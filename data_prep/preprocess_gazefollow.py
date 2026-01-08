@@ -7,7 +7,7 @@ import argparse
 # preprocessing adapted from https://github.com/ejcgt/attention-target-detection/blob/master/dataset.py
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_path", type=str, default="./data/gazefollow")
+parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/gazefollow_extended")
 args = parser.parse_args()
 
 

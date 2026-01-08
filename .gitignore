@@ -3,7 +3,8 @@ data/
 checkpoints/
 experiments/
 wandb/
-
+dinov2/
+.vscode/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

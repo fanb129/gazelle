@@ -28,7 +28,9 @@ class Backbone(nn.Module, ABC):
 class DinoV2Backbone(Backbone):
     def __init__(self, model_name):
         super(DinoV2Backbone, self).__init__()
-        self.model = torch.hub.load('facebookresearch/dinov2', model_name)
+        # self.model = torch.hub.load('facebookresearch/dinov2', model_name)
+        self.model = torch.hub.load('dinov2', model_name, source='local', pretrained=False)
+        self.model.load_state_dict(torch.load('./checkpoints/'+model_name+"_pretrain.pth"))
 
     def forward(self, x):
         b, c, h, w = x.shape

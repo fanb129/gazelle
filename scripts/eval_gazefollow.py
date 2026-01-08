@@ -10,7 +10,7 @@ from gazelle.model import get_gazelle_model
 from gazelle.utils import gazefollow_auc, gazefollow_l2
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_path", type=str, default="./data/gazefollow")
+parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/gazefollow_extended")
 parser.add_argument("--model_name", type=str, default="gazelle_dinov2_vitl14")
 parser.add_argument("--ckpt_path", type=str, default="./checkpoints/gazelle_dinov2_vitl14.pt")
 parser.add_argument("--batch_size", type=int, default=128)
@@ -43,7 +43,7 @@ def collate(batch):
 
 @torch.no_grad()
 def main():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda:3" if torch.cuda.is_available() else "cpu"
     print("Running on {}".format(device))
 
     model, transform = get_gazelle_model(args.model_name)
