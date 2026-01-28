@@ -5,7 +5,7 @@ from timm.models.vision_transformer import Block
 import math
 
 import gazelle.utils as utils
-from gazelle.backbone import DinoV2Backbone
+from gazelle.backbone import DinoV3Backbone
 
 
 class GazeLLE(nn.Module):
@@ -156,34 +156,34 @@ def positionalencoding2d(d_model, height, width):
 # models
 def get_gazelle_model(model_name):
     factory = {
-        "gazelle_dinov2_vitb14": gazelle_dinov2_vitb14,
-        "gazelle_dinov2_vitl14": gazelle_dinov2_vitl14,
-        "gazelle_dinov2_vitb14_inout": gazelle_dinov2_vitb14_inout,
-        "gazelle_dinov2_vitl14_inout": gazelle_dinov2_vitl14_inout,
+        "gazelle_dinov3_vitb16": gazelle_dinov3_vitb16,
+        "gazelle_dinov3_vitl16": gazelle_dinov3_vitl16,
+        "gazelle_dinov3_vitb16_inout": gazelle_dinov3_vitb16_inout,
+        "gazelle_dinov3_vitl16_inout": gazelle_dinov3_vitl16_inout,
     }
     assert model_name in factory.keys(), "invalid model name"
     return factory[model_name]()
 
-def gazelle_dinov2_vitb14():
-    backbone = DinoV2Backbone('dinov2_vitb14')
+def gazelle_dinov3_vitb16():
+    backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((448, 448))
     model = GazeLLE(backbone)
     return model, transform
 
-def gazelle_dinov2_vitl14():
-    backbone = DinoV2Backbone('dinov2_vitl14')
+def gazelle_dinov3_vitl16():
+    backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((448, 448))
     model = GazeLLE(backbone)
     return model, transform
 
-def gazelle_dinov2_vitb14_inout():
-    backbone = DinoV2Backbone('dinov2_vitb14')
+def gazelle_dinov3_vitb16_inout():
+    backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((448, 448))
     model = GazeLLE(backbone, inout=True)
     return model, transform
 
-def gazelle_dinov2_vitl14_inout():
-    backbone = DinoV2Backbone('dinov2_vitl14')
+def gazelle_dinov3_vitl16_inout():
+    backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((448, 448))
     model = GazeLLE(backbone, inout=True)
     return model, transform

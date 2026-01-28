@@ -3,9 +3,10 @@ data/
 checkpoints/
 experiments/
 wandb/
-dinov2/
+dinov3/
 .vscode/
 assets/
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

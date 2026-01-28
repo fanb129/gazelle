@@ -11,9 +11,9 @@ from gazelle.model import get_gazelle_model
 from gazelle.utils import vat_auc, vat_l2
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_path", type=str, default="./data/videoattentiontarget")
-parser.add_argument("--model_name", type=str, default="gazelle_dinov2_vitl14_inout")
-parser.add_argument("--ckpt_path", type=str, default="./checkpoints/gazelle_dinov2_vitl14_inout.pt")
+parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/videoattentiontarget")
+parser.add_argument("--model_name", type=str, default="gazelle_dinov3_vitl16_inout")
+parser.add_argument("--ckpt_path", type=str, default="./checkpoints/gazelle_dinov3_vitl16_inout.pt")
 parser.add_argument("--batch_size", type=int, default=64)
 args = parser.parse_args()
 

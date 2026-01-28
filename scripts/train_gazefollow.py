@@ -12,10 +12,10 @@ from gazelle.model import get_gazelle_model
 from gazelle.utils import gazefollow_auc, gazefollow_l2
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default="gazelle_dinov2_vitb14")
+parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16")
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/gazefollow_extended')
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
-parser.add_argument('--wandb_project', type=str, default='gazelle')
+parser.add_argument('--wandb_project', type=str, default='gazelleV1')
 parser.add_argument('--exp_name', type=str, default='train_gazefollow_vitb')
 parser.add_argument('--log_iter', type=int, default=10, help='how often to log loss during training')
 parser.add_argument('--max_epochs', type=int, default=15)

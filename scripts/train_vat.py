@@ -13,12 +13,12 @@ from gazelle.model import get_gazelle_model
 from gazelle.utils import vat_auc, vat_l2
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default="gazelle_dinov2_vitb14_inout")
-parser.add_argument('--init_ckpt', type=str, default='./checkpoints/gazelle_dinov2_vitb14.pt', help='checkpoint for initialization (trained on GazeFollow)')
-parser.add_argument('--data_path', type=str, default='./data/videoattentiontarget')
+parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16_inout")
+parser.add_argument('--init_ckpt', type=str, default='./checkpoints/gazelle_dinov3_vitb16.pt', help='checkpoint for initialization (trained on GazeFollow)')
+parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/videoattentiontarget')
 parser.add_argument('--frame_sample_every', type=int, default=6)
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
-parser.add_argument('--wandb_project', type=str, default='gazelle')
+parser.add_argument('--wandb_project', type=str, default='gazelleV1')
 parser.add_argument('--exp_name', type=str, default='train_vat')
 parser.add_argument('--log_iter', type=int, default=10, help='how often to log loss during training')
 parser.add_argument('--max_epochs', type=int, default=8)
