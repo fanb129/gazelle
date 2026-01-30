@@ -78,12 +78,13 @@ class GazeDataset(torch.utils.data.dataset.Dataset):
             gazey_norm = [y / float(height) for y in gazey]
         
         img = self.transform(img)
-        
+        # TODO
+        text_prompt = "The person"
         if self.split == "train":
             heatmap = utils.get_heatmap(gazex_norm[0], gazey_norm[0], 64, 64) # note for training set, there is only one annotation
-            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, heatmap
+            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, heatmap, text_prompt
         else:
-            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width
+            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, text_prompt
 
     def __len__(self):
         return len(self.data_idxs)
