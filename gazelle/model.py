@@ -9,7 +9,7 @@ from gazelle.backbone import DinoV3Backbone
 
 
 class GazeLLE(nn.Module):
-    def __init__(self, backbone, inout=False, dim=256, num_layers=3, in_size=(448, 448), out_size=(64, 64)):
+    def __init__(self, backbone, inout=False, dim=256, num_layers=3, in_size=(512, 512), out_size=(64, 64)):
         super().__init__()
         self.backbone = backbone
         self.dim = dim
@@ -166,24 +166,24 @@ def get_gazelle_model(model_name):
 
 def gazelle_dinov3_vitb16():
     backbone = DinoV3Backbone('dinov3_vitb16')
-    transform = backbone.get_transform((448, 448))
+    transform = backbone.get_transform((512, 512))
     model = GazeLLE(backbone)
     return model, transform
 
 def gazelle_dinov3_vitl16():
     backbone = DinoV3Backbone('dinov3_vitl16')
-    transform = backbone.get_transform((448, 448))
+    transform = backbone.get_transform((512, 512))
     model = GazeLLE(backbone)
     return model, transform
 
 def gazelle_dinov3_vitb16_inout():
     backbone = DinoV3Backbone('dinov3_vitb16')
-    transform = backbone.get_transform((448, 448))
+    transform = backbone.get_transform((512, 512))
     model = GazeLLE(backbone, inout=True)
     return model, transform
 
 def gazelle_dinov3_vitl16_inout():
     backbone = DinoV3Backbone('dinov3_vitl16')
-    transform = backbone.get_transform((448, 448))
+    transform = backbone.get_transform((512, 512))
     model = GazeLLE(backbone, inout=True)
     return model, transform
