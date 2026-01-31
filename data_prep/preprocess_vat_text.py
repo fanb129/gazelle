@@ -62,63 +62,67 @@ for split in SPLITS:
     
     # 遍历每一张图
     # 注意：正式运行时请去掉切片 [:10]
-    for i, item in enumerate(tqdm(data, desc=f"Generating {split}")):
-        image_path = os.path.join(DATA_DIR, item['path'])
-        
-        # 必须读取图片尺寸用于 bbox 边界检查 (clip)
-        try:
-            with Image.open(image_path) as img:
-                img_w, img_h = img.size
-        except Exception as e:
-            print(f"Error reading image {image_path}: {e}")
-            continue
-
-        new_heads = []
-        for head in item['heads']:
-            raw_bbox = head['bbox'] # 原始头部 bbox
-            
-            # --- 关键修改：获取扩大的 bbox (Head -> Upper Body) ---
-            body_bbox = get_expanded_bbox(raw_bbox, img_w, img_h)
-            
-            # 构造 Query
-            # 提示词微调：明确告诉模型我们给的是大致区域，让它描述区域里的人
-            # Qwen-VL 对于坐标的理解能力较强，直接给坐标数字通常能懂，
-            # 如果效果不好，可以使用 Qwen 特有的 <box> 格式，但自然语言通常足够。
-            prompt = (
-                f"Identify the person located roughly at coordinates {body_bbox}. "
-                "Describe their clothing color and type (e.g., 'red t-shirt', 'blue jacket') "
-                "and gender in a short phrase. Keep it under 10 words."
-            )
-
-            query = tokenizer.from_list_format([
-                {'image': image_path},
-                {'text': prompt}
-            ])
-            
-            # 推理
+    for i, seq_item in enumerate(tqdm(data, desc=f"Generating {split}")):
+        new_frames = []
+        for frame in tqdm(seq_item['frames'], desc="Processing frames", leave=False):
+            image_path = os.path.join(DATA_DIR, frame['path'])
+            # 必须读取图片尺寸用于 bbox 边界检查 (clip)
             try:
-                with torch.no_grad():
-                    response, _ = model.chat(tokenizer, query=query, history=None)
-                
-                # 清洗文本
-                text_label = response.strip().rstrip('.')
-                
-                # 存入数据
-                head['text_label'] = text_label
-                # 也可以选择把 body_bbox 也存下来用于 debug，看模型到底看了哪里
-                # head['body_bbox_debug'] = body_bbox 
-                
+                with Image.open(image_path) as img:
+                    img_w, img_h = img.size
             except Exception as e:
-                print(f"Inference error: {e}")
-                head['text_label'] = "person" # fallback
+                print(f"Error reading image {image_path}: {e}")
+                continue
 
-            new_heads.append(head)
-        
-        item['heads'] = new_heads
-        new_data.append(item)
+            new_heads = []
+            for head in frame['heads']:
+                raw_bbox = head['bbox'] # 原始头部 bbox
+                # --- 关键修改：获取扩大的 bbox (Head -> Upper Body) ---
+                body_bbox = get_expanded_bbox(raw_bbox, img_w, img_h)
+                
+                # 构造 Query
+                # 提示词微调：明确告诉模型我们给的是大致区域，让它描述区域里的人
+                # Qwen-VL 对于坐标的理解能力较强，直接给坐标数字通常能懂，
+                # 如果效果不好，可以使用 Qwen 特有的 <box> 格式，但自然语言通常足够。
+                prompt = (
+                    f"Identify the person located roughly at coordinates {body_bbox}. "
+                    "Describe their clothing color and type (e.g., 'red t-shirt', 'blue jacket') "
+                    "and gender in a short phrase. Keep it under 10 words."
+                )
 
-        # 定期保存 (每1000张存一次，或者每处理完10%存一次)
-        if (i + 1) % 1000 == 0:
+                query = tokenizer.from_list_format([
+                    {'image': image_path},
+                    {'text': prompt}
+                ])
+                
+                # 推理
+                try:
+                    with torch.no_grad():
+                        response, _ = model.chat(tokenizer, query=query, history=None)
+                    
+                    # 清洗文本
+                    text_label = response.strip().rstrip('.')
+                    
+                    # 存入数据
+                    head['text_label'] = text_label
+                    # 也可以选择把 body_bbox 也存下来用于 debug，看模型到底看了哪里
+                    # head['body_bbox_debug'] = body_bbox 
+                    
+                except Exception as e:
+                    print(f"Inference error: {e}")
+                    head['text_label'] = "person" # fallback
+
+                new_heads.append(head)
+            
+            frame['heads'] = new_heads
+            new_frames.append(frame)
+
+        # 把更新后的 frames 放回 sequence
+        seq_item['frames'] = new_frames
+        new_data.append(seq_item)
+
+        # 定期保存 视频序列比较大，可以改小一点间隔，比如每10个序列存一次
+        if (i + 1) % 10 == 0:
             print(f"Saving checkpoint to {output_path}...")
             with open(output_path, 'w') as f:
                 json.dump(new_data, f)
