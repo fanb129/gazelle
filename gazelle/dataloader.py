@@ -32,9 +32,9 @@ class GazeDataset(torch.utils.data.dataset.Dataset):
         self.sample_rate = sample_rate
         
         if dataset_name == "gazefollow":
-            self.data = load_data_gazefollow(os.path.join(self.path, "{}_preprocessed.json".format(split)))
+            self.data = load_data_gazefollow(os.path.join(self.path, "{}_preprocessed_text.json".format(split)))
         elif dataset_name == "videoattentiontarget":
-            self.data = load_data_vat(os.path.join(self.path, "{}_preprocessed.json".format(split)), sample_rate=sample_rate)
+            self.data = load_data_vat(os.path.join(self.path, "{}_preprocessed_text.json".format(split)), sample_rate=sample_rate)
         else:
             raise ValueError("Invalid dataset: {}".format(dataset_name))
 
@@ -79,11 +79,18 @@ class GazeDataset(torch.utils.data.dataset.Dataset):
         
         img = self.transform(img)
         
+        # 读取 json 里生成好的 text
+        if 'text_label' in head_data:
+            text_prompt = head_data['text_label']
+        else:
+            # Fallback，万一生成失败
+            text_prompt = "the person"
+            
         if self.split == "train":
             heatmap = utils.get_heatmap(gazex_norm[0], gazey_norm[0], 64, 64) # note for training set, there is only one annotation
-            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, heatmap
+            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, heatmap, text_prompt
         else:
-            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width
+            return img, bbox_norm, gazex_norm, gazey_norm, torch.tensor(inout), height, width, text_prompt
 
     def __len__(self):
         return len(self.data_idxs)

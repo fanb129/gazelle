@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_path", type=str, default="./data/videoattentiontarget")
+parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/videoattentiontarget")
 args = parser.parse_args()
 
 # preprocessing adapted from https://github.com/ejcgt/attention-target-detection/blob/master/dataset.py
