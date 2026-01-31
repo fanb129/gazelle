@@ -4,9 +4,12 @@ checkpoints/
 experiments/
 wandb/
 dinov3/
+AutoGPTQ/
 .vscode/
 assets/
 *.log
+=0.26.0
+SimSun.ttf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
