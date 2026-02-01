@@ -25,7 +25,7 @@ parser.add_argument('--max_epochs', type=int, default=8)
 parser.add_argument('--batch_size', type=int, default=60)
 parser.add_argument('--inout_loss_lambda', type=float, default=1.0)
 parser.add_argument('--lr_non_inout', type=float, default=1e-5)
-parser.add_argument('--lr_inout', type=float, default=1e-2)
+parser.add_argument('--lr_inout', type=float, default=1e-3)
 parser.add_argument('--n_workers', type=int, default=8)
 args = parser.parse_args()
 
