@@ -22,15 +22,21 @@ parser.add_argument('--max_epochs', type=int, default=15)
 parser.add_argument('--batch_size', type=int, default=60)
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--n_workers', type=int, default=8)
+parser.add_argument('--wandb', type=str, default='1')
 args = parser.parse_args()
 
 
 def main():
+    # 如果 args.wandb 为 '1' 则在线运行，否则禁用
+    mode = 'online' if args.wandb == '1' else 'disabled'
+    debug_save_path='/home/fb/src/paper/gazelleV1/visImg' if args.wandb == '0' else None
     wandb.init(
         project=args.wandb_project,
         name=args.exp_name,
-        config=vars(args)
+        config=vars(args),
+        mode=mode  # 设置为 'disabled' 后，后续所有的 wandb.log 都会被静默忽略
     )
+    
     exp_dir = os.path.join(args.ckpt_save_dir, args.exp_name, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     os.makedirs(exp_dir)
 
@@ -60,17 +66,18 @@ def main():
             imgs, bboxes, gazex, gazey, inout, heights, widths, heatmaps, text_prompt = batch
 
             optimizer.zero_grad()
-            preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes], "text": text_prompt})
-            # heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
-            heatmap_preds = preds['heatmap']
-
-            loss = loss_fn(heatmap_preds, heatmaps.cuda())
-            loss.backward()
+            preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes], "text": text_prompt}, debug_save_path)
+            heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
+            # heatmap_preds = preds['heatmap']
+            loss_grounding = preds["grounding_loss"]
+            loss_gaze = loss_fn(heatmap_preds, heatmaps.cuda())
+            total_loss = loss_gaze + 1.0 * loss_grounding
+            total_loss.backward()
             optimizer.step()
 
             if cur_iter % args.log_iter == 0:
-                wandb.log({"train/loss": loss.item()})
-                print("TRAIN EPOCH {}, iter {}/{}, loss={}".format(epoch, cur_iter, len(train_dl), round(loss.item(), 4)))
+                wandb.log({"train/totalLoss": total_loss.item(), "train/loss_grounding": loss_grounding.item(), "train/loss_gaze": loss_gaze.item()})
+                print("TRAIN EPOCH {}, iter {}/{}, totalLoss={}, loss_grounding={}, loss_gaze={}".format(epoch, cur_iter, len(train_dl), round(total_loss.item(), 4), round(loss_grounding.item(), 4), round(loss_gaze.item(), 4)))
 
         scheduler.step()
 
@@ -90,8 +97,8 @@ def main():
             with torch.no_grad():
                 preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes], "text": text_prompt})
 
-            # heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
-            heatmap_preds = preds['heatmap']
+            heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
+            # heatmap_preds = preds['heatmap']
             for i in range(heatmap_preds.shape[0]):
                 auc = gazefollow_auc(heatmap_preds[i], gazex[i], gazey[i], heights[i], widths[i])
                 avg_l2, min_l2 = gazefollow_l2(heatmap_preds[i], gazex[i], gazey[i])

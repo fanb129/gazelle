@@ -3,6 +3,9 @@ import torch.nn as nn
 import torchvision
 from timm.models.vision_transformer import Block
 import math
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as patches
 
 import gazelle.utils as utils
 from gazelle.backbone import DinoV3Backbone
@@ -44,9 +47,9 @@ class GazeLLE(nn.Module):
         for param in self.text_backbone.parameters():
             param.requires_grad = False
         
-        # 我们需要一个投影层，把文本特征映射到 GazeLLE 的维度 (dim=256)
         self.text_proj = nn.Linear(2048, self.dim) 
-        # =================================
+
+        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
         self.linear = nn.Conv2d(backbone.get_dimension(), self.dim, 1)
 
@@ -82,67 +85,70 @@ class GazeLLE(nn.Module):
                 nn.Sigmoid()
             )
 
-    def forward(self, input):
+    def forward(self, input, debug_save_path=None):
         # input["images"]: [B, 3, H, W] tensor of images
         # input["bboxes"]: list of lists of bbox tuples [[(xmin, ymin, xmax, ymax)]] per image in normalized image coords
         # input["text"]: list of strings, e.g. ["man in red", "woman in blue"]
-
+        num_ppl_per_img = [len(bbox_list) for bbox_list in input["bboxes"]]
         # 1. 提取图像特征
         x_vis = self.backbone.forward(input["images"]) # [B, C_vis, H, W]
-        # 2. 提取文本特征
-        # 需要将文本 tokenize 并放入 device
-        text_tokens = self.tokenizer.tokenize(input["text"]).to(x_vis.device)
-        text_emb = self.text_backbone(text_tokens) # [B, 1280] (假设是 CLS token 或 pooled output)
-        text_emb = F.normalize(text_emb, dim=-1) # 归一化很重要
-        # 3. 生成“语言引导 Mask” (Language-Guided Mask)
-        # 我们计算文本特征与图像空间特征的点积相似度
-        # DINOv3 的视觉特征 x_vis 需要先归一化以便计算余弦相似度
-        B, C, H, W = x_vis.shape
-        x_vis_norm = F.normalize(x_vis, dim=1) # 在通道维度归一化
-        # === 简化版实现逻辑 ===
         x = self.linear(x_vis) # [B, 256, H, W] - 图像特征降维到 GazeLLE 维度
         x = x + self.pos_embed
-        # 将文本也映射到 256 维
+        x = utils.repeat_tensors(x, num_ppl_per_img) # repeat image features along people dimension per image
+        # 2. 提取文本特征
+        text_tokens = self.tokenizer.tokenize(input["text"]).to(x_vis.device)
+        text_emb = self.text_backbone(text_tokens) # [B, 1280] 
         text_emb_proj = self.text_proj(text_emb).unsqueeze(-1).unsqueeze(-1) # [B, 256, 1, 1]
-        # 计算 Attention Mask: 图像特征 与 文本特征 的点积
-        # 形状: [B, 256, H, W] * [B, 256, 1, 1] -> sum -> [B, 1, H, W]
-        prompt_mask = (x * text_emb_proj).sum(dim=1, keepdim=True) 
-        
-        # 激活一下，让 Mask 更关注正样本区域（类似 ReLU 或 Sigmoid）
-        # 或者直接作为一种 bias 加进去
-        # 这里模拟原论文的 add embedding 操作
-        x = x + (prompt_mask * self.prompt_scale)
+        text_emb_proj = utils.repeat_tensors(text_emb_proj, num_ppl_per_img)
 
-        # num_ppl_per_img = [len(bbox_list) for bbox_list in input["bboxes"]]
-        # x = self.backbone.forward(input["images"])
-        # x = self.linear(x)
-        # x = x + self.pos_embed
-        # x = utils.repeat_tensors(x, num_ppl_per_img) # repeat image features along people dimension per image
-        # head_maps = torch.cat(self.get_input_head_maps(input["bboxes"]), dim=0).to(x.device) # [sum(N_p), 32, 32]
-        # head_map_embeddings = head_maps.unsqueeze(dim=1) * self.head_token.weight.unsqueeze(-1).unsqueeze(-1)
-        # x = x + head_map_embeddings
+        x_norm = F.normalize(x, p=2, dim=1)
+        t_norm = F.normalize(text_emb_proj, p=2, dim=1)
+        # prompt_mask = (x_norm * t_norm).sum(dim=1, keepdim=True)
+        similarity_map = (x_norm * t_norm).sum(dim=1, keepdim=True)
+        
+        # 计算带温度的 Logits，用于 Loss 计算
+        logit_scale = self.logit_scale.exp()
+        logits = similarity_map * logit_scale
+        # 生成 Prompt Mask (用于给模型做 Attention)
+        # 这里可以用 sigmoid 后的值，也可以直接用 similarity_map
+        prompt_mask = torch.sigmoid(logits)
+
+        loss_grounding = torch.tensor(0.0, device=x.device)
+        if self.training:
+            gt_masks = self.generate_gt_masks(input["bboxes"], (self.featmap_h, self.featmap_w), x.device)
+            loss_grounding = F.binary_cross_entropy_with_logits(logits, gt_masks)
+
+        if debug_save_path is not None:
+            # 只取 Batch 中的前 4 张图进行可视化
+            self.visualize_alignment(
+                input["images"], 
+                prompt_mask, 
+                input["text"], 
+                input.get("bboxes", None), # 传入 GT BBox 做对比
+                debug_save_path
+            )
+        x = x + (prompt_mask * self.prompt_scale)
         x = x.flatten(start_dim=2).permute(0, 2, 1) # "b c h w -> b (h w) c"
 
         if self.inout:
             x = torch.cat([self.inout_token.weight.unsqueeze(dim=0).repeat(x.shape[0], 1, 1), x], dim=1)
-
+        
         x = self.transformer(x)
-
-        # 注意：现在不需要 repeat_tensors 和 split_tensors 了，
-        # 因为我们假设一个文本对应生成一张热力图，也就是 batch size 是一一对应的。
-        # 如果一张图有多个文本 query，你应该在 dataloader 阶段把图片复制多次形成 batch。
         if self.inout:
             inout_tokens = x[:, 0, :] 
             inout_preds = self.inout_head(inout_tokens).squeeze(dim=-1)
-            # inout_preds = utils.split_tensors(inout_preds, num_ppl_per_img)
+            inout_preds = utils.split_tensors(inout_preds, num_ppl_per_img)
             x = x[:, 1:, :] # slice off inout tokens from scene tokens
         
         x = x.reshape(x.shape[0], self.featmap_h, self.featmap_w, x.shape[2]).permute(0, 3, 1, 2) # b (h w) c -> b c h w
         x = self.heatmap_head(x).squeeze(dim=1)
         x = torchvision.transforms.functional.resize(x, self.out_size)
-        # heatmap_preds = utils.split_tensors(x, num_ppl_per_img) # resplit per image
+        heatmap_preds = utils.split_tensors(x, num_ppl_per_img) # resplit per image
 
-        return {"heatmap": x, "inout": inout_preds if self.inout else None}
+        return {"heatmap": heatmap_preds, 
+                "inout": inout_preds if self.inout else None,
+                "grounding_loss": loss_grounding
+                }
 
     def get_input_head_maps(self, bboxes):
         # bboxes: [[(xmin, ymin, xmax, ymax)]] - list of list of head bboxes per image
@@ -193,7 +199,119 @@ class GazeLLE(nn.Module):
         
         self.load_state_dict(current_state_dict, strict=False)
 
+    def visualize_alignment(self, images, masks, texts, bboxes, save_dir):
+        """
+        images: [B, 3, H, W] (normalized)
+        masks: [B, 1, h, w] (raw logits)
+        texts: list of strings
+        """
+        os.makedirs(save_dir, exist_ok=True)
+        # 反归一化图片以便显示 (假设是 ImageNet mean/std)
+        mean = torch.tensor([0.485, 0.456, 0.406], device=images.device).view(1, 3, 1, 1)
+        std = torch.tensor([0.229, 0.224, 0.225], device=images.device).view(1, 3, 1, 1)
+        imgs_unnorm = images * std + mean
+        
+        # 限制最多画 4 张
+        num_to_plot = min(len(texts), 4)
+        
+        fig, axes = plt.subplots(num_to_plot, 2, figsize=(10, 4 * num_to_plot))
+        if num_to_plot == 1: axes = axes[np.newaxis, :]
+        
+        for i in range(num_to_plot):
+            # 1. 处理原图
+            img_np = imgs_unnorm[i].permute(1, 2, 0).detach().cpu().numpy()
+            img_np = np.clip(img_np, 0, 1)
+            
+            # 2. 处理 Mask
+            mask_tensor = masks[i, 0].detach() # [h, w]
+            # 归一化 mask 到 0-1 以便显示热力图
+            mask_tensor = (mask_tensor - mask_tensor.min()) / (mask_tensor.max() - mask_tensor.min() + 1e-6)
+            mask_np = mask_tensor.cpu().numpy()
+            # 上采样到原图大小
+            mask_resized =  torch.nn.functional.interpolate(
+                mask_tensor.unsqueeze(0).unsqueeze(0), 
+                size=(img_np.shape[0], img_np.shape[1]), 
+                mode='bilinear'
+            ).squeeze().cpu().numpy()
 
+            # 3. 绘制左边：Mask 热力图覆盖
+            axes[i, 0].imshow(img_np)
+            axes[i, 0].imshow(mask_resized, cmap='jet', alpha=0.5) # 半透明叠加
+            axes[i, 0].set_title(f"Prompt: {texts[i]}\n(Model Prediction)")
+            axes[i, 0].axis('off')
+
+            # 4. 绘制右边：Ground Truth BBox (如果有)
+            axes[i, 1].imshow(img_np)
+            if bboxes is not None:
+                current_bboxes = bboxes[i]
+                
+                # 获取当前用于显示的图像尺寸 (Height, Width)
+                h_img, w_img, _ = img_np.shape
+                
+                for bbox in current_bboxes:
+                    # 解包坐标 (假设是 xmin, ymin, xmax, ymax) 且为 0-1 归一化坐标
+                    # 如果 bbox 是 tensor，建议先 .item() 或者转 numpy，这里假设是 list/tuple
+                    nx_min, ny_min, nx_max, ny_max = bbox
+                    
+                    # 转换为绝对像素坐标
+                    x_rect = nx_min * w_img
+                    y_rect = ny_min * h_img
+                    w_rect = (nx_max - nx_min) * w_img
+                    h_rect = (ny_max - ny_min) * h_img
+                    
+                    # 创建矩形 Patch
+                    # patches.Rectangle((x,y), width, height, ...)
+                    # (x, y) 代表左上角
+                    rect = patches.Rectangle(
+                        (x_rect, y_rect), 
+                        w_rect, 
+                        h_rect, 
+                        linewidth=2, 
+                        edgecolor='r',  # 红色边框
+                        facecolor='none' # 中间透明
+                    )
+                    # 将矩形添加到对应的子图 (axes[i, 1])
+                    axes[i, 1].add_patch(rect) 
+            axes[i, 1].set_title("Ground Truth (Reference)")
+            axes[i, 1].axis('off')
+            
+        # 保存图片，文件名可以用 step 或者随机数
+        plt.tight_layout()
+        plt.savefig(os.path.join(save_dir, f"vis_batch_{np.random.randint(0, 1000)}.png"))
+        plt.close()
+
+    def generate_gt_masks(self, bboxes_list_of_lists, feature_size, device):
+        """
+        将 bbox 列表转换为 Tensor Mask [Total_Ppl, 1, H, W]
+        """
+        H, W = feature_size
+        masks = []
+        
+        # 遍历每张图
+        for bboxes in bboxes_list_of_lists:
+            # 遍历图中的每个人
+            for bbox in bboxes:
+                mask = torch.zeros((1, H, W), device=device, dtype=torch.float32)
+                if bbox is not None:
+                    # 解包归一化坐标 (x1, y1, x2, y2)
+                    x1, y1, x2, y2 = bbox
+                    # 映射到特征图尺寸
+                    c_x1 = int(round(x1 * W))
+                    c_y1 = int(round(y1 * H))
+                    c_x2 = int(round(x2 * W))
+                    c_y2 = int(round(y2 * H))
+                    # 边界保护
+                    c_x1 = max(0, c_x1); c_y1 = max(0, c_y1)
+                    c_x2 = min(W, c_x2); c_y2 = min(H, c_y2)
+                    
+                    if c_x2 > c_x1 and c_y2 > c_y1:
+                        mask[:, c_y1:c_y2, c_x1:c_x2] = 1.0
+                masks.append(mask)
+        
+        if len(masks) > 0:
+            return torch.stack(masks)
+        else:
+            return torch.zeros((0, 1, H, W), device=device)
 # From https://github.com/wzlxjtu/PositionalEncoding2D/blob/master/positionalembedding2d.py
 def positionalencoding2d(d_model, height, width):
     """

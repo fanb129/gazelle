@@ -66,12 +66,14 @@ def main():
         # TRAIN EPOCH
         model.train()
         for cur_iter, batch in enumerate(train_dl):
-            imgs, bboxes, gazex, gazey, inout, heights, widths, heatmaps = batch
+            imgs, bboxes, gazex, gazey, inout, heights, widths, heatmaps, text_prompt = batch
 
             optimizer.zero_grad()
-            preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes]})
-            heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
-            inout_preds = torch.stack(preds['inout']).squeeze(dim=1)
+            preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes], "text": text_prompt})
+            # heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
+            heatmap_preds = preds['heatmap']
+            # inout_preds = torch.stack(preds['inout']).squeeze(dim=1)
+            inout_preds = preds['inout']
 
             # compute heatmap loss only for in-frame gaze targets
             heatmap_loss = heatmap_loss_fn(heatmap_preds[inout.bool()], heatmaps[inout.bool()].cuda())
@@ -100,13 +102,15 @@ def main():
         all_inout_preds = []
         all_inout_gts = []
         for cur_iter, batch in enumerate(eval_dl):
-            imgs, bboxes, gazex, gazey, inout, heights, widths = batch
+            imgs, bboxes, gazex, gazey, inout, heights, widths, text_prompt = batch
 
             with torch.no_grad():
-                preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes]})
+                preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes], "text": text_prompt})
 
-            heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
-            inout_preds = torch.stack(preds['inout']).squeeze(dim=1)
+            # heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
+            heatmap_preds = preds['heatmap']
+            # inout_preds = torch.stack(preds['inout']).squeeze(dim=1)
+            inout_preds = preds['inout']
             for i in range(heatmap_preds.shape[0]):
                 if inout[i] == 1: # in-frame
                     auc = vat_auc(heatmap_preds[i], gazex[i][0], gazey[i][0])
