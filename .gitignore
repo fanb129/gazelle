@@ -7,6 +7,8 @@ dinov3/
 .vscode/
 assets/
 *.log
+=0.26.0
+SimSun.ttf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
