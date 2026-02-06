@@ -16,12 +16,13 @@ parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16")
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/gazefollow_extended')
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
 parser.add_argument('--wandb_project', type=str, default='gazelleV1')
-parser.add_argument('--exp_name', type=str, default='train_gazefollow_vitb')
+parser.add_argument('--exp_name', type=str, default='train_gazefollow_vitb_coarse_to_fine') #"Coarse-to-Fine Gaze Perception Framework" (由粗到精的注视感知框架)
 parser.add_argument('--log_iter', type=int, default=10, help='how often to log loss during training')
 parser.add_argument('--max_epochs', type=int, default=15)
 parser.add_argument('--batch_size', type=int, default=60)
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--n_workers', type=int, default=8)
+parser.add_argument('--aux_weight', type=float, default=0.3, help='Weight for auxiliary loss (deep supervision)')
 args = parser.parse_args()
 
 
@@ -62,14 +63,26 @@ def main():
             optimizer.zero_grad()
             preds = model({"images": imgs.cuda(), "bboxes": [[bbox] for bbox in bboxes]})
             heatmap_preds = torch.stack(preds['heatmap']).squeeze(dim=1)
+            loss_main = loss_fn(heatmap_preds, heatmaps.cuda())
+            aux_heatmap_preds = torch.stack(preds['aux_heatmap']).squeeze(dim=1)
+            loss_aux = loss_fn(aux_heatmap_preds, heatmaps.cuda())
 
-            loss = loss_fn(heatmap_preds, heatmaps.cuda())
-            loss.backward()
+            loss_total = loss_main + args.aux_weight * loss_aux
+                         
+            loss_total.backward()
             optimizer.step()
 
             if cur_iter % args.log_iter == 0:
-                wandb.log({"train/loss": loss.item()})
-                print("TRAIN EPOCH {}, iter {}/{}, loss={}".format(epoch, cur_iter, len(train_dl), round(loss.item(), 4)))
+                wandb.log({
+                    "train/loss_total": loss_total.item(),
+                    "train/loss_main": loss_main.item(),
+                    "train/loss_aux": loss_aux.item(),
+                    "train/epoch": epoch
+                })
+                print("TRAIN EPOCH {}, iter {}/{}, Total Loss={:.4f} (Main={:.4f}, Aux={:.4f})".format(
+                    epoch, cur_iter, len(train_dl), 
+                    loss_total.item(), loss_main.item(), loss_aux.item()
+                ))
 
         scheduler.step()
 
@@ -114,4 +127,8 @@ if __name__ == '__main__':
     random.seed(0)
     np.random.seed(0)
     torch.manual_seed(0)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(0)
+        torch.cuda.manual_seed_all(0)
+        torch.backends.cudnn.deterministic = True
     main()

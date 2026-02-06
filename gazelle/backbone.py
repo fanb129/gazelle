@@ -30,44 +30,24 @@ class DinoV3Backbone(Backbone):
         self.model = torch.hub.load('dinov3', model_name, source='local', pretrained=False)
         self.model.load_state_dict(torch.load('./checkpoints/'+model_name+"_pretrain.pth"))
 
-        # 2. 确定要提取的层数 (参考 DINOv3 官方配置)
         if "vitl" in model_name:
-            self.out_indices = [4, 11, 17, 23] # 官方推荐的 ViT-L 用于密集任务的层
+            self.out_indices = [4, 11, 17, 23] 
         elif "vitb" in model_name:
-            self.out_indices = [2, 5, 8, 11] # 示例，可以取最后4层或者均匀分布
+            self.out_indices = [2, 5, 8, 11]
         else:
-            self.out_indices = [len(self.model.blocks) - 1] # 默认只取最后一层
+            self.out_indices = [len(self.model.blocks) - 1]
 
     def forward(self, x):
-        # b, c, h, w = x.shape
-        # out_h, out_w = self.get_out_size((h, w))
-        # x = self.model.forward_features(x)['x_norm_patchtokens']
-        # x = x.view(x.size(0), out_h, out_w, -1).permute(0, 3, 1, 2) # "b (out_h out_w) c -> b c out_h out_w"
-        # return x
-        # 3. 使用 get_intermediate_layers 获取多层特征
-        # reshape=True 会自动帮你把 (B, N, C) 变为 (B, C, H, W)，且自动处理掉 register tokens
         features = self.model.get_intermediate_layers(
             x,
             n=self.out_indices, 
             reshape=True
         )
-        
-        # 4. 特征融合策略
-        # 策略A (简单): 拼接所有层 (通道数变大，例如 1024*4)
-        # 结果形状: (B, C * len(indices), H, W)
-        return torch.cat(features, dim=1) 
-        
-        # 策略B (常用): 只返回最后一层 (如果你不想改下游网络结构)
-        # return features[-1]
-
-        # 策略C (推荐): 返回最后一层，但建议你尝试策略A并在下游加一个 1x1 卷积降维
-        # return features[-1]
+        # features 是一个 list，包含 4 个 tensor，每个形状为 [B, C, H, W]
+        return features
     
     def get_dimension(self):
-        # return self.model.embed_dim
-        # 【关键修改】返回拼接后的总通道数
-        # 例如 ViT-L: 1024 * 4 = 4096
-        return self.model.embed_dim * len(self.out_indices)
+        return self.model.embed_dim
     
     def get_out_size(self, in_size):
         h, w = in_size
