@@ -9,25 +9,29 @@ import gazelle.utils as utils
 from gazelle.backbone import DinoV3Backbone
 
 # ==========================================
-# 模块 1: GGSF (Geometry-Guided Spatial Focus)
+# 模块 1: GGSF (几何引导) - 升级为尺度感知 (Scale-Aware)
 # ==========================================
 class GeometryGuidedSpatialFocus(nn.Module):
-    def __init__(self, feat_h, feat_w):
+    def __init__(self, feat_h, feat_w, dropout=0.1):
         super().__init__()
         self.feat_h = feat_h
         self.feat_w = feat_w
         
-        # 输入是相对坐标 (dx, dy)，2通道
+        # 【关键升级】输入通道从 2 变为 4：相对坐标 (dx, dy) + Bbox宽高 (w, h)
         self.geo_mlp = nn.Sequential(
-            nn.Conv2d(2, 32, kernel_size=1),
+            nn.Conv2d(4, 32, kernel_size=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
+            nn.Dropout(dropout), 
             nn.Conv2d(32, 1, kernel_size=1),
             nn.Sigmoid() 
         )
+        
+        # 初始化 bias 偏大，保证初始阶段 mask 值接近 1，不破坏 DINO 原始特征，稳定前期训练
+        nn.init.constant_(self.geo_mlp[-2].bias, 2.0) 
 
-    def forward(self, bboxes, num_ppl_per_img, device):
-        # 构造网格 (1, 2, H, W)
+    def forward(self, bboxes, device):
+        # 1. 构造基础网格 (0~1)
         y_grid, x_grid = torch.meshgrid(
             torch.arange(self.feat_h, device=device),
             torch.arange(self.feat_w, device=device),
@@ -41,201 +45,205 @@ class GeometryGuidedSpatialFocus(nn.Module):
         for i, bbox_list in enumerate(bboxes):
             for bbox in bbox_list:
                 if bbox is None:
-                    cx, cy = 0.5, 0.5
+                    # 默认值
+                    cx, cy, w, h = 0.5, 0.5, 1.0, 1.0
                 else:
                     xmin, ymin, xmax, ymax = bbox
                     cx = (xmin + xmax) / 2
                     cy = (ymin + ymax) / 2
+                    w = xmax - xmin
+                    h = ymax - ymin # 获取 Bbox 的物理尺寸
                 
+                # 2. 计算相对坐标 (dx, dy)
                 center = torch.tensor([cx, cy], device=device).view(2, 1, 1)
-                relative_coords = base_grid - center 
-                final_geo_masks.append(relative_coords)
+                relative_coords = base_grid - center # [2, H, W]
+                
+                # 3. 将 w 和 h 扩展为特征图大小的通道
+                w_tensor = torch.full((1, self.feat_h, self.feat_w), w, device=device) # [1, H, W]
+                h_tensor = torch.full((1, self.feat_h, self.feat_w), h, device=device) # [1, H, W]
+                
+                # 4. 拼接成 4 通道几何特征
+                # 这使得网络能同时知道“相对位置”和“头部大小”
+                geo_feat = torch.cat([relative_coords, w_tensor, h_tensor], dim=0) # [4, H, W]
+                final_geo_masks.append(geo_feat)
         
         if len(final_geo_masks) == 0:
             return None
 
-        geo_input = torch.stack(final_geo_masks) # [Total_People, 2, H, W]
-        attention_mask = self.geo_mlp(geo_input) # [Total_People, 1, H, W]
+        # [Total_People, 4, H, W]
+        geo_input = torch.stack(final_geo_masks) 
+        
+        # [Total_People, 1, H, W] -> 0~1 的权重掩码
+        attention_mask = self.geo_mlp(geo_input) 
         
         return attention_mask
 
 # ==========================================
-# 模块 2: SASA (Scale-Aware Semantic Aggregation)
+# 模块 2: SASA (动态融合) - 融合原始高维特征
 # ==========================================
 class ScaleAwareSemanticAggregator(nn.Module):
-    def __init__(self, in_dim, num_scales=4):
+    def __init__(self, in_dim, num_scales=4, dropout=0.1):
+        """
+        in_dim: 输入特征的通道数 (Backbone原始维度，如 1024)
+        """
         super().__init__()
         self.num_scales = num_scales
         
-        # 计算权重: Input [Head_Token + Global_Pool]
+        # 1. 注意力网络
+        # 我们需要给每个 Scale 算一个分数
+        # 输入: [B, num_scales, in_dim]
+        # 这里的 Linear 是作用在最后一维 (in_dim) 上的
         self.scale_attention = nn.Sequential(
-            nn.Linear(in_dim, 128),
+            nn.Linear(in_dim, 128),      # [B, 4, 1024] -> [B, 4, 128]
             nn.ReLU(),
-            nn.Linear(128, num_scales),
-            nn.Softmax(dim=1) 
+            nn.Dropout(dropout),
+            nn.Linear(128, 1),           # [B, 4, 128] -> [B, 4, 1] 【关键修复：输出变成1】
+            # 我们不需要在这里 Softmax，因为我们要拿出 [B, 4] 之后再 Softmax
         )
         
-        # 融合后的特征变换
-        self.project = nn.Sequential(
-            nn.Conv2d(in_dim, in_dim, 1),
-            nn.BatchNorm2d(in_dim),
-            nn.ReLU()
-        )
+        self.softmax = nn.Softmax(dim=1) # 在 Scale 维度 (dim=1) 上归一化
 
-    def forward(self, features_list, head_token):
-        # features_list: List of [Total_People, C, H, W]
-        stacked_feats = torch.stack(features_list, dim=1) # [B, 4, C, H, W]
+    def forward(self, features_list, head_token=None):
+        # features_list: List of [B, C, H, W] (C=1024)
+        
+        # 1. 堆叠: [B, 4, C, H, W]
+        stacked_feats = torch.stack(features_list, dim=1) 
         b, n, c, h, w = stacked_feats.shape
         
-        # Global Pool for Attention
-        feats_global = torch.mean(stacked_feats, dim=[3, 4]) # [B, 4, C]
+        # 2. 全局池化获取语义向量: [B, 4, C]
+        feats_global = torch.mean(stacked_feats, dim=[3, 4]) 
         
-        if head_token.dim() == 2:
-            query = head_token.unsqueeze(1) # [B, 1, C]
-        else:
-            query = head_token.view(1, 1, -1).repeat(b, 1, 1)
-
-        # 简单的相加融合用于计算 Attention Score
-        fusion_for_attn = feats_global + query 
+        # 3. 计算权重
+        # 注意：这里我们暂时忽略 head_token，避免维度不匹配问题 (1024 vs 256)
+        # SASA 的核心是根据"图像内容的语义强度"来分配权重，光靠 feats_global 足够了
         
-        # 计算层级权重
-        weights = self.scale_attention(fusion_for_attn) # [B, 4]
+        # MLP: [B, 4, C] -> [B, 4, 1]
+        attn_score = self.scale_attention(feats_global)
+        
+        # Squeeze & Softmax: [B, 4, 1] -> [B, 4] -> Softmax
+        attn_score = attn_score.squeeze(-1) 
+        weights = self.softmax(attn_score) # [B, 4]
+        
+        # 4. 准备加权: [B, 4] -> [B, 4, 1, 1, 1]
         weights_view = weights.view(b, n, 1, 1, 1)
         
-        # 加权求和
-        fused_feat = torch.sum(stacked_feats * weights_view, dim=1) # [B, C, H, W]
+        # 5. 加权融合: sum([B, 4, C, H, W] * [B, 4, 1, 1, 1]) -> [B, C, H, W]
+        # fused_feat = torch.sum(stacked_feats * weights_view, dim=1)
+        # 【关键修改】不要 sum，而是乘回去
+        # [B, 4, C, H, W] * [B, 4, 1, 1, 1] -> [B, 4, C, H, W]
+        weighted_feats_stack = stacked_feats * weights_view
+        # 把它拆回 list，为了后面做 concat
+        # 也可以直接在这里 reshape，但为了兼容性，我们返回处理后的 list
+        weighted_features_list = [weighted_feats_stack[:, i, ...] for i in range(n)]
         
-        out = self.project(fused_feat)
-        return out, weights
+        return weighted_features_list, weights
 
 # ==========================================
 # 主模型 GazeLLE
 # ==========================================
 class GazeLLE(nn.Module):
     def __init__(self, backbone, inout=False, dim=256, num_layers=3, in_size=(512, 512), out_size=(64, 64),
-                 use_sasa=False, use_ggsf=False, use_aux=False):
-        """
-        Args:
-            use_sasa: 是否启用动态层级选择 (Contribution 1)
-            use_ggsf: 是否启用几何门控 (Contribution 2)
-            use_aux:  是否启用辅助监督 (Contribution 3)
-        """
+                 use_sasa=False, use_ggsf=False, use_aux=False, dropout=0.1):
         super().__init__()
         self.backbone = backbone
-        self.dim = dim
+        self.dim = dim # 最终 Transformer 的维度 (256)
+        
+        # 获取 Backbone 的原始输出维度 (e.g. 1024 for ViT-L)
+        # 注意：这里调用的是 backbone.get_dimension()，但我们在 backbone.py 里改成了返回单层维度
+        self.raw_dim = backbone.get_dimension() 
+        
         self.use_sasa = use_sasa
         self.use_ggsf = use_ggsf
         self.use_aux = use_aux
         
-        # 打印当前配置，防止跑错
-        print(f"Init GazeLLE with: SASA={use_sasa}, GGSF={use_ggsf}, AUX={use_aux}")
+        print(f"Init GazeLLE: SASA={use_sasa}, GGSF={use_ggsf}, AUX={use_aux}, RawDim={self.raw_dim}")
 
-        # 1. 特征适配层: 将 Backbone 的 1024 维降到 256 维
-        # 注意：这里我们对每一层都独立降维，方便后续处理
-        self.feat_adapter = nn.ModuleList([
-            nn.Sequential(
-                nn.Conv2d(backbone.get_dimension(), self.dim, 1),
-                nn.BatchNorm2d(self.dim),
-                nn.ReLU()
-            ) for _ in range(4) # 假设 DinoV3Backbone 返回 4 层
-        ])
+        self.linear = nn.Conv2d(self.raw_dim * 4, self.dim, 1)
+        if self.use_sasa:
+            self.sasa = ScaleAwareSemanticAggregator(self.raw_dim, num_scales=4, dropout=dropout)
 
+        # GGSF 模块
+        if self.use_ggsf:
+            self.ggsf = GeometryGuidedSpatialFocus(backbone.get_out_size(in_size)[0], backbone.get_out_size(in_size)[1], dropout=dropout)
+
+        # Aux Head
+        if self.use_aux:
+            # 输入改为 self.raw_dim (例如 1024)
+            self.aux_head = nn.Sequential(
+                # 先用 3x3 卷积降维，提取浅层局部空间特征
+                nn.Conv2d(self.raw_dim, 256, kernel_size=3, padding=1),
+                nn.BatchNorm2d(256),
+                nn.ReLU(),
+                # 上采样到 Heatmap 尺寸
+                nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2),
+                nn.Conv2d(256, 1, kernel_size=1, bias=False),
+                nn.Sigmoid()
+            )
+
+        # 通用组件 (保持不变)
         self.num_layers = num_layers
         self.featmap_h, self.featmap_w = backbone.get_out_size(in_size)
         self.in_size = in_size
         self.out_size = out_size
         self.inout = inout
-
-        # === 模块初始化 ===
-        
-        # [C1] SASA
-        if self.use_sasa:
-            self.sasa = ScaleAwareSemanticAggregator(self.dim, num_scales=4)
-        else:
-            # Fallback: 如果不用 SASA，就用简单的 Concat + Conv 融合 (还原你的 Baseline)
-            # 输入通道是 dim * 4，输出 dim
-            self.fallback_fusion = nn.Sequential(
-                nn.Conv2d(self.dim * 4, self.dim, 1),
-                nn.BatchNorm2d(self.dim),
-                nn.ReLU()
-            )
-
-        # [C2] GGSF
-        if self.use_ggsf:
-            self.ggsf = GeometryGuidedSpatialFocus(self.featmap_h, self.featmap_w)
-
-        # [C3] Aux Head
-        if self.use_aux:
-            self.aux_head = nn.Sequential(
-                nn.ConvTranspose2d(self.dim, self.dim, kernel_size=2, stride=2),
-                nn.Conv2d(self.dim, 1, kernel_size=1, bias=False),
-                nn.Sigmoid()
-            )
-
-        # Gazelle 原有组件
         self.head_token = nn.Embedding(1, self.dim)
         self.register_buffer("pos_embed", positionalencoding2d(self.dim, self.featmap_h, self.featmap_w).squeeze(dim=0).squeeze(dim=0))
         if self.inout: self.inout_token = nn.Embedding(1, self.dim)
-        
-        self.transformer = nn.Sequential(*[
-            Block(dim=self.dim, num_heads=8, mlp_ratio=4, drop_path=0.1)
-            for i in range(num_layers)
-        ])
-        
-        self.heatmap_head = nn.Sequential(
-            nn.ConvTranspose2d(dim, dim, kernel_size=2, stride=2),
-            nn.Conv2d(dim, 1, kernel_size=1, bias=False),
-            nn.Sigmoid()
-        )
-        if self.inout: 
-            self.inout_head = nn.Sequential(
-                nn.Linear(self.dim, 128), nn.ReLU(), nn.Dropout(0.1),
-                nn.Linear(128, 1), nn.Sigmoid()
-            )
+        self.transformer = nn.Sequential(*[Block(dim=self.dim, num_heads=8, mlp_ratio=4, drop_path=0.1) for i in range(num_layers)])
+        self.heatmap_head = nn.Sequential(nn.ConvTranspose2d(dim, dim, kernel_size=2, stride=2), nn.Conv2d(dim, 1, kernel_size=1, bias=False), nn.Sigmoid())
+        if self.inout: self.inout_head = nn.Sequential(nn.Linear(self.dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 1), nn.Sigmoid())
 
     def forward(self, input):
         num_ppl_per_img = [len(bbox_list) for bbox_list in input["bboxes"]]
         
-        # 1. Backbone 提取多层特征
+        # 1. 获取原始多层特征 [List of (B, 1024, H, W)]
         raw_features_list = self.backbone.forward(input["images"])
         
-        # 2. 特征适配 & Repeat
-        adapted_features = []
-        for i, feat in enumerate(raw_features_list):
-            feat = self.feat_adapter[i](feat)
-            feat = utils.repeat_tensors(feat, num_ppl_per_img) # [Total_People, 256, H, W]
-            adapted_features.append(feat)
+        # 2. 将 Image 维度 repeat 成 Person 维度
+        # [Total_Ppl, 1024, H, W]
+        person_features_list = []
+        for feat in raw_features_list:
+            feat = utils.repeat_tensors(feat, num_ppl_per_img)
+            person_features_list.append(feat)
 
-        # === [C2] GGSF 逻辑 ===
+        # === [C2] GGSF 几何门控 (作用于原始特征) ===
         if self.use_ggsf:
-            geo_mask = self.ggsf(input["bboxes"], num_ppl_per_img, adapted_features[0].device)
+            geo_mask = self.ggsf(input["bboxes"], person_features_list[0].device)
             # 乘性门控
             gated_features = []
-            for feat in adapted_features:
+            for feat in person_features_list:
                 gated_features.append(feat * geo_mask)
+            processing_features = gated_features
         else:
-            # 如果不开启，直接透传
-            gated_features = adapted_features
+            processing_features = person_features_list
 
-        # === [C3] Aux Head 逻辑 ===
+        # === [C1] SASA vs Baseline ===
+        if self.use_sasa:
+            weighted_features_list, layer_weights = self.sasa(processing_features)
+            cat_feat = torch.cat(weighted_features_list, dim=1)
+            x = self.linear(cat_feat)
+        else:
+            # Baseline 逻辑: 4x1024 -> Concat -> 4096 -> Conv -> 256
+            cat_feat = torch.cat(processing_features, dim=1) 
+            x = self.linear(cat_feat) # 此时 self.linear 是 4096->256
+            layer_weights = None
+
+        # === [C3] Aux Head (建议放在 linear 降维之后做) ===
+        # 这样 Aux Head 参数少，且利用了融合后的特征
         aux_preds = None
         if self.use_aux:
-            # 使用最浅层 (Index 0) 进行监督
-            shallow_feat = gated_features[0] 
-            aux_out = self.aux_head(shallow_feat)
-            aux_out = torchvision.transforms.functional.resize(aux_out, self.out_size).squeeze(1)
-            aux_preds = utils.split_tensors(aux_out, num_ppl_per_img)
+            # 【关键修改】提取最浅层特征 (Layer 2 或 Layer 4)
+            # 注意：这里的 processing_features 是已经经过 GGSF 门控的特征
+            shallow_feat = processing_features[0] # [Total_People, 1024, H, W]
+            
+            # 预测粗糙热图
+            aux_out = self.aux_head(shallow_feat) # [Total_People, 1, H*2, W*2]
+            aux_out = torchvision.transforms.functional.resize(aux_out, self.out_size)
+            
+            # squeeze(1) 去掉通道维，得到 [Total_People, 64, 64]
+            aux_preds = utils.split_tensors(aux_out.squeeze(1), num_ppl_per_img)
 
-        # === [C1] SASA 逻辑 ===
-        layer_weights = None
-        if self.use_sasa:
-            x, layer_weights = self.sasa(gated_features, self.head_token.weight)
-        else:
-            # Fallback: Concat -> Conv
-            cat_feat = torch.cat(gated_features, dim=1) # [Total_People, 256*4, H, W]
-            x = self.fallback_fusion(cat_feat)          # [Total_People, 256, H, W]
-
-        # === 以下是 Gazelle 原有逻辑 ===
+        # === 以下逻辑完全保持 Gazelle 原样 ===
         x = x + self.pos_embed
         
         head_maps = torch.cat(self.get_input_head_maps(input["bboxes"]), dim=0).to(x.device)
@@ -264,7 +272,8 @@ class GazeLLE(nn.Module):
             "heatmap": heatmap_preds, 
             "aux_heatmap": aux_preds, 
             "inout": inout_preds if self.inout else None,
-            "layer_weights": layer_weights 
+            "layer_weights": layer_weights,
+            "geo_mask": geo_mask if self.use_ggsf else None 
         }
 
     def get_input_head_maps(self, bboxes):
@@ -364,11 +373,11 @@ def gazelle_dinov3_vitl16(sasa, ggsf, aux):
 def gazelle_dinov3_vitb16_inout(sasa, ggsf, aux):
     backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, inout=True)
     return model, transform
 
 def gazelle_dinov3_vitl16_inout(sasa, ggsf, aux):
     backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, inout=True)
     return model, transform

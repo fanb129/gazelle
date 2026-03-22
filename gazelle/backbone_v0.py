@@ -30,21 +30,12 @@ class DinoV3Backbone(Backbone):
         self.model = torch.hub.load('dinov3', model_name, source='local', pretrained=False)
         self.model.load_state_dict(torch.load('./checkpoints/'+model_name+"_pretrain.pth"))
 
-        if "vitl" in model_name:
-            self.out_indices = [5, 11, 17, 23] 
-        elif "vitb" in model_name:
-            self.out_indices = [2, 5, 8, 11]
-        else:
-            self.out_indices = [len(self.model.blocks) - 1]
-
     def forward(self, x):
-        features = self.model.get_intermediate_layers(
-            x,
-            n=self.out_indices, 
-            reshape=True
-        )
-        # features 是一个 list，包含 4 个 tensor，每个形状为 [B, C, H, W]
-        return features
+        b, c, h, w = x.shape
+        out_h, out_w = self.get_out_size((h, w))
+        x = self.model.forward_features(x)['x_norm_patchtokens']
+        x = x.view(x.size(0), out_h, out_w, -1).permute(0, 3, 1, 2) # "b (out_h out_w) c -> b c out_h out_w"
+        return x
     
     def get_dimension(self):
         return self.model.embed_dim

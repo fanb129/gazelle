@@ -9,6 +9,7 @@ assets/
 *.log
 =0.26.0
 SimSun.ttf
+experiments_imgs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
