@@ -20,11 +20,11 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup python -u scripts/train_vat.py --model="gaze
 
 CUDA_VISIBLE_DEVICES=2 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitb16_inout" --exp_name="train_vat_sasa_ggsf" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt" --use_sasa --use_ggsf > train_vat_sasa_ggsf.log 2>&1 &
 
-CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitb16_inout" --exp_name="train_vat_sasa_ggsf_aux" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf_aux/2026-03-11_10-21-57/epoch_14.pt" --use_sasa --use_ggsf --use_aux > train_vat_sasa_ggsf_aux.log 2>&1 &
+CUDA_VISIBLE_DEVICES=0 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitb16_inout" --exp_name="train_vat_ggsf" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_ggsf/2026-02-28_15-17-39/epoch_14.pt" --use_ggsf > train_vat_ggsf.log 2>&1 &
 
 
 ## vat l
-CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitl16_inout" --exp_name="train_vat_vitl_sasa_ggsf" --init_ckpt="" --use_sasa --use_ggsf > train_vat_vitl_sasa_ggsf.log 2>&1 &
+CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitl16_inout" --exp_name="train_vat_vitl_sasa_ggsf" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl_sasa_ggsf/2026-03-22_13-49-56/epoch_14.pt" --use_sasa --use_ggsf > train_vat_vitl_sasa_ggsf.log 2>&1 &
 
 
 
@@ -40,3 +40,52 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup python -u scripts/train_vat.py --model="gaze
 
 CUDA_VISIBLE_DEVICES=2 setsid nohup python -u scripts/train_vat.py --model="gazelle_dinov3_vitb16_inout" --exp_name="train_vat_sasa_ggsf_aux_2" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt" --use_sasa --use_ggsf --use_aux > train_vat_sasa_ggsf_aux_2.log 2>&1 &
 
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/generate_comparisons.py \
+    --input_dir "/newhome/fb/dataset/gazefollow_extended/test2/00000000" \
+    --output_dir "/home/fb/src/paper/gazelleV1/visualizations_paper" \
+    --json_path "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json" \
+    --base_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt" \
+    --spot_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt" > generate_comparisons.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=0 python scripts/generate_comparisons.py \
+    --input_dir "/newhome/fb/dataset/gazefollow_extended/test2/00000000" \
+    --output_dir "/home/fb/src/paper/gazelleV1/visualizations_paper" \
+    --json_path "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json" \
+    --base_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt" \
+    --spot_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt"
+
+CUDA_VISIBLE_DEVICES=0 python scripts/generate_comparisons.py \
+    --input_dir "/newhome/fb/dataset/gazefollow_extended/test2" \
+    --output_dir "/home/fb/src/paper/gazelleV1/visualizations_paper" \
+    --json_path "/newhome/fb/dataset/gazefollow_extended/test_preprocessed/test_near.json" \
+    --base_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt" \
+    --spot_ckpt "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt"
+
+
+CUDA_VISIBLE_DEVICES=0 python scripts/eval_gazefollow.py
+
+CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat.py \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_lt3.json" \
+--vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_crowd" > eval_vat_test_crowd_lt3.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat_dinov2.py \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_4.json" \
+--vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_crowd" > eval_vat_dinov2_test_crowd_4.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat.py \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_far.json" \
+--vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_far" > eval_vat_test_far.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=2 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat.py \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json" \
+--vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_near" > eval_vat.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=2 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat.py \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_mixed_hard.json" \
+--vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_mixed_hard" > eval_vat_test_mixed_hard.log 2>&1 &
+
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_gazefollow_dinov2.py --model="gazelle_dinov2_vitb14" --exp_name="train_gazefollow_dinov2_sasa_ggsf" --use_sasa --use_ggsf > train_gazefollow_dinov2_sasa_ggsf.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_vat_dinov2.py --model="gazelle_dinov2_vitb14_inout" --exp_name="train_vat_dinov2_sasa_ggsf" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_dinov2_sasa_ggsf/2026-03-26_00-58-25/epoch_14.pt" --use_sasa --use_ggsf > train_vat_dinov2_sasa_ggsf.log 2>&1 &

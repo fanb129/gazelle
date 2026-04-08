@@ -13,8 +13,8 @@ import torchvision.transforms.functional as F
 import scipy.ndimage as ndimage
 
 # 导入两个版本的模型 (VAT 模型通常包含 inout_head)
-from gazelle.model_v0 import gazelle_dinov3_vitb16_inout as gazelle_baseline
-from gazelle.model import gazelle_dinov3_vitb16_inout as gazelle_spot
+from gazelle.model_v0_dinov2 import gazelle_dinov2_vitb14_inout as gazelle_baseline
+from gazelle.model_dinov2 import gazelle_dinov2_vitb14_inout as gazelle_spot
 from gazelle.utils import vat_auc, vat_l2
 
 # ==========================================
@@ -256,8 +256,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/videoattentiontarget", help="Path to JSON dataset")
     parser.add_argument("--json_path", type=str, required=True)
-    parser.add_argument("--base_ckpt", type=str, default="/home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt", help="Path to Baseline checkpoint")
-    parser.add_argument("--spot_ckpt", type=str, default="/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt", help="Path to GazeSpot checkpoint")
+    parser.add_argument("--base_ckpt", type=str, default="/home/fb/src/paper/gazelle/checkpoints/gazelle_dinov2_vitb14_inout.pt", help="Path to Baseline checkpoint")
+    parser.add_argument("--spot_ckpt", type=str, default="/home/fb/src/paper/gazelleV1/experiments/train_vat_dinov2_sasa_ggsf/2026-03-27_14-54-52/epoch_7.pt", help="Path to GazeSpot checkpoint")
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--vis_dir", type=str, required=True, help="If set, will save visualizations here")
     parser.add_argument("--num_vis", type=int, default=0, help="Max number of images to visualize")

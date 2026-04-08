@@ -4,12 +4,16 @@ checkpoints/
 experiments/
 wandb/
 dinov3/
+dinov2/
 .vscode/
 assets/
 *.log
 =0.26.0
 SimSun.ttf
 experiments_imgs/
+scripts/generate_comparisons.py
+visualizations_paper*
+*.jpg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

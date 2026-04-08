@@ -9,12 +9,12 @@ import torch.nn as nn
 import wandb
 
 from gazelle.dataloader import GazeDataset, collate_fn
-from gazelle.model import get_gazelle_model
+from gazelle.model_dinov2 import get_gazelle_model
 from gazelle.utils import vat_auc, vat_l2
 from visualize import plot_gazelle_results
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16_inout")
+parser.add_argument('--model', type=str, default="gazelle_dinov2_vitb14_inout")
 parser.add_argument('--init_ckpt', type=str, default='./checkpoints/gazelle_dinov3_vitb16.pt', help='checkpoint for initialization (trained on GazeFollow)')
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/videoattentiontarget')
 parser.add_argument('--frame_sample_every', type=int, default=6)
