@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from gazelle.utils import perturb_normalized_bbox
+from gazelle.eval_utils import perturb_normalized_bbox
 
 
 METHOD_BASELINE = "Baseline (DINOv3 last-layer)"
