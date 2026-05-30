@@ -1,8 +1,13 @@
-import torch
+try:
+    import torch
+except ModuleNotFoundError:
+    torch = None
 from PIL import Image, ImageDraw
 import numpy as np
-import matplotlib.pyplot as plt
-import torchvision
+try:
+    import torchvision
+except ModuleNotFoundError:
+    torchvision = None
 import random
 from sklearn.metrics import roc_auc_score
 
@@ -15,7 +20,9 @@ def split_tensors(tensor, split_counts):
     return [tensor[indices[i]:indices[i+1]] for i in range(len(split_counts))]
 
 def visualize_heatmap(pil_image, heatmap, bbox=None):
-    if isinstance(heatmap, torch.Tensor):
+    import matplotlib.pyplot as plt
+
+    if torch is not None and isinstance(heatmap, torch.Tensor):
         heatmap = heatmap.detach().cpu().numpy()
     heatmap = Image.fromarray((heatmap * 255).astype(np.uint8)).resize(pil_image.size, Image.Resampling.BILINEAR)
     heatmap = plt.cm.jet(np.array(heatmap) / 255.)
@@ -86,6 +93,41 @@ def random_bbox_jitter(img, bbox):
     bbox = [max(0, xmin_j + xmin), max(0, ymin_j + ymin), min(width, xmax_j + xmax), min(height, ymax_j + ymax)]
 
     return bbox
+
+def perturb_normalized_bbox(bbox, jitter_level, rng, min_size=1e-4):
+    if len(bbox) != 4:
+        raise ValueError(f"Expected bbox with 4 values, got {bbox!r}")
+    xmin, ymin, xmax, ymax = [float(value) for value in bbox]
+    if not (0 <= xmin < xmax <= 1 and 0 <= ymin < ymax <= 1):
+        raise ValueError(f"Expected valid normalized bbox, got {bbox!r}")
+    if jitter_level < 0:
+        raise ValueError(f"jitter_level must be non-negative, got {jitter_level!r}")
+    if jitter_level == 0:
+        return list(bbox)
+
+    jitter = float(jitter_level) / 100.0
+    width = xmax - xmin
+    height = ymax - ymin
+    center_x = (xmin + xmax) / 2.0 + rng.uniform(-jitter, jitter) * width
+    center_y = (ymin + ymax) / 2.0 + rng.uniform(-jitter, jitter) * height
+    new_width = max(width * (1.0 + rng.uniform(-jitter, jitter)), min_size)
+    new_height = max(height * (1.0 + rng.uniform(-jitter, jitter)), min_size)
+
+    def clip_interval(center, size):
+        low = max(0.0, center - size / 2.0)
+        high = min(1.0, center + size / 2.0)
+        if high - low >= min_size:
+            return low, high
+        if low <= 0.0:
+            return 0.0, min(1.0, min_size)
+        if high >= 1.0:
+            return max(0.0, 1.0 - min_size), 1.0
+        half = min_size / 2.0
+        return max(0.0, center - half), min(1.0, center + half)
+
+    new_xmin, new_xmax = clip_interval(center_x, new_width)
+    new_ymin, new_ymax = clip_interval(center_y, new_height)
+    return [new_xmin, new_ymin, new_xmax, new_ymax]
 
 def get_heatmap(gazex, gazey, height, width, sigma=3, htype="Gaussian"):
     # Adapted from https://github.com/ejcgt/attention-target-detection/blob/master/utils/imutils.py
