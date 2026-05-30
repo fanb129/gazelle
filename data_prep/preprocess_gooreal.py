@@ -55,13 +55,13 @@ def clip_bbox(bbox, width, height):
     return [xmin, ymin, xmax, ymax]
 
 
-def make_fallback_head_bbox(hx, hy, width, height):
-    size = max(16.0, min(float(width), float(height)) * 0.04)
+def make_fallback_head_bbox(hx, hy, coord_width, coord_height):
+    size = max(16.0, min(float(coord_width), float(coord_height)) * 0.04)
     half = size / 2.0
-    xmin = clamp(hx - half, 0.0, float(width) - 1.0)
-    ymin = clamp(hy - half, 0.0, float(height) - 1.0)
-    xmax = clamp(hx + half, xmin + 1.0, float(width))
-    ymax = clamp(hy + half, ymin + 1.0, float(height))
+    xmin = clamp(hx - half, 0.0, float(coord_width) - 1.0)
+    ymin = clamp(hy - half, 0.0, float(coord_height) - 1.0)
+    xmax = clamp(hx + half, xmin + 1.0, float(coord_width))
+    ymax = clamp(hy + half, ymin + 1.0, float(coord_height))
     return [xmin, ymin, xmax, ymax]
 
 
@@ -77,9 +77,7 @@ def bbox_center_distance(x, y, bbox):
     return ((cx - x) ** 2 + (cy - y) ** 2) ** 0.5
 
 
-def select_head_bbox(record, warnings):
-    width = as_float(record.get("width"), "width")
-    height = as_float(record.get("height"), "height")
+def select_head_bbox(record, warnings, coord_width, coord_height):
     hx = as_float(record.get("hx"), "hx")
     hy = as_float(record.get("hy"), "hy")
 
@@ -97,7 +95,7 @@ def select_head_bbox(record, warnings):
     candidates = []
     for idx, bbox in enumerate(bboxes):
         try:
-            clipped = clip_bbox(bbox, width, height)
+            clipped = clip_bbox(bbox, coord_width, coord_height)
         except SchemaError:
             continue
         label = int(labels[idx]) if idx < len(labels) else None
@@ -107,7 +105,7 @@ def select_head_bbox(record, warnings):
 
     if not candidates:
         warnings.append("No valid boxes in ann.bboxes; using synthetic box around hx/hy.")
-        return make_fallback_head_bbox(hx, hy, width, height), "synthetic_hxhy"
+        return make_fallback_head_bbox(hx, hy, coord_width, coord_height), "synthetic_hxhy"
 
     label_25 = [item for item in candidates if item[1] == 25 and item[3]]
     if label_25:
@@ -123,17 +121,17 @@ def select_head_bbox(record, warnings):
         return chosen[2], f"contains_hxhy:index={chosen[0]}"
 
     chosen = min(candidates, key=lambda item: item[4])
-    if chosen[4] <= max(width, height) * 0.08:
+    if chosen[4] <= max(coord_width, coord_height) * 0.08:
         warnings.append(
             f"No box contained hx/hy; using nearest box index {chosen[0]} at distance {chosen[4]:.2f}."
         )
         return chosen[2], f"nearest_hxhy:index={chosen[0]}"
 
     warnings.append("No plausible head box found; using synthetic box around hx/hy.")
-    return make_fallback_head_bbox(hx, hy, width, height), "synthetic_hxhy"
+    return make_fallback_head_bbox(hx, hy, coord_width, coord_height), "synthetic_hxhy"
 
 
-def convert_record(record, index, image_prefix):
+def convert_record(record, index, image_prefix, coord_width=640, coord_height=480):
     required = ["filename", "width", "height", "gaze_cx", "gaze_cy", "hx", "hy", "ann"]
     missing = [field for field in required if field not in record]
     if missing:
@@ -144,15 +142,28 @@ def convert_record(record, index, image_prefix):
     if width <= 0 or height <= 0:
         raise SchemaError(f"Record {index} has invalid image size: {width}x{height}")
 
+    coord_width = as_float(coord_width, "coord_width")
+    coord_height = as_float(coord_height, "coord_height")
+    if coord_width <= 0 or coord_height <= 0:
+        raise SchemaError(f"Invalid coordinate canvas: {coord_width}x{coord_height}")
+
     gaze_x = as_float(record["gaze_cx"], "gaze_cx")
     gaze_y = as_float(record["gaze_cy"], "gaze_cy")
-    if not (0 <= gaze_x <= width and 0 <= gaze_y <= height):
-        raise SchemaError(f"Record {index} has out-of-image gaze point: ({gaze_x}, {gaze_y})")
+    if not (0 <= gaze_x <= coord_width and 0 <= gaze_y <= coord_height):
+        raise SchemaError(f"Record {index} has out-of-canvas gaze point: ({gaze_x}, {gaze_y})")
 
     warnings = []
-    bbox = select_head_bbox(record, warnings)
+    bbox = select_head_bbox(record, warnings, coord_width, coord_height)
     bbox_pixels, bbox_source = bbox
-    bbox_pixels = clip_bbox(bbox_pixels, width, height)
+    bbox_canvas = clip_bbox(bbox_pixels, coord_width, coord_height)
+    scale_x = float(width) / coord_width
+    scale_y = float(height) / coord_height
+    bbox_pixels = [
+        bbox_canvas[0] * scale_x,
+        bbox_canvas[1] * scale_y,
+        bbox_canvas[2] * scale_x,
+        bbox_canvas[3] * scale_y,
+    ]
 
     filename = normalize_path(record["filename"])
     image_path = normalize_path(Path(image_prefix) / filename) if image_prefix else filename
@@ -160,15 +171,15 @@ def convert_record(record, index, image_prefix):
     head = {
         "bbox": bbox_pixels,
         "bbox_norm": [
-            bbox_pixels[0] / float(width),
-            bbox_pixels[1] / float(height),
-            bbox_pixels[2] / float(width),
-            bbox_pixels[3] / float(height),
+            bbox_canvas[0] / coord_width,
+            bbox_canvas[1] / coord_height,
+            bbox_canvas[2] / coord_width,
+            bbox_canvas[3] / coord_height,
         ],
         "gazex": [gaze_x],
         "gazey": [gaze_y],
-        "gazex_norm": [gaze_x / float(width)],
-        "gazey_norm": [gaze_y / float(height)],
+        "gazex_norm": [gaze_x / coord_width],
+        "gazey_norm": [gaze_y / coord_height],
         "inout": 1,
         "head_id": 0,
         "gooreal_index": index,
@@ -176,6 +187,8 @@ def convert_record(record, index, image_prefix):
         "gooreal_gaze_idx": record.get("gazeIdx"),
         "gooreal_gaze_item": record.get("gaze_item"),
         "gooreal_occluded": bool(record.get("occluded", False)),
+        "gooreal_coord_width": coord_width,
+        "gooreal_coord_height": coord_height,
     }
 
     item = {
@@ -292,6 +305,8 @@ def parse_args():
     parser.add_argument("--pickle_path", type=str, default=None)
     parser.add_argument("--image_prefix", type=str, default=None)
     parser.add_argument("--output_json", type=str, default=None)
+    parser.add_argument("--coord_width", type=float, default=640.0, help="GOO-real annotation coordinate canvas width.")
+    parser.add_argument("--coord_height", type=float, default=480.0, help="GOO-real annotation coordinate canvas height.")
     parser.add_argument("--max_items", type=int, default=None)
     parser.add_argument("--inspect", action="store_true", help="Print pickle keys and shapes without writing JSON.")
     parser.add_argument("--schema_check", action="store_true", help="Validate an existing preprocessed JSON file.")
@@ -341,7 +356,7 @@ def main():
     warning_count = 0
     for idx, record in enumerate(raw_records):
         try:
-            item = convert_record(record, idx, image_prefix)
+            item = convert_record(record, idx, image_prefix, args.coord_width, args.coord_height)
         except SchemaError as exc:
             raise SchemaError(f"Failed to convert record {idx}: {exc}") from exc
         warning_count += len(item.get("gooreal_warnings", []))
@@ -359,6 +374,7 @@ def main():
     print(f"Split: {args.split}")
     print(f"Pickle: {pickle_path}")
     print(f"Image prefix: {image_prefix}")
+    print(f"Coordinate canvas: {args.coord_width:g}x{args.coord_height:g}")
     print(f"Items with conversion warnings: {warning_count}")
 
 

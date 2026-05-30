@@ -28,6 +28,13 @@ def validate_records(records):
             for field in ["bbox_norm", "gazex_norm", "gazey_norm", "inout"]:
                 if field not in head:
                     raise SchemaError(f"Item {idx} head {head_idx} is missing field {field!r}")
+            if "gooreal_index" in head and (
+                "gooreal_coord_width" not in head or "gooreal_coord_height" not in head
+            ):
+                raise SchemaError(
+                    f"Item {idx} head {head_idx} looks like stale GOO-real preprocessing. "
+                    "Regenerate it with data_prep/preprocess_gooreal.py so coordinates use the 640x480 GOO-real canvas."
+                )
             bbox = head["bbox_norm"]
             if len(bbox) != 4 or not (0 <= bbox[0] < bbox[2] <= 1) or not (0 <= bbox[1] < bbox[3] <= 1):
                 raise SchemaError(f"Item {idx} head {head_idx} has invalid bbox_norm: {bbox}")
@@ -41,13 +48,16 @@ def synthetic_records():
             "heads": [
                 {
                     "bbox": [156.0, 115.0, 212.0, 188.0],
-                    "bbox_norm": [156.0 / 1920.0, 115.0 / 1080.0, 212.0 / 1920.0, 188.0 / 1080.0],
+                    "bbox_norm": [156.0 / 640.0, 115.0 / 480.0, 212.0 / 640.0, 188.0 / 480.0],
                     "gazex": [382.0],
                     "gazey": [329.0],
-                    "gazex_norm": [382.0 / 1920.0],
-                    "gazey_norm": [329.0 / 1080.0],
+                    "gazex_norm": [382.0 / 640.0],
+                    "gazey_norm": [329.0 / 480.0],
                     "inout": 1,
                     "head_id": 0,
+                    "gooreal_index": 0,
+                    "gooreal_coord_width": 640.0,
+                    "gooreal_coord_height": 480.0,
                 }
             ],
             "num_heads": 1,
@@ -160,6 +170,30 @@ def summarize(values):
     return float(np.mean(values)) if values else None
 
 
+def gooreal_auc(heatmap, gt_gazex, gt_gazey):
+    from sklearn.metrics import roc_auc_score
+
+    if isinstance(gt_gazex, (list, tuple, np.ndarray)):
+        gt_gazex = gt_gazex[0]
+    if isinstance(gt_gazey, (list, tuple, np.ndarray)):
+        gt_gazey = gt_gazey[0]
+
+    if hasattr(heatmap, "detach"):
+        heatmap = heatmap.detach().cpu().numpy()
+    heatmap = np.asarray(heatmap, dtype=np.float32)
+    resized = np.asarray(
+        Image.fromarray(heatmap).resize((5, 5), Image.Resampling.BILINEAR),
+        dtype=np.float32,
+    )
+    target = np.zeros((5, 5), dtype=np.int32)
+    x = int(float(gt_gazex) * 5)
+    y = int(float(gt_gazey) * 5)
+    x = max(0, min(4, x))
+    y = max(0, min(4, y))
+    target[y, x] = 1
+    return roc_auc_score(target.reshape(-1), resized.reshape(-1))
+
+
 def write_results(output_path, payload):
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     with open(output_path, "w") as file:
@@ -174,7 +208,7 @@ def write_csv(csv_path, payload):
         row = {"method": method}
         row.update(metrics)
         rows.append(row)
-    fieldnames = ["method", "auc", "avg_l2", "min_l2"]
+    fieldnames = ["method", "auc", "l2", "avg_l2", "min_l2"]
     with open(csv_path, "w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -222,7 +256,7 @@ def evaluate(args):
 
     from gazelle.model import gazelle_dinov3_vitb16 as gazelle_spot
     from gazelle.model_v0 import gazelle_dinov3_vitb16 as gazelle_baseline
-    from gazelle.utils import gazefollow_auc, gazefollow_l2
+    from gazelle.utils import gazefollow_l2
 
     if not args.json_path:
         raise SystemExit("--json_path is required for evaluation")
@@ -252,8 +286,8 @@ def evaluate(args):
     )
 
     metrics = {
-        "Baseline (DINOv3 last-layer)": {"auc": [], "avg_l2": [], "min_l2": []},
-        "GazeSpot": {"auc": [], "avg_l2": [], "min_l2": []},
+        "Baseline (DINOv3 last-layer)": {"auc": [], "l2": [], "avg_l2": [], "min_l2": []},
+        "GazeSpot": {"auc": [], "l2": [], "avg_l2": [], "min_l2": []},
     }
 
     try:
@@ -266,15 +300,17 @@ def evaluate(args):
 
                 for i in range(images_base.shape[0]):
                     for j in range(len(bboxes[i])):
-                        auc_b = gazefollow_auc(out_base["heatmap"][i][j], gazex[i][j], gazey[i][j], heights[i], widths[i])
+                        auc_b = gooreal_auc(out_base["heatmap"][i][j], gazex[i][j], gazey[i][j])
                         avg_l2_b, min_l2_b = gazefollow_l2(out_base["heatmap"][i][j], gazex[i][j], gazey[i][j])
                         metrics["Baseline (DINOv3 last-layer)"]["auc"].append(auc_b)
+                        metrics["Baseline (DINOv3 last-layer)"]["l2"].append(avg_l2_b)
                         metrics["Baseline (DINOv3 last-layer)"]["avg_l2"].append(avg_l2_b)
                         metrics["Baseline (DINOv3 last-layer)"]["min_l2"].append(min_l2_b)
 
-                        auc_s = gazefollow_auc(out_spot["heatmap"][i][j], gazex[i][j], gazey[i][j], heights[i], widths[i])
+                        auc_s = gooreal_auc(out_spot["heatmap"][i][j], gazex[i][j], gazey[i][j])
                         avg_l2_s, min_l2_s = gazefollow_l2(out_spot["heatmap"][i][j], gazex[i][j], gazey[i][j])
                         metrics["GazeSpot"]["auc"].append(auc_s)
+                        metrics["GazeSpot"]["l2"].append(avg_l2_s)
                         metrics["GazeSpot"]["avg_l2"].append(avg_l2_s)
                         metrics["GazeSpot"]["min_l2"].append(min_l2_s)
     finally:
@@ -290,7 +326,7 @@ def evaluate(args):
         "data_path": args.data_path,
         "num_images": len(records),
         "num_heads": sum(len(item["heads"]) for item in records),
-        "metrics": ["auc", "avg_l2", "min_l2"],
+        "metrics": ["auc", "l2", "avg_l2", "min_l2"],
         "results": results,
     }
 
