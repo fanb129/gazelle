@@ -155,6 +155,119 @@ def test_runner_smoke_writes_manifest_and_csv_without_training(tmp_path):
     assert "dataset_split,variant,spatial_prior,fusion,seed,status" in csv_text
 
 
+def test_reliability_plan_expands_variants_across_seeds(tmp_path):
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--print_plan_only",
+            "--group",
+            "reliability",
+            "--dataset",
+            "vat",
+            "--data_path",
+            "/data/vat",
+            "--crowd_json",
+            "/data/vat/test_preprocessed_subsets/test_crowd_ge4.json",
+            "--variants",
+            "baseline_full",
+            "gazespot_full",
+            "--seeds",
+            "3106",
+            "3107",
+            "3108",
+            "--output_dir",
+            str(tmp_path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    plan = json.loads((tmp_path / "run_plan.json").read_text())
+    names = [run["name"] for run in plan["runs"]]
+
+    assert plan["section"] == "6.statistical_reliability"
+    assert plan["expected_seeds"] == [3106, 3107, 3108]
+    assert names == [
+        "reliability_baseline_full_seed3106",
+        "reliability_gazespot_full_seed3106",
+        "reliability_baseline_full_seed3107",
+        "reliability_gazespot_full_seed3107",
+        "reliability_baseline_full_seed3108",
+        "reliability_gazespot_full_seed3108",
+    ]
+    assert plan["runs"][0]["metadata"]["spatial_prior"] == "none"
+    assert plan["runs"][0]["metadata"]["fusion"] == "raw_concat"
+    assert plan["runs"][1]["metadata"]["spatial_prior"] == "ggsf"
+    assert plan["runs"][1]["metadata"]["fusion"] == "sasa"
+
+
+def test_reliability_aggregate_reports_mean_std_for_complete_seeds():
+    from scripts.run_rebuttal_ablation import aggregate_reliability_rows
+
+    rows = []
+    for seed, auc, l2, ap in [(3106, 0.6, 0.3, 0.7), (3107, 0.8, 0.5, 0.9), (3108, 1.0, 0.7, 1.0)]:
+        rows.append(
+            {
+                "dataset_split": "VAT Crowd >=4",
+                "variant": "baseline_full",
+                "seed": seed,
+                "checkpoint_path": f"run-{seed}.pt",
+                "sample_count": 8,
+                "auc": auc,
+                "l2": l2,
+                "inout_ap": ap,
+                "status": "evaluated",
+            }
+        )
+
+    aggregate = aggregate_reliability_rows(rows, variants=["baseline_full"], expected_seeds=[3106, 3107, 3108])
+    summary = aggregate["rows"][0]
+
+    assert aggregate["section"] == "6.statistical_reliability"
+    assert summary["variant"] == "baseline_full"
+    assert summary["status"] == "complete"
+    assert summary["seeds"] == [3106, 3107, 3108]
+    assert summary["missing_seeds"] == []
+    assert summary["auc_mean"] == pytest.approx(0.8)
+    assert summary["auc_std"] == pytest.approx(0.2)
+    assert summary["l2_mean"] == pytest.approx(0.5)
+    assert summary["l2_std"] == pytest.approx(0.2)
+    assert summary["inout_ap_mean"] == pytest.approx(0.8666666667)
+    assert summary["inout_ap_std"] == pytest.approx(0.1527525232)
+
+
+def test_reliability_aggregate_marks_missing_seed_incomplete():
+    from scripts.run_rebuttal_ablation import aggregate_reliability_rows
+
+    rows = [
+        {
+            "dataset_split": "VAT Crowd >=4",
+            "variant": "gazespot_full",
+            "seed": 3106,
+            "checkpoint_path": "run-3106.pt",
+            "sample_count": 8,
+            "auc": 0.9,
+            "l2": 0.2,
+            "inout_ap": 0.95,
+            "status": "evaluated",
+        }
+    ]
+
+    aggregate = aggregate_reliability_rows(rows, variants=["gazespot_full"], expected_seeds=[3106, 3107, 3108])
+    summary = aggregate["rows"][0]
+
+    assert summary["status"] == "incomplete"
+    assert summary["seeds"] == [3106]
+    assert summary["missing_seeds"] == [3107, 3108]
+    assert summary["auc_mean"] == "TBD"
+    assert summary["l2_std"] == "TBD"
+    assert summary["notes"] == "missing seeds: 3107, 3108"
+
+
 def test_runner_fails_with_available_crowd_json_alternatives(tmp_path):
     script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
     subset_dir = tmp_path / "test_preprocessed_subsets"

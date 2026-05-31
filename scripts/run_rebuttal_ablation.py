@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+from statistics import mean, stdev
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -122,16 +123,23 @@ def build_run_plan(args):
     return {
         "print_plan_only": bool(args.print_plan_only),
         "runner_smoke_only": bool(args.runner_smoke_only),
-        "section": "4.training_and_evaluation_runner" if not args.print_plan_only else "1.variant_configuration_and_metadata",
+        "section": _plan_section(args.group, args.print_plan_only),
         "group": args.group,
         "dataset": args.dataset,
         "data_path": args.data_path,
         "crowd_json": crowd_json,
+        "expected_seeds": seeds,
         "max_epochs": args.max_epochs,
         "batch_size": args.batch_size,
         "runs": runs,
         "note": "Runner smoke writes manifests and placeholder metrics without training." if args.runner_smoke_only else "Run commands are ready for server training/evaluation.",
     }
+
+
+def _plan_section(group, print_plan_only):
+    if group == "reliability":
+        return "6.statistical_reliability"
+    return "1.variant_configuration_and_metadata" if print_plan_only else "4.training_and_evaluation_runner"
 
 
 def resolve_crowd_json(data_path, requested):
@@ -249,20 +257,36 @@ def main(argv=None):
     metrics_path.write_text(json.dumps(metrics, indent=2, sort_keys=True) + os.linesep)
     csv_path = output_dir / "metrics.csv"
     write_metrics_csv(csv_path, metrics["rows"])
+    aggregate_path = output_dir / "aggregate_metrics.json"
+    aggregate_csv_path = output_dir / "aggregate_metrics.csv"
+    if args.group == "reliability":
+        aggregate = aggregate_reliability_rows(metrics["rows"], args.variants, plan["expected_seeds"])
+        aggregate_path.write_text(json.dumps(aggregate, indent=2, sort_keys=True) + os.linesep)
+        write_reliability_aggregate_csv(aggregate_csv_path, aggregate["rows"])
     if args.runner_smoke_only:
         print(f"Wrote runner smoke manifest: {manifest_path}")
         print(f"Wrote runner smoke metrics: {metrics_path}")
         print(f"Wrote runner smoke CSV: {csv_path}")
+        if args.group == "reliability":
+            print(f"Wrote reliability smoke aggregate: {aggregate_path}")
+            print(f"Wrote reliability smoke aggregate CSV: {aggregate_csv_path}")
         return
 
     validate_init_checkpoint(args)
     executed_metrics = execute_plan(plan)
     metrics_path.write_text(json.dumps(executed_metrics, indent=2, sort_keys=True) + os.linesep)
     write_metrics_csv(csv_path, executed_metrics["rows"])
+    if args.group == "reliability":
+        aggregate = aggregate_reliability_rows(executed_metrics["rows"], args.variants, plan["expected_seeds"])
+        aggregate_path.write_text(json.dumps(aggregate, indent=2, sort_keys=True) + os.linesep)
+        write_reliability_aggregate_csv(aggregate_csv_path, aggregate["rows"])
     manifest_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + os.linesep)
     print(f"Wrote execution manifest: {manifest_path}")
     print(f"Wrote execution metrics: {metrics_path}")
     print(f"Wrote execution CSV: {csv_path}")
+    if args.group == "reliability":
+        print(f"Wrote reliability aggregate: {aggregate_path}")
+        print(f"Wrote reliability aggregate CSV: {aggregate_csv_path}")
 
 
 def build_placeholder_metrics(plan, status):
@@ -285,7 +309,7 @@ def build_placeholder_metrics(plan, status):
                 "status": status,
             }
         )
-    return {"section": "4.training_and_evaluation_runner", "rows": rows}
+    return {"section": plan["section"], "rows": rows}
 
 
 def write_metrics_csv(path, rows):
@@ -308,6 +332,104 @@ def write_metrics_csv(path, rows):
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def aggregate_reliability_rows(rows, variants, expected_seeds):
+    aggregate_rows = []
+    expected_seeds = list(expected_seeds)
+    for variant in variants:
+        variant_rows = [
+            row
+            for row in rows
+            if row.get("variant") == variant and row.get("status") in {"evaluated", "smoke_only", "pending"}
+        ]
+        rows_by_seed = {}
+        for row in variant_rows:
+            try:
+                seed = int(row["seed"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            rows_by_seed.setdefault(seed, row)
+
+        present_seeds = sorted(seed for seed in expected_seeds if seed in rows_by_seed)
+        missing_seeds = [seed for seed in expected_seeds if seed not in rows_by_seed]
+        numeric_ready = not missing_seeds and all(
+            _is_number(rows_by_seed[seed].get(metric))
+            for seed in expected_seeds
+            for metric in ("auc", "l2", "inout_ap")
+        )
+
+        first_row = rows_by_seed[present_seeds[0]] if present_seeds else {}
+        aggregate = {
+            "dataset_split": first_row.get("dataset_split", "TBD"),
+            "variant": variant,
+            "status": "complete" if numeric_ready else "incomplete",
+            "seeds": present_seeds,
+            "expected_seeds": expected_seeds,
+            "missing_seeds": missing_seeds,
+            "sample_counts": {str(seed): rows_by_seed[seed].get("sample_count", "TBD") for seed in present_seeds},
+            "checkpoint_paths": {str(seed): rows_by_seed[seed].get("checkpoint_path", "TBD") for seed in present_seeds},
+            "auc_mean": "TBD",
+            "auc_std": "TBD",
+            "l2_mean": "TBD",
+            "l2_std": "TBD",
+            "inout_ap_mean": "TBD",
+            "inout_ap_std": "TBD",
+            "notes": "",
+        }
+        if numeric_ready:
+            for metric in ("auc", "l2", "inout_ap"):
+                values = [float(rows_by_seed[seed][metric]) for seed in expected_seeds]
+                aggregate[f"{metric}_mean"] = float(mean(values))
+                aggregate[f"{metric}_std"] = float(stdev(values)) if len(values) > 1 else 0.0
+            aggregate["notes"] = "complete seed sweep"
+        elif missing_seeds:
+            aggregate["notes"] = "missing seeds: " + ", ".join(str(seed) for seed in missing_seeds)
+        else:
+            aggregate["notes"] = "non-numeric or pending metric values"
+        aggregate_rows.append(aggregate)
+
+    return {
+        "section": "6.statistical_reliability",
+        "expected_seeds": expected_seeds,
+        "rows": aggregate_rows,
+    }
+
+
+def _is_number(value):
+    if isinstance(value, bool):
+        return False
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def write_reliability_aggregate_csv(path, rows):
+    fieldnames = [
+        "dataset_split",
+        "variant",
+        "status",
+        "seeds",
+        "expected_seeds",
+        "missing_seeds",
+        "auc_mean",
+        "auc_std",
+        "l2_mean",
+        "l2_std",
+        "inout_ap_mean",
+        "inout_ap_std",
+        "notes",
+    ]
+    with open(path, "w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            csv_row = dict(row)
+            for key in ("seeds", "expected_seeds", "missing_seeds"):
+                csv_row[key] = " ".join(str(value) for value in row.get(key, []))
+            writer.writerow({key: csv_row.get(key, "") for key in fieldnames})
 
 
 def validate_init_checkpoint(args):
