@@ -6,6 +6,13 @@ import math
 import torch.nn.functional as F
 
 import gazelle.utils as utils
+from gazelle.ablation_variants import (
+    CoordConvSpatialAdapter,
+    FixedGaussianSpatialPrior,
+    FixedSectorSpatialPrior,
+    IdentitySpatialPrior,
+    SPATIAL_PRIOR_CHOICES,
+)
 from gazelle.backbone import DinoV3Backbone
 
 # ==========================================
@@ -143,7 +150,7 @@ class ScaleAwareSemanticAggregator(nn.Module):
 # ==========================================
 class GazeLLE(nn.Module):
     def __init__(self, backbone, inout=False, dim=256, num_layers=3, in_size=(512, 512), out_size=(64, 64),
-                 use_sasa=False, use_ggsf=False, use_aux=False, dropout=0.1):
+                 use_sasa=False, use_ggsf=False, use_aux=False, dropout=0.1, spatial_prior=None):
         super().__init__()
         self.backbone = backbone
         self.dim = dim # 最终 Transformer 的维度 (256)
@@ -152,19 +159,33 @@ class GazeLLE(nn.Module):
         # 注意：这里调用的是 backbone.get_dimension()，但我们在 backbone.py 里改成了返回单层维度
         self.raw_dim = backbone.get_dimension() 
         
+        self.spatial_prior = spatial_prior if spatial_prior is not None else ("ggsf" if use_ggsf else "none")
+        if self.spatial_prior not in SPATIAL_PRIOR_CHOICES:
+            raise ValueError(f"invalid spatial_prior: {self.spatial_prior}")
+
         self.use_sasa = use_sasa
-        self.use_ggsf = use_ggsf
+        self.use_ggsf = self.spatial_prior == "ggsf"
         self.use_aux = use_aux
+        self.featmap_h, self.featmap_w = backbone.get_out_size(in_size)
         
-        print(f"Init GazeLLE: SASA={use_sasa}, GGSF={use_ggsf}, AUX={use_aux}, RawDim={self.raw_dim}")
+        print(f"Init GazeLLE: SASA={use_sasa}, SpatialPrior={self.spatial_prior}, AUX={use_aux}, RawDim={self.raw_dim}")
 
         self.linear = nn.Conv2d(self.raw_dim * 4, self.dim, 1)
         if self.use_sasa:
             self.sasa = ScaleAwareSemanticAggregator(self.raw_dim, num_scales=4, dropout=dropout)
 
-        # GGSF 模块
-        if self.use_ggsf:
-            self.ggsf = GeometryGuidedSpatialFocus(backbone.get_out_size(in_size)[0], backbone.get_out_size(in_size)[1], dropout=dropout)
+        self.spatial_prior_module = None
+        self.coordconv_adapter = None
+        if self.spatial_prior == "ggsf":
+            self.ggsf = GeometryGuidedSpatialFocus(self.featmap_h, self.featmap_w, dropout=dropout)
+        elif self.spatial_prior == "none":
+            self.spatial_prior_module = IdentitySpatialPrior(self.featmap_h, self.featmap_w)
+        elif self.spatial_prior == "fixed_gaussian":
+            self.spatial_prior_module = FixedGaussianSpatialPrior(self.featmap_h, self.featmap_w)
+        elif self.spatial_prior == "fixed_sector":
+            self.spatial_prior_module = FixedSectorSpatialPrior(self.featmap_h, self.featmap_w)
+        elif self.spatial_prior == "coordconv":
+            self.coordconv_adapter = CoordConvSpatialAdapter(self.raw_dim, self.featmap_h, self.featmap_w)
 
         # Aux Head
         if self.use_aux:
@@ -182,7 +203,6 @@ class GazeLLE(nn.Module):
 
         # 通用组件 (保持不变)
         self.num_layers = num_layers
-        self.featmap_h, self.featmap_w = backbone.get_out_size(in_size)
         self.in_size = in_size
         self.out_size = out_size
         self.inout = inout
@@ -206,16 +226,19 @@ class GazeLLE(nn.Module):
             feat = utils.repeat_tensors(feat, num_ppl_per_img)
             person_features_list.append(feat)
 
-        # === [C2] GGSF 几何门控 (作用于原始特征) ===
-        if self.use_ggsf:
+        geo_mask = None
+        if self.spatial_prior == "ggsf":
             geo_mask = self.ggsf(input["bboxes"], person_features_list[0].device)
             # 乘性门控
             gated_features = []
             for feat in person_features_list:
                 gated_features.append(feat * geo_mask)
             processing_features = gated_features
+        elif self.spatial_prior == "coordconv":
+            processing_features = self.coordconv_adapter(person_features_list, input["bboxes"])
         else:
-            processing_features = person_features_list
+            geo_mask = self.spatial_prior_module(input["bboxes"], person_features_list[0].device)
+            processing_features = [feat * geo_mask for feat in person_features_list]
 
         # === [C1] SASA vs Baseline ===
         if self.use_sasa:
@@ -273,7 +296,8 @@ class GazeLLE(nn.Module):
             "aux_heatmap": aux_preds, 
             "inout": inout_preds if self.inout else None,
             "layer_weights": layer_weights,
-            "geo_mask": geo_mask if self.use_ggsf else None 
+            "geo_mask": geo_mask,
+            "spatial_prior": self.spatial_prior,
         }
 
     def get_input_head_maps(self, bboxes):
@@ -345,7 +369,7 @@ def positionalencoding2d(d_model, height, width):
 # ==========================================
 # 工厂函数修改 (方便调用)
 # ==========================================
-def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False):
+def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False, spatial_prior=None):
     # 工厂模式：根据名字选择对应的构造函数
     factory = {
         "gazelle_dinov3_vitb16": gazelle_dinov3_vitb16,
@@ -356,28 +380,28 @@ def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False)
     assert model_name in factory.keys(), "invalid model name"
     
     # 将开关参数传递给具体的构造函数
-    return factory[model_name](sasa=use_sasa, ggsf=use_ggsf, aux=use_aux)
+    return factory[model_name](sasa=use_sasa, ggsf=use_ggsf, aux=use_aux, spatial_prior=spatial_prior)
 
-def gazelle_dinov3_vitb16(sasa, ggsf, aux):
+def gazelle_dinov3_vitb16(sasa, ggsf, aux, spatial_prior=None):
     backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior)
     return model, transform
 
-def gazelle_dinov3_vitl16(sasa, ggsf, aux):
+def gazelle_dinov3_vitl16(sasa, ggsf, aux, spatial_prior=None):
     backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior)
     return model, transform
 
-def gazelle_dinov3_vitb16_inout(sasa, ggsf, aux):
+def gazelle_dinov3_vitb16_inout(sasa, ggsf, aux, spatial_prior=None):
     backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, inout=True)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, inout=True)
     return model, transform
 
-def gazelle_dinov3_vitl16_inout(sasa, ggsf, aux):
+def gazelle_dinov3_vitl16_inout(sasa, ggsf, aux, spatial_prior=None):
     backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, inout=True)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, inout=True)
     return model, transform

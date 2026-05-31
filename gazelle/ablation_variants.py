@@ -3,6 +3,13 @@ import json
 from dataclasses import asdict, dataclass
 from typing import Iterable, Optional
 
+try:
+    import torch
+    import torch.nn as nn
+except ModuleNotFoundError:
+    torch = None
+    nn = None
+
 
 SPATIAL_PRIOR_CHOICES = ("none", "fixed_gaussian", "coordconv", "ggsf", "fixed_sector")
 FUSION_CHOICES = ("raw_concat", "equal_weight", "sasa", "fpn", "selected_layers")
@@ -174,3 +181,176 @@ def build_run_metadata(
         data_path=data_path,
         crowd_json=crowd_json,
     )
+
+
+def _require_torch():
+    if torch is None or nn is None:
+        raise ModuleNotFoundError("torch is required for spatial-prior modules")
+
+
+def _module_base():
+    return nn.Module if nn is not None else object
+
+
+class IdentitySpatialPrior(_module_base()):
+    def __init__(self, feat_h: int, feat_w: int):
+        _require_torch()
+        super().__init__()
+        self.feat_h = feat_h
+        self.feat_w = feat_w
+
+    def forward(self, bboxes, device):
+        count = _count_bboxes(bboxes)
+        return torch.ones((count, 1, self.feat_h, self.feat_w), device=device)
+
+    def metadata(self) -> dict:
+        return {
+            "spatial_prior": "none",
+            "description": "all-ones gate; no spatial filtering",
+            "has_learned_mask_parameters": False,
+        }
+
+
+class FixedGaussianSpatialPrior(_module_base()):
+    sigma_rule = "max(head_width, head_height) * 0.75, clamped to one feature cell"
+
+    def __init__(self, feat_h: int, feat_w: int, sigma_scale: float = 0.75):
+        _require_torch()
+        super().__init__()
+        self.feat_h = feat_h
+        self.feat_w = feat_w
+        self.sigma_scale = sigma_scale
+
+    def forward(self, bboxes, device):
+        x_grid, y_grid = _normalized_grid(self.feat_h, self.feat_w, device)
+        masks = []
+        min_sigma = max(1.0 / self.feat_w, 1.0 / self.feat_h)
+        for bbox in _flatten_bboxes(bboxes):
+            cx, cy, w, h = _bbox_to_center_size(bbox, device)
+            sigma = torch.clamp(torch.maximum(w, h) * self.sigma_scale, min=min_sigma)
+            dist_sq = (x_grid - cx).pow(2) + (y_grid - cy).pow(2)
+            masks.append(torch.exp(-dist_sq / (2.0 * sigma.pow(2))).unsqueeze(0))
+        return torch.stack(masks, dim=0)
+
+    def metadata(self) -> dict:
+        return {
+            "spatial_prior": "fixed_gaussian",
+            "sigma_rule": self.sigma_rule,
+            "sigma_scale": self.sigma_scale,
+            "has_learned_mask_parameters": False,
+        }
+
+
+class FixedSectorSpatialPrior(_module_base()):
+    def __init__(self, feat_h: int, feat_w: int, half_angle_degrees: float = 45.0):
+        _require_torch()
+        super().__init__()
+        self.feat_h = feat_h
+        self.feat_w = feat_w
+        self.half_angle_degrees = half_angle_degrees
+
+    def forward(self, bboxes, device):
+        x_grid, y_grid = _normalized_grid(self.feat_h, self.feat_w, device)
+        cos_threshold = torch.cos(torch.tensor(self.half_angle_degrees * torch.pi / 180.0, device=device))
+        masks = []
+        for bbox in _flatten_bboxes(bboxes):
+            cx, cy, w, h = _bbox_to_center_size(bbox, device)
+            dx = x_grid - cx
+            dy = y_grid - cy
+            radius = torch.sqrt(dx.pow(2) + dy.pow(2)).clamp_min(1e-6)
+            downward_cosine = dy / radius
+            angular_weight = ((downward_cosine - cos_threshold) / (1.0 - cos_threshold)).clamp(0.0, 1.0)
+            sigma = torch.clamp(torch.maximum(w, h) * 2.0, min=max(1.0 / self.feat_w, 1.0 / self.feat_h))
+            radial_weight = torch.exp(-radius.pow(2) / (2.0 * sigma.pow(2)))
+            masks.append((angular_weight * radial_weight).unsqueeze(0))
+        return torch.stack(masks, dim=0)
+
+    def metadata(self) -> dict:
+        return {
+            "spatial_prior": "fixed_sector",
+            "optional": True,
+            "half_angle_degrees": self.half_angle_degrees,
+            "limitation": "deterministic downward sector without head-pose or gaze-direction cues",
+            "has_learned_mask_parameters": False,
+        }
+
+
+class CoordConvSpatialAdapter(_module_base()):
+    def __init__(self, in_channels: int, feat_h: int, feat_w: int):
+        _require_torch()
+        super().__init__()
+        self.feat_h = feat_h
+        self.feat_w = feat_w
+        self.coord_projection = nn.Conv2d(4, in_channels, kernel_size=1)
+        nn.init.zeros_(self.coord_projection.weight)
+        nn.init.zeros_(self.coord_projection.bias)
+
+    def forward(self, features_list, bboxes):
+        if not features_list:
+            return features_list
+        device = features_list[0].device
+        coord_features = _coord_features(bboxes, self.feat_h, self.feat_w, device)
+        coord_projection = self.coord_projection(coord_features)
+        return [features + coord_projection.to(dtype=features.dtype) for features in features_list]
+
+    def metadata(self) -> dict:
+        return {
+            "spatial_prior": "coordconv",
+            "conditioning_mode": "additive_coordconv",
+            "uses_multiplicative_mask": False,
+            "has_learned_mask_parameters": False,
+        }
+
+
+def _count_bboxes(bboxes) -> int:
+    return sum(len(bbox_list) for bbox_list in bboxes)
+
+
+def _flatten_bboxes(bboxes):
+    for bbox_list in bboxes:
+        for bbox in bbox_list:
+            yield bbox
+
+
+def _normalized_grid(feat_h: int, feat_w: int, device):
+    y_grid, x_grid = torch.meshgrid(
+        (torch.arange(feat_h, device=device).float() + 0.5) / feat_h,
+        (torch.arange(feat_w, device=device).float() + 0.5) / feat_w,
+        indexing="ij",
+    )
+    return x_grid, y_grid
+
+
+def _bbox_to_center_size(bbox, device):
+    if bbox is None:
+        values = torch.tensor([0.0, 0.0, 1.0, 1.0], device=device)
+    elif torch.is_tensor(bbox):
+        values = bbox.detach().to(device=device, dtype=torch.float32).flatten()
+    else:
+        values = torch.tensor(list(bbox), device=device, dtype=torch.float32)
+    values = values.clamp(0.0, 1.0)
+    xmin, ymin, xmax, ymax = values[:4]
+    w = (xmax - xmin).clamp_min(1e-6)
+    h = (ymax - ymin).clamp_min(1e-6)
+    cx = ((xmin + xmax) / 2.0).clamp(0.0, 1.0)
+    cy = ((ymin + ymax) / 2.0).clamp(0.0, 1.0)
+    return cx, cy, w, h
+
+
+def _coord_features(bboxes, feat_h: int, feat_w: int, device):
+    x_grid, y_grid = _normalized_grid(feat_h, feat_w, device)
+    coords = []
+    for bbox in _flatten_bboxes(bboxes):
+        cx, cy, w, h = _bbox_to_center_size(bbox, device)
+        coords.append(
+            torch.stack(
+                [
+                    x_grid - cx,
+                    y_grid - cy,
+                    torch.full_like(x_grid, w),
+                    torch.full_like(y_grid, h),
+                ],
+                dim=0,
+            )
+        )
+    return torch.stack(coords, dim=0)

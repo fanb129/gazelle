@@ -3,6 +3,8 @@ import pathlib
 import subprocess
 import sys
 
+import pytest
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from gazelle.ablation_variants import (
@@ -103,3 +105,62 @@ def test_plan_only_runner_writes_resolved_run_plan(tmp_path):
     assert plan["print_plan_only"] is True
     assert [run["metadata"]["spatial_prior"] for run in plan["runs"]] == ["none", "ggsf"]
     assert all(run["metadata"]["fusion"] == "sasa" for run in plan["runs"])
+
+
+def test_identity_spatial_prior_returns_all_ones_gate():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import IdentitySpatialPrior
+
+    prior = IdentitySpatialPrior(feat_h=4, feat_w=5)
+
+    mask = prior([[[0.2, 0.2, 0.4, 0.4]], [[0.1, 0.1, 0.3, 0.3]]], torch.device("cpu"))
+
+    assert mask.shape == (2, 1, 4, 5)
+    assert torch.all(mask == 1)
+    assert prior.metadata()["spatial_prior"] == "none"
+
+
+def test_fixed_gaussian_prior_is_deterministic_and_documents_sigma_rule():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import FixedGaussianSpatialPrior
+
+    prior = FixedGaussianSpatialPrior(feat_h=6, feat_w=6)
+    bboxes = [[[0.25, 0.25, 0.5, 0.5]], [[0.6, 0.2, 0.8, 0.5]]]
+
+    mask_a = prior(bboxes, torch.device("cpu"))
+    mask_b = prior(bboxes, torch.device("cpu"))
+
+    assert mask_a.shape == (2, 1, 6, 6)
+    assert torch.equal(mask_a, mask_b)
+    assert prior.metadata()["sigma_rule"] == "max(head_width, head_height) * 0.75, clamped to one feature cell"
+
+
+def test_fixed_sector_prior_is_deterministic_and_marked_optional():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import FixedSectorSpatialPrior
+
+    prior = FixedSectorSpatialPrior(feat_h=5, feat_w=5)
+    bboxes = [[[0.3, 0.2, 0.5, 0.4]]]
+
+    mask_a = prior(bboxes, torch.device("cpu"))
+    mask_b = prior(bboxes, torch.device("cpu"))
+
+    assert mask_a.shape == (1, 1, 5, 5)
+    assert torch.equal(mask_a, mask_b)
+    assert prior.metadata()["optional"] is True
+    assert "without head-pose" in prior.metadata()["limitation"]
+
+
+def test_coordconv_adapter_preserves_feature_shapes_without_mask_output():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import CoordConvSpatialAdapter
+
+    adapter = CoordConvSpatialAdapter(in_channels=3, feat_h=4, feat_w=4)
+    features = [torch.zeros(2, 3, 4, 4), torch.ones(2, 3, 4, 4)]
+    bboxes = [[[0.2, 0.2, 0.4, 0.4]], [[0.5, 0.5, 0.7, 0.8]]]
+
+    conditioned = adapter(features, bboxes)
+
+    assert [feat.shape for feat in conditioned] == [feat.shape for feat in features]
+    assert adapter.metadata()["conditioning_mode"] == "additive_coordconv"
+    assert adapter.metadata()["uses_multiplicative_mask"] is False
