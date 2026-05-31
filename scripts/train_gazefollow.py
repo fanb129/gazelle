@@ -17,6 +17,7 @@ from visualize import plot_gazelle_results
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16")
 parser.add_argument('--init_ckpt', type=str, default=None)
+parser.add_argument('--skip_init_ckpt', action='store_true', help='Skip Gazelle head initialization checkpoint for runner smoke tests')
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/gazefollow_extended')
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
 parser.add_argument('--run_dir', type=str, default=None)
@@ -29,6 +30,8 @@ parser.add_argument('--max_epochs', type=int, default=15)
 parser.add_argument('--batch_size', type=int, default=60)
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--n_workers', type=int, default=8)
+parser.add_argument('--max_train_batches', type=int, default=None, help='Optional short-run limit for runner smoke tests')
+parser.add_argument('--max_eval_batches', type=int, default=None, help='Optional short-run eval limit for runner smoke tests')
 
 # 【新增】 Contribution 开关参数
 parser.add_argument('--use_sasa', action='store_true', help='Enable Scale-Aware Semantic Aggregation (Contribution 1)')
@@ -78,7 +81,9 @@ def main():
         fusion=variant_config.fusion,
         selected_layers=variant_config.selected_layers_label,
     )
-    if args.init_ckpt:
+    if args.skip_init_ckpt:
+        print("Skipping Gazelle initialization checkpoint; using randomly initialized non-backbone heads.")
+    elif args.init_ckpt:
         print("Initializing from {}".format(args.init_ckpt))
         model.load_gazelle_state_dict(torch.load(args.init_ckpt, weights_only=True))
     model.cuda()
@@ -95,7 +100,7 @@ def main():
         dataset="gazefollow",
         backbone=args.model,
         config=variant_config,
-        checkpoint_path=args.init_ckpt,
+        checkpoint_path=None if args.skip_init_ckpt else args.init_ckpt,
         sample_count=len(train_dataset),
         group=None,
         variant=args.exp_name,
@@ -120,6 +125,8 @@ def main():
         # TRAIN EPOCH
         model.train()
         for cur_iter, batch in enumerate(train_dl):
+            if args.max_train_batches is not None and cur_iter >= args.max_train_batches:
+                break
             imgs, bboxes, gazex, gazey, inout, heights, widths, heatmaps = batch
 
             optimizer.zero_grad()
@@ -182,6 +189,8 @@ def main():
         min_l2s = []
         aucs = []
         for cur_iter, batch in enumerate(eval_dl):
+            if args.max_eval_batches is not None and cur_iter >= args.max_eval_batches:
+                break
             imgs, bboxes, gazex, gazey, inout, heights, widths = batch
 
             with torch.no_grad():

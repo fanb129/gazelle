@@ -18,6 +18,7 @@ from visualize import plot_gazelle_results
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, default="gazelle_dinov3_vitb16_inout")
 parser.add_argument('--init_ckpt', type=str, default='./checkpoints/gazelle_dinov3_vitb16.pt', help='checkpoint for initialization (trained on GazeFollow)')
+parser.add_argument('--skip_init_ckpt', action='store_true', help='Skip Gazelle head initialization checkpoint for runner smoke tests')
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/videoattentiontarget')
 parser.add_argument('--frame_sample_every', type=int, default=6)
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
@@ -33,6 +34,8 @@ parser.add_argument('--inout_loss_lambda', type=float, default=1.0)
 parser.add_argument('--lr_non_inout', type=float, default=1e-5)
 parser.add_argument('--lr_inout', type=float, default=1e-3)
 parser.add_argument('--n_workers', type=int, default=8)
+parser.add_argument('--max_train_batches', type=int, default=None, help='Optional short-run limit for runner smoke tests')
+parser.add_argument('--max_eval_batches', type=int, default=None, help='Optional short-run eval limit for runner smoke tests')
 # 【新增】 Contribution 开关参数
 parser.add_argument('--use_sasa', action='store_true', help='Enable Scale-Aware Semantic Aggregation (Contribution 1)')
 parser.add_argument('--use_ggsf', action='store_true', help='Enable Geometry-Guided Spatial Focus (Contribution 2)')
@@ -80,8 +83,11 @@ def main():
         fusion=variant_config.fusion,
         selected_layers=variant_config.selected_layers_label,
     )
-    print("Initializing from {}".format(args.init_ckpt))
-    model.load_gazelle_state_dict(torch.load(args.init_ckpt, weights_only=True)) # initializing from ckpt without inout head
+    if args.skip_init_ckpt:
+        print("Skipping Gazelle initialization checkpoint; using randomly initialized non-backbone heads.")
+    else:
+        print("Initializing from {}".format(args.init_ckpt))
+        model.load_gazelle_state_dict(torch.load(args.init_ckpt, weights_only=True)) # initializing from ckpt without inout head
     model.cuda()
 
     for param in model.backbone.parameters(): # freeze backbone
@@ -97,7 +103,7 @@ def main():
         dataset="vat",
         backbone=args.model,
         config=variant_config,
-        checkpoint_path=args.init_ckpt,
+        checkpoint_path=None if args.skip_init_ckpt else args.init_ckpt,
         sample_count=len(train_dataset),
         group=None,
         variant=args.exp_name,
@@ -124,6 +130,8 @@ def main():
         # TRAIN EPOCH
         model.train()
         for cur_iter, batch in enumerate(train_dl):
+            if args.max_train_batches is not None and cur_iter >= args.max_train_batches:
+                break
             imgs, bboxes, gazex, gazey, inout, heights, widths, heatmaps = batch
 
             optimizer.zero_grad()
@@ -184,6 +192,8 @@ def main():
         all_inout_preds = []
         all_inout_gts = []
         for cur_iter, batch in enumerate(eval_dl):
+            if args.max_eval_batches is not None and cur_iter >= args.max_eval_batches:
+                break
             imgs, bboxes, gazex, gazey, inout, heights, widths = batch
 
             with torch.no_grad():

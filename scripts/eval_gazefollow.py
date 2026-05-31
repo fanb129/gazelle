@@ -239,7 +239,9 @@ def main_variant(args):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=collate, num_workers=4)
 
     aucs, avg_l2s, min_l2s = [], [], []
-    for _, (_, images, bboxes, gazex, gazey, height, width, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+    for batch_idx, (_, images, bboxes, gazex, gazey, height, width, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+        if args.max_eval_batches is not None and batch_idx >= args.max_eval_batches:
+            break
         out = model({"images": images.to(device), "bboxes": bboxes})
         for i in range(images.shape[0]):
             for j in range(len(bboxes[i])):
@@ -281,6 +283,7 @@ if __name__ == "__main__":
     parser.add_argument("--selected_layers", type=str, default=None)
     parser.add_argument("--metrics_output", type=str, default=None)
     parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--max_eval_batches", type=int, default=None)
     parser.add_argument("--vis_dir", type=str, default="/newhome/fb/dataset/gazefollow_extended/exp_vis/test_far", help="If set, will save visualizations here")
     args = parser.parse_args()
     if args.variant_ckpt:

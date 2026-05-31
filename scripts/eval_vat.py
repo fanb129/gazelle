@@ -272,7 +272,9 @@ def main_variant(args):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=collate, num_workers=4)
 
     aucs, l2s, inout_preds, inout_gts = [], [], [], []
-    for _, (_, images, bboxes, gazex, gazey, inout, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+    for batch_idx, (_, images, bboxes, gazex, gazey, inout, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+        if args.max_eval_batches is not None and batch_idx >= args.max_eval_batches:
+            break
         out = model({"images": images.to(device), "bboxes": bboxes})
         for i in range(images.shape[0]):
             num_people = len(bboxes[i])
@@ -318,6 +320,7 @@ if __name__ == "__main__":
     parser.add_argument("--selected_layers", type=str, default=None)
     parser.add_argument("--metrics_output", type=str, default=None)
     parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--max_eval_batches", type=int, default=None)
     parser.add_argument("--vis_dir", type=str, default=None, help="If set, will save visualizations here")
     parser.add_argument("--num_vis", type=int, default=0, help="Max number of images to visualize")
     args = parser.parse_args()

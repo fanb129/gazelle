@@ -39,8 +39,11 @@ def build_parser():
     parser.add_argument("--selected_layer_sets", nargs="+", default=None)
     parser.add_argument("--max_epochs", type=int, default=8)
     parser.add_argument("--batch_size", type=int, default=60)
+    parser.add_argument("--max_train_batches", type=int, default=None)
+    parser.add_argument("--max_eval_batches", type=int, default=None)
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--wandb_mode", default="offline")
+    parser.add_argument("--allow_random_init", action="store_true", help="Skip init checkpoint loading for short runner smoke tests.")
     parser.add_argument("--output_dir", required=True)
     return parser
 
@@ -184,8 +187,14 @@ def build_commands(args, run_name, config, crowd_json):
         "--wandb_mode",
         args.wandb_mode,
     ]
+    if args.max_train_batches is not None:
+        train.extend(["--max_train_batches", str(args.max_train_batches)])
+    if args.max_eval_batches is not None:
+        train.extend(["--max_eval_batches", str(args.max_eval_batches)])
     if args.init_ckpt:
         train.extend(["--init_ckpt", args.init_ckpt])
+    if args.allow_random_init:
+        train.append("--skip_init_ckpt")
 
     eval_cmd = [
         args.python,
@@ -207,6 +216,8 @@ def build_commands(args, run_name, config, crowd_json):
         "--batch_size",
         str(args.batch_size),
     ]
+    if args.max_eval_batches is not None:
+        eval_cmd.extend(["--max_eval_batches", str(args.max_eval_batches)])
     if args.dataset == "vat":
         eval_cmd.extend(["--json_path", crowd_json])
     return {"train": train, "eval": eval_cmd, "checkpoint_path": ckpt_path}
@@ -244,6 +255,7 @@ def main(argv=None):
         print(f"Wrote runner smoke CSV: {csv_path}")
         return
 
+    validate_init_checkpoint(args)
     executed_metrics = execute_plan(plan)
     metrics_path.write_text(json.dumps(executed_metrics, indent=2, sort_keys=True) + os.linesep)
     write_metrics_csv(csv_path, executed_metrics["rows"])
@@ -296,6 +308,31 @@ def write_metrics_csv(path, rows):
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def validate_init_checkpoint(args):
+    if args.allow_random_init:
+        return
+    if args.init_ckpt and os.path.exists(args.init_ckpt):
+        return
+
+    requested = args.init_ckpt or "./checkpoints/gazelle_dinov3_vitb16.pt"
+    candidates = []
+    for root in ("checkpoints", "experiments", "rebuttal/results"):
+        root_path = Path(root)
+        if root_path.exists():
+            candidates.extend(str(path) for path in root_path.rglob("*.pt"))
+            candidates.extend(str(path) for path in root_path.rglob("*.pth"))
+    candidates = sorted(set(candidates))
+    suggestion = (
+        " Available checkpoint alternatives: " + ", ".join(candidates[:20])
+        if candidates
+        else " No .pt/.pth checkpoint alternatives were found under checkpoints/, experiments/, or rebuttal/results/."
+    )
+    raise FileNotFoundError(
+        f"init checkpoint not found before training starts: {requested}."
+        f"{suggestion} For a pipeline-only smoke test, rerun with --allow_random_init."
+    )
 
 
 def execute_plan(plan):
