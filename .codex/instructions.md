@@ -1,0 +1,1 @@
+When interacting with the user, respond in Chinese unless the user explicitly requests another language. Keep code, identifiers, CLI flags, and error messages in English.

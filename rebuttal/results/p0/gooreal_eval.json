@@ -1,0 +1,27 @@
+{
+  "dataset": "GOO-real",
+  "json_path": "/newhome/fb/dataset/gooreal_data/gooreal_test_preprocessed.json",
+  "data_path": "/newhome/fb/dataset/gooreal_data",
+  "num_images": 2146,
+  "num_heads": 2146,
+  "metrics": [
+    "auc",
+    "l2",
+    "avg_l2",
+    "min_l2"
+  ],
+  "results": {
+    "Baseline (DINOv3 last-layer)": {
+      "auc": 0.8583410997204101,
+      "l2": 0.1997362379289585,
+      "avg_l2": 0.1997362379289585,
+      "min_l2": 0.1997362379289585
+    },
+    "GazeSpot": {
+      "auc": 0.8832517862690277,
+      "l2": 0.17614198479542567,
+      "avg_l2": 0.17614198479542567,
+      "min_l2": 0.17614198479542567
+    }
+  }
+}

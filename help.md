@@ -89,3 +89,42 @@ CUDA_VISIBLE_DEVICES=2 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid n
 CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_gazefollow_dinov2.py --model="gazelle_dinov2_vitb14" --exp_name="train_gazefollow_dinov2_sasa_ggsf" --use_sasa --use_ggsf > train_gazefollow_dinov2_sasa_ggsf.log 2>&1 &
 
 CUDA_VISIBLE_DEVICES=3 setsid nohup python -u scripts/train_vat_dinov2.py --model="gazelle_dinov2_vitb14_inout" --exp_name="train_vat_dinov2_sasa_ggsf" --init_ckpt="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_dinov2_sasa_ggsf/2026-03-26_00-58-25/epoch_14.pt" --use_sasa --use_ggsf > train_vat_dinov2_sasa_ggsf.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup /home/fb/anaconda3/envs/py310/bin/python scripts/eval_gooreal.py \
+  --data_path /newhome/fb/dataset/gooreal_data \
+  --json_path /newhome/fb/dataset/gooreal_data/gooreal_test_preprocessed.json \
+  --base_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt \
+  --spot_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --batch_size 64 \
+  --output rebuttal/results/p0/gooreal_eval1.json \
+  --csv_output rebuttal/results/p0/gooreal_eval1.csv > gooreal_eval1.log 2>&1 &
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup /home/fb/anaconda3/envs/py310/bin/python scripts/eval_gooreal.py \
+  --data_path /newhome/fb/dataset/gooreal_data \
+  --json_path /newhome/fb/dataset/gooreal_data/gooreal_test_sparse_preprocessed.json \
+  --base_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt \
+  --spot_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --batch_size 64 \
+  --output rebuttal/results/p0/gooreal_eval_test_sparse.json \
+  --csv_output rebuttal/results/p0/gooreal_eval_test_sparse.csv > gooreal_eval_test_sparse.log 2>&1 &
+
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup /home/fb/anaconda3/envs/py310/bin/python scripts/eval_bbox_noise.py \
+  --dataset vat \
+  --data_path /newhome/fb/dataset/videoattentiontarget \
+  --json_path /newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_eq4.json \
+  --base_ckpt /home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt \
+  --spot_ckpt /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
+  --jitter_levels 0 5 10 20 \
+  --seed 3106 \
+  --batch_size 16 \
+  --output rebuttal/results/p0/vat_crowd_bbox_noise_test_crowd_eq4.json \
+  --csv_output rebuttal/results/p0/vat_crowd_bbox_noise_test_crowd_eq4.csv > vat_crowd_bbox_noise_test_crowd_eq4.log 2>&1 &
+
+
+CUDA_VISIBLE_DEVICES=3 setsid nohup /home/fb/anaconda3/envs/py310/bin/python scripts/compute_flops.py \
+  --device cuda \
+  --warmup_iters 50 \
+  --measure_iters 200 \
+  --batch_size 1 \
+  --output rebuttal/results/p0/complexity_latency.json > complexity_latency.log 2>&1 &

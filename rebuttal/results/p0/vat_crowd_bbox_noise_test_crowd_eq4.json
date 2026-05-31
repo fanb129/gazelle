@@ -1,0 +1,149 @@
+{
+  "metadata": {
+    "dataset": "vat",
+    "data_path": "/newhome/fb/dataset/videoattentiontarget",
+    "json_path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_eq4.json",
+    "checkpoints": {
+      "baseline": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt",
+      "gazespot": "/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt"
+    },
+    "seed": 3106,
+    "jitter_levels": [
+      0,
+      5,
+      10,
+      20
+    ],
+    "perturbation": {
+      "box_format": "normalized [xmin, ymin, xmax, ymax]",
+      "translation": "uniform offsets in [-jitter, jitter] times box width/height",
+      "scale": "uniform independent width/height scale factors in [1-jitter, 1+jitter]",
+      "clip": "[0, 1]",
+      "min_size": 0.0001,
+      "zero_jitter": "original boxes are used without perturbation"
+    },
+    "sample_count": 1628,
+    "head_count": 6512,
+    "metric_names": [
+      "auc",
+      "l2",
+      "inout_ap"
+    ]
+  },
+  "results": {
+    "0%": {
+      "Baseline (DINOv3 last-layer)": {
+        "auc": 0.9344549921653075,
+        "l2": 0.11054570017408102,
+        "inout_ap": 0.9283145396647925
+      },
+      "GazeSpot": {
+        "auc": 0.9414776633605161,
+        "l2": 0.10132219910363327,
+        "inout_ap": 0.9160521084839951
+      }
+    },
+    "5%": {
+      "Baseline (DINOv3 last-layer)": {
+        "auc": 0.9345211139702349,
+        "l2": 0.11058958919656779,
+        "inout_ap": 0.928472911461774
+      },
+      "GazeSpot": {
+        "auc": 0.9415217745523223,
+        "l2": 0.10126677101117262,
+        "inout_ap": 0.9163660254324132
+      }
+    },
+    "10%": {
+      "Baseline (DINOv3 last-layer)": {
+        "auc": 0.934471186369774,
+        "l2": 0.11062491543148902,
+        "inout_ap": 0.9282054840910245
+      },
+      "GazeSpot": {
+        "auc": 0.9415544166543285,
+        "l2": 0.10081653038451083,
+        "inout_ap": 0.9163182037295103
+      }
+    },
+    "20%": {
+      "Baseline (DINOv3 last-layer)": {
+        "auc": 0.9336746315762546,
+        "l2": 0.11121226266715872,
+        "inout_ap": 0.9269919672617977
+      },
+      "GazeSpot": {
+        "auc": 0.9411472641389012,
+        "l2": 0.10189253952304893,
+        "inout_ap": 0.9156961390301568
+      }
+    }
+  },
+  "rows": [
+    {
+      "dataset": "vat",
+      "jitter": "0%",
+      "method": "Baseline (DINOv3 last-layer)",
+      "auc": 0.9344549921653075,
+      "l2": 0.11054570017408102,
+      "inout_ap": 0.9283145396647925
+    },
+    {
+      "dataset": "vat",
+      "jitter": "0%",
+      "method": "GazeSpot",
+      "auc": 0.9414776633605161,
+      "l2": 0.10132219910363327,
+      "inout_ap": 0.9160521084839951
+    },
+    {
+      "dataset": "vat",
+      "jitter": "5%",
+      "method": "Baseline (DINOv3 last-layer)",
+      "auc": 0.9345211139702349,
+      "l2": 0.11058958919656779,
+      "inout_ap": 0.928472911461774
+    },
+    {
+      "dataset": "vat",
+      "jitter": "5%",
+      "method": "GazeSpot",
+      "auc": 0.9415217745523223,
+      "l2": 0.10126677101117262,
+      "inout_ap": 0.9163660254324132
+    },
+    {
+      "dataset": "vat",
+      "jitter": "10%",
+      "method": "Baseline (DINOv3 last-layer)",
+      "auc": 0.934471186369774,
+      "l2": 0.11062491543148902,
+      "inout_ap": 0.9282054840910245
+    },
+    {
+      "dataset": "vat",
+      "jitter": "10%",
+      "method": "GazeSpot",
+      "auc": 0.9415544166543285,
+      "l2": 0.10081653038451083,
+      "inout_ap": 0.9163182037295103
+    },
+    {
+      "dataset": "vat",
+      "jitter": "20%",
+      "method": "Baseline (DINOv3 last-layer)",
+      "auc": 0.9336746315762546,
+      "l2": 0.11121226266715872,
+      "inout_ap": 0.9269919672617977
+    },
+    {
+      "dataset": "vat",
+      "jitter": "20%",
+      "method": "GazeSpot",
+      "auc": 0.9411472641389012,
+      "l2": 0.10189253952304893,
+      "inout_ap": 0.9156961390301568
+    }
+  ]
+}
