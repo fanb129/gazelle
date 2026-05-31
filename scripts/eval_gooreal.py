@@ -181,10 +181,15 @@ def gooreal_auc(heatmap, gt_gazex, gt_gazey):
     if hasattr(heatmap, "detach"):
         heatmap = heatmap.detach().cpu().numpy()
     heatmap = np.asarray(heatmap, dtype=np.float32)
-    resized = np.asarray(
-        Image.fromarray(heatmap).resize((5, 5), Image.Resampling.BILINEAR),
-        dtype=np.float32,
-    )
+    try:
+        import cv2
+
+        resized = cv2.resize(heatmap, (5, 5))
+    except ImportError:
+        resized = np.asarray(
+            Image.fromarray(heatmap).resize((5, 5), Image.Resampling.BILINEAR),
+            dtype=np.float32,
+        )
     target = np.zeros((5, 5), dtype=np.int32)
     x = int(float(gt_gazex) * 5)
     y = int(float(gt_gazey) * 5)
