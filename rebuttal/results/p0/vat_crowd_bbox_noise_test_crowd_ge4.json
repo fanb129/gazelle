@@ -2,7 +2,7 @@
   "metadata": {
     "dataset": "vat",
     "data_path": "/newhome/fb/dataset/videoattentiontarget",
-    "json_path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_4.json",
+    "json_path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_ge4.json",
     "checkpoints": {
       "baseline": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt",
       "gazespot": "/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt"

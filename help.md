@@ -70,7 +70,7 @@ CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid n
 --vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_crowd" > eval_vat_test_crowd_lt3.log 2>&1 &
 
 CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat_dinov2.py \
---json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_4.json" \
+--json_path "/newhome/fb/dataset/videoattentiontarget/test_preprocessed_subsets/test_crowd_ge4.json" \
 --vis_dir "/newhome/fb/dataset/videoattentiontarget/exp_vis/test_crowd" > eval_vat_dinov2_test_crowd_4.log 2>&1 &
 
 CUDA_VISIBLE_DEVICES=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True setsid nohup python -u scripts/eval_vat.py \
