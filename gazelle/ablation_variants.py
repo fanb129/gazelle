@@ -192,6 +192,102 @@ def _module_base():
     return nn.Module if nn is not None else object
 
 
+class RawConcatFusion(_module_base()):
+    def __init__(self, in_channels: int, out_channels: int, num_layers: int):
+        _require_torch()
+        super().__init__()
+        self.num_layers = num_layers
+        self.projection = nn.Conv2d(in_channels * num_layers, out_channels, kernel_size=1)
+
+    def forward(self, features_list):
+        _validate_feature_count(features_list, self.num_layers)
+        output = self.projection(torch.cat(features_list[: self.num_layers], dim=1))
+        return output, self.metadata()
+
+    def metadata(self) -> dict:
+        return {
+            "fusion": "raw_concat",
+            "uses_sasa_routing": False,
+            "num_layers": self.num_layers,
+        }
+
+
+class EqualWeightFusion(_module_base()):
+    def __init__(self, in_channels: int, out_channels: int, num_layers: int):
+        _require_torch()
+        super().__init__()
+        self.num_layers = num_layers
+        self.projection = nn.Conv2d(in_channels * num_layers, out_channels, kernel_size=1)
+
+    def forward(self, features_list):
+        _validate_feature_count(features_list, self.num_layers)
+        weight = 1.0 / self.num_layers
+        weighted = [feature * weight for feature in features_list[: self.num_layers]]
+        output = self.projection(torch.cat(weighted, dim=1))
+        metadata = self.metadata()
+        metadata["layer_weights"] = [weight for _ in range(self.num_layers)]
+        return output, metadata
+
+    def metadata(self) -> dict:
+        return {
+            "fusion": "equal_weight",
+            "uses_sasa_routing": False,
+            "num_layers": self.num_layers,
+        }
+
+
+class FPNFusion(_module_base()):
+    def __init__(self, in_channels: int, out_channels: int, num_layers: int):
+        _require_torch()
+        super().__init__()
+        self.num_layers = num_layers
+        self.lateral = nn.ModuleList([nn.Conv2d(in_channels, out_channels, kernel_size=1) for _ in range(num_layers)])
+        self.output_projection = nn.Conv2d(out_channels, out_channels, kernel_size=1)
+
+    def forward(self, features_list):
+        _validate_feature_count(features_list, self.num_layers)
+        lateral_features = [layer(feature) for layer, feature in zip(self.lateral, features_list[: self.num_layers])]
+        fused = lateral_features[-1]
+        for feature in reversed(lateral_features[:-1]):
+            if fused.shape[-2:] != feature.shape[-2:]:
+                fused = torch.nn.functional.interpolate(fused, size=feature.shape[-2:], mode="nearest")
+            fused = feature + fused
+        output = self.output_projection(fused / self.num_layers)
+        return output, self.metadata()
+
+    def metadata(self) -> dict:
+        return {
+            "fusion": "fpn",
+            "uses_sasa_routing": False,
+            "aggregation": "lateral_1x1_top_down_add",
+            "num_layers": self.num_layers,
+        }
+
+
+class SelectedLayersFusion(_module_base()):
+    def __init__(self, in_channels: int, out_channels: int, selected_layers: Optional[str] = None):
+        _require_torch()
+        super().__init__()
+        self.selected_layers = parse_selected_layers(selected_layers)
+        self.selected_layers_label = selected_layers_label(selected_layers, self.selected_layers)
+        self.selected_positions = selected_layer_positions(self.selected_layers)
+        self.projection = nn.Conv2d(in_channels * len(self.selected_positions), out_channels, kernel_size=1)
+
+    def forward(self, features_list):
+        selected = select_feature_layers(features_list, self.selected_layers)
+        output = self.projection(torch.cat(selected, dim=1))
+        return output, self.metadata()
+
+    def metadata(self) -> dict:
+        return {
+            "fusion": "selected_layers",
+            "uses_sasa_routing": False,
+            "selected_layers": list(self.selected_layers),
+            "selected_layers_label": self.selected_layers_label,
+            "selected_layer_positions": list(self.selected_positions),
+        }
+
+
 class IdentitySpatialPrior(_module_base()):
     def __init__(self, feat_h: int, feat_w: int):
         _require_torch()
@@ -304,6 +400,35 @@ class CoordConvSpatialAdapter(_module_base()):
 
 def _count_bboxes(bboxes) -> int:
     return sum(len(bbox_list) for bbox_list in bboxes)
+
+
+def selected_layer_positions(selected_layers: Iterable[int]) -> list[int]:
+    positions = []
+    default_layers = list(DEFAULT_SELECTED_LAYERS)
+    for layer in selected_layers:
+        if layer in default_layers:
+            positions.append(default_layers.index(layer))
+        elif 0 <= layer < len(default_layers):
+            positions.append(layer)
+        else:
+            raise argparse.ArgumentTypeError(
+                f"selected layer {layer} is not available; expected one of {default_layers} or positions 0-{len(default_layers) - 1}"
+            )
+    return positions
+
+
+def select_feature_layers(features_list, selected_layers: Iterable[int]):
+    positions = selected_layer_positions(selected_layers)
+    if not features_list:
+        raise ValueError("features_list cannot be empty")
+    if max(positions) >= len(features_list):
+        raise ValueError(f"selected layer positions {positions} exceed available feature count {len(features_list)}")
+    return [features_list[position] for position in positions]
+
+
+def _validate_feature_count(features_list, expected_count: int):
+    if len(features_list) < expected_count:
+        raise ValueError(f"expected at least {expected_count} feature layers, got {len(features_list)}")
 
 
 def _flatten_bboxes(bboxes):

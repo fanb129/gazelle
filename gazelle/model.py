@@ -8,10 +8,15 @@ import torch.nn.functional as F
 import gazelle.utils as utils
 from gazelle.ablation_variants import (
     CoordConvSpatialAdapter,
+    EqualWeightFusion,
+    FPNFusion,
     FixedGaussianSpatialPrior,
     FixedSectorSpatialPrior,
+    FUSION_CHOICES,
     IdentitySpatialPrior,
+    RawConcatFusion,
     SPATIAL_PRIOR_CHOICES,
+    SelectedLayersFusion,
 )
 from gazelle.backbone import DinoV3Backbone
 
@@ -150,7 +155,8 @@ class ScaleAwareSemanticAggregator(nn.Module):
 # ==========================================
 class GazeLLE(nn.Module):
     def __init__(self, backbone, inout=False, dim=256, num_layers=3, in_size=(512, 512), out_size=(64, 64),
-                 use_sasa=False, use_ggsf=False, use_aux=False, dropout=0.1, spatial_prior=None):
+                 use_sasa=False, use_ggsf=False, use_aux=False, dropout=0.1, spatial_prior=None,
+                 fusion=None, selected_layers=None):
         super().__init__()
         self.backbone = backbone
         self.dim = dim # 最终 Transformer 的维度 (256)
@@ -163,16 +169,24 @@ class GazeLLE(nn.Module):
         if self.spatial_prior not in SPATIAL_PRIOR_CHOICES:
             raise ValueError(f"invalid spatial_prior: {self.spatial_prior}")
 
-        self.use_sasa = use_sasa
+        self.fusion = fusion if fusion is not None else ("sasa" if use_sasa else "raw_concat")
+        if self.fusion not in FUSION_CHOICES:
+            raise ValueError(f"invalid fusion: {self.fusion}")
+
+        self.use_sasa = self.fusion == "sasa"
         self.use_ggsf = self.spatial_prior == "ggsf"
         self.use_aux = use_aux
         self.featmap_h, self.featmap_w = backbone.get_out_size(in_size)
         
-        print(f"Init GazeLLE: SASA={use_sasa}, SpatialPrior={self.spatial_prior}, AUX={use_aux}, RawDim={self.raw_dim}")
+        print(f"Init GazeLLE: Fusion={self.fusion}, SpatialPrior={self.spatial_prior}, AUX={use_aux}, RawDim={self.raw_dim}")
 
         self.linear = nn.Conv2d(self.raw_dim * 4, self.dim, 1)
         if self.use_sasa:
             self.sasa = ScaleAwareSemanticAggregator(self.raw_dim, num_scales=4, dropout=dropout)
+        elif self.fusion == "fpn":
+            self.fusion_module = FPNFusion(self.raw_dim, self.dim, num_layers=4)
+        elif self.fusion == "selected_layers":
+            self.fusion_module = SelectedLayersFusion(self.raw_dim, self.dim, selected_layers=selected_layers)
 
         self.spatial_prior_module = None
         self.coordconv_adapter = None
@@ -245,10 +259,25 @@ class GazeLLE(nn.Module):
             weighted_features_list, layer_weights = self.sasa(processing_features)
             cat_feat = torch.cat(weighted_features_list, dim=1)
             x = self.linear(cat_feat)
+            fusion_metadata = {"fusion": "sasa", "uses_sasa_routing": True}
+        elif self.fusion == "raw_concat":
+            cat_feat = torch.cat(processing_features, dim=1)
+            x = self.linear(cat_feat)
+            layer_weights = None
+            fusion_metadata = {"fusion": "raw_concat", "uses_sasa_routing": False, "num_layers": len(processing_features)}
+        elif self.fusion == "equal_weight":
+            layer_weight = 1.0 / len(processing_features)
+            weighted_features = [feature * layer_weight for feature in processing_features]
+            cat_feat = torch.cat(weighted_features, dim=1)
+            x = self.linear(cat_feat)
+            layer_weights = None
+            fusion_metadata = {
+                "fusion": "equal_weight",
+                "uses_sasa_routing": False,
+                "layer_weights": [layer_weight for _ in processing_features],
+            }
         else:
-            # Baseline 逻辑: 4x1024 -> Concat -> 4096 -> Conv -> 256
-            cat_feat = torch.cat(processing_features, dim=1) 
-            x = self.linear(cat_feat) # 此时 self.linear 是 4096->256
+            x, fusion_metadata = self.fusion_module(processing_features)
             layer_weights = None
 
         # === [C3] Aux Head (建议放在 linear 降维之后做) ===
@@ -298,6 +327,8 @@ class GazeLLE(nn.Module):
             "layer_weights": layer_weights,
             "geo_mask": geo_mask,
             "spatial_prior": self.spatial_prior,
+            "fusion": self.fusion,
+            "fusion_metadata": fusion_metadata,
         }
 
     def get_input_head_maps(self, bboxes):
@@ -369,7 +400,8 @@ def positionalencoding2d(d_model, height, width):
 # ==========================================
 # 工厂函数修改 (方便调用)
 # ==========================================
-def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False, spatial_prior=None):
+def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False, spatial_prior=None,
+                      fusion=None, selected_layers=None):
     # 工厂模式：根据名字选择对应的构造函数
     factory = {
         "gazelle_dinov3_vitb16": gazelle_dinov3_vitb16,
@@ -380,28 +412,35 @@ def get_gazelle_model(model_name, use_sasa=False, use_ggsf=False, use_aux=False,
     assert model_name in factory.keys(), "invalid model name"
     
     # 将开关参数传递给具体的构造函数
-    return factory[model_name](sasa=use_sasa, ggsf=use_ggsf, aux=use_aux, spatial_prior=spatial_prior)
+    return factory[model_name](
+        sasa=use_sasa,
+        ggsf=use_ggsf,
+        aux=use_aux,
+        spatial_prior=spatial_prior,
+        fusion=fusion,
+        selected_layers=selected_layers,
+    )
 
-def gazelle_dinov3_vitb16(sasa, ggsf, aux, spatial_prior=None):
+def gazelle_dinov3_vitb16(sasa, ggsf, aux, spatial_prior=None, fusion=None, selected_layers=None):
     backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, fusion=fusion, selected_layers=selected_layers)
     return model, transform
 
-def gazelle_dinov3_vitl16(sasa, ggsf, aux, spatial_prior=None):
+def gazelle_dinov3_vitl16(sasa, ggsf, aux, spatial_prior=None, fusion=None, selected_layers=None):
     backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, fusion=fusion, selected_layers=selected_layers)
     return model, transform
 
-def gazelle_dinov3_vitb16_inout(sasa, ggsf, aux, spatial_prior=None):
+def gazelle_dinov3_vitb16_inout(sasa, ggsf, aux, spatial_prior=None, fusion=None, selected_layers=None):
     backbone = DinoV3Backbone('dinov3_vitb16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, inout=True)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, fusion=fusion, selected_layers=selected_layers, inout=True)
     return model, transform
 
-def gazelle_dinov3_vitl16_inout(sasa, ggsf, aux, spatial_prior=None):
+def gazelle_dinov3_vitl16_inout(sasa, ggsf, aux, spatial_prior=None, fusion=None, selected_layers=None):
     backbone = DinoV3Backbone('dinov3_vitl16')
     transform = backbone.get_transform((512, 512))
-    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, inout=True)
+    model = GazeLLE(backbone, use_sasa=sasa, use_ggsf=ggsf, use_aux=aux, spatial_prior=spatial_prior, fusion=fusion, selected_layers=selected_layers, inout=True)
     return model, transform

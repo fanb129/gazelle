@@ -164,3 +164,60 @@ def test_coordconv_adapter_preserves_feature_shapes_without_mask_output():
     assert [feat.shape for feat in conditioned] == [feat.shape for feat in features]
     assert adapter.metadata()["conditioning_mode"] == "additive_coordconv"
     assert adapter.metadata()["uses_multiplicative_mask"] is False
+
+
+def test_raw_concat_fusion_projects_concatenated_layers():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import RawConcatFusion
+
+    features = [torch.ones(2, 3, 4, 4) * i for i in range(4)]
+    fusion = RawConcatFusion(in_channels=3, out_channels=5, num_layers=4)
+
+    output, metadata = fusion(features)
+
+    assert output.shape == (2, 5, 4, 4)
+    assert metadata["fusion"] == "raw_concat"
+    assert metadata["uses_sasa_routing"] is False
+
+
+def test_equal_weight_fusion_uses_uniform_layer_weights_before_projection():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import EqualWeightFusion
+
+    features = [torch.ones(2, 3, 4, 4) * i for i in range(4)]
+    fusion = EqualWeightFusion(in_channels=3, out_channels=5, num_layers=4)
+
+    output, metadata = fusion(features)
+
+    assert output.shape == (2, 5, 4, 4)
+    assert metadata["fusion"] == "equal_weight"
+    assert metadata["layer_weights"] == [0.25, 0.25, 0.25, 0.25]
+
+
+def test_fpn_fusion_returns_projected_feature_without_sasa_routing():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import FPNFusion
+
+    features = [torch.ones(2, 3, 4, 4) * i for i in range(4)]
+    fusion = FPNFusion(in_channels=3, out_channels=5, num_layers=4)
+
+    output, metadata = fusion(features)
+
+    assert output.shape == (2, 5, 4, 4)
+    assert metadata["fusion"] == "fpn"
+    assert metadata["uses_sasa_routing"] is False
+
+
+def test_selected_layers_fusion_uses_named_presets():
+    torch = pytest.importorskip("torch")
+    from gazelle.ablation_variants import SelectedLayersFusion
+
+    features = [torch.ones(2, 3, 4, 4) * i for i in range(4)]
+    fusion = SelectedLayersFusion(in_channels=3, out_channels=5, selected_layers="shallow_mid")
+
+    output, metadata = fusion(features)
+
+    assert output.shape == (2, 5, 4, 4)
+    assert metadata["fusion"] == "selected_layers"
+    assert metadata["selected_layers"] == [2, 5]
+    assert metadata["selected_layer_positions"] == [0, 1]
