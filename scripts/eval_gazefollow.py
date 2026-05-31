@@ -14,6 +14,7 @@ import scipy.ndimage as ndimage
 # 导入两个版本的模型
 from gazelle.model_v0 import gazelle_dinov3_vitb16 as gazelle_baseline
 from gazelle.model import gazelle_dinov3_vitb16 as gazelle_spot
+from gazelle.model import get_gazelle_model
 from gazelle.utils import gazefollow_auc, gazefollow_l2
 
 # ==========================================
@@ -219,16 +220,73 @@ def main(args):
     print(f"-> Min L2 Diff: {(np.mean(min_l2s_s) - np.mean(min_l2s_b)):.4f}")
     print("="*50)
 
+
+@torch.no_grad()
+def main_variant(args):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Running metrics-only GazeFollow variant eval on {device}")
+
+    model, transform = get_gazelle_model(
+        args.model,
+        spatial_prior=args.spatial_prior,
+        fusion=args.fusion,
+        selected_layers=args.selected_layers,
+    )
+    model.load_gazelle_state_dict(torch.load(args.variant_ckpt, map_location="cpu", weights_only=True))
+    model.to(device).eval()
+
+    dataset = GazeFollow(args.data_path, transform, transform)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=collate, num_workers=4)
+
+    aucs, avg_l2s, min_l2s = [], [], []
+    for _, (_, images, bboxes, gazex, gazey, height, width, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+        out = model({"images": images.to(device), "bboxes": bboxes})
+        for i in range(images.shape[0]):
+            for j in range(len(bboxes[i])):
+                aucs.append(gazefollow_auc(out["heatmap"][i][j], gazex[i][j], gazey[i][j], height[i], width[i]))
+                avg_l2, min_l2 = gazefollow_l2(out["heatmap"][i][j], gazex[i][j], gazey[i][j])
+                avg_l2s.append(avg_l2)
+                min_l2s.append(min_l2)
+
+    result = {
+        "dataset": "gazefollow",
+        "model": args.model,
+        "checkpoint_path": args.variant_ckpt,
+        "spatial_prior": args.spatial_prior,
+        "fusion": args.fusion,
+        "selected_layers": args.selected_layers,
+        "sample_count": len(min_l2s),
+        "auc": float(np.mean(aucs)) if aucs else None,
+        "avg_l2": float(np.mean(avg_l2s)) if avg_l2s else None,
+        "min_l2": float(np.mean(min_l2s)) if min_l2s else None,
+    }
+    if args.metrics_output:
+        os.makedirs(os.path.dirname(args.metrics_output), exist_ok=True)
+        with open(args.metrics_output, "w") as handle:
+            json.dump(result, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        print(f"Saved metrics to {args.metrics_output}")
+    print(json.dumps(result, indent=2, sort_keys=True))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # 默认值已经帮你填好了，可以直接跑
     parser.add_argument("--data_path", type=str, help="Path to JSON dataset", default="/newhome/fb/dataset/gazefollow_extended")
     parser.add_argument("--base_ckpt", type=str, help="Path to Baseline checkpoint", default="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitb_v0/2026-03-19_16-40-15/epoch_14.pt")
     parser.add_argument("--spot_ckpt", type=str, help="Path to GazeSpot checkpoint", default="/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt")
+    parser.add_argument("--variant_ckpt", type=str, default=None, help="Metrics-only checkpoint path for one P1 variant")
+    parser.add_argument("--model", type=str, default="gazelle_dinov3_vitb16")
+    parser.add_argument("--spatial_prior", type=str, default="ggsf")
+    parser.add_argument("--fusion", type=str, default="sasa")
+    parser.add_argument("--selected_layers", type=str, default=None)
+    parser.add_argument("--metrics_output", type=str, default=None)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--vis_dir", type=str, default="/newhome/fb/dataset/gazefollow_extended/exp_vis/test_far", help="If set, will save visualizations here")
     args = parser.parse_args()
-    main(args)
+    if args.variant_ckpt:
+        main_variant(args)
+    else:
+        main(args)
 
 '''
 ==================================================

@@ -107,6 +107,86 @@ def test_plan_only_runner_writes_resolved_run_plan(tmp_path):
     assert all(run["metadata"]["fusion"] == "sasa" for run in plan["runs"])
 
 
+def test_runner_smoke_writes_manifest_and_csv_without_training(tmp_path):
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--runner_smoke_only",
+            "--group",
+            "fusion",
+            "--dataset",
+            "vat",
+            "--data_path",
+            "/data/vat",
+            "--crowd_json",
+            "/data/vat/test_preprocessed_subsets/test_crowd_gt4.json",
+            "--init_ckpt",
+            "./checkpoints/gazelle_dinov3_vitb16.pt",
+            "--variants",
+            "raw_concat",
+            "sasa",
+            "--seed",
+            "3106",
+            "--max_epochs",
+            "1",
+            "--batch_size",
+            "2",
+            "--output_dir",
+            str(tmp_path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    metrics = json.loads((tmp_path / "metrics.json").read_text())
+    csv_text = (tmp_path / "metrics.csv").read_text()
+
+    assert manifest["runner_smoke_only"] is True
+    assert len(manifest["runs"]) == 2
+    assert manifest["runs"][0]["commands"]["train"][0] == sys.executable
+    assert "--fusion" in manifest["runs"][0]["commands"]["train"]
+    assert manifest["runs"][0]["metadata"]["dataset_split"] == "VAT Crowd >4"
+    assert all(row["status"] == "smoke_only" for row in metrics["rows"])
+    assert "dataset_split,variant,spatial_prior,fusion,seed,status" in csv_text
+
+
+def test_runner_fails_with_available_crowd_json_alternatives(tmp_path):
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
+    subset_dir = tmp_path / "test_preprocessed_subsets"
+    subset_dir.mkdir()
+    (subset_dir / "test_crowd_gt4.json").write_text("[]")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--print_plan_only",
+            "--group",
+            "spatial_prior",
+            "--dataset",
+            "vat",
+            "--data_path",
+            str(tmp_path),
+            "--crowd_json",
+            str(subset_dir / "test_crowd_ge4.json"),
+            "--variants",
+            "none",
+            "--output_dir",
+            str(tmp_path / "out"),
+        ],
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "test_crowd_gt4.json" in result.stderr
+
+
 def test_identity_spatial_prior_returns_all_ones_gate():
     torch = pytest.importorskip("torch")
     from gazelle.ablation_variants import IdentitySpatialPrior

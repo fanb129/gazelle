@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import json
 import numpy as np
 import os
 import random
@@ -9,6 +10,7 @@ import torch.nn as nn
 import wandb
 
 from gazelle.dataloader import GazeDataset, collate_fn
+from gazelle.ablation_variants import add_variant_args, build_run_metadata, resolve_variant_config
 from gazelle.model import get_gazelle_model
 from gazelle.utils import vat_auc, vat_l2
 from visualize import plot_gazelle_results
@@ -19,8 +21,10 @@ parser.add_argument('--init_ckpt', type=str, default='./checkpoints/gazelle_dino
 parser.add_argument('--data_path', type=str, default='/newhome/fb/dataset/videoattentiontarget')
 parser.add_argument('--frame_sample_every', type=int, default=6)
 parser.add_argument('--ckpt_save_dir', type=str, default='./experiments')
+parser.add_argument('--run_dir', type=str, default=None)
 parser.add_argument('--imgs_save_dir', type=str, default='./experiments_imgs')
 parser.add_argument('--wandb_project', type=str, default='gazelleV1')
+parser.add_argument('--wandb_mode', type=str, default='online')
 parser.add_argument('--exp_name', type=str, default='train_vat')
 parser.add_argument('--log_iter', type=int, default=10, help='how often to log loss during training')
 parser.add_argument('--max_epochs', type=int, default=8)
@@ -34,29 +38,47 @@ parser.add_argument('--use_sasa', action='store_true', help='Enable Scale-Aware 
 parser.add_argument('--use_ggsf', action='store_true', help='Enable Geometry-Guided Spatial Focus (Contribution 2)')
 parser.add_argument('--use_aux', action='store_true', help='Enable Auxiliary Loss (Contribution 3)')
 parser.add_argument('--aux_weight', type=float, default=0.3, help='Weight for the auxiliary loss')
+add_variant_args(parser)
 args = parser.parse_args()
 
 
 def main():
+    variant_config = resolve_variant_config(
+        spatial_prior=args.spatial_prior,
+        fusion=args.fusion,
+        selected_layers=args.selected_layers,
+        use_sasa=args.use_sasa,
+        use_ggsf=args.use_ggsf,
+        seed=args.seed,
+    )
     wandb.init(
         project=args.wandb_project,
         name=args.exp_name,
-        config=vars(args)
+        config={**vars(args), "variant_config": variant_config.to_dict()},
+        mode=args.wandb_mode
     )
-    exp_dir = os.path.join(args.ckpt_save_dir, args.exp_name, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    os.makedirs(exp_dir)
+    exp_dir = args.run_dir or os.path.join(args.ckpt_save_dir, args.exp_name, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    os.makedirs(exp_dir, exist_ok=True)
 
     imgs_dir = os.path.join(args.imgs_save_dir, args.exp_name, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    os.makedirs(imgs_dir)
+    os.makedirs(imgs_dir, exist_ok=True)
 
-    print(f"Experimental Config - SASA: {args.use_sasa}, GGSF: {args.use_ggsf}, AUX: {args.use_aux}")
+    print(
+        "Experimental Config - "
+        f"SASA: {variant_config.use_sasa}, GGSF: {variant_config.use_ggsf}, "
+        f"SpatialPrior: {variant_config.spatial_prior}, Fusion: {variant_config.fusion}, "
+        f"SelectedLayers: {variant_config.selected_layers_label}, Seed: {args.seed}, AUX: {args.use_aux}"
+    )
 
 
     model, transform = get_gazelle_model(
         args.model, 
-        use_sasa=args.use_sasa, 
-        use_ggsf=args.use_ggsf, 
-        use_aux=args.use_aux
+        use_sasa=variant_config.use_sasa,
+        use_ggsf=variant_config.use_ggsf,
+        use_aux=args.use_aux,
+        spatial_prior=variant_config.spatial_prior,
+        fusion=variant_config.fusion,
+        selected_layers=variant_config.selected_layers_label,
     )
     print("Initializing from {}".format(args.init_ckpt))
     model.load_gazelle_state_dict(torch.load(args.init_ckpt, weights_only=True)) # initializing from ckpt without inout head
@@ -71,6 +93,24 @@ def main():
     # Note this eval dataloader samples frames sparsely for efficiency - for final results, run eval_vat.py which uses sample rate 1
     eval_dataset = GazeDataset('videoattentiontarget', args.data_path, 'test', transform, in_frame_only=False, sample_rate=args.frame_sample_every)
     eval_dl = torch.utils.data.DataLoader(eval_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn, num_workers=args.n_workers)
+    metadata = build_run_metadata(
+        dataset="vat",
+        backbone=args.model,
+        config=variant_config,
+        checkpoint_path=args.init_ckpt,
+        sample_count=len(train_dataset),
+        group=None,
+        variant=args.exp_name,
+        data_path=args.data_path,
+        crowd_json=None,
+    ).to_dict()
+    metadata["run_dir"] = exp_dir
+    metadata["frame_sample_every"] = args.frame_sample_every
+    metadata_path = os.path.join(exp_dir, "run_metadata.json")
+    with open(metadata_path, "w") as handle:
+        json.dump(metadata, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    print(f"Saved run metadata to {metadata_path}")
 
     loss_fn = nn.BCELoss()
     inout_loss_fn = nn.BCELoss()
@@ -169,7 +209,9 @@ def main():
 
 
 if __name__ == '__main__':
-    random.seed(0)
-    np.random.seed(0)
-    torch.manual_seed(0)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
     main()

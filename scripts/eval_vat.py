@@ -15,6 +15,7 @@ import scipy.ndimage as ndimage
 # 导入两个版本的模型 (VAT 模型通常包含 inout_head)
 from gazelle.model_v0 import gazelle_dinov3_vitb16_inout as gazelle_baseline
 from gazelle.model import gazelle_dinov3_vitb16_inout as gazelle_spot
+from gazelle.model import get_gazelle_model
 from gazelle.utils import vat_auc, vat_l2
 
 # ==========================================
@@ -252,14 +253,75 @@ def main(args):
     print(f"-> L2 Diff: {(np.mean(l2s_s) - np.mean(l2s_b)):.4f}")
     print("="*50)
 
+
+@torch.no_grad()
+def main_variant(args):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Running metrics-only VAT variant eval on {device}")
+
+    model, transform = get_gazelle_model(
+        args.model,
+        spatial_prior=args.spatial_prior,
+        fusion=args.fusion,
+        selected_layers=args.selected_layers,
+    )
+    model.load_gazelle_state_dict(torch.load(args.variant_ckpt, map_location="cpu", weights_only=True))
+    model.to(device).eval()
+
+    dataset = VideoAttentionTarget(args.data_path, transform, transform)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=collate, num_workers=4)
+
+    aucs, l2s, inout_preds, inout_gts = [], [], [], []
+    for _, (_, images, bboxes, gazex, gazey, inout, _) in tqdm(enumerate(dataloader), desc="Evaluating", total=len(dataloader)):
+        out = model({"images": images.to(device), "bboxes": bboxes})
+        for i in range(images.shape[0]):
+            num_people = len(bboxes[i])
+            for j in range(num_people):
+                if inout[i][j] == 1:
+                    aucs.append(vat_auc(out["heatmap"][i][j], gazex[i][j][0], gazey[i][j][0]))
+                    l2s.append(vat_l2(out["heatmap"][i][j], gazex[i][j][0], gazey[i][j][0]))
+                if out.get("inout") is not None:
+                    inout_preds.append(out["inout"][i][j].item())
+                    inout_gts.append(inout[i][j])
+
+    result = {
+        "dataset": "vat",
+        "json_path": args.json_path,
+        "model": args.model,
+        "checkpoint_path": args.variant_ckpt,
+        "spatial_prior": args.spatial_prior,
+        "fusion": args.fusion,
+        "selected_layers": args.selected_layers,
+        "sample_count": len(inout_gts) if inout_gts else len(l2s),
+        "auc": float(np.mean(aucs)) if aucs else None,
+        "l2": float(np.mean(l2s)) if l2s else None,
+        "inout_ap": float(average_precision_score(inout_gts, inout_preds)) if inout_gts else None,
+    }
+    if args.metrics_output:
+        os.makedirs(os.path.dirname(args.metrics_output), exist_ok=True)
+        with open(args.metrics_output, "w") as handle:
+            json.dump(result, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        print(f"Saved metrics to {args.metrics_output}")
+    print(json.dumps(result, indent=2, sort_keys=True))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", type=str, default="/newhome/fb/dataset/videoattentiontarget", help="Path to JSON dataset")
     parser.add_argument("--json_path", type=str, required=True)
     parser.add_argument("--base_ckpt", type=str, default="/home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt", help="Path to Baseline checkpoint")
     parser.add_argument("--spot_ckpt", type=str, default="/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt", help="Path to GazeSpot checkpoint")
+    parser.add_argument("--variant_ckpt", type=str, default=None, help="Metrics-only checkpoint path for one P1 variant")
+    parser.add_argument("--model", type=str, default="gazelle_dinov3_vitb16_inout")
+    parser.add_argument("--spatial_prior", type=str, default="ggsf")
+    parser.add_argument("--fusion", type=str, default="sasa")
+    parser.add_argument("--selected_layers", type=str, default=None)
+    parser.add_argument("--metrics_output", type=str, default=None)
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--vis_dir", type=str, required=True, help="If set, will save visualizations here")
+    parser.add_argument("--vis_dir", type=str, default=None, help="If set, will save visualizations here")
     parser.add_argument("--num_vis", type=int, default=0, help="Max number of images to visualize")
     args = parser.parse_args()
-    main(args)
+    if args.variant_ckpt:
+        main_variant(args)
+    else:
+        main(args)
