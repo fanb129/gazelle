@@ -155,6 +155,131 @@ def test_runner_smoke_writes_manifest_and_csv_without_training(tmp_path):
     assert "dataset_split,variant,spatial_prior,fusion,seed,status" in csv_text
 
 
+def test_runner_can_use_smaller_eval_batch_size_than_training_batch_size(tmp_path):
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--print_plan_only",
+            "--group",
+            "fusion",
+            "--dataset",
+            "vat",
+            "--data_path",
+            "/data/vat",
+            "--crowd_json",
+            "/data/vat/test_preprocessed_subsets/test_crowd_ge4.json",
+            "--init_ckpt",
+            "/ckpts/gazelle_dinov3_vitb16.pt",
+            "--variants",
+            "raw_concat",
+            "--seed",
+            "3106",
+            "--max_epochs",
+            "8",
+            "--batch_size",
+            "60",
+            "--eval_batch_size",
+            "8",
+            "--output_dir",
+            str(tmp_path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    plan = json.loads((tmp_path / "run_plan.json").read_text())
+    train_command = plan["runs"][0]["commands"]["train"]
+    eval_command = plan["runs"][0]["commands"]["eval"]
+
+    assert train_command[train_command.index("--batch_size") + 1] == "60"
+    assert eval_command[eval_command.index("--batch_size") + 1] == "8"
+
+
+def test_execute_plan_resume_skips_training_when_checkpoint_exists(tmp_path):
+    from scripts.run_rebuttal_ablation import execute_plan
+
+    checkpoint_path = tmp_path / "runs" / "variant" / "epoch_7.pt"
+    checkpoint_path.parent.mkdir(parents=True)
+    checkpoint_path.write_text("checkpoint")
+    train_marker = tmp_path / "train-ran.txt"
+    metrics_path = tmp_path / "variant_metrics.json"
+    eval_code = (
+        "import json, pathlib, sys; "
+        "pathlib.Path(sys.argv[1]).write_text(json.dumps({'auc': 0.7, 'l2': 0.2, 'inout_ap': 0.9, 'sample_count': 4}) + '\\n')"
+    )
+    plan = {
+        "runs": [
+            {
+                "name": "fusion_sasa_seed3106",
+                "metadata": {
+                    "dataset_split": "VAT Crowd >=4",
+                    "variant": "sasa",
+                    "spatial_prior": "ggsf",
+                    "fusion": "sasa",
+                    "selected_layers_label": "all",
+                    "seed": 3106,
+                    "sample_count": None,
+                },
+                "commands": {
+                    "train": [sys.executable, "-c", f"from pathlib import Path; Path({str(train_marker)!r}).write_text('ran')"],
+                    "eval": [sys.executable, "-c", eval_code, str(metrics_path), "--metrics_output", str(metrics_path)],
+                    "checkpoint_path": str(checkpoint_path),
+                },
+                "status": "planned",
+            }
+        ]
+    }
+
+    executed = execute_plan(plan, resume_existing=True)
+
+    assert not train_marker.exists()
+    assert executed["rows"][0]["status"] == "evaluated"
+    assert executed["rows"][0]["auc"] == 0.7
+
+
+def test_execute_plan_resume_skips_run_when_metrics_already_exist(tmp_path):
+    from scripts.run_rebuttal_ablation import execute_plan
+
+    metrics_path = tmp_path / "variant_metrics.json"
+    write_json = lambda path, payload: path.write_text(json.dumps(payload) + "\n")
+    write_json(metrics_path, {"auc": 0.8, "l2": 0.1, "inout_ap": 0.95, "sample_count": 5})
+    train_marker = tmp_path / "train-ran.txt"
+    eval_marker = tmp_path / "eval-ran.txt"
+    plan = {
+        "runs": [
+            {
+                "name": "fusion_sasa_seed3106",
+                "metadata": {
+                    "dataset_split": "VAT Crowd >=4",
+                    "variant": "sasa",
+                    "spatial_prior": "ggsf",
+                    "fusion": "sasa",
+                    "selected_layers_label": "all",
+                    "seed": 3106,
+                    "sample_count": None,
+                },
+                "commands": {
+                    "train": [sys.executable, "-c", f"from pathlib import Path; Path({str(train_marker)!r}).write_text('ran')"],
+                    "eval": [sys.executable, "-c", f"from pathlib import Path; Path({str(eval_marker)!r}).write_text('ran')", "--metrics_output", str(metrics_path)],
+                    "checkpoint_path": str(tmp_path / "missing.pt"),
+                },
+                "status": "planned",
+            }
+        ]
+    }
+
+    executed = execute_plan(plan, resume_existing=True)
+
+    assert not train_marker.exists()
+    assert not eval_marker.exists()
+    assert executed["rows"][0]["status"] == "evaluated"
+    assert executed["rows"][0]["auc"] == 0.8
+
+
 def test_reliability_plan_expands_variants_across_seeds(tmp_path):
     script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run_rebuttal_ablation.py"
 

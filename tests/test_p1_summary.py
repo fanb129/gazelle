@@ -126,6 +126,148 @@ def test_summarize_p1_results_generates_tables_and_plot_csv(tmp_path):
     assert any(row["plot_group"] == "reliability" and row["value"] == "TBD" for row in csv_rows)
 
 
+def test_summarize_p1_results_uses_direct_metrics_json_when_runner_aborts(tmp_path):
+    input_dir = tmp_path / "p1"
+    output_md = tmp_path / "out" / "p1_tables.md"
+    plot_csv = tmp_path / "out" / "p1_plot_data.csv"
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "summarize_p1_results.py"
+
+    write_json(
+        input_dir / "fusion" / "metrics.json",
+        {
+            "rows": [
+                {
+                    "dataset_split": "VAT Crowd >=4",
+                    "variant": "raw_concat",
+                    "spatial_prior": "ggsf",
+                    "fusion": "raw_concat",
+                    "selected_layers": "all",
+                    "seed": 3106,
+                    "status": "pending",
+                    "sample_count": None,
+                    "auc": "TBD",
+                    "l2": "TBD",
+                    "inout_ap": "TBD",
+                }
+            ]
+        },
+    )
+    write_json(
+        input_dir / "fusion" / "fusion_raw_concat_seed3106_metrics.json",
+        {
+            "auc": 0.8098811237,
+            "l2": 0.2358152866,
+            "inout_ap": 0.9008177270,
+            "sample_count": 9525,
+            "checkpoint_path": "rebuttal/results/p1/fusion/runs/fusion_raw_concat_seed3106/epoch_7.pt",
+            "dataset": "vat",
+            "fusion": "raw_concat",
+            "spatial_prior": "ggsf",
+            "selected_layers": "all",
+            "json_path": "/data/vat/test_preprocessed_subsets/test_crowd_ge4.json",
+        },
+    )
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--input_dir",
+            str(input_dir),
+            "--output_md",
+            str(output_md),
+            "--plot_csv",
+            str(plot_csv),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    markdown = output_md.read_text()
+    csv_rows = list(csv.DictReader(plot_csv.open()))
+
+    assert "| raw_concat | ggsf | raw_concat | all | 3106 | evaluated | 9525 | 0.8099 | 0.2358 | 0.9008 |" in markdown
+    assert "| raw_concat | ggsf | raw_concat | all | 3106 | pending | TBD | TBD | TBD | TBD |" not in markdown
+    assert any(row["plot_group"] == "fusion" and row["metric"] == "auc" and row["value"] == "0.8099" for row in csv_rows)
+
+
+def test_summarize_p1_results_rebuilds_reliability_from_direct_metrics_json(tmp_path):
+    input_dir = tmp_path / "p1"
+    output_md = tmp_path / "out" / "p1_tables.md"
+    plot_csv = tmp_path / "out" / "p1_plot_data.csv"
+    script = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "summarize_p1_results.py"
+
+    write_json(
+        input_dir / "reliability" / "manifest.json",
+        {
+            "expected_seeds": [3106, 3107, 3108],
+            "runs": [
+                {"metadata": {"variant": "baseline_full"}},
+                {"metadata": {"variant": "gazespot_full"}},
+            ],
+        },
+    )
+    write_json(
+        input_dir / "reliability" / "aggregate_metrics.json",
+        {
+            "expected_seeds": [3106, 3107, 3108],
+            "rows": [
+                {
+                    "variant": "baseline_full",
+                    "status": "incomplete",
+                    "seeds": [3106, 3107, 3108],
+                    "expected_seeds": [3106, 3107, 3108],
+                    "missing_seeds": [],
+                    "auc_mean": "TBD",
+                    "auc_std": "TBD",
+                    "l2_mean": "TBD",
+                    "l2_std": "TBD",
+                    "inout_ap_mean": "TBD",
+                    "inout_ap_std": "TBD",
+                    "notes": "non-numeric or pending metric values",
+                }
+            ],
+        },
+    )
+    write_json(
+        input_dir / "reliability" / "reliability_baseline_full_seed3106_metrics.json",
+        {
+            "auc": 0.8102049857,
+            "l2": 0.2367694770,
+            "inout_ap": 0.8967851825,
+            "sample_count": 9525,
+            "checkpoint_path": "rebuttal/results/p1/reliability/runs/reliability_baseline_full_seed3106/epoch_7.pt",
+            "dataset": "vat",
+            "fusion": "raw_concat",
+            "spatial_prior": "none",
+            "selected_layers": "all",
+            "json_path": "/data/vat/test_preprocessed_subsets/test_crowd_ge4.json",
+        },
+    )
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--input_dir",
+            str(input_dir),
+            "--output_md",
+            str(output_md),
+            "--plot_csv",
+            str(plot_csv),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    markdown = output_md.read_text()
+
+    assert "| baseline_full | incomplete | 3106 | 3106 3107 3108 | 3107 3108 | TBD | TBD | TBD |" in markdown
+    assert "non-numeric or pending metric values" not in markdown
+
+
 def test_p1_controls_document_contains_required_commands_and_templates():
     doc_path = pathlib.Path(__file__).resolve().parents[1] / "rebuttal" / "p1_controls_and_analysis.md"
 

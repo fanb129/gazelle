@@ -40,11 +40,13 @@ def build_parser():
     parser.add_argument("--selected_layer_sets", nargs="+", default=None)
     parser.add_argument("--max_epochs", type=int, default=8)
     parser.add_argument("--batch_size", type=int, default=60)
+    parser.add_argument("--eval_batch_size", type=int, default=None, help="Optional metrics-only eval batch size; defaults to --batch_size.")
     parser.add_argument("--max_train_batches", type=int, default=None)
     parser.add_argument("--max_eval_batches", type=int, default=None)
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--wandb_mode", default="offline")
     parser.add_argument("--allow_random_init", action="store_true", help="Skip init checkpoint loading for short runner smoke tests.")
+    parser.add_argument("--resume_existing", action="store_true", help="Skip runs with existing metrics and skip training when the target checkpoint already exists.")
     parser.add_argument("--output_dir", required=True)
     return parser
 
@@ -123,6 +125,7 @@ def build_run_plan(args):
     return {
         "print_plan_only": bool(args.print_plan_only),
         "runner_smoke_only": bool(args.runner_smoke_only),
+        "resume_existing": bool(args.resume_existing),
         "section": _plan_section(args.group, args.print_plan_only),
         "group": args.group,
         "dataset": args.dataset,
@@ -131,6 +134,7 @@ def build_run_plan(args):
         "expected_seeds": seeds,
         "max_epochs": args.max_epochs,
         "batch_size": args.batch_size,
+        "eval_batch_size": args.eval_batch_size or args.batch_size,
         "runs": runs,
         "note": "Runner smoke writes manifests and placeholder metrics without training." if args.runner_smoke_only else "Run commands are ready for server training/evaluation.",
     }
@@ -228,6 +232,7 @@ def build_commands(args, run_name, config, crowd_json):
         eval_cmd.extend(["--max_eval_batches", str(args.max_eval_batches)])
     if args.dataset == "vat":
         eval_cmd.extend(["--json_path", crowd_json])
+    eval_cmd[eval_cmd.index("--batch_size") + 1] = str(args.eval_batch_size or args.batch_size)
     return {"train": train, "eval": eval_cmd, "checkpoint_path": ckpt_path}
 
 
@@ -273,7 +278,7 @@ def main(argv=None):
         return
 
     validate_init_checkpoint(args)
-    executed_metrics = execute_plan(plan)
+    executed_metrics = execute_plan(plan, resume_existing=args.resume_existing)
     metrics_path.write_text(json.dumps(executed_metrics, indent=2, sort_keys=True) + os.linesep)
     write_metrics_csv(csv_path, executed_metrics["rows"])
     if args.group == "reliability":
@@ -457,12 +462,23 @@ def validate_init_checkpoint(args):
     )
 
 
-def execute_plan(plan):
+def execute_plan(plan, resume_existing=False):
     rows = []
     for run in plan["runs"]:
-        print(f"Running train command for {run['name']}")
-        subprocess.run(run["commands"]["train"], check=True)
-        run["status"] = "trained"
+        metrics_path = _metrics_path_for_run(run)
+        checkpoint_path = run["commands"]["checkpoint_path"]
+        if resume_existing and metrics_path and os.path.exists(metrics_path):
+            print(f"Skipping completed run with existing metrics for {run['name']}: {metrics_path}")
+            run["status"] = "evaluated"
+            rows.append(_load_metric_row(run))
+            continue
+        if resume_existing and os.path.exists(checkpoint_path):
+            print(f"Skipping train command for {run['name']}; checkpoint exists: {checkpoint_path}")
+            run["status"] = "trained"
+        else:
+            print(f"Running train command for {run['name']}")
+            subprocess.run(run["commands"]["train"], check=True)
+            run["status"] = "trained"
         print(f"Running eval command for {run['name']}")
         subprocess.run(run["commands"]["eval"], check=True)
         run["status"] = "evaluated"
@@ -471,12 +487,16 @@ def execute_plan(plan):
     return {"section": "4.training_and_evaluation_runner", "rows": rows}
 
 
-def _load_metric_row(run):
-    metadata = run["metadata"]
-    metrics_path = None
+def _metrics_path_for_run(run):
     eval_command = run["commands"]["eval"]
     if "--metrics_output" in eval_command:
-        metrics_path = eval_command[eval_command.index("--metrics_output") + 1]
+        return eval_command[eval_command.index("--metrics_output") + 1]
+    return None
+
+
+def _load_metric_row(run):
+    metadata = run["metadata"]
+    metrics_path = _metrics_path_for_run(run)
     metrics = {}
     if metrics_path and os.path.exists(metrics_path):
         with open(metrics_path) as handle:
