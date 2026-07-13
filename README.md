@@ -1,26 +1,39 @@
-# Gazelle AAAI2027 Workspace
+# Gazelle AAAI2027 工作区
 
-This repository is now configured as the working branch for the AAAI 2027 submission cycle.
+本仓库当前已经切换为 AAAI 2027 投稿周期的工作区。后续所有研究设计、代码修改、实验整理、论文写作与审稿前检查，默认都服务于 AAAI 2027。
 
-## Current Direction
+## 当前方向
 
-- Active branch: `codex/aaai2027`.
-- All next research, engineering, experiments, writing, and review work in this repository should target AAAI 2027.
-- The previous V1 / ACM MM 2026 rebuttal work is no longer the active target. Treat the ACM MM 2026 material as historical context only.
-- Local changes from the previous `v1` workspace were preserved in Git stash entries before this branch was created:
+- 当前工作分支：`codex/aaai2027`
+- 原 V1 / ACM MM 2026 rebuttal 工作已经不再是当前主线。
+- ACM MM 2026 相关材料仅作为历史背景、问题复盘和 AAAI 2027 改稿参考。
+- 从 `v1` 切换到本分支前，旧工作区的未提交内容已经保存在 Git stash 中：
   - `stash@{0}: On v1: pre-aaai2027-untracked-rebuttal-files`
   - `stash@{1}: On v1: pre-aaai2027-cleanup-from-v1`
 
-## Codex Skills
+## ACM MM 2026 历史材料
 
-Supervisor-Skills has been installed as project-local Skills only.
+ACM MM 2026 投稿已经被拒，以下材料保留在仓库中，用于分析评审意见、总结失败原因，并指导 AAAI 2027 版本的重构与补强。
 
-- Skill root: `.agents/skills/`
-- Source repository: `https://github.com/HKUSTDial/Supervisor-Skills`
-- Do not install or depend on copies under `$HOME/.agents/skills`, `~/.codex/skills`, or any other global/user/system directory for this project.
-- Each skill is kept in its own directory with its original `SKILL.md` and related resources.
+- ACM MM 2026 论文正文：`ACMMM2026rebuttal/2026ACMMM-fanb-final-3.pdf`
+- ACM MM 2026 附件：`ACMMM2026rebuttal/Appendix of GazeSpot.pdf`
+- ACM MM 2026 rebuttal 目录：`ACMMM2026rebuttal/2026ACMMM_rebuttal/`
+- ACM MM 2026 rebuttal 策略记录：`ACMMM2026rebuttal/rebuttal_strategy.md`
+- ACM MM 2026 评审意见 / OpenReview 导出：`ACMMM2026rebuttal/Gaze in the Crowd_ Frustum-Aware Feature Aggregation for Robust Gaze Target Estimation _ OpenReview.pdf`
+- rebuttal 阶段实验命令：`ACMMM2026rebuttal/p0_experiment_commands.md`
+- rebuttal 阶段结果：`ACMMM2026rebuttal/results/`
 
-Installed skill directories:
+## 项目本地 Skills 配置
+
+Supervisor-Skills 已经作为项目本地 Skills 安装到本仓库中。
+
+- Skills 根目录：`.agents/skills/`
+- 来源仓库：`https://github.com/HKUSTDial/Supervisor-Skills`
+- 本项目只使用 `.agents/skills/` 下的项目本地 Skills。
+- 不要把本项目依赖的 Skills 安装到 `$HOME/.agents/skills`、`~/.codex/skills` 或任何全局、用户级、管理员级、系统级目录。
+- 每个 Supervisor-Skills skill 都保留为独立目录，并包含原始 `SKILL.md` 与相关资源。
+
+已安装的 skill 目录：
 
 - `.agents/skills/benchmark-paper-template/`
 - `.agents/skills/deep-research/`
@@ -34,26 +47,28 @@ Installed skill directories:
 - `.agents/skills/tech-paper-template/`
 - `.agents/skills/vibe-research-workflow/`
 
-## Development And Execution Setup
+## 开发与运行配置
 
-- Local environment: used for code edits, repository cleanup, test edits, and documentation updates.
-- Real training/evaluation runs: performed on the server after the user pulls the updated code and manually starts jobs.
-- Server login: `fb@3090.lab`; local SSH key login is already configured.
-- Main Python package: `gazelle`, defined by `setup.py`.
-- Existing command notes and experiment snippets are in `help.md`.
+- 本地环境主要用于修改代码、整理仓库、更新文档和补充测试。
+- 真实训练与评测由用户在服务器上 `pull` 最新代码后手动运行，并把运行结果反馈回来。
+- 服务器登录：`fb@3090.lab`
+- 本地已经配置好 SSH 密钥登录。
+- Python 包名：`gazelle`
+- 包配置文件：`setup.py`
+- 现有实验命令和历史运行片段：`help.md`
 
-Common script defaults and paths currently assume the server dataset layout:
+当前脚本中的默认路径主要面向服务器环境：
 
-- GazeFollow: `/newhome/fb/dataset/gazefollow_extended`
-- VideoAttentionTarget: `/newhome/fb/dataset/videoattentiontarget`
-- GooReal: `/newhome/fb/dataset/gooreal_data`
-- Default checkpoint/output root in scripts: `./experiments`
-- Default image output root in scripts: `./experiments_imgs`
-- Existing scripts still use `gazelleV1` as the default Weights & Biases project name; review this before launching new AAAI 2027 experiments.
+- GazeFollow：`/newhome/fb/dataset/gazefollow_extended`
+- VideoAttentionTarget：`/newhome/fb/dataset/videoattentiontarget`
+- GooReal：`/newhome/fb/dataset/gooreal_data`
+- 默认 checkpoint / 实验输出目录：`./experiments`
+- 默认可视化图片输出目录：`./experiments_imgs`
+- 部分脚本中的默认 Weights & Biases project 仍是 `gazelleV1`，启动 AAAI 2027 新实验前需要检查是否改名。
 
-## Dataset Notes
+## 数据集备注
 
-GooReal has already been downloaded on the server:
+GooReal 已经在服务器上下载到：
 
 ```text
 fb@nise-server:/newhome/fb/dataset/gooreal_data
@@ -69,8 +84,8 @@ fb@nise-server:/newhome/fb/dataset/gooreal_data
 └── wget-log.4
 ```
 
-ChildPlay-gaze has not been downloaded yet because YouTube access was unavailable.
+ChildPlay-gaze 因为无法访问 YouTube，暂时还没有下载。
 
-## Working Rule
+## 工作规则
 
-When planning or modifying this repository from now on, assume the objective is AAAI 2027 unless explicitly told otherwise.
+除非明确说明，否则之后对本仓库的讨论、修改、实验设计和写作，都默认面向 AAAI 2027。
