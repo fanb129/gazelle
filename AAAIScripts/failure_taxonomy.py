@@ -334,7 +334,10 @@ def load_model(args: argparse.Namespace):
     return model, transform, load_manifest
 
 
-def evaluate(args: argparse.Namespace) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def evaluate(
+    args: argparse.Namespace,
+    loaded_model: Optional[Tuple[Any, Any, Dict[str, Any]]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     import torch
     from PIL import Image
     from gazelle.utils import gazefollow_auc, gazefollow_l2, vat_auc, vat_l2
@@ -349,7 +352,7 @@ def evaluate(args: argparse.Namespace) -> Tuple[List[Dict[str, Any]], List[Dict[
         frames = frames[: args.max_frames]
 
     device = args.device if args.device != "auto" else ("cuda" if torch.cuda.is_available() else "cpu")
-    model, transform, load_manifest = load_model(args)
+    model, transform, load_manifest = loaded_model if loaded_model is not None else load_model(args)
     args.checkpoint_load_manifest = load_manifest
     model.to(device).eval()
     person_rows: List[Dict[str, Any]] = []
