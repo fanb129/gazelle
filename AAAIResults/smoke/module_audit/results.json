@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "analysis": "raw_sasa_ggsf_audit",
+  "synthetic_smoke": true,
+  "no_gt_postprocessing": true,
+  "row_count": 32,
+  "aggregates": [
+    {
+      "component": "ggsf",
+      "metric": "dynamic_range",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.4,
+      "variance_across_observations": 0.32000000000000006,
+      "std": 0.5656854249492381
+    },
+    {
+      "component": "ggsf",
+      "metric": "identity_l1",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.26,
+      "variance_across_observations": 0.03919999999999999,
+      "std": 0.1979898987322333
+    },
+    {
+      "component": "ggsf",
+      "metric": "inter_person_l1",
+      "crowd_bin": "2-3",
+      "n": 1,
+      "mean": 0.2996428571428571,
+      "variance_across_observations": null,
+      "std": null
+    },
+    {
+      "component": "ggsf",
+      "metric": "max",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.94,
+      "variance_across_observations": 0.0072,
+      "std": 0.08485281374238571
+    },
+    {
+      "component": "ggsf",
+      "metric": "mean",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.74,
+      "variance_across_observations": 0.039200000000000006,
+      "std": 0.19798989873223333
+    },
+    {
+      "component": "ggsf",
+      "metric": "min",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.54,
+      "variance_across_observations": 0.23120000000000002,
+      "std": 0.48083261120685233
+    },
+    {
+      "component": "ggsf",
+      "metric": "spatial_entropy",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.9903215202875517,
+      "variance_across_observations": 0.00018734593908854605,
+      "std": 0.013687437272497218
+    },
+    {
+      "component": "ggsf",
+      "metric": "std",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.11728859175816612,
+      "variance_across_observations": 0.02751322751322751,
+      "std": 0.16587111717603975
+    },
+    {
+      "component": "ggsf",
+      "metric": "variance",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.02751322751322751,
+      "variance_across_observations": 0.0015139553763892386,
+      "std": 0.03890957949386293
+    },
+    {
+      "component": "sasa",
+      "metric": "entropy",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.9616098361677539,
+      "variance_across_observations": 0.0029476093581333905,
+      "std": 0.054291890353287485
+    },
+    {
+      "component": "sasa",
+      "metric": "inter_person_l1",
+      "crowd_bin": "2-3",
+      "n": 1,
+      "mean": 0.05,
+      "variance_across_observations": null,
+      "std": null
+    },
+    {
+      "component": "sasa",
+      "metric": "max_weight",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.325,
+      "variance_across_observations": 0.011250000000000003,
+      "std": 0.10606601717798214
+    },
+    {
+      "component": "sasa",
+      "metric": "uniform_l1",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.05,
+      "variance_across_observations": 0.005000000000000001,
+      "std": 0.07071067811865477
+    },
+    {
+      "component": "sasa",
+      "metric": "weight_layer_0",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.175,
+      "variance_across_observations": 0.01125,
+      "std": 0.10606601717798213
+    },
+    {
+      "component": "sasa",
+      "metric": "weight_layer_1",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.225,
+      "variance_across_observations": 0.0012499999999999994,
+      "std": 0.03535533905932737
+    },
+    {
+      "component": "sasa",
+      "metric": "weight_layer_2",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.275,
+      "variance_across_observations": 0.0012499999999999994,
+      "std": 0.03535533905932737
+    },
+    {
+      "component": "sasa",
+      "metric": "weight_layer_3",
+      "crowd_bin": "2-3",
+      "n": 2,
+      "mean": 0.325,
+      "variance_across_observations": 0.011250000000000003,
+      "std": 0.10606601717798214
+    }
+  ],
+  "config": {
+    "synthetic_smoke": true,
+    "dataset": "vat",
+    "data_path": null,
+    "json_path": null,
+    "checkpoint": null,
+    "model": "gazelle_dinov3_vitb16_inout",
+    "max_samples": 200,
+    "device": null,
+    "output_dir": "/home/fb/src/paper/gazelleV1/AAAIResults/smoke/module_audit"
+  }
+}
