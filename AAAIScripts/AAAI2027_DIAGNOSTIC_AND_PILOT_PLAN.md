@@ -114,7 +114,7 @@ Wrote 32 raw gate/weight audit rows ...
   --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt \
   --model-source v0 \
   --model-label baseline_v0_448_exploratory \
-  --device cuda:0 \
+  --device cuda:2 \
   --max-frames 20 \
   --output-prefix /home/fb/src/paper/gazelleV1/AAAIResults/P0/vat_base_smoke
 
@@ -127,7 +127,7 @@ Wrote 32 raw gate/weight audit rows ...
   --spatial-prior ggsf \
   --fusion sasa \
   --model-label gazespot_512_exploratory \
-  --device cuda:0 \
+  --device cuda:2 \
   --max-frames 20 \
   --output-prefix /home/fb/src/paper/gazelleV1/AAAIResults/P0/vat_spot_smoke
 ```
@@ -155,7 +155,7 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/failure_taxonomy.p
   --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt \
   --model-source v0 \
   --model-label baseline_v0_448_exploratory \
-  --device cuda:0 \
+  --device cuda:1 \
   --output-prefix /home/fb/src/paper/gazelleV1/AAAIResults/P0/vat_base_full \
   > /home/fb/src/paper/gazelleV1/AAAIResults/logs/vat_base_full.log 2>&1 &
 
@@ -168,7 +168,7 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/failure_taxonomy.p
   --spatial-prior ggsf \
   --fusion sasa \
   --model-label gazespot_512_exploratory \
-  --device cuda:0 \
+  --device cuda:2 \
   --output-prefix /home/fb/src/paper/gazelleV1/AAAIResults/P0/vat_spot_full \
   > /home/fb/src/paper/gazelleV1/AAAIResults/logs/vat_spot_full.log 2>&1 &
 ```
@@ -221,7 +221,7 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/hierarchical_featu
   --data-path /newhome/fb/dataset/videoattentiontarget \
   --json-path /newhome/fb/dataset/videoattentiontarget/test_preprocessed.json \
   --max-samples 1000 \
-  --device cuda:0 \
+  --device cuda:2 \
   --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P0/hierarchy_probe \
   > /home/fb/src/paper/gazelleV1/AAAIResults/logs/hierarchy_probe.log 2>&1 &
 ```
@@ -255,7 +255,7 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/audit_sasa_ggsf.py
   --json-path /newhome/fb/dataset/videoattentiontarget/test_preprocessed.json \
   --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
   --max-samples 1000 \
-  --device cuda:0 \
+  --device cuda:1 \
   --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P0/sasa_ggsf_audit \
   > /home/fb/src/paper/gazelleV1/AAAIResults/logs/sasa_ggsf_audit.log 2>&1 &
 ```
