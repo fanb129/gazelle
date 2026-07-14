@@ -1,6 +1,6 @@
 # AAAI 2027 诊断与最小候选实验方案
 
-> 状态：P0、P0.5 与 P1a 已完成并同步；P1a 未通过预先冻结的 Go 门槛，hierarchy-router 方法线于 2026-07-14 判定为 No-Go；P2 无训练审计代码与命令已就绪，尚未运行。
+> 状态：P0、P0.5、P1a 与 P2 已完成并同步；P1a hierarchy-router 方法线为 No-Go；P2 检出一致的 transition degradation，但因每个切换方向仅有 238/251 个样本，未通过预先冻结的 500/方向门槛，因此 temporal-module 方法线暂为 No-Go。
 > 服务器解释器：`/home/fb/anaconda3/envs/py310/bin/python`
 > 原则：先验证机制，再训练候选；所有 `[待补充]` 都必须由真实输出填写，不得根据预期补数。
 
@@ -15,7 +15,7 @@
 3. **Q3：为什么 GGSF 的历史增益很小，是否应删除？**  
    ACM MM 实验已经显示 GGSF 提升很小。本轮只审计其 mask 是否接近常数/identity，以及不同人物之间是否真的有差异；它不再作为默认核心贡献候选。
 
-P0/P0.5 已经回答：crowded/query binding 不足以作为主故事，GGSF 应删除，原 SASA 近似任务级固定层级配方。当前只允许运行第 9 节的最小 prior-residual pilot；它没有 relational loss，也不建模人与人交互。
+P0/P0.5 已经回答：crowded/query binding 不足以作为主故事，GGSF 应删除，原 SASA 近似任务级固定层级配方。P1a 进一步说明 query-conditioned hierarchy router 虽然学到了人物间权重差异，但没有稳定改善整体指标。P2 则发现静态模型在 VAT in/out 边界帧存在一致退化；该现象目前只作为待质检的问题线索，不能直接升级为 temporal 方法贡献。
 
 ## 2. 目录与职责
 
@@ -31,6 +31,8 @@ AAAIScripts/
 ├── run_p1a_vat.sh                   # 3090.lab 顺序训练/评估 prior-residual pilot
 ├── p2_transition_reliability_audit.py # 无推理的 VAT transition/calibration 审计
 ├── run_p2_transition_audit.sh        # P2 四组已有 records 的后台执行入口
+├── p21_transition_validity_audit.py  # P2.1 contact sheets、人工表与冻结门槛汇总
+├── run_p21_transition_validity_audit.sh # P2.1 无 GPU 后台生成入口
 ├── matched_control_runner.py          # 现有 Gazelle controls 的 dry-run 计划/汇总
 ├── train_gazelle_control.py           # unchanged Gazelle control，严格 matching init/best.pt
 ├── train_person_router.py             # 独立候选 GF/VAT 训练，保存 best.pt
@@ -603,10 +605,12 @@ P1a 进入下一阶段必须同时满足：
 | P1a paired comparison | 完成；31,978 对齐 records，localization 与 AP 均完成 sequence bootstrap |
 | P1a router audit | 完成；uniform 1,000 test frames、2,344 queries，inter-person L1=0.01407 |
 | P1a Go/No-Go | **No-Go**；overall AUC/L2/AP/X-TCR/margin 的 CI 全部跨 0 |
+| P2 transition audit | 完成；131 sequences、31,680 matched transitions/模型、2,000 次 sequence bootstrap |
+| P2 Go/No-Go | **严格 No-Go**；退化效应显著，但 in→out/out→in 仅 238/251，未达到冻结的 500/方向门槛 |
 
-## 11. 当前结论与下一次执行入口
+## 11. 当前结论、P2 结果与复现入口
 
-P0/P0.5/P1a 的结果已经回传并完成检查：
+P0/P0.5/P1a/P2 的结果已经回传并完成检查：
 
 ```text
 AAAIResults/P0/vat_base_full.report.json
@@ -620,9 +624,11 @@ AAAIResults/P1a/prior_residual_vat_seed3106/{run_manifest,history}.json
 AAAIResults/P1a/vat_{static_prior_full,prior_residual_full}.report.json
 AAAIResults/P1a/static_prior_vs_prior_residual.report.json
 AAAIResults/P1a/router_audit/results.json
+AAAIResults/P2/transition_reliability/{per_transition,summary,comparisons}.csv
+AAAIResults/P2/transition_reliability/report.json
 ```
 
-当前不要再运行第 9.4 节命令，也不要启动旧 GazeFollow controls。下一次只执行下面的 P2 无训练 transition/reliability audit；在其问题证据与近期文献 gap 同时成立之前，不实现新的 temporal module。
+当前不要再运行第 9.4 节命令，也不要启动旧 GazeFollow controls。下面的 P2 命令保留作复现记录，不需要重复执行；下一步按第 11.5 节先做无训练的 P2.1 人工有效性审计。
 
 ### 11.1 P2 代码 smoke
 
@@ -679,22 +685,22 @@ AAAIResults/P2/transition_reliability/report.json
 - `comparisons.csv`：2,000 次 sequence-bootstrap 的 switch-vs-stable Brier/absolute error，以及 out→in-vs-stable-in L2；
 - `report.json`：annotation/records SHA256、tracking coverage、完整汇总和 claim boundary。
 
-### 11.3 P2 结果占位与预先冻结的门槛
+### 11.3 P2 实测结果与预先冻结的门槛
 
 | Tracking diagnostic | 结果 |
 |---|---:|
-| Sequence count | `[待补充]` |
-| Adjacent frame pairs | `[待补充]` |
-| Matched people | `[待补充]` |
-| IoU match-rate upper bound | `[待补充]` |
-| stable-in / in→out / out→in / stable-out counts | `[待补充]` |
+| Sequence count | 131 |
+| Adjacent frame pairs | 12,996 |
+| Matched people | 31,680/模型（四模型合计 126,720 rows） |
+| IoU match-rate upper bound | 1.0000（31,680 / 31,680） |
+| stable-in / in→out / out→in / stable-out counts | 20,225 / 238 / 251 / 10,966（每模型相同） |
 
 | Model | Switch−Stable Brier（95% CI） | Switch−Stable absolute error（95% CI） | Out→In−StableIn L2（95% CI） | 判断 |
 |---|---:|---:|---:|---|
-| Baseline v0 448（只作跨架构现象核验） | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Learned SASA+GGSF 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| P1a static prior 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| P1a prior residual 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| Baseline v0 448（只作跨架构现象核验） | +0.23862 [0.21102, 0.26624] | +0.26503 [0.23572, 0.29381] | +0.06185 [0.03199, 0.09257] | 三项显著；样本门槛失败 |
+| Learned SASA+GGSF 512 | +0.25058 [0.21611, 0.28363] | +0.27672 [0.24110, 0.31071] | +0.06110 [0.03578, 0.08970] | 三项显著；样本门槛失败 |
+| P1a static prior 512 | +0.25156 [0.21622, 0.28603] | +0.27765 [0.24157, 0.31250] | +0.05850 [0.03338, 0.08670] | 三项显著；样本门槛失败 |
+| P1a prior residual 512 | +0.24428 [0.21038, 0.27832] | +0.27266 [0.23776, 0.30617] | +0.05556 [0.03166, 0.08385] | 三项显著；样本门槛失败 |
 
 P2 只有同时满足以下条件才进入 temporal/calibration 方法设计：
 
@@ -703,4 +709,116 @@ P2 只有同时满足以下条件才进入 temporal/calibration 方法设计：
 3. 至少两个 512 模型的 out→in−stable-in L2 CI 完全大于 0，或存在同等强度且预先解释清楚的 localization reliability 证据；
 4. 效应不只来自单一 crowd/head-size/target-distance 小分桶。
 
-若不满足，P2 判定 No-Go，不实现 temporal module。若满足，也只能先称为“候选问题证据”；还需完成针对 transition-aware calibrated scene-level gaze following 的系统文献检索，确认 gap 后再写方法。
+逐项判定：
+
+1. **门槛 1 失败**：tracking coverage 很高，且切换覆盖 90/96 个 sequences，但 in→out=238、out→in=251，均低于冻结的 500；
+2. **门槛 2 通过**：四个模型的 Brier 与 absolute-error CI 均完全大于 0；
+3. **门槛 3 通过**：全部三个 512 模型以及 448 baseline 的 out→in L2 CI 均完全大于 0；
+4. **门槛 4 初步通过但未作正式分桶 bootstrap**：raw direction-matched effect 出现在所有 crowd bins；head-size 上主要来自 large/medium，small 只有 10/11 个切换样本，不能解释为可靠的反例。
+
+由于四项是 AND 关系，**P2 按预注册规则判定为严格 No-Go，当前不实现 temporal module**。这不等于现象不存在，而是现有 VAT test transitions 的规模不足以支持把它直接包装成新方法主线。
+
+### 11.4 P2 补充解释：存在边界退化，但还不能叫“时序记忆错误”
+
+| Model | Switch AP（positive rate=0.5133） | in→out 当前 in-score | out→in 当前 in-score | stable-out in-score | stable-in in-score |
+|---|---:|---:|---:|---:|---:|
+| Baseline v0 448 | 0.49235 | 0.72626 | 0.69431 | 0.36960 | 0.82201 |
+| Learned SASA+GGSF 512 | 0.49306 | 0.74189 | 0.70744 | 0.36774 | 0.83769 |
+| P1a static prior 512 | 0.49238 | 0.74753 | 0.71110 | 0.37446 | 0.84143 |
+| P1a prior residual 512 | 0.48678 | 0.72045 | 0.68689 | 0.35566 | 0.82471 |
+
+四个模型在切换帧上的 AP 都接近随机排序，而且 in→out 帧的当前 `in-score` 反而高于 out→in 帧。这是一个一致的 **boundary-lag-like pattern**。但这些模型是逐帧静态模型，本身没有可产生 temporal hysteresis 的记忆状态，因此不能把这个结果直接解释成“模型记住了上一帧”。更可能的竞争解释包括：边界帧视觉证据滞后、VAT in/out 标签切换约定、遮挡/出画过程，以及 IoU track 或标注噪声。
+
+原 `switch−stable` 比较还存在 current-label 比例不同的潜在混淆。为核验这一点，又用 `per_transition.csv` 做了同标签、sequence-bootstrap sanity check：
+
+- in→out 对 stable-out：absolute-error delta 为 +0.35666 到 +0.37415，四模型 CI 均完全大于 0；
+- out→in 对 stable-in：absolute-error delta 为 +0.12770 到 +0.13782，四模型 CI 均完全大于 0；
+- out→in 对 stable-in 的 L2 delta 为 +0.05556 到 +0.06185，与主结果一致。
+
+因此，退化不是简单由 switch/stable 的正负样本比例造成的；真正未排除的是 **transition 标注/视觉可判定性**。
+
+### 11.5 接下来怎么做
+
+当前不启动任何 GPU 训练。下一步只做一个最多一天的 **P2.1 transition validity audit**：
+
+1. 从 489 个唯一切换点中按方向与 sequence 分层抽取 120 个（in→out/out→in 各 60），生成 `t−2, t−1, t, t+1` contact sheets，并叠加人物 bbox、in/out 标签、可用的 gaze target 和四模型 in-score；
+2. 人工检查这 120 个切换点，分类为 clear transition、gradual/ambiguous、annotation inconsistency、track mismatch、occlusion/scene cut；
+3. 在查看人工结果前冻结通过条件：track/annotation 明显错误不超过 10%，至少 70% 样本能从邻帧获得比当前帧更明确的判别证据，并在排除 invalid transitions 后保留同方向退化；
+4. 只有 P2.1 通过，才做一次小范围、针对 `transition-aware calibrated scene-level gaze following` 的重叠检索。文献 gap 也成立时，才考虑缓存输出上的轻量 calibration/residual 方法；不重跑 DINO backbone；
+5. 任一条件失败，立即结束 temporal 路线。P2 只保留为 failure analysis，不写成贡献。
+
+从转投策略看，**P2 当前不能替代原论文主线**。更稳妥的主线仍是把真实增益归因于 hierarchical/multi-layer representation reuse，删除 GGSF 主贡献与 crowded 主叙事；随后只在 VAT 上筛选同分辨率、同参数预算的 single-layer / mean / concat / FPN-like / learned fusion controls，再把唯一胜出的配置跑一次 GazeFollow。P2.1 的目的只是用极低成本判断是否存在值得保留的第二问题，不应挤占这组核心对照实验的单卡时间。
+
+### 11.6 P2.1 下一次执行命令
+
+先运行不读取真实数据的自测：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python AAAIScripts/p21_transition_validity_audit.py self-test
+```
+
+预期输出：
+
+```text
+Self-test passed: deterministic sampling, IDs, IoU, and contact-sheet drawing.
+```
+
+自测通过后，后台生成 120 张 contact sheets（in→out/out→in 各 60）和人工标注表。该步骤只读取图片、annotation 和 P2 CSV，不加载模型/PT，也不使用 GPU：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p /home/fb/src/paper/gazelleV1/AAAIResults/P21/transition_validity /home/fb/src/paper/gazelleV1/AAAIResults/logs
+chmod +x AAAIScripts/run_p21_transition_validity_audit.sh
+nohup bash AAAIScripts/run_p21_transition_validity_audit.sh \
+  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/p21_transition_validity.log 2>&1 &
+```
+
+查看进度：
+
+```bash
+tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p21_transition_validity.log
+```
+
+生成结果：
+
+```text
+AAAIResults/P21/transition_validity/audit.csv
+AAAIResults/P21/transition_validity/manifest.json
+AAAIResults/P21/transition_validity/sheets/*.jpg
+```
+
+`audit.csv` 中只填写以下四列，其他列不得修改：
+
+| 列 | 允许值 |
+|---|---|
+| `review_valid_transition` | `yes` / `no` / `uncertain` |
+| `review_temporal_context_helpful` | `yes` / `no` / `uncertain` |
+| `review_issue_type` | `clear_transition` / `gradual_ambiguous` / `annotation_inconsistency` / `track_mismatch` / `occlusion_scene_cut` / `other` |
+| `review_notes` | 自由文本，可留空 |
+
+必须完成全部 120 行。`uncertain` 在有效性门槛中按 invalid 保守处理。生成脚本若发现已有 `audit.csv` 会拒绝覆盖，避免误删人工标注。
+
+判定口径：`review_valid_transition=yes` 表示四帧确实跟踪同一人物，且当前帧的 in/out 标签变化可信；`review_temporal_context_helpful=yes` 表示邻帧让当前帧单独无法明确判断的边界变得更明确；`review_issue_type` 只填最主要的一类问题。不要根据模型分数高低判断标签是否有效。
+
+人工标注完成并同步回服务器后，运行自动汇总（该步骤很短，不需要 `nohup`）：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/p21_transition_validity_audit.py summarize \
+  --transition-csv /home/fb/src/paper/gazelleV1/AAAIResults/P2/transition_reliability/per_transition.csv \
+  --audit-csv /home/fb/src/paper/gazelleV1/AAAIResults/P21/transition_validity/audit.csv \
+  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P21/transition_validity \
+  --per-direction 60 \
+  --bootstrap-iterations 2000 \
+  --seed 3106
+```
+
+汇总输出：
+
+```text
+AAAIResults/P21/transition_validity/review_summary.json
+AAAIResults/P21/transition_validity/filtered_comparisons.csv
+```
+
+`review_summary.json` 只有在以下三个冻结门槛全部通过时才输出 `outcome=GO`：invalid rate ≤10%，temporal-context-helpful rate ≥70%，以及清除 invalid transitions 后两个方向的同标签 absolute-error CI 在至少三个模型（含两个 512 模型）上仍完全大于 0。否则自动输出 `NO_GO`。
