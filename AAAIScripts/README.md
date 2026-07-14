@@ -5,7 +5,7 @@
 - [`AAAI2027_DIAGNOSTIC_AND_PILOT_PLAN.md`](./AAAI2027_DIAGNOSTIC_AND_PILOT_PLAN.md)
 - [`AAAI2027_P3_EFFECT_FIRST_ALCHEMY_PLAN.md`](./AAAI2027_P3_EFFECT_FIRST_ALCHEMY_PLAN.md)：停止 P21 后的效果优先融合/损失搜索计划
 
-新候选模型位于仓库根目录的 `AAAIModules/`；历史 `gazelle/` 只作为依赖导入，没有在本轮修改。
+P1 候选模型位于仓库根目录的 `AAAIModules/`，P3 效果优先候选位于 `AAAIAlchemyModels/`；历史 `gazelle/` 只作为依赖导入，没有在本轮修改。
 
 建议先运行 P0，不要直接启动 P1 长训练：
 

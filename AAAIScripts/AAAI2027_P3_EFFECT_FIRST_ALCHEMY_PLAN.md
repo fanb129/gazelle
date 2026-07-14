@@ -1,6 +1,6 @@
 # AAAI 2027 P3：效果优先炼丹计划
 
-> 状态：`PLAN_FROZEN / CODE_PENDING / NOT_RUN`  
+> 状态：`PLAN_FROZEN / CODE_READY / NOT_RUN`
 > 日期：2026-07-15  
 > 服务器 Python：`/home/fb/anaconda3/envs/py310/bin/python`  
 > 服务器仓库：`/home/fb/src/paper/gazelleV1`  
@@ -71,7 +71,7 @@ AAAIScripts/
 └── run_p3d_vat_clean.sh         # 用 P3C GF best.pt 初始化 VAT 8 epochs
 ```
 
-本文件创建时以上 P3 代码仍为 `CODE_PENDING`。在这些文件通过 smoke test 前，不得执行第 7～8 节的长训练命令。
+以上 P3 代码已完成并通过本地无需 DINO/真实数据的 smoke test，状态为 `CODE_READY`。服务器 pytest、DINO/checkpoint 加载 smoke 和第 7～8 节真实训练仍为 `NOT_RUN`；在服务器 smoke 通过前不得执行长训练命令。
 
 ## 5. 固定路径与初始化
 
@@ -131,16 +131,36 @@ winner 从原 VAT warm-start 重新训练 8 epochs，不从 P3A 的第 3 epoch �
 cd /home/fb/src/paper/gazelleV1
 /home/fb/anaconda3/envs/py310/bin/python -m pytest -q AAAIAlchemyModels/tests
 /home/fb/anaconda3/envs/py310/bin/python AAAIScripts/train_p3_alchemy.py --self-test
+/home/fb/anaconda3/envs/py310/bin/python AAAIScripts/evaluate_p3_alchemy.py --self-test
 /home/fb/anaconda3/envs/py310/bin/python AAAIScripts/select_p3_candidate.py --self-test
 ```
 
 预期结果：
 
 ```text
-[待补充：pytest passed 数量]
-[待补充：train self-test 输出]
-[待补充：selection self-test 输出]
+7 passed
+Self-test passed: candidate mapping, differentiable coordinate loss, and sequence-disjoint 90/10 split.
+Self-test passed: full-test metric aggregation and candidate mapping.
+Self-test passed: thresholds, collapse guard, Pareto dominance, and tie-break order.
 ```
+
+本地 2026-07-15 实测（使用已有 PyTorch/timm 与 pytest 运行时组合，不加载 DINO 权重或真实数据）：
+
+| Smoke item | 真实结果 |
+|---|---|
+| `AAAIAlchemyModels/tests` | `7 passed in 4.36s` |
+| synthetic shape / invalid hierarchy | 通过 |
+| R0/R1/R2 zero-init vs historical SASA+GGSF | 逐元素严格相等，`rtol=0, atol=0` |
+| R1/R2 gradient smoke | output projection 梯度非零 |
+| legacy checkpoint / GF→VAT coverage | shared base 与 cross-dataset shared coverage 均为 `1.0` |
+| `train_p3_alchemy.py --self-test` | `Self-test passed: candidate mapping, differentiable coordinate loss, and sequence-disjoint 90/10 split.` |
+| `evaluate_p3_alchemy.py --self-test` | `Self-test passed: full-test metric aggregation and candidate mapping.` |
+| `select_p3_candidate.py --self-test` | `Self-test passed: thresholds, collapse guard, Pareto dominance, and tie-break order.` |
+| Python `py_compile` | 通过 |
+| 四个 shell 的 `bash -n` | 通过 |
+| `git diff --check` | 通过 |
+
+服务器 smoke 与长训练均为 `NOT_RUN`。本地没有读取服务器 DINO 权重、SASA+GGSF checkpoint 或数据集，因此这里不填写任何真实集指标。
 
 ### 7.2 后台顺序运行 R0/R1/R2/R3
 
@@ -220,6 +240,8 @@ tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p3b_vat_confirm.log
 
 仅当 P3B 通过时运行：
 
+`run_p3c_gazefollow.sh` 会先读取 P3B 的 `test.report.json`，并强制检查冻结的 2/3 晋级线；未通过会立即退出，不会启动 GazeFollow 训练。
+
 ```bash
 cd /home/fb/src/paper/gazelleV1
 chmod +x AAAIScripts/run_p3c_gazefollow.sh
@@ -239,6 +261,8 @@ tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p3c_gazefollow.log
 ### 8.3 P3D：用 P3C best.pt 初始化干净 VAT 训练
 
 只有 P3C 没有明显退化时运行。这一步产生可用于最终论文比较的 VAT checkpoint：
+
+为把“没有明显退化”变成可执行保护，`run_p3d_vat_clean.sh` 要求相对当前 GazeFollow SASA+GGSF 参考值：AUC 下降不超过 `0.002`，Min L2 和 Avg L2 各自增加不超过 `0.003`；任一项失败就退出，不启动 VAT。
 
 ```bash
 cd /home/fb/src/paper/gazelleV1
@@ -277,4 +301,3 @@ tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p3d_vat_clean.log
 - P3B 未达到晋级线前，不运行 GazeFollow；
 - 不把 warm-start search checkpoint 直接当作最终论文结果；
 - 不在新结果产生前修改本文件中的 `[待补充]` 数据。
-
