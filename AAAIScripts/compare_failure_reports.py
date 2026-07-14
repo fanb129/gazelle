@@ -84,6 +84,9 @@ def build_pairs(reference: list[dict[str, str]], candidate: list[dict[str, str]]
             raise ValueError(f"annotation/bin mismatch for {row_key}: {mismatches}")
         row = {field: base.get(field, "") for field in (*KEY_FIELDS, *MATCH_FIELDS)}
         row["sequence_id"] = sequence_id(base["dataset"], base["path"])
+        row["inout_label"] = int(base["inout"]) if base.get("inout", "") != "" else None
+        row["reference_inout_score"] = number(base.get("inout_score"))
+        row["candidate_inout_score"] = number(cand.get("inout_score"))
         for metric, direction in METRIC_DIRECTIONS.items():
             base_value, cand_value = number(base.get(metric)), number(cand.get(metric))
             row[f"reference_{metric}"] = base_value
@@ -145,6 +148,57 @@ def summarize(rows: list[dict], iterations: int, seed: int) -> list[dict]:
                 "ci95_low": lower,
                 "ci95_high": upper,
             })
+    ap_rows = [
+        row
+        for row in rows
+        if row.get("inout_label") is not None
+        and row.get("reference_inout_score") is not None
+        and row.get("candidate_inout_score") is not None
+    ]
+    if ap_rows:
+        from sklearn.metrics import average_precision_score
+
+        labels = np.asarray([row["inout_label"] for row in ap_rows], dtype=np.int64)
+        reference_scores = np.asarray(
+            [row["reference_inout_score"] for row in ap_rows], dtype=np.float64
+        )
+        candidate_scores = np.asarray(
+            [row["candidate_inout_score"] for row in ap_rows], dtype=np.float64
+        )
+        point_delta = float(
+            average_precision_score(labels, candidate_scores)
+            - average_precision_score(labels, reference_scores)
+        )
+        cluster_names = sorted({row["sequence_id"] for row in ap_rows})
+        indices_by_cluster = {
+            name: np.asarray(
+                [index for index, row in enumerate(ap_rows) if row["sequence_id"] == name],
+                dtype=np.int64,
+            )
+            for name in cluster_names
+        }
+        rng = np.random.default_rng(seed)
+        bootstrap_deltas = []
+        for _ in range(iterations):
+            sampled = rng.choice(cluster_names, size=len(cluster_names), replace=True)
+            indices = np.concatenate([indices_by_cluster[str(name)] for name in sampled])
+            bootstrap_deltas.append(
+                float(
+                    average_precision_score(labels[indices], candidate_scores[indices])
+                    - average_precision_score(labels[indices], reference_scores[indices])
+                )
+            )
+        output.append({
+            "dimension": "overall",
+            "bin": "all",
+            "metric": "inout_ap",
+            "positive_means": "candidate_better",
+            "n": len(ap_rows),
+            "cluster_n": len(cluster_names),
+            "mean_improvement": point_delta,
+            "ci95_low": float(np.percentile(bootstrap_deltas, 2.5)),
+            "ci95_high": float(np.percentile(bootstrap_deltas, 97.5)),
+        })
     return output
 
 
@@ -197,8 +251,16 @@ def main(argv=None):
         return
     rows = build_pairs(read_csv(args.reference_records), read_csv(args.candidate_records))
     summary = summarize(rows, args.bootstrap_iterations, args.seed)
-    write_csv(args.output_prefix.with_suffix(".paired.csv"), rows)
-    write_csv(args.output_prefix.with_suffix(".summary.csv"), summary)
+    transient_fields = {"inout_label", "reference_inout_score", "candidate_inout_score"}
+    paired_output = [
+        {key: value for key, value in row.items() if key not in transient_fields}
+        for row in rows
+    ]
+    # AP is a nonlinear dataset-level metric, so keep its bootstrap result in
+    # the JSON report rather than mixing it into the per-observation CSV schema.
+    csv_summary = [row for row in summary if row["metric"] != "inout_ap"]
+    write_csv(args.output_prefix.with_suffix(".paired.csv"), paired_output)
+    write_csv(args.output_prefix.with_suffix(".summary.csv"), csv_summary)
     report = {
         "status": "measured",
         "reference": file_manifest(args.reference_records),
@@ -209,7 +271,7 @@ def main(argv=None):
             "iterations": args.bootstrap_iterations,
             "seed": args.seed,
         },
-        "metric_directions": METRIC_DIRECTIONS,
+        "metric_directions": {**METRIC_DIRECTIONS, "inout_ap": 1.0},
         "summary": summary,
     }
     report_path = args.output_prefix.with_suffix(".report.json")

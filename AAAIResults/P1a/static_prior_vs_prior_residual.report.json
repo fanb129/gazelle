@@ -22,7 +22,8 @@
     "avg_l2": -1.0,
     "min_l2": -1.0,
     "target_confusion": -1.0,
-    "association_margin": 1.0
+    "association_margin": 1.0,
+    "inout_ap": 1.0
   },
   "summary": [
     {
@@ -1344,6 +1345,17 @@
       "mean_improvement": null,
       "ci95_low": null,
       "ci95_high": null
+    },
+    {
+      "dimension": "overall",
+      "bin": "all",
+      "metric": "inout_ap",
+      "positive_means": "candidate_better",
+      "n": 31978,
+      "cluster_n": 131,
+      "mean_improvement": 0.004669043216222191,
+      "ci95_low": -0.0007274491198149657,
+      "ci95_high": 0.008677691020240238
     }
   ]
 }

@@ -1,6 +1,6 @@
 # AAAI 2027 诊断与最小候选实验方案
 
-> 状态：P0 与 P0.5 已于 2026-07-14 完成并同步；P1a 代码与执行方案已就绪，尚未在服务器运行。
+> 状态：P0、P0.5 与 P1a 已完成并同步；P1a 未通过预先冻结的 Go 门槛，hierarchy-router 方法线于 2026-07-14 判定为 No-Go；P2 无训练审计代码与命令已就绪，尚未运行。
 > 服务器解释器：`/home/fb/anaconda3/envs/py310/bin/python`
 > 原则：先验证机制，再训练候选；所有 `[待补充]` 都必须由真实输出填写，不得根据预期补数。
 
@@ -29,6 +29,8 @@ AAAIScripts/
 ├── p05_inference_interventions.py   # P0.5 SASA/GGSF 无训练干预
 ├── run_p05_vat.sh                   # 3090.lab 顺序运行与 paired comparison
 ├── run_p1a_vat.sh                   # 3090.lab 顺序训练/评估 prior-residual pilot
+├── p2_transition_reliability_audit.py # 无推理的 VAT transition/calibration 审计
+├── run_p2_transition_audit.sh        # P2 四组已有 records 的后台执行入口
 ├── matched_control_runner.py          # 现有 Gazelle controls 的 dry-run 计划/汇总
 ├── train_gazelle_control.py           # unchanged Gazelle control，严格 matching init/best.pt
 ├── train_person_router.py             # 独立候选 GF/VAT 训练，保存 best.pt
@@ -472,7 +474,7 @@ AAAIResults/smoke/p1a_prior_residual_vat/best.pt
 AAAIResults/smoke/p1a_prior_residual_vat/history.json
 ```
 
-smoke 的实际结果：`[待补充]`
+smoke 日志没有单独同步，但完整 P1a 的 `run_manifest.status=complete`，训练、双模型完整测试、paired bootstrap 与 router audit 均已成功完成，因此端到端连通性已由正式运行覆盖。
 
 检查 `run_manifest.json` 时必须满足：`test_used_for_selection=false`、`candidate=P1a_global_prior_plus_person_residual_router`，并且 `initialization_report.unexpected=[]`、`incompatible_shapes=[]`。`ignored_source_keys` 中出现 `sasa.*`/`ggsf.*` 是预期行为。
 
@@ -518,23 +520,35 @@ AAAIResults/P1a/router_audit/results.json
 
 ### 9.5 结果填写区
 
+训练使用 20,462 个 train queries 和 2,179 个 sequence-disjoint validation queries，只训练 250,625 个 router 参数；test 未用于选 epoch。验证集历史如下：
+
+| Epoch | Train loss ↓ | Validation AUC ↑ | Validation L2 ↓ | Validation AP ↑ |
+|---:|---:|---:|---:|---:|
+| 0 | 0.3525 | 0.9343 | 0.1280 | 0.9570 |
+| 1 | 0.3382 | 0.9349 | 0.1242 | 0.9569 |
+| 2 | 0.3424 | 0.9340 | 0.1253 | 0.9563 |
+| 3 | 0.3316 | 0.9343 | **0.1234** | 0.9561 |
+
 | P1a model（同架构、同 checkpoint 起点） | AUC ↑ | L2 ↓ | AP ↑ | X-TCR ↓ | Margin ↑ | 备注 |
 |---|---:|---:|---:|---:|---:|---|
-| `initial.pt`：train-only 固定层级先验、无 GGSF | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | 严格 control；prior=`[待补充]` |
-| `best.pt`：全局先验 + 人物条件残差 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | validation best epoch=`[待补充]` |
+| `initial.pt`：train-only 固定层级先验、无 GGSF | 0.94095 | 0.10039 | 0.88180 | 0.19315 | 0.21427 | 严格 control；prior=`.01176/.08664/.21456/.68703` |
+| `best.pt`：全局先验 + 人物条件残差 | 0.94143 | 0.09983 | 0.88647 | 0.19410 | 0.21396 | validation best epoch=3 |
 
 | Paired metric（positive means `best.pt` better） | Mean improvement | Sequence-bootstrap 95% CI | 判断 |
 |---|---:|---:|---|
-| AUC | `[待补充]` | `[待补充]` | `[待补充]` |
-| L2 | `[待补充]` | `[待补充]` | `[待补充]` |
-| X-TCR | `[待补充]` | `[待补充]` | `[待补充]` |
-| Association margin | `[待补充]` | `[待补充]` | `[待补充]` |
+| AUC | +0.00048 | `[-0.00037, 0.00129]` | CI 跨 0，不稳定 |
+| L2 | +0.00055 | `[-0.00144, 0.00235]` | CI 跨 0，不稳定 |
+| In/Out AP | +0.00467 | `[-0.00073, 0.00868]` | point estimate 改善，但 CI 跨 0 |
+| X-TCR | -0.00095 | `[-0.00676, 0.00366]` | point estimate 退化，CI 跨 0 |
+| Association margin | -0.00031 | `[-0.00338, 0.00214]` | point estimate 退化，CI 跨 0 |
 
 | Router behavior | `initial.pt` | `best.pt` | 判断 |
 |---|---:|---:|---|
-| Mean weights L2/L5/L8/L11 | `[待补充：train-only prior]` | `[待补充]` | 是否保留任务级先验 |
-| Inter-person L1 | `0` | `[待补充]` | 是否产生人物条件差异 |
-| Normalized entropy | `[待补充]` | `[待补充]` | 是否塌缩到单层/极端权重 |
+| Mean weights L2/L5/L8/L11 | `.01176/.08664/.21456/.68703` | `.01956/.09838/.22850/.65355` | 保留深层主导，同时向浅/中层移动 |
+| Inter-person L1 | `0` | `0.01407` | 确实产生了人物条件差异 |
+| Normalized entropy | `0.61482` | `0.65734` | 未塌缩，分布反而更平坦 |
+
+补充观察：router 在 3 人、near target、medium head 等部分分桶改善，但在单人 L2 和 far-target AUC 上出现显著反向退化；不同分桶方向不一致，不能选择性包装为 crowded 或 query-specific 收益。与旧 learned SASA+GGSF（0.94023/0.09902/0.88680）相比，P1a 的 AUC 略高、L2 略差、AP 基本相同，同样没有形成新的 SOTA 证据。
 
 ### 9.6 预先冻结的 Go / No-Go 门槛
 
@@ -545,14 +559,24 @@ P1a 进入下一阶段必须同时满足：
 3. `best.pt` 的权重没有塌缩为几乎固定或单层，并出现可复现的人物/场景条件差异；
 4. 改善不能只存在于某一个极小分桶，crowded 只作为 stress-test 分层，不再作为主问题定义。
 
-满足四项为 **Go**：再运行 GazeFollow → VAT 的 matched full training，并补 3 seeds、参数量/FLOPs、静态先验、无先验 residual、不同 router input 的消融。任何一项失败为 **No-Go**：停止 hierarchy-router 方法线，不再通过增大 router 或恢复 GGSF 挽救；转而重新定义问题或考虑更实质的任务设定。
+实际判定：第 1 条失败；第 2、3 条通过；第 4 条失败，因为分桶收益方向相反。因此结论为 **No-Go**。不运行 GazeFollow、不补 3 seeds，也不通过增大 router、延长 epoch 或恢复 GGSF 挽救这一机制。
 
-### 9.7 如果 P1a 通过，后续顺序（当前不要执行）
+### 9.7 P1a 最终判断与下一步
 
-1. 训练匹配的 512 GazeFollow `global-prior` control 与 `prior+residual` candidate（各约 1.5 天，顺序运行）；
-2. 分别用 matching GF checkpoint 初始化 VAT（各约 7 小时），不得用同一不兼容 checkpoint 初始化不同 fusion；
-3. 首个 seed 仍满足门槛后再补另外两个 seed；
-4. 最后才做与 2026 新工作及公开预印本的统一 protocol 对比。预印本应列入 related work 和结果表，但必须标注 arXiv/preprint、核对其数据划分/输入分辨率/backbone，不能把不可比数字直接当作 SOTA 排名。
+**Paper type：Novel Method。** 一句话故事原本是“用任务级先验加人物条件残差，使冻结视觉基础模型的层级表示适配每个 bbox query”。致命问题是：动态性已经被成功学出，但主要定位指标被简单固定 control 匹配，且没有一个 overall paired CI 支持改善。按照预先冻结的判据，这是被数据否定的核心机制，而不是多跑几次可以修复的方差问题。
+
+**Verdict：Reject and Pivot（针对 P1a 版本，不是放弃整个 gaze 方向）。**
+
+下一步回到 problem-first，暂不继续改网络。优先做一个无需 GPU 长训练的 **P2：VAT transition-conditioned reliability audit**：
+
+1. 在连续帧中用 bbox IoU 匹配同一人物，划分 stable-in、in→out、out→in、stable-out 四类状态；
+2. 对已有 raw predictions 计算 in/out ECE、Brier、AP，以及扣除 GT 运动后的 localization jitter；
+3. 控制人数、head size、target distance 与 scene cut，判断“状态转换时的不可靠性”是否是独立且可重复的真实问题；
+4. 只有诊断成立，才调研并设计轻量的 transition-aware calibration/temporal residual head，优先在缓存特征或输出层上训练，不重跑 DINO backbone。
+
+这个方向不能简单表述为“加入时序”：CVPR 2020 的 [Detecting Attended Visual Targets in Video](https://openaccess.thecvf.com/content_CVPR_2020/html/Chong_Detecting_Attended_Visual_Targets_in_Video_CVPR_2020_paper.html) 已建模动态 attention，2024 年的 [multi-person temporal gaze framework](https://arxiv.org/abs/2403.10511) 已联合多人、时序和 social gaze；静态不确定性/in-out 联合建模也已有 [Patch-Level Gaze Distribution Prediction](https://openaccess.thecvf.com/content/WACV2023/html/Miao_Patch-Level_Gaze_Distribution_Prediction_for_Gaze_Following_WACV_2023_paper.html)。潜在差异只能是“**scene-level gaze following 在 in/out 状态转换下的可靠性与校准**”，且仍需系统文献核验后才能称为 gap。
+
+如果 P2 诊断也不成立，则不再强行修改原 MM 方法投 AAAI。届时有两个诚实选择：把现有工作按静态多层融合的真实贡献转向要求较低的 venue，或围绕新的任务/数据设置重启一篇论文。AAAI 近年的 gaze 文章更依赖明确的新问题或外部语义，例如 activity cues 的 [AAAI 2024 工作](https://ojs.aaai.org/index.php/AAAI/article/view/28480)、自闭症儿童新场景与数据的 [AAAI 2026 工作](https://ojs.aaai.org/index.php/AAAI/article/view/41177)，以及 concept-conditioned/OOD setting 的 [CVPR 2026 GazeAnywhere](https://openaccess.thecvf.com/content/CVPR2026/papers/Cao_Gaze_Target_Estimation_Anywhere_with_Concepts_CVPR_2026_paper.pdf)。仅靠重新命名多层融合不足以达到这一问题强度。
 
 
 ## 10. 已完成的执行与结果完整性
@@ -575,11 +599,14 @@ P1a 进入下一阶段必须同时满足：
 | SASA/GGSF audit | 完成；53,431 raw audit rows，无 GT post-processing |
 | P0.5 六种 inference interventions | 完成；fixed mean/shuffle/GGSF identity 支持删除旧 dynamic/GGSF claim |
 | P1a prior-residual 语法与纯函数检查 | 通过；epoch-0 prior 与 VAT sequence split 已作本地检查 |
-| 完整候选模型服务器 pytest | `[待在 py310 环境补充]` |
+| P1a 完整训练与测试 | 完成；20,462/2,179 train/validation queries，best epoch=3 |
+| P1a paired comparison | 完成；31,978 对齐 records，localization 与 AP 均完成 sequence bootstrap |
+| P1a router audit | 完成；uniform 1,000 test frames、2,344 queries，inter-person L1=0.01407 |
+| P1a Go/No-Go | **No-Go**；overall AUC/L2/AP/X-TCR/margin 的 CI 全部跨 0 |
 
 ## 11. 当前结论与下一次执行入口
 
-P0/P0.5 的结果已经回传并完成检查。P1a 现在是唯一允许启动的训练入口：
+P0/P0.5/P1a 的结果已经回传并完成检查：
 
 ```text
 AAAIResults/P0/vat_base_full.report.json
@@ -589,6 +616,91 @@ AAAIResults/P0/hierarchy_probe/results.json
 AAAIResults/P0/sasa_ggsf_audit/results.json
 AAAIResults/P05/vat_*.report.json
 AAAIResults/P05/learned_vs_*.report.json
+AAAIResults/P1a/prior_residual_vat_seed3106/{run_manifest,history}.json
+AAAIResults/P1a/vat_{static_prior_full,prior_residual_full}.report.json
+AAAIResults/P1a/static_prior_vs_prior_residual.report.json
+AAAIResults/P1a/router_audit/results.json
 ```
 
-先按第 9.3 节执行 pytest 与一批次 smoke；通过后按第 9.4 节只启动 `run_p1a_vat.sh`。不要并行启动旧 GazeFollow controls，也不要先补 3 seeds。P1a 完成并同步后，填写第 9.5 节并严格按第 9.6 节作 Go/No-Go 判断。
+当前不要再运行第 9.4 节命令，也不要启动旧 GazeFollow controls。下一次只执行下面的 P2 无训练 transition/reliability audit；在其问题证据与近期文献 gap 同时成立之前，不实现新的 temporal module。
+
+### 11.1 P2 代码 smoke
+
+从服务器仓库根目录运行：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python AAAIScripts/p2_transition_reliability_audit.py --self-test
+```
+
+预期输出：
+
+```text
+Self-test passed: IoU tracking, transition states, ECE, and AP.
+```
+
+### 11.2 P2 完整后台命令
+
+该步骤不加载模型或 PT 文件，只读取 VAT test annotation 和四组已有 `.records.csv`。预计主要消耗 CPU；四组模型中的 448 baseline 只用于检查问题是否跨架构存在，不能与 512 模型做绝对性能归因。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p /home/fb/src/paper/gazelleV1/AAAIResults/P2/transition_reliability /home/fb/src/paper/gazelleV1/AAAIResults/logs
+chmod +x AAAIScripts/run_p2_transition_audit.sh
+nohup bash AAAIScripts/run_p2_transition_audit.sh \
+  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/p2_transition_reliability.log 2>&1 &
+```
+
+查看进度：
+
+```bash
+tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p2_transition_reliability.log
+```
+
+确认进程：
+
+```bash
+ps -ef | grep '[p]2_transition_reliability_audit.py'
+```
+
+输出文件：
+
+```text
+AAAIResults/P2/transition_reliability/per_transition.csv
+AAAIResults/P2/transition_reliability/summary.csv
+AAAIResults/P2/transition_reliability/comparisons.csv
+AAAIResults/P2/transition_reliability/report.json
+```
+
+其中：
+
+- `per_transition.csv`：相邻帧 bbox-IoU 匹配、stable/switch 状态、in/out score、Brier、L2 和 motion residual；
+- `summary.csv`：按 model、state、regime、crowd、head size、target distance 汇总；
+- `comparisons.csv`：2,000 次 sequence-bootstrap 的 switch-vs-stable Brier/absolute error，以及 out→in-vs-stable-in L2；
+- `report.json`：annotation/records SHA256、tracking coverage、完整汇总和 claim boundary。
+
+### 11.3 P2 结果占位与预先冻结的门槛
+
+| Tracking diagnostic | 结果 |
+|---|---:|
+| Sequence count | `[待补充]` |
+| Adjacent frame pairs | `[待补充]` |
+| Matched people | `[待补充]` |
+| IoU match-rate upper bound | `[待补充]` |
+| stable-in / in→out / out→in / stable-out counts | `[待补充]` |
+
+| Model | Switch−Stable Brier（95% CI） | Switch−Stable absolute error（95% CI） | Out→In−StableIn L2（95% CI） | 判断 |
+|---|---:|---:|---:|---|
+| Baseline v0 448（只作跨架构现象核验） | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| Learned SASA+GGSF 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| P1a static prior 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| P1a prior residual 512 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+
+P2 只有同时满足以下条件才进入 temporal/calibration 方法设计：
+
+1. IoU tracking coverage 足够，且 in→out、out→in 各自至少有 500 个 matched transitions；
+2. 至少三个模型（必须包含两个 512 模型）的 switch−stable Brier 或 absolute-error 95% CI 完全大于 0；
+3. 至少两个 512 模型的 out→in−stable-in L2 CI 完全大于 0，或存在同等强度且预先解释清楚的 localization reliability 证据；
+4. 效应不只来自单一 crowd/head-size/target-distance 小分桶。
+
+若不满足，P2 判定 No-Go，不实现 temporal module。若满足，也只能先称为“候选问题证据”；还需完成针对 transition-aware calibrated scene-level gaze following 的系统文献检索，确认 gap 后再写方法。
