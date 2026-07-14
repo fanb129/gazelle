@@ -1,0 +1,17 @@
+ci95_high,ci95_low,cluster_n,comparison,delta,first_n,model,positive_means,second_n
+0.266241995684011,0.21102195359209755,131,switch_minus_stable_brier,0.23862438180635578,489,baseline_v0_448,first_group_worse,31191
+0.2938055683310432,0.23572108580484816,131,switch_minus_stable_absolute_error,0.26502942989183986,489,baseline_v0_448,first_group_worse,31191
+0.09256990563172489,0.031992935250341636,119,out_to_in_minus_stable_in_l2,0.06185321650530133,251,baseline_v0_448,first_group_worse,20225
+,,119,stable_in_motion_residual,0.01977090139258621,20225,baseline_v0_448,first_group_worse,0
+0.2836287251823497,0.21610725993786453,131,switch_minus_stable_brier,0.25058354061378485,489,learned_sasa_ggsf_512,first_group_worse,31191
+0.3107127104895802,0.2411031733039222,131,switch_minus_stable_absolute_error,0.27671937176430406,489,learned_sasa_ggsf_512,first_group_worse,31191
+0.0896989718657869,0.03577837748678931,119,out_to_in_minus_stable_in_l2,0.061104587572777494,251,learned_sasa_ggsf_512,first_group_worse,20225
+,,119,stable_in_motion_residual,0.020630248293377396,20225,learned_sasa_ggsf_512,first_group_worse,0
+0.2783204145042763,0.21037943785837934,131,switch_minus_stable_brier,0.24427820199368622,489,p1a_prior_residual_512,first_group_worse,31191
+0.3061691768022482,0.23776266338306812,131,switch_minus_stable_absolute_error,0.272661868093727,489,p1a_prior_residual_512,first_group_worse,31191
+0.08385211102584744,0.03165561428844625,119,out_to_in_minus_stable_in_l2,0.05556252084933026,251,p1a_prior_residual_512,first_group_worse,20225
+,,119,stable_in_motion_residual,0.021350121842982715,20225,p1a_prior_residual_512,first_group_worse,0
+0.286025528691092,0.21622343690508147,131,switch_minus_stable_brier,0.25156172156278056,489,p1a_static_prior_512,first_group_worse,31191
+0.3124994736636901,0.24156889353278088,131,switch_minus_stable_absolute_error,0.2776476939840584,489,p1a_static_prior_512,first_group_worse,31191
+0.08670297218357717,0.033380693732318174,119,out_to_in_minus_stable_in_l2,0.05850156159259842,251,p1a_static_prior_512,first_group_worse,20225
+,,119,stable_in_motion_residual,0.02127318206375902,20225,p1a_static_prior_512,first_group_worse,0
