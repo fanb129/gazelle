@@ -1,0 +1,37 @@
+{
+  "status": "awaiting_manual_review",
+  "seed": 3106,
+  "per_direction": 60,
+  "sample_count": 120,
+  "state_counts": {
+    "in_to_out": 60,
+    "out_to_in": 60
+  },
+  "sequence_count": 88,
+  "review_columns": {
+    "review_valid_transition": [
+      "no",
+      "uncertain",
+      "yes"
+    ],
+    "review_temporal_context_helpful": [
+      "no",
+      "uncertain",
+      "yes"
+    ],
+    "review_issue_type": [
+      "annotation_inconsistency",
+      "clear_transition",
+      "gradual_ambiguous",
+      "occlusion_scene_cut",
+      "other",
+      "track_mismatch"
+    ],
+    "review_notes": "free text"
+  },
+  "frozen_gates": {
+    "max_invalid_rate": 0.1,
+    "min_temporal_context_helpful_rate": 0.7,
+    "effect_requirement": "both direction-matched absolute-error CI lows > 0 for >=3 models including >=2 512 models"
+  }
+}
