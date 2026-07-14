@@ -6,6 +6,7 @@ different backbone layers.  It does not model interactions between people.
 
 from __future__ import annotations
 
+import math
 from typing import Any, Sequence
 
 import torch
@@ -105,16 +106,29 @@ class PersonConditionedHierarchicalRouter(nn.Module):
         roi_size: int = 3,
         dropout: float = 0.1,
         temperature: float = 1.0,
+        prior_weights: Sequence[float] = (0.0340173, 0.0974448, 0.2007198, 0.6678180),
+        residual_scale: float = 1.0,
     ) -> None:
         super().__init__()
         if num_layers < 2:
             raise ValueError("Hierarchical routing requires at least two feature layers")
         if temperature <= 0:
             raise ValueError("temperature must be positive")
+        if residual_scale <= 0:
+            raise ValueError("residual_scale must be positive")
+        if len(prior_weights) != num_layers or any(weight <= 0 for weight in prior_weights):
+            raise ValueError("prior_weights must contain one positive value per hierarchy layer")
         self.feature_dim = feature_dim
         self.num_layers = num_layers
         self.roi_size = roi_size
         self.temperature = temperature
+        self.residual_scale = residual_scale
+        prior_sum = float(sum(prior_weights))
+        normalized_prior = [float(weight) / prior_sum for weight in prior_weights]
+        self.register_buffer(
+            "base_logits",
+            torch.tensor([math.log(weight) for weight in normalized_prior], dtype=torch.float32),
+        )
 
         self.roi_norm = nn.LayerNorm(feature_dim)
         self.context_norm = nn.LayerNorm(feature_dim)
@@ -130,7 +144,8 @@ class PersonConditionedHierarchicalRouter(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, 1),
         )
-        # Start close to equal weighting; learning must justify specialization.
+        # The residual starts at zero, so epoch-0 routing exactly reproduces the
+        # task-global fixed-mean prior measured in P0.5.
         nn.init.zeros_(self.score[-1].weight)
         nn.init.zeros_(self.score[-1].bias)
 
@@ -185,7 +200,13 @@ class PersonConditionedHierarchicalRouter(nn.Module):
         layer_ids = torch.arange(self.num_layers, device=reference.device)
         layer_code = self.layer_embedding(layer_ids)[None].expand(num_people, -1, -1)
         geometry_code = geometry_code[:, None].expand(-1, self.num_layers, -1)
-        logits = self.score(torch.cat([roi_tensor, context_tensor, geometry_code, layer_code], dim=-1)).squeeze(-1)
+        residual_logits = self.score(
+            torch.cat([roi_tensor, context_tensor, geometry_code, layer_code], dim=-1)
+        ).squeeze(-1)
+        logits = (
+            self.base_logits.to(dtype=residual_logits.dtype)[None]
+            + self.residual_scale * torch.tanh(residual_logits)
+        )
         weights = torch.softmax(logits / self.temperature, dim=1)
 
         # Keep Gazelle's historical 4C -> dim projection compatible by weighting
@@ -206,5 +227,13 @@ class PersonConditionedHierarchicalRouter(nn.Module):
             "num_layers": self.num_layers,
             "num_people": num_people,
             "temperature": self.temperature,
+            "routing_decomposition": "task_global_prior_plus_person_residual",
+            "base_prior": (
+                torch.softmax(self.base_logits / self.temperature, dim=0)
+                .detach()
+                .cpu()
+                .tolist()
+            ),
+            "residual_scale": self.residual_scale,
             "fusion_after_routing": "weighted_layer_concat",
         }

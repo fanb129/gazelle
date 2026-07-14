@@ -35,6 +35,10 @@ class PersonHierarchicalGazeLLE(GazeLLE):
         router_roi_size: int = 3,
         router_dropout: float = 0.1,
         router_temperature: float = 1.0,
+        router_prior_weights: tuple[float, float, float, float] = (
+            0.0340173, 0.0974448, 0.2007198, 0.6678180
+        ),
+        router_residual_scale: float = 1.0,
         hierarchy_layers: int = 4,
     ) -> None:
         super().__init__(
@@ -61,6 +65,8 @@ class PersonHierarchicalGazeLLE(GazeLLE):
             roi_size=router_roi_size,
             dropout=router_dropout,
             temperature=router_temperature,
+            prior_weights=router_prior_weights,
+            residual_scale=router_residual_scale,
         )
 
     def forward(self, input: Mapping[str, Any]) -> dict[str, Any]:
@@ -101,7 +107,7 @@ class PersonHierarchicalGazeLLE(GazeLLE):
         backbone_indices = getattr(self.backbone, "out_indices", None)
         metadata = {
             **router_metadata,
-            "candidate": "P1_minimal_hierarchical_router",
+            "candidate": "P1a_global_prior_plus_person_residual_router",
             "backbone_passes_per_forward": 1,
             "shared_scene_encoding": True,
             "backbone_layer_indices": list(backbone_indices) if backbone_indices is not None else None,
@@ -127,6 +133,7 @@ class PersonHierarchicalGazeLLE(GazeLLE):
         checkpoint: str | Path | Mapping[str, torch.Tensor],
         *,
         map_location: str | torch.device = "cpu",
+        allow_legacy_sasa_ggsf: bool = False,
     ) -> dict[str, list[str]]:
         """Load a historical Gazelle checkpoint and report compatibility.
 
@@ -151,11 +158,18 @@ class PersonHierarchicalGazeLLE(GazeLLE):
             key for key, value in state.items() if key in current and current[key].shape != value.shape
         )
         unexpected = sorted(key for key in state if key not in current)
+        ignored_source_keys: list[str] = []
+        if allow_legacy_sasa_ggsf:
+            ignored_source_keys = [
+                key for key in unexpected if key.startswith(("sasa.", "ggsf."))
+            ]
+            unexpected = [key for key in unexpected if key not in ignored_source_keys]
         missing = sorted(key for key in current if key not in compatible)
         self.load_state_dict(compatible, strict=False)
         return {
             "loaded": sorted(compatible),
             "missing": missing,
             "unexpected": unexpected,
+            "ignored_source_keys": sorted(ignored_source_keys),
             "incompatible_shapes": incompatible_shapes,
         }

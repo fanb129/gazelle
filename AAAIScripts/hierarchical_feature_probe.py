@@ -116,10 +116,24 @@ def sample_attributes(frame: dict) -> dict[str, str | int | float]:
     }
 
 
-def iter_frames(dataset: str, data_path: Path, json_path: Path, max_samples: int):
+def iter_frames(
+    dataset: str,
+    data_path: Path,
+    json_path: Path,
+    max_samples: int,
+    *,
+    sampling: str = "prefix",
+    sampling_seed: int = 3106,
+):
     payload = json.loads(json_path.read_text())
     frames = payload if dataset == "gazefollow" else [f for seq in payload for f in seq.get("frames", [])]
-    for index, frame in enumerate(frames[:max_samples]):
+    if sampling == "uniform" and max_samples < len(frames):
+        rng = np.random.default_rng(sampling_seed)
+        indices = sorted(rng.choice(len(frames), size=max_samples, replace=False).tolist())
+    else:
+        indices = list(range(min(max_samples, len(frames))))
+    for index in indices:
+        frame = frames[index]
         image_path = Path(frame.get("path", ""))
         if not image_path.is_absolute():
             image_path = data_path / image_path

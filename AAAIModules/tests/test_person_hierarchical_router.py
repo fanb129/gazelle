@@ -41,6 +41,17 @@ def test_router_produces_person_weights_that_sum_to_one():
     assert metadata["models_query_interaction"] is False
 
 
+def test_router_starts_from_measured_global_prior():
+    prior = (0.0340173, 0.0974448, 0.2007198, 0.6678180)
+    router = PersonConditionedHierarchicalRouter(8, dropout=0.0, prior_weights=prior).eval()
+    features = [torch.randn(1, 8, 4, 4) for _ in range(4)]
+    with torch.no_grad():
+        _, weights, metadata = router(features, [[[0.1, 0.1, 0.5, 0.6]]])
+    expected = torch.tensor(prior) / sum(prior)
+    assert torch.allclose(weights[0], expected, atol=1e-6)
+    assert metadata["routing_decomposition"] == "task_global_prior_plus_person_residual"
+
+
 def test_synthetic_model_smoke_without_dino_weights():
     backbone = DummyBackbone()
     model = PersonHierarchicalGazeLLE(
@@ -88,3 +99,20 @@ def test_base_checkpoint_compatibility_keeps_new_router_parameters_missing():
     assert report["unexpected"] == []
     assert report["missing"]
     assert all(key.startswith("layer_router.") for key in report["missing"])
+
+
+def test_legacy_sasa_ggsf_keys_can_be_explicitly_ignored():
+    model = PersonHierarchicalGazeLLE(
+        DummyBackbone(), dim=32, num_layers=1, in_size=(64, 64), out_size=(16, 16),
+        router_hidden_dim=16,
+    )
+    historical = {
+        key: value.clone()
+        for key, value in model.state_dict().items()
+        if not key.startswith("layer_router.")
+    }
+    historical["sasa.fake_weight"] = torch.ones(1)
+    historical["ggsf.fake_weight"] = torch.ones(1)
+    report = model.load_base_checkpoint(historical, allow_legacy_sasa_ggsf=True)
+    assert report["unexpected"] == []
+    assert report["ignored_source_keys"] == ["ggsf.fake_weight", "sasa.fake_weight"]

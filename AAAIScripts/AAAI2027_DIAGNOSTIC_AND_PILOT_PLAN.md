@@ -1,6 +1,6 @@
 # AAAI 2027 诊断与最小候选实验方案
 
-> 状态：P0 已于 2026-07-14 完成并同步；P0.5 脚本已就绪；P1 尚未启动。
+> 状态：P0 与 P0.5 已于 2026-07-14 完成并同步；P1a 代码与执行方案已就绪，尚未在服务器运行。
 > 服务器解释器：`/home/fb/anaconda3/envs/py310/bin/python`
 > 原则：先验证机制，再训练候选；所有 `[待补充]` 都必须由真实输出填写，不得根据预期补数。
 
@@ -15,7 +15,7 @@
 3. **Q3：为什么 GGSF 的历史增益很小，是否应删除？**  
    ACM MM 实验已经显示 GGSF 提升很小。本轮只审计其 mask 是否接近常数/identity，以及不同人物之间是否真的有差异；它不再作为默认核心贡献候选。
 
-只有 Q1/Q2 给出正证据，才运行 `AAAIModules/` 中的最小 person-conditioned hierarchical router。该候选旨在增强 bbox-conditioned layer selection，没有 relational loss，也不建模人与人交互。若 X-TCR 很低或只反映一般定位误差，则不应把 crowded/query specificity 作为主故事。
+P0/P0.5 已经回答：crowded/query binding 不足以作为主故事，GGSF 应删除，原 SASA 近似任务级固定层级配方。当前只允许运行第 9 节的最小 prior-residual pilot；它没有 relational loss，也不建模人与人交互。
 
 ## 2. 目录与职责
 
@@ -28,6 +28,7 @@ AAAIScripts/
 ├── audit_sasa_ggsf.py                # raw GGSF mask 与 SASA weight 审计
 ├── p05_inference_interventions.py   # P0.5 SASA/GGSF 无训练干预
 ├── run_p05_vat.sh                   # 3090.lab 顺序运行与 paired comparison
+├── run_p1a_vat.sh                   # 3090.lab 顺序训练/评估 prior-residual pilot
 ├── matched_control_runner.py          # 现有 Gazelle controls 的 dry-run 计划/汇总
 ├── train_gazelle_control.py           # unchanged Gazelle control，严格 matching init/best.pt
 ├── train_person_router.py             # 独立候选 GF/VAT 训练，保存 best.pt
@@ -48,7 +49,7 @@ AAAIModules/
 
 ```bash
 cd /home/fb/src/paper/gazelleV1
-mkdir -p /home/fb/src/paper/gazelleV1/AAAIResults/P0 /home/fb/src/paper/gazelleV1/AAAIResults/P1 /home/fb/src/paper/gazelleV1/AAAIResults/logs
+mkdir -p /home/fb/src/paper/gazelleV1/AAAIResults/P0 /home/fb/src/paper/gazelleV1/AAAIResults/P05 /home/fb/src/paper/gazelleV1/AAAIResults/P1a /home/fb/src/paper/gazelleV1/AAAIResults/logs
 ```
 
 必须从仓库根目录运行，因为 DINOv3 本地仓库与预训练权重目前使用相对路径：
@@ -93,7 +94,7 @@ Wrote 32 raw gate/weight audit rows ...
 预期：
 
 ```text
-3 passed
+5 passed
 ```
 
 若服务器环境未安装 `pytest`，可先运行语法检查，再用下一节的一批次训练 smoke 验证完整 forward：
@@ -374,12 +375,12 @@ P0.5 结果表：
 | Inference intervention（同一 checkpoint） | AUC ↑ | L2 ↓ | AP ↑ | X-TCR ↓ | Margin ↑ | 相对 learned 的 paired 结论 |
 |---|---:|---:|---:|---:|---:|---|
 | Learned SASA + GGSF | 0.9402 | 0.0990 | 0.8868 | 0.1961 | 0.2137 | reference |
-| Fixed global mean | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Previous-frame shuffled | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Equal four-layer | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Last-only | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Shallow+deep static（L2+L11） | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| GGSF identity | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| Fixed global mean | 0.9411 | 0.0994 | 0.8834 | 0.1931 | 0.2135 | AUC `+0.00086 [-0.00011,0.00209]`，L2 改善 `-0.00041 [-0.00196,0.00096]`；均不稳定 |
+| Previous-frame shuffled | 0.9402 | 0.0990 | 0.8868 | 0.1959 | 0.2138 | 几乎完全相同；图像与动态权重对应关系没有可测贡献 |
+| Equal four-layer | 0.8724 | 0.1729 | 0.8673 | 0.3112 | 0.1172 | 显著退化，但属于未重训 decoder 的分布外干预 |
+| Last-only | 0.9042 | 0.1360 | 0.8391 | 0.2611 | 0.1658 | 显著退化，但属于未重训 decoder 的分布外干预 |
+| Shallow+deep static（L2+L11） | 0.7427 | 0.2817 | 0.7691 | 0.5802 | -0.0341 | 显著退化，但属于未重训 decoder 的分布外干预 |
+| GGSF identity | 0.9402 | 0.0992 | 0.8865 | 0.1965 | 0.2130 | 所有 paired CI 跨 0；GGSF 可删除 |
 
 主要输出：
 
@@ -389,191 +390,172 @@ AAAIResults/P05/learned_vs_{fixed_mean,shuffle,equal,last_only,shallow_deep,ggsf
 AAAIResults/P05/last_only_vs_shallow_deep.report.json
 ```
 
-### 8.3 P1 的最小训练顺序
+P0.5 的核心结论不是“固定均值优于 learned SASA”，而是两者在统计上不可区分；shuffle 又几乎逐点复现 learned 结果。因此现有 SASA 的有效部分是一个**任务级固定层级配方**，不是样本级或人物级动态选择。GGSF identity 同样与原模型不可区分。equal、last-only、L2+L11 的退化只能说明旧 decoder 依赖训练时的四层缩放，不能替代重训后的架构消融。
 
-P0.5 后不要把现有全部 P1 命令一次排队。单卡 3090 按信息增益排序：
+### 8.3 P0.5 后的决策
 
-1. 先完成上述不训练的 P0.5；若 fixed/static 干预相对 last-only/equal 没有优势，立即停止 hierarchy 方法线；
-2. 若 P0.5 有正信号，先审计是否已有与候选架构严格匹配的 512 GazeFollow checkpoint；有则复用，没有才顺序训练 **last-only** 与最优 **static shallow–deep** 两个 GF control（各约 1.5 天）；
-3. 使用各自 matching GF checkpoint 分别训练 VAT（各约 7 小时），比较 last-only 与 static shallow–deep；
-4. 只有 static shallow–deep 在主要定位指标上稳定改善且 AP 不退化，才按 “GF 约 1.5 天 → VAT 约 7 小时” 训练 person-conditioned router；
-5. router 必须进一步超过 static shallow–deep，否则论文只保留静态、简单且可解释的融合，不包装 router。
+P0.5 已否定两个旧 claim：GGSF 没有可测贡献，SASA 也不是动态的人物自适应融合。与此同时，固定均值明显优于未经重训的单层和任意两层替换，说明旧 MM 提升确实主要依赖四层层级配方。由于 2026 年的 *Multi-scale Object-Aware Gaze Estimation via Geometric Reasoning* 已覆盖“冻结 DINOv3 多层特征 + 静态融合 + 几何/物体引导”，不能再把“使用多层特征”本身写成主要创新。
 
-最终方法进入论文的门槛不是“某个 point estimate 更好”，而是：在相同分辨率、初始化、数据和选 epoch 规则下，目标指标的 sequence-bootstrap CI 支持改善，且 AP 无明显回退；router 还必须超过 static fusion，而不能只超过旧 448 baseline。
+下一步不重新发明复杂 GGSF，也不立即花约 1.5 天跑 GazeFollow。先做一个约 4 epoch、router-only 的 VAT-first 可证伪 pilot：保留 P0.5 实测的全局层级先验，只学习 bbox-conditioned 的小残差。它回答一个比“多层是否有用”更具体的问题：**同一个任务级层级配方，是否需要随被观察人物及其局部/全局上下文做有限修正？**
 
-## 9. P1：最小 person-conditioned router（仅在 P0.5/静态 pilot 通过后）
+## 9. P1a：全局层级先验 + 人物条件残差（VAT-first）
 
 ### 9.1 设计边界
 
-`AAAIModules.PersonHierarchicalGazeLLE`：
+候选不再声称“首次使用多层 DINOv3”，而把可检验贡献限定为：从一个跨样本共享的任务级层级先验出发，只允许 bbox query 对它做有界的小修正。
+
+```text
+w_p = softmax(log(w_train) + tanh(Delta_p))
+w_train = mean legacy-SASA weights measured on VAT train only
+```
+
+其中 `Delta_p` 由人物 bbox 的多层 ROI、全局 scene context、bbox geometry 和 layer embedding 产生。P0.5 在 test 上观测到的 `.0340/.0974/.2007/.6678` 只用于提出候选，正式 P1a 会以 seed 3106 从 VAT train 均匀抽取 1,000 帧重新估计 `w_train`，不把 test 统计量写入模型。输出层零初始化，因此 `initial.pt` **严格等于 train-only 固定全局先验**；训练后 `best.pt` 与它构成唯一变量为人物条件残差的 matched comparison。
+
+`AAAIModules.PersonHierarchicalGazeLLE` 的边界如下：
 
 - DINOv3 scene backbone 每个 batch 只运行一次；
-- 从每层 bbox ROI 和全局 context 计算每个人的四层权重；
+- 不使用 GGSF，不增加第二个 DINO 分支；
+- 冻结 backbone、Gazelle decoder、heatmap head 和 in/out head，pilot 只训练 `layer_router`；
 - 加权后仍使用原 Gazelle `4C → dim` projection、transformer 和 heatmap/inout heads；
 - 输出 raw `layer_weights` 与明确 metadata；
 - 不含 relational loss，不观察同帧其他 query，不解决真正的 inter-person interaction。
 
-### 9.2 先建立统一 512 的 GazeFollow controls
+与 2026 年 object-aware geometric reasoning 工作的差异必须写成“**静态任务级层级选择 vs query-conditioned residual routing**”，而不是泛泛的“我们也做多尺度”。这个差异只有在 `best.pt` 显著超过 `initial.pt` 时才成立；否则停止包装 router。
 
-根据 P0 的信息增益，优先建立 last-layer 与 shallow+deep（L2+L11）两个 matched controls。它们都使用 unchanged Gazelle，但通过新 runner 保存 `best.pt`，不再默认使用最后一个 epoch。
+### 9.2 为什么先跑 VAT，而不是立即跑 GazeFollow
 
-```bash
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_gazelle_control.py \
-  --dataset gazefollow \
-  --data-path /newhome/fb/dataset/gazefollow_extended \
-  --fusion selected_layers \
-  --selected-layers last \
-  --spatial-prior none \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_gf_last_seed3106 \
-  --epochs 15 \
-  --batch-size 60 \
-  --seed 3106 \
-  --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/control_gf_last_seed3106.log 2>&1 &
+GazeFollow 一次约 1.5 天，VAT 一次约 7 小时。P1a 只训练小 router，并使用现有 VAT SASA+GGSF checkpoint 中兼容的 decoder/head 参数；旧 `sasa.*`、`ggsf.*` 参数会被显式记录为 ignored，不会进入新模型。固定先验只从 VAT train 图像估计；随后 VAT train 按 sequence directory 固定划分 90%/10% train/validation，test 只在训练完成后评估，避免用 test 统计量初始化或选 epoch。
 
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_gazelle_control.py \
-  --dataset gazefollow \
-  --data-path /newhome/fb/dataset/gazefollow_extended \
-  --fusion selected_layers \
-  --selected-layers 2,11 \
-  --spatial-prior none \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_gf_l2_l11_seed3106 \
-  --epochs 15 \
-  --batch-size 60 \
-  --seed 3106 \
-  --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/control_gf_l2_l11_seed3106.log 2>&1 &
-```
+这个 pilot 不是最终公平 SOTA 实验，而是回答“人物条件残差是否值得继续投入”。只有通过预先定义的 Go 门槛，才启动耗时的 GazeFollow matched training。
 
-两条 GazeFollow 训练各约 1.5 天，单卡上必须逐条运行；前一条完成并确认 `best.pt` 后再启动后一条。
+### 9.3 服务器 smoke test（先运行）
 
-对应 VAT control 必须分别使用 matching GF checkpoint，不能用一个 GF checkpoint 初始化所有架构：
+先检查新增测试。当前测试数应为 5：
 
 ```bash
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_gazelle_control.py \
-  --dataset vat \
-  --data-path /newhome/fb/dataset/videoattentiontarget \
-  --fusion selected_layers \
-  --selected-layers last \
-  --spatial-prior none \
-  --init-checkpoint /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_gf_last_seed3106/best.pt \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_vat_last_seed3106 \
-  --epochs 8 --batch-size 60 --seed 3106 --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/control_vat_last_seed3106.log 2>&1 &
-
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_gazelle_control.py \
-  --dataset vat \
-  --data-path /newhome/fb/dataset/videoattentiontarget \
-  --fusion selected_layers \
-  --selected-layers 2,11 \
-  --spatial-prior none \
-  --init-checkpoint /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_gf_l2_l11_seed3106/best.pt \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/control_vat_l2_l11_seed3106 \
-  --epochs 8 --batch-size 60 --seed 3106 --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/control_vat_l2_l11_seed3106.log 2>&1 &
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python -m pytest -q AAAIModules/tests/test_person_hierarchical_router.py
 ```
 
-如果已有严格匹配的 512 GF checkpoint，可先通过 manifest/key-shape 审计复用；不能复用 448 v0 或含不同 fusion 参数的 checkpoint。
-
-### 9.3 再训练 GazeFollow candidate
-
-默认从随机初始化的 task head/router 开始，与 GazeFollow controls 的 protocol 对齐。若未来选择 warm-start，`--init-checkpoint` 只能使用架构兼容的 512、四层 raw-concat Gazelle checkpoint；不能使用含 SASA/GGSF 参数的 checkpoint。
-
-```bash
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_person_router.py \
-  --dataset gazefollow \
-  --data-path /newhome/fb/dataset/gazefollow_extended \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/router_gf_seed3106 \
-  --epochs 15 \
-  --batch-size 60 \
-  --seed 3106 \
-  --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/router_gf_seed3106.log 2>&1 &
-```
-
-快速一批次 smoke：
+然后只跑一个 train batch 和一个 validation batch，预计几分钟内完成。smoke 只检查连通性，临时使用 P0.5 默认先验；完整实验会改用 train-only JSON：
 
 ```bash
 /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_person_router.py \
-  --dataset gazefollow \
-  --data-path /newhome/fb/dataset/gazefollow_extended \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/smoke/router_gf \
+  --dataset vat \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --init-checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
+  --allow-legacy-sasa-ggsf \
+  --train-scope router_only \
+  --validation-from-train \
+  --validation-fraction 0.1 \
+  --validation-seed 3106 \
+  --router-prior-weights 0.0340173,0.0974448,0.2007198,0.6678180 \
+  --router-residual-scale 1.0 \
   --epochs 1 \
   --batch-size 2 \
+  --workers 2 \
   --max-train-batches 1 \
-  --max-eval-batches 1 \
-  --device cuda:0
-```
-
-训练入口保存：
-
-```text
-run_manifest.json
-history.json
-epoch_*.pt
-best.pt
-```
-
-### 9.4 再用 matching GF router checkpoint 初始化 VAT
-
-```bash
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/train_person_router.py \
-  --dataset vat \
-  --data-path /newhome/fb/dataset/videoattentiontarget \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/router_vat_seed3106 \
-  --init-checkpoint /home/fb/src/paper/gazelleV1/AAAIResults/P1/router_gf_seed3106/best.pt \
-  --epochs 8 \
-  --batch-size 60 \
-  --frame-sample-every 6 \
+  --max-eval-batches 10 \
+  --lr 1e-3 \
   --seed 3106 \
   --device cuda:0 \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/router_vat_seed3106.log 2>&1 &
+  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/smoke/p1a_prior_residual_vat
 ```
 
-### 9.5 用同一 taxonomy 评估 candidate
+应生成：
+
+```text
+AAAIResults/smoke/p1a_prior_residual_vat/run_manifest.json
+AAAIResults/smoke/p1a_prior_residual_vat/initial.pt
+AAAIResults/smoke/p1a_prior_residual_vat/epoch_0.pt
+AAAIResults/smoke/p1a_prior_residual_vat/best.pt
+AAAIResults/smoke/p1a_prior_residual_vat/history.json
+```
+
+smoke 的实际结果：`[待补充]`
+
+检查 `run_manifest.json` 时必须满足：`test_used_for_selection=false`、`candidate=P1a_global_prior_plus_person_residual_router`，并且 `initialization_report.unexpected=[]`、`incompatible_shapes=[]`。`ignored_source_keys` 中出现 `sasa.*`/`ggsf.*` 是预期行为。
+
+### 9.4 完整 P1a：一个后台命令顺序完成训练、双模型测试与审计
+
+`run_p1a_vat.sh` 会依次执行：从 train 均匀抽取 1,000 帧估计固定先验 → 4 epoch router-only 训练 → 测试 `initial.pt` 固定先验 → 测试 `best.pt` 残差 router → 2,000 次 sequence-bootstrap paired comparison → 1,000 帧 router weight audit。单卡只会同时运行一个任务。
 
 ```bash
-nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/failure_taxonomy.py \
-  --dataset vat \
-  --data-path /newhome/fb/dataset/videoattentiontarget \
-  --json-path /newhome/fb/dataset/videoattentiontarget/test_preprocessed.json \
-  --checkpoint /home/fb/src/paper/gazelleV1/AAAIResults/P1/router_vat_seed3106/best.pt \
-  --model-source aaai_router \
-  --model-label person_router_seed3106 \
-  --device cuda:0 \
-  --output-prefix /home/fb/src/paper/gazelleV1/AAAIResults/P1/router_vat_full \
-  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/router_vat_full.log 2>&1 &
+cd /home/fb/src/paper/gazelleV1
+mkdir -p /home/fb/src/paper/gazelleV1/AAAIResults/P1a /home/fb/src/paper/gazelleV1/AAAIResults/logs
+chmod +x AAAIScripts/run_p1a_vat.sh
+nohup bash AAAIScripts/run_p1a_vat.sh \
+  > /home/fb/src/paper/gazelleV1/AAAIResults/logs/p1a_vat_seed3106.log 2>&1 &
 ```
 
-结果占位：
-
-| Model（统一 512、统一 protocol） | AUC ↑ | L2 ↓ | AP ↑ | X-TCR ↓ | Margin ↑ | Params | Best epoch |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Last-layer control | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Shallow+deep static（L2+L11） | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Equal weight | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| SASA | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| Person-conditioned router | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-
-## 10. Matched-control 计划生成
-
-以下命令只生成计划和命令，不默认启动长训练：
+查看进度：
 
 ```bash
-/home/fb/anaconda3/envs/py310/bin/python AAAIScripts/matched_control_runner.py plan \
-  --suite hierarchy \
-  --dataset vat \
-  --data-path /newhome/fb/dataset/videoattentiontarget \
-  --json-path /newhome/fb/dataset/videoattentiontarget/test_preprocessed.json \
-  --fixed-spatial none \
-  --seeds 3106 \
-  --python /home/fb/anaconda3/envs/py310/bin/python \
-  --output-dir /home/fb/src/paper/gazelleV1/AAAIResults/P1/hierarchy_controls
+tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p1a_vat_seed3106.log
 ```
 
-会生成 `plan.json`、`plan.csv` 和 `commands.txt`。在检查每个 VAT variant 是否具有 matching GazeFollow initialization 之前，**不要添加 `--execute`**。当前一个 GF checkpoint 初始化所有不同 fusion variant 会造成不公平的部分随机初始化。
+确认进程：
 
-## 11. 已完成的执行与结果完整性
+```bash
+ps -ef | grep '[r]un_p1a_vat.sh'
+```
+
+主要输出：
+
+```text
+AAAIResults/P1a/prior_residual_vat_seed3106/run_manifest.json
+AAAIResults/P1a/train_prior_1000/{per_sample,aggregate}.csv
+AAAIResults/P1a/train_prior_1000/results.json
+AAAIResults/P1a/prior_residual_vat_seed3106/{initial,best,epoch_0,epoch_1,epoch_2,epoch_3}.pt
+AAAIResults/P1a/prior_residual_vat_seed3106/history.json
+AAAIResults/P1a/vat_static_prior_full.{records,frames,summary}.csv
+AAAIResults/P1a/vat_prior_residual_full.{records,frames,summary}.csv
+AAAIResults/P1a/static_prior_vs_prior_residual.{paired,summary}.csv
+AAAIResults/P1a/static_prior_vs_prior_residual.report.json
+AAAIResults/P1a/router_audit/{per_sample,aggregate}.csv
+AAAIResults/P1a/router_audit/results.json
+```
+
+### 9.5 结果填写区
+
+| P1a model（同架构、同 checkpoint 起点） | AUC ↑ | L2 ↓ | AP ↑ | X-TCR ↓ | Margin ↑ | 备注 |
+|---|---:|---:|---:|---:|---:|---|
+| `initial.pt`：train-only 固定层级先验、无 GGSF | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | 严格 control；prior=`[待补充]` |
+| `best.pt`：全局先验 + 人物条件残差 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | validation best epoch=`[待补充]` |
+
+| Paired metric（positive means `best.pt` better） | Mean improvement | Sequence-bootstrap 95% CI | 判断 |
+|---|---:|---:|---|
+| AUC | `[待补充]` | `[待补充]` | `[待补充]` |
+| L2 | `[待补充]` | `[待补充]` | `[待补充]` |
+| X-TCR | `[待补充]` | `[待补充]` | `[待补充]` |
+| Association margin | `[待补充]` | `[待补充]` | `[待补充]` |
+
+| Router behavior | `initial.pt` | `best.pt` | 判断 |
+|---|---:|---:|---|
+| Mean weights L2/L5/L8/L11 | `[待补充：train-only prior]` | `[待补充]` | 是否保留任务级先验 |
+| Inter-person L1 | `0` | `[待补充]` | 是否产生人物条件差异 |
+| Normalized entropy | `[待补充]` | `[待补充]` | 是否塌缩到单层/极端权重 |
+
+### 9.6 预先冻结的 Go / No-Go 门槛
+
+P1a 进入下一阶段必须同时满足：
+
+1. AUC 或 L2 至少一个 overall paired 95% CI 完全位于改善方向，另一个不能出现稳定退化；
+2. AP 相对 `initial.pt` 的 point drop 不超过 `0.003`；
+3. `best.pt` 的权重没有塌缩为几乎固定或单层，并出现可复现的人物/场景条件差异；
+4. 改善不能只存在于某一个极小分桶，crowded 只作为 stress-test 分层，不再作为主问题定义。
+
+满足四项为 **Go**：再运行 GazeFollow → VAT 的 matched full training，并补 3 seeds、参数量/FLOPs、静态先验、无先验 residual、不同 router input 的消融。任何一项失败为 **No-Go**：停止 hierarchy-router 方法线，不再通过增大 router 或恢复 GGSF 挽救；转而重新定义问题或考虑更实质的任务设定。
+
+### 9.7 如果 P1a 通过，后续顺序（当前不要执行）
+
+1. 训练匹配的 512 GazeFollow `global-prior` control 与 `prior+residual` candidate（各约 1.5 天，顺序运行）；
+2. 分别用 matching GF checkpoint 初始化 VAT（各约 7 小时），不得用同一不兼容 checkpoint 初始化不同 fusion；
+3. 首个 seed 仍满足门槛后再补另外两个 seed；
+4. 最后才做与 2026 新工作及公开预印本的统一 protocol 对比。预印本应列入 related work 和结果表，但必须标注 arXiv/preprint、核对其数据划分/输入分辨率/backbone，不能把不可比数字直接当作 SOTA 排名。
+
+
+## 10. 已完成的执行与结果完整性
 
 以下同时记录开发机代码检查与已同步的服务器 P0 实验：
 
@@ -591,11 +573,13 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u AAAIScripts/failure_taxonomy.p
 | Paired comparison | 完成；31,978 对齐 records，2,000 次 sequence bootstrap |
 | hierarchy probe | 完成；前 1,000 帧，结论仅作候选筛选 |
 | SASA/GGSF audit | 完成；53,431 raw audit rows，无 GT post-processing |
+| P0.5 六种 inference interventions | 完成；fixed mean/shuffle/GGSF identity 支持删除旧 dynamic/GGSF claim |
+| P1a prior-residual 语法与纯函数检查 | 通过；epoch-0 prior 与 VAT sequence split 已作本地检查 |
 | 完整候选模型服务器 pytest | `[待在 py310 环境补充]` |
 
-## 12. 当前结论与下一次执行入口
+## 11. 当前结论与下一次执行入口
 
-P0 的以下小文件已回传并完成检查：
+P0/P0.5 的结果已经回传并完成检查。P1a 现在是唯一允许启动的训练入口：
 
 ```text
 AAAIResults/P0/vat_base_full.report.json
@@ -603,6 +587,8 @@ AAAIResults/P0/vat_spot_full.report.json
 AAAIResults/P0/vat_base_vs_spot.report.json
 AAAIResults/P0/hierarchy_probe/results.json
 AAAIResults/P0/sasa_ggsf_audit/results.json
+AAAIResults/P05/vat_*.report.json
+AAAIResults/P05/learned_vs_*.report.json
 ```
 
-P0 文件已经全部同步并纳入本文档。当前 **不要启动第 9 节的长训练命令**；先按第 8.2 节运行 P0.5。结果同步回来后填写 P0.5 表格，再按第 8.3 节的门槛决定是否启动训练。
+先按第 9.3 节执行 pytest 与一批次 smoke；通过后按第 9.4 节只启动 `run_p1a_vat.sh`。不要并行启动旧 GazeFollow controls，也不要先补 3 seeds。P1a 完成并同步后，填写第 9.5 节并严格按第 9.6 节作 Go/No-Go 判断。

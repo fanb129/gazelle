@@ -9,6 +9,7 @@ metadata to distinguish exploratory runs from final matched controls.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import random
@@ -22,6 +23,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from AAAIScripts.common import file_manifest
+
+
+DEFAULT_PRIOR_WEIGHTS = (0.0340173, 0.0974448, 0.2007198, 0.6678180)
 
 
 def seed_everything(seed: int, deterministic: bool) -> None:
@@ -45,6 +49,50 @@ def seed_worker(worker_id: int) -> None:
     random.seed(worker_seed)
 
 
+def split_vat_train_dataset(dataset, validation_fraction: float, seed: int):
+    """Split VAT train annotations by sequence directory without test leakage."""
+    if not 0.0 < validation_fraction < 1.0:
+        raise ValueError("validation_fraction must be between zero and one")
+    sequence_by_image = {
+        image_index: str(Path(frame["path"]).parent)
+        for image_index, frame in enumerate(dataset.data)
+    }
+    sequences = sorted(set(sequence_by_image.values()))
+    if len(sequences) < 2:
+        raise ValueError("VAT train validation split requires at least two sequences")
+    rng = np.random.default_rng(seed)
+    shuffled = list(rng.permutation(sequences))
+    validation_count = min(len(sequences) - 1, max(1, round(len(sequences) * validation_fraction)))
+    validation_sequences = set(shuffled[:validation_count])
+    train_sequences = set(shuffled[validation_count:])
+
+    train_dataset = copy.copy(dataset)
+    validation_dataset = copy.copy(dataset)
+    train_dataset.data_idxs = [
+        item for item in dataset.data_idxs if sequence_by_image[item[0]] in train_sequences
+    ]
+    validation_dataset.data_idxs = [
+        item for item in dataset.data_idxs if sequence_by_image[item[0]] in validation_sequences
+    ]
+    train_dataset.split, train_dataset.aug = "train", True
+    # Reuse the train annotations but disable augmentation and return eval tuples.
+    validation_dataset.split, validation_dataset.aug = "validation", False
+    split_manifest = {
+        "source": "train_preprocessed.json",
+        "unit": "VAT sequence directory",
+        "seed": seed,
+        "validation_fraction": validation_fraction,
+        "train_sequences": sorted(train_sequences),
+        "validation_sequences": sorted(validation_sequences),
+        "train_queries": len(train_dataset.data_idxs),
+        "validation_queries": len(validation_dataset.data_idxs),
+        "test_used_for_selection": False,
+    }
+    train_dataset.split_manifest = split_manifest
+    validation_dataset.split_manifest = split_manifest
+    return train_dataset, validation_dataset
+
+
 def build_loaders(args, transform):
     import torch
     from gazelle.dataloader import GazeDataset, collate_fn
@@ -55,11 +103,18 @@ def build_loaders(args, transform):
         in_frame_only=(args.dataset == "gazefollow"),
         sample_rate=args.frame_sample_every if args.dataset == "vat" else 1,
     )
-    validation = GazeDataset(
-        dataset_name, args.data_path, "test", transform,
-        in_frame_only=(args.dataset == "gazefollow"),
-        sample_rate=args.frame_sample_every if args.dataset == "vat" else 1,
-    )
+    if args.dataset == "vat" and getattr(args, "validation_from_train", False):
+        train, validation = split_vat_train_dataset(
+            train,
+            getattr(args, "validation_fraction", 0.1),
+            getattr(args, "validation_seed", args.seed),
+        )
+    else:
+        validation = GazeDataset(
+            dataset_name, args.data_path, "test", transform,
+            in_frame_only=(args.dataset == "gazefollow"),
+            sample_rate=args.frame_sample_every if args.dataset == "vat" else 1,
+        )
     generator = torch.Generator().manual_seed(args.seed)
     common = {
         "batch_size": args.batch_size,
@@ -172,6 +227,22 @@ def main(argv=None):
     import torch
     from AAAIModules.factory import build_person_hierarchical_gazelle
 
+    prior_source = None
+    if args.router_prior_json:
+        prior_payload = json.loads(args.router_prior_json.read_text())
+        annotation_path = Path(prior_payload.get("annotation", {}).get("path", ""))
+        if annotation_path.name != "train_preprocessed.json":
+            raise RuntimeError(
+                "--router-prior-json must be computed from train_preprocessed.json"
+            )
+        measured_weights = prior_payload.get("mean_layer_weights")
+        if not isinstance(measured_weights, list):
+            raise RuntimeError("router prior report does not contain mean_layer_weights")
+        args.router_prior_weights = parse_prior_weights(
+            ",".join(str(value) for value in measured_weights)
+        )
+        prior_source = file_manifest(args.router_prior_json)
+
     seed_everything(args.seed, args.deterministic)
     device = torch.device(args.device if args.device != "auto" else ("cuda" if torch.cuda.is_available() else "cpu"))
     if device.type != "cuda" and not args.allow_cpu:
@@ -187,10 +258,15 @@ def main(argv=None):
         router_roi_size=args.router_roi_size,
         router_dropout=args.router_dropout,
         router_temperature=args.router_temperature,
+        router_prior_weights=args.router_prior_weights,
+        router_residual_scale=args.router_residual_scale,
     )
     initialization = None
     if args.init_checkpoint:
-        initialization = model.load_base_checkpoint(args.init_checkpoint)
+        initialization = model.load_base_checkpoint(
+            args.init_checkpoint,
+            allow_legacy_sasa_ggsf=args.allow_legacy_sasa_ggsf,
+        )
         if initialization["incompatible_shapes"] or initialization["unexpected"]:
             raise RuntimeError(f"unsafe initialization checkpoint: {initialization}")
         allowed_missing = ("backbone.", "layer_router.", "inout_token.", "inout_head.")
@@ -200,10 +276,20 @@ def main(argv=None):
 
     for parameter in model.backbone.parameters():
         parameter.requires_grad = False
+    if args.train_scope == "router_only":
+        for parameter in model.parameters():
+            parameter.requires_grad = False
+        for parameter in model.layer_router.parameters():
+            parameter.requires_grad = True
     model.to(device)
     train_loader, validation_loader, train_dataset, validation_dataset = build_loaders(args, transform)
 
-    if args.dataset == "vat":
+    if args.train_scope == "router_only":
+        optimizer = torch.optim.Adam(
+            [parameter for parameter in model.layer_router.parameters() if parameter.requires_grad],
+            lr=args.lr,
+        )
+    elif args.dataset == "vat":
         optimizer = torch.optim.Adam([
             {"params": [p for name, p in model.named_parameters() if p.requires_grad and "inout" in name], "lr": args.lr_inout},
             {"params": [p for name, p in model.named_parameters() if p.requires_grad and "inout" not in name], "lr": args.lr},
@@ -219,8 +305,11 @@ def main(argv=None):
     }
     manifest = {
         "status": "running",
-        "candidate": "P1_minimal_hierarchical_router",
-        "claim_boundary": "No relational loss or inter-person query interaction.",
+        "candidate": "P1a_global_prior_plus_person_residual_router",
+        "claim_boundary": (
+            "Tests whether bbox-conditioned residual routing improves over the exact P0.5 "
+            "task-global hierarchy prior; no relational loss or inter-person query interaction."
+        ),
         "config": {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
         "model": model_name,
         "device": str(device),
@@ -230,9 +319,15 @@ def main(argv=None):
         "annotation_files": annotation_files,
         "initialization_checkpoint": file_manifest(args.init_checkpoint) if args.init_checkpoint else None,
         "initialization_report": initialization,
+        "router_prior_source": prior_source,
         "selection_metric": "l2" if args.dataset == "vat" else "min_l2",
+        "validation_protocol": getattr(validation_dataset, "split_manifest", {
+            "source": "test_preprocessed.json",
+            "test_used_for_selection": True,
+        }),
     }
     (args.output_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    torch.save(checkpoint_state(model), args.output_dir / "initial.pt")
 
     best_value, best_epoch = float("inf"), None
     history = []
@@ -273,6 +368,14 @@ def parse_args(argv=None):
     parser.add_argument("--router-roi-size", type=int, default=3)
     parser.add_argument("--router-dropout", type=float, default=0.1)
     parser.add_argument("--router-temperature", type=float, default=1.0)
+    parser.add_argument("--router-prior-weights", type=parse_prior_weights, default=DEFAULT_PRIOR_WEIGHTS)
+    parser.add_argument("--router-prior-json", type=Path)
+    parser.add_argument("--router-residual-scale", type=float, default=1.0)
+    parser.add_argument("--train-scope", choices=("router_only", "full_decoder"), default="full_decoder")
+    parser.add_argument("--allow-legacy-sasa-ggsf", action="store_true")
+    parser.add_argument("--validation-from-train", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--validation-fraction", type=float, default=0.1)
+    parser.add_argument("--validation-seed", type=int, default=3106)
     parser.add_argument("--seed", type=int, default=3106)
     parser.add_argument("--deterministic", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--device", default="auto")
@@ -287,7 +390,24 @@ def parse_args(argv=None):
         args.lr = 1e-5 if args.dataset == "vat" else 1e-3
     if args.epochs <= 0 or args.batch_size <= 0:
         parser.error("--epochs and --batch-size must be positive")
+    if not 0.0 < args.validation_fraction < 1.0:
+        parser.error("--validation-fraction must be between zero and one")
+    if args.router_residual_scale <= 0:
+        parser.error("--router-residual-scale must be positive")
     return args
+
+
+def parse_prior_weights(value):
+    if isinstance(value, tuple):
+        return value
+    try:
+        weights = tuple(float(item.strip()) for item in str(value).split(","))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("prior weights must be comma-separated floats") from exc
+    if len(weights) != 4 or any(weight <= 0 for weight in weights):
+        raise argparse.ArgumentTypeError("prior weights must contain four positive values")
+    total = sum(weights)
+    return tuple(weight / total for weight in weights)
 
 
 if __name__ == "__main__":

@@ -66,12 +66,30 @@ def aggregate(rows):
     buckets = defaultdict(list)
     for row in rows:
         buckets[(row["component"], row["metric"], row["crowd_bin"])].append(row["value"])
+        buckets[(row["component"], row["metric"], "overall")].append(row["value"])
     output = []
     for (component, metric, crowd_bin), values in sorted(buckets.items()):
         output.append({"component": component, "metric": metric, "crowd_bin": crowd_bin, "n": len(values),
                        "mean": float(np.mean(values)), "variance_across_observations": float(np.var(values, ddof=1)) if len(values) > 1 else None,
                        "std": float(np.std(values, ddof=1)) if len(values) > 1 else None})
     return output
+
+
+def mean_layer_weights(rows):
+    means = []
+    for layer in range(4):
+        values = [
+            row["value"]
+            for row in rows
+            if row["component"] == "sasa"
+            and row["metric"] == f"weight_layer_{layer}"
+            and row["person"] != "all"
+        ]
+        if not values:
+            return None
+        means.append(float(np.mean(values)))
+    total = sum(means)
+    return [value / total for value in means]
 
 
 def write_csv(path, rows):
@@ -89,7 +107,10 @@ def parse_args(argv=None):
     parser.add_argument("--json-path", type=Path)
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--model", default="gazelle_dinov3_vitb16_inout")
+    parser.add_argument("--model-source", choices=("current", "aaai_router"), default="current")
     parser.add_argument("--max-samples", type=int, default=200)
+    parser.add_argument("--sampling", choices=("prefix", "uniform"), default="prefix")
+    parser.add_argument("--sampling-seed", type=int, default=3106)
     parser.add_argument("--device", default=None)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser.parse_args(argv)
@@ -104,16 +125,29 @@ def main(argv=None):
             raise SystemExit("--data-path, --json-path and --checkpoint are required outside --synthetic-smoke")
         import torch
         from PIL import Image
-        from gazelle.model import get_gazelle_model
         from AAAIScripts.hierarchical_feature_probe import iter_frames, sample_attributes
 
         device = torch.device(args.device or ("cuda" if torch.cuda.is_available() else "cpu"))
-        model, transform = get_gazelle_model(args.model, use_sasa=True, use_ggsf=True)
+        if args.model_source == "aaai_router":
+            from AAAIModules.factory import build_person_hierarchical_gazelle
+
+            model, transform = build_person_hierarchical_gazelle(args.model)
+        else:
+            from gazelle.model import get_gazelle_model
+
+            model, transform = get_gazelle_model(args.model, use_sasa=True, use_ggsf=True)
         checkpoint_load = strict_load_task_checkpoint(model, args.checkpoint)
         model.to(device).eval()
         rows = []
         with torch.inference_mode():
-            for index, frame, image_path in iter_frames(args.dataset, args.data_path, args.json_path, args.max_samples):
+            for index, frame, image_path in iter_frames(
+                args.dataset,
+                args.data_path,
+                args.json_path,
+                args.max_samples,
+                sampling=args.sampling,
+                sampling_seed=args.sampling_seed,
+            ):
                 boxes = [head.get("bbox_norm") for head in frame.get("heads", []) if head.get("bbox_norm")]
                 if not boxes or not image_path.exists():
                     continue
@@ -129,9 +163,20 @@ def main(argv=None):
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_csv(args.output_dir / "per_sample.csv", rows)
     write_csv(args.output_dir / "aggregate.csv", aggregates)
-    payload = {"schema_version": 1, "analysis": "raw_sasa_ggsf_audit", "synthetic_smoke": args.synthetic_smoke,
-               "no_gt_postprocessing": True, "row_count": len(rows), "aggregates": aggregates,
-               "config": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}}
+    payload = {
+        "schema_version": 1,
+        "analysis": (
+            "person_router_weight_audit"
+            if args.model_source == "aaai_router"
+            else "raw_sasa_ggsf_audit"
+        ),
+        "synthetic_smoke": args.synthetic_smoke,
+        "no_gt_postprocessing": True,
+        "row_count": len(rows),
+        "mean_layer_weights": mean_layer_weights(rows),
+        "aggregates": aggregates,
+        "config": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+    }
     if not args.synthetic_smoke:
         payload["checkpoint"] = file_manifest(args.checkpoint)
         payload["checkpoint_load"] = checkpoint_load
