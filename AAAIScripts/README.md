@@ -3,6 +3,7 @@
 完整执行顺序、3090 服务器命令、输出说明、Go/No-Go 标准与结果占位表见：
 
 - [`AAAI2027_DIAGNOSTIC_AND_PILOT_PLAN.md`](./AAAI2027_DIAGNOSTIC_AND_PILOT_PLAN.md)
+- [`AAAI2027_P3_EFFECT_FIRST_ALCHEMY_PLAN.md`](./AAAI2027_P3_EFFECT_FIRST_ALCHEMY_PLAN.md)：停止 P21 后的效果优先融合/损失搜索计划
 
 新候选模型位于仓库根目录的 `AAAIModules/`；历史 `gazelle/` 只作为依赖导入，没有在本轮修改。
 
