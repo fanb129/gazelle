@@ -1,5 +1,7 @@
 # data and checkpoint folders
 data/
+!AAAISelectiveGaze/data/
+!AAAISelectiveGaze/data/*.py
 checkpoints/
 experiments/
 wandb/
