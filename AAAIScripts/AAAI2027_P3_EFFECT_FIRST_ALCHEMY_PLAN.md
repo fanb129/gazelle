@@ -1,11 +1,11 @@
 # AAAI 2027 P3：效果优先炼丹计划
 
-> 状态：`PLAN_FROZEN / CODE_READY / NOT_RUN`
+> 状态：`PLAN_FROZEN / CODE_READY / P3A_COMPLETE / P3B_HOLD`
 > 日期：2026-07-15  
 > 服务器 Python：`/home/fb/anaconda3/envs/py310/bin/python`  
 > 服务器仓库：`/home/fb/src/paper/gazelleV1`  
 > GPU：单卡 RTX 3090  
-> 当前决定：停止 P2/P2.1，不做人工标注；先搜索真实指标增益，再根据胜出结构包装论文故事。
+> 当前决定：停止 P2/P2.1，不做人工标注；P3A 未选出优于 R0 的新候选，暂不运行 P3B，先按第 9 节在 R1 residual refinement 家族内做单因素下一轮。
 
 ## 1. 本轮目标
 
@@ -196,21 +196,32 @@ AAAIResults/P3/screen/leaderboard.csv
 AAAIResults/P3/screen/winner.json
 ```
 
-### 7.3 P3A 结果占位
+### 7.3 P3A 实测结果
 
 | Candidate | Best epoch | Val AUC ↑ | Val L2 ↓ | Val Inout AP ↑ | ΔAUC vs R0 | ΔL2 vs R0 | ΔAP vs R0 | 结果 |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| R0 continued baseline | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | 0 | 0 | 0 | reference |
-| R1 residual refinement | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| R2 cross-layer attention | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
-| R3 R1 + coord 0.05 | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` | `[待补充]` |
+| R0 continued baseline | 0 | 0.93316 | 0.12682 | 0.95516 | 0 | 0 | 0 | reference；selector winner |
+| R1 residual refinement | 0 | 0.93245 | 0.12804 | 0.95206 | -0.00070 | -0.00123 | -0.00310 | No-Go；无主要改善 |
+| R2 cross-layer attention | 0 | 0.93125 | 0.12944 | 0.95313 | -0.00191 | -0.00263 | -0.00203 | No-Go；无主要改善 |
+| R3 R1 + coord 0.05 | 0 | 0.93223 | 0.12779 | 0.95231 | -0.00093 | -0.00097 | -0.00285 | No-Go；无主要改善 |
 
 ```text
-P3A winner: [待补充]
-P3A wall time: [待补充]
-GPU peak memory: [待补充]
-异常/中断记录: [待补充]
+P3A selector winner: R0 continued baseline
+P3A new-method winner: none；R1/R2/R3 均未达到任一主要改善门槛
+P3A wall time: 未记录；同步结果不含 p3a_vat_screen.log，manifest/history 也未写 wall time
+GPU peak memory: 未记录；同步结果不含 nvidia-smi 或显存日志
+异常/中断记录: 无运行中断；四组 manifest 均为 complete。实验异常信号是四组 best epoch 全为 0，继续训练时 validation 整体变差
 ```
+
+结果完整性核验：四组均使用 seed=`3106`、VAT train sequence-level 90%/10% split、20,462/2,179 train/validation queries，且 `test_used_for_selection=false`。train annotation SHA256 为 `9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43`，test annotation SHA256 为 `75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa`。R0 task checkpoint coverage 为 `1.0`；R1/R2/R3 的 shared-base coverage 均为 `1.0`，missing keys 仅为 12/13/12 个预期新分支参数，`unexpected=[]`、shape mismatch 为空，zero-init audit 均通过。
+
+四组训练 loss 都下降，但下降主要来自 in/out loss；heatmap BCE 基本不变。与此同时 validation AUC/L2/AP 在 epoch 1～2 普遍退化。R1/R2/R3 没有满足 L2 `+0.002`、AUC `+0.001` 或 AP `+0.005` 的任何一项主要改善；它们虽然没有越过“明显崩坏”护栏，但不能进入候选集合。自动 selector 因此只保留 R0。这里的 R0 是 control winner，不构成新的融合方法收益。
+
+### 7.4 P3A 决策与下一步
+
+当前不运行 `run_p3b_vat_confirm.sh`。P3B 的目的应是确认一个通过 P3A 的新候选；直接把 R0 continued baseline 跑 8 epochs 只会确认“继续训练旧模型”，而原 VAT SASA+GGSF 参考结果本身也没有达到 P3B 的 2/3 晋级线。
+
+下一步保留 R1 residual refinement 家族：R1 与 R3 是同一结构，R3 的 coordinate loss 使 epoch-0 L2/AP 相对 R1 略好，但仍未超过 R0，因此按第 9 节先做 coordinate loss weight=`0.02/0.10` 的单因素 P3A2。启动 P3A2 前先补一个不接触 test 的低成本 sanity：在同一 validation split 上评估 warm-start `initial.pt`，确认四组训练前输出/指标一致，并记录首个 epoch 后 base、inout head 与 residual branch 的参数漂移。若 initial 一致而首个 epoch 即统一退化，则把问题定位为优化协议而不是结构表达能力；完成冻结的 coordinate-weight 两点后，不应盲目延长 epoch。代码侧需先把当前 R3 固定的 `0.05` 暴露为受 manifest 记录的 CLI 参数，并新增独立 P3A2 顺序脚本与输出目录；P3A 的 R0 结果保持为冻结 reference，不覆盖现有 screen 目录。
 
 ## 8. Winner 后续命令
 
@@ -282,7 +293,7 @@ tail -f /home/fb/src/paper/gazelleV1/AAAIResults/logs/p3d_vat_clean.log
 
 ## 9. 失败后的下一轮炼丹顺序
 
-如果 R1/R2/R3 全部失败，不回到 P2/P2.1，也不立即编故事。下一轮只在最好的结构上依次搜索：
+P3A 已确认 R1/R2/R3 全部失败。不回到 P2/P2.1，也不立即编故事。下一轮只在最好的 R1 residual refinement 家族上依次搜索：
 
 1. coordinate loss weight：0.02 / 0.10；
 2. residual width：128 / 256；
