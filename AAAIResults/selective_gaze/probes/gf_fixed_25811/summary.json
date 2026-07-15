@@ -1,0 +1,87 @@
+{
+  "backbone_loaded": true,
+  "checkpoint": "AAAIResults/selective_gaze/probes/gf_fixed_25811/layer_probes.pt",
+  "config": {
+    "base_predictor_fusion": "sasa",
+    "base_predictor_spatial_prior": "ggsf",
+    "batch_size": 32,
+    "device": "cuda:0",
+    "epochs": 3,
+    "hidden_channels": 64,
+    "lr": 0.001,
+    "seed": 3106
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.058541255618405084,
+      "train_loss_by_layer": {
+        "11": 0.053969153372185004,
+        "2": 0.06365647796384247,
+        "5": 0.06000979383811926,
+        "8": 0.056529597341156826
+      },
+      "val_loss": 0.05663260368063398,
+      "val_loss_by_layer": {
+        "11": 0.051475916017332805,
+        "2": 0.062097276540716055,
+        "5": 0.05840939898853716,
+        "8": 0.054547823580872755
+      }
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.056076294537681294,
+      "train_loss_by_layer": {
+        "11": 0.05084063556364468,
+        "2": 0.06158038233514027,
+        "5": 0.05776913262798887,
+        "8": 0.054115027615614715
+      },
+      "val_loss": 0.055951841661463615,
+      "val_loss_by_layer": {
+        "11": 0.05101074776409761,
+        "2": 0.061203708791214485,
+        "5": 0.05758402749653096,
+        "8": 0.05400888275598054
+      }
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.055498527528484685,
+      "train_loss_by_layer": {
+        "11": 0.050212967233336944,
+        "2": 0.06110599302612912,
+        "5": 0.05713232204108439,
+        "8": 0.053542827765750305
+      },
+      "val_loss": 0.055732873410148466,
+      "val_loss_by_layer": {
+        "11": 0.050764237894960075,
+        "2": 0.061033717275637646,
+        "5": 0.05705667473375797,
+        "8": 0.05407686399943803
+      }
+    }
+  ],
+  "inputs": {
+    "base_checkpoint": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt",
+    "base_checkpoint_sha256": "eaa68dc62e7deaabeaeb13bfc2715926f99269fb4674273acb06959b47906305",
+    "train_json": "AAAIResults/selective_gaze/splits/gazefollow/base_train.json",
+    "train_json_sha256": "a6761d07599746c57e7e2269999a639a47f8a94a3e123df2f5a380e695bfd48e",
+    "val_json": "AAAIResults/selective_gaze/splits/gazefollow/base_val.json",
+    "val_json_sha256": "92f042188c5cadfe80f6f83ad47f96b9cf47609c54bda45c95ecf552b8dc2024"
+  },
+  "layers": [
+    2,
+    5,
+    8,
+    11
+  ],
+  "parameter_count": 494852,
+  "status": "ok",
+  "synthetic_smoke": false,
+  "train_samples": 100068,
+  "trainable_parameter_count": 494852,
+  "val_samples": 5887
+}
