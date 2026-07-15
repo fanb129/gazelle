@@ -8,6 +8,18 @@ from pathlib import Path
 from typing import Any
 
 
+def _create_gooreal_image_store(data_root: Path, zip_path=None, zip_cache_dir=None):
+    """Construct the repository's nested-zip-aware GOO-Real image store."""
+
+    from scripts.eval_gooreal import GoorealImageStore
+
+    return GoorealImageStore(
+        str(data_root),
+        zip_path=zip_path,
+        zip_cache_dir=zip_cache_dir,
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=("gazefollow", "vat", "gooreal"), required=True)
@@ -19,6 +31,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--split", default=None)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument(
+        "--zip-path",
+        default=None,
+        help="GOO-Real outer zip; defaults to <data-path>/gooreal.zip.",
+    )
+    parser.add_argument(
+        "--zip-cache-dir",
+        default=None,
+        help="Directory for extracted nested GOO-Real image archives.",
+    )
     parser.add_argument("--device", default=None, help="Defaults to cuda when available")
     parser.add_argument("--fusion", default="raw_concat")
     parser.add_argument("--spatial-prior", default="none")
@@ -77,6 +99,24 @@ def main(argv: list[str] | None = None) -> int:
     data_root = Path(args.data_path)
     split_name = args.split or json_path.stem.replace("_preprocessed", "")
 
+    image_store = None
+    effective_num_workers = args.num_workers
+    if args.dataset == "gooreal":
+        image_store = _create_gooreal_image_store(
+            data_root,
+            args.zip_path,
+            args.zip_cache_dir,
+        )
+        # GoorealImageStore lazily opens an inner zip and owns open file handles.
+        # Keeping reads in the main process avoids duplicate/racing extraction and
+        # makes missing archive members surface with their original traceback.
+        if effective_num_workers != 0:
+            print(
+                "GOO-Real nested-zip input detected; overriding "
+                f"--num-workers {effective_num_workers} with 0."
+            )
+            effective_num_workers = 0
+
     predictor, transform = get_gazelle_model(
         args.model,
         spatial_prior=args.spatial_prior,
@@ -110,7 +150,15 @@ def main(argv: list[str] | None = None) -> int:
 
         def __getitem__(self, index):
             frame = frames[index]
-            image = Image.open(data_root / frame["path"]).convert("RGB")
+            if image_store is not None:
+                image = image_store.open(frame["path"])
+            else:
+                image_path = data_root / frame["path"]
+                if not image_path.is_file():
+                    raise FileNotFoundError(
+                        f"image {frame['path']!r} was not found under {str(data_root)!r}"
+                    )
+                image = Image.open(image_path).convert("RGB")
             return transform(image), frame
 
     def collate(items):
@@ -121,48 +169,52 @@ def main(argv: list[str] | None = None) -> int:
         FrameDataset(),
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=args.num_workers,
+        num_workers=effective_num_workers,
         collate_fn=collate,
     )
     base_hash = checkpoint_sha256(args.base_checkpoint)
     probe_hash = checkpoint_sha256(args.probe_checkpoint)
     records: list[dict[str, Any]] = []
-    with torch.no_grad():
-        for images, metadata in loader:
-            bboxes = [[head.get("bbox_norm") for head in frame["heads"]] for frame in metadata]
-            outputs = model({"images": images.to(device), "bboxes": bboxes})
-            for image_index, frame in enumerate(metadata):
-                for person_index, head in enumerate(frame["heads"]):
-                    xs = head.get("gazex_norm", [])
-                    ys = head.get("gazey_norm", [])
-                    gt_gaze = [[float(x), float(y)] for x, y in zip(xs, ys)]
-                    inout_output = outputs.get("inout")
-                    inout_probability = None
-                    if inout_output is not None:
-                        inout_probability = float(inout_output[image_index][person_index].cpu())
-                    record = {
-                        "sample_id": head.get(
-                            "sample_id",
-                            make_sample_id(args.dataset, frame["path"], person_index),
-                        ),
-                        "dataset": args.dataset,
-                        "split": split_name,
-                        "image_path": frame["path"],
-                        "sequence_id": frame.get("sequence_id"),
-                        "person_index": person_index,
-                        "final_heatmap": outputs["heatmap"][image_index][person_index].cpu(),
-                        "probe_heatmaps": {
-                            str(layer): layer_outputs[image_index][person_index].cpu()
-                            for layer, layer_outputs in outputs["probe_heatmap"].items()
-                        },
-                        "inout_probability": inout_probability,
-                        "gt_gaze": gt_gaze,
-                        "gt_inout": int(head.get("inout", 1)),
-                        "bbox": head["bbox_norm"],
-                        "checkpoint_hash": base_hash,
-                        "probe_checkpoint_hash": probe_hash,
-                    }
-                    records.append(record)
+    try:
+        with torch.no_grad():
+            for images, metadata in loader:
+                bboxes = [[head.get("bbox_norm") for head in frame["heads"]] for frame in metadata]
+                outputs = model({"images": images.to(device), "bboxes": bboxes})
+                for image_index, frame in enumerate(metadata):
+                    for person_index, head in enumerate(frame["heads"]):
+                        xs = head.get("gazex_norm", [])
+                        ys = head.get("gazey_norm", [])
+                        gt_gaze = [[float(x), float(y)] for x, y in zip(xs, ys)]
+                        inout_output = outputs.get("inout")
+                        inout_probability = None
+                        if inout_output is not None:
+                            inout_probability = float(inout_output[image_index][person_index].cpu())
+                        record = {
+                            "sample_id": head.get(
+                                "sample_id",
+                                make_sample_id(args.dataset, frame["path"], person_index),
+                            ),
+                            "dataset": args.dataset,
+                            "split": split_name,
+                            "image_path": frame["path"],
+                            "sequence_id": frame.get("sequence_id"),
+                            "person_index": person_index,
+                            "final_heatmap": outputs["heatmap"][image_index][person_index].cpu(),
+                            "probe_heatmaps": {
+                                str(layer): layer_outputs[image_index][person_index].cpu()
+                                for layer, layer_outputs in outputs["probe_heatmap"].items()
+                            },
+                            "inout_probability": inout_probability,
+                            "gt_gaze": gt_gaze,
+                            "gt_inout": int(head.get("inout", 1)),
+                            "bbox": head["bbox_norm"],
+                            "checkpoint_hash": base_hash,
+                            "probe_checkpoint_hash": probe_hash,
+                        }
+                        records.append(record)
+    finally:
+        if image_store is not None:
+            image_store.close()
     output = save_prediction_cache(records, args.output)
     print(f"Saved {len(records)} per-person predictions to {output}")
     return 0

@@ -661,7 +661,10 @@ GOO-Real val：
   --spatial-prior ggsf \
   --data-path /newhome/fb/dataset/gooreal_data \
   --json-path /newhome/fb/dataset/gooreal_data/gooreal_val_preprocessed.json \
+  --zip-path /newhome/fb/dataset/gooreal_data/gooreal.zip \
+  --zip-cache-dir /newhome/fb/dataset/gooreal_data/.gooreal_zip_cache \
   --batch-size 16 \
+  --num-workers 0 \
   --device cuda:0 \
   --output AAAIResults/selective_gaze/prediction_cache/gooreal_val.parquet
 ```
