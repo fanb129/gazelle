@@ -299,6 +299,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Formal-plan-compatible live feature extraction arguments.
     parser.add_argument("--model", default="gazelle_dinov3_vitb16")
+    parser.add_argument(
+        "--fusion",
+        default="sasa",
+        help="Base-predictor fusion architecture; must match --base-checkpoint.",
+    )
+    parser.add_argument(
+        "--spatial-prior",
+        default="ggsf",
+        help="Base-predictor spatial prior; must match --base-checkpoint.",
+    )
     parser.add_argument("--base-checkpoint", type=Path)
     parser.add_argument("--data-path", type=Path)
     parser.add_argument("--train-json", type=Path)
@@ -354,7 +364,11 @@ def main(argv: list[str] | None = None) -> int:
     elif all(value is not None for value in (args.base_checkpoint, args.data_path, args.train_json, args.val_json)):
         from gazelle.model import get_gazelle_model
 
-        predictor, transform = get_gazelle_model(args.model, fusion="raw_concat", spatial_prior="none")
+        predictor, transform = get_gazelle_model(
+            args.model,
+            fusion=args.fusion,
+            spatial_prior=args.spatial_prior,
+        )
         try:
             checkpoint = torch.load(args.base_checkpoint, map_location="cpu", weights_only=True)
         except TypeError:
@@ -429,6 +443,8 @@ def main(argv: list[str] | None = None) -> int:
             "seed": args.seed,
             "synthetic_smoke": args.synthetic_smoke,
             "live_backbone": live_mode,
+            "base_predictor_fusion": args.fusion if live_mode else None,
+            "base_predictor_spatial_prior": args.spatial_prior if live_mode else None,
         },
         checkpoint_path,
     )
@@ -450,6 +466,8 @@ def main(argv: list[str] | None = None) -> int:
             "seed": args.seed,
             "hidden_channels": args.hidden_channels,
             "device": str(device),
+            "base_predictor_fusion": args.fusion if live_mode else None,
+            "base_predictor_spatial_prior": args.spatial_prior if live_mode else None,
         },
         "inputs": (
             {

@@ -434,7 +434,49 @@ AAAIResults/selective_gaze/
 /home/fb/anaconda3/envs/py310/bin/python
 ```
 
-命令中的 `/path/to/gf_checkpoint.pt`、`/path/to/probe_checkpoint.pt`、`/path/to/vat_checkpoint.pt` 和 `/path/to/risk_checkpoint.pt` 需要替换为真实 checkpoint。
+一天 Pilot 固定复用以下已经训练完成的 GazeFollow SASA + GGSF checkpoint：
+
+```text
+/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt
+```
+
+12.4 训练得到的 probe checkpoint 固定为：
+
+```text
+AAAIResults/selective_gaze/probes/gf_fixed_25811/layer_probes.pt
+```
+
+后续尚未实现阶段中的 `/path/to/vat_checkpoint.pt` 和 `/path/to/risk_checkpoint.pt`
+仍然只是接口占位符。
+
+### 12.0 当前实现状态与一天 Pilot 执行顺序
+
+第一阶段只实现并允许运行以下顺序：
+
+```text
+12.1 单元测试与 synthetic smoke
+  -> 12.2 构建无泄漏 splits
+  -> 跳过 12.3，复用已有 GazeFollow checkpoint
+  -> 12.4 训练 fixed probes
+  -> 12.5 缓存三域预测
+  -> 12.6 执行 Go/No-Go disagreement pilot
+```
+
+实现状态：
+
+| 小节 | 状态 | 第一阶段是否运行 |
+|---|---|---|
+| 12.1 | 已实现 | 是 |
+| 12.2 | 已实现 | 是 |
+| 12.3 `train_base` | **未实现，属于 Formal 阶段** | **否，必须跳过** |
+| 12.4 | 已实现 | 是 |
+| 12.5 | 已实现 | 是 |
+| 12.6 | 已实现 | 是 |
+| 12.7 `train_risk_head` | **未实现，risk head 已明确延期** | 否 |
+| 12.8 neural risk checkpoint evaluation | **未实现** | 否 |
+
+如果执行未实现模块，Python 会报告 `No module named ...`。这不是环境问题，
+也不应通过临时复制旧训练脚本来绕过数据协议。
 
 ### 12.1 单元测试与 synthetic smoke
 
@@ -493,15 +535,19 @@ VAT，必须按 sequence 切分：
   --seed 3106
 ```
 
-### 12.3 Formal：在干净 split 上训练主 predictor
+### 12.3 Formal：在干净 split 上训练主 predictor（未实现，Pilot 必须跳过）
 
-一天 pilot 可以暂时复用现有 GF checkpoint；正式结果必须重新训练，确保 `risk_train` 和 `risk_calibration` 对主 predictor 未见：
+**第一阶段不要运行本小节命令。** 一天 pilot 必须复用已有 GF checkpoint，
+然后直接执行 12.4。正式阶段才实现 `AAAISelectiveGaze.scripts.train_base` 并重新训练，
+确保 `risk_train` 和 `risk_calibration` 对主 predictor 未见。
 
-```bash
+以下仅保留为后续 Formal 阶段的接口设计，不是当前可执行命令：
+
+```text
 mkdir -p AAAIResults/selective_gaze/base
 ```
 
-```bash
+```text
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   -m AAAISelectiveGaze.scripts.train_base \
   --dataset gazefollow \
@@ -523,6 +569,11 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 
 ### 12.4 Pilot：训练四个 fixed probes
 
+一天 Pilot 的主结果使用当前已经验证过的最强 GazeFollow predictor。如果现有
+checkpoint 是 `DINOv3 ViT-B + SASA + GGSF`，则 `--fusion sasa`、
+`--spatial-prior ggsf` 和 checkpoint 必须配套。probe 仍从 SASA 融合和 GGSF
+门控之前读取四层原始特征；这些参数只用于正确重建并加载 base predictor。
+
 先建立日志目录：
 
 ```bash
@@ -533,7 +584,9 @@ mkdir -p AAAIResults/selective_gaze/probes
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   -m AAAISelectiveGaze.scripts.train_layer_probes \
   --model gazelle_dinov3_vitb16 \
-  --base-checkpoint /path/to/gf_checkpoint.pt \
+  --base-checkpoint /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --fusion sasa \
+  --spatial-prior ggsf \
   --data-path /newhome/fb/dataset/gazefollow_extended \
   --train-json AAAIResults/selective_gaze/splits/gazefollow/base_train.json \
   --val-json AAAIResults/selective_gaze/splits/gazefollow/base_val.json \
@@ -557,8 +610,10 @@ GazeFollow 预留集：
   -m AAAISelectiveGaze.scripts.cache_predictions \
   --dataset gazefollow \
   --model gazelle_dinov3_vitb16 \
-  --base-checkpoint /path/to/gf_checkpoint.pt \
-  --probe-checkpoint /path/to/probe_checkpoint.pt \
+  --base-checkpoint /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --probe-checkpoint AAAIResults/selective_gaze/probes/gf_fixed_25811/layer_probes.pt \
+  --fusion sasa \
+  --spatial-prior ggsf \
   --data-path /newhome/fb/dataset/gazefollow_extended \
   --json-path AAAIResults/selective_gaze/splits/gazefollow/risk_train.json \
   --batch-size 32 \
@@ -573,8 +628,10 @@ VAT 跨域诊断：
   -m AAAISelectiveGaze.scripts.cache_predictions \
   --dataset vat \
   --model gazelle_dinov3_vitb16 \
-  --base-checkpoint /path/to/gf_checkpoint.pt \
-  --probe-checkpoint /path/to/probe_checkpoint.pt \
+  --base-checkpoint /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --probe-checkpoint AAAIResults/selective_gaze/probes/gf_fixed_25811/layer_probes.pt \
+  --fusion sasa \
+  --spatial-prior ggsf \
   --data-path /newhome/fb/dataset/videoattentiontarget \
   --json-path AAAIResults/selective_gaze/splits/vat/risk_train.json \
   --batch-size 16 \
@@ -598,8 +655,10 @@ GOO-Real val：
   -m AAAISelectiveGaze.scripts.cache_predictions \
   --dataset gooreal \
   --model gazelle_dinov3_vitb16 \
-  --base-checkpoint /path/to/gf_checkpoint.pt \
-  --probe-checkpoint /path/to/probe_checkpoint.pt \
+  --base-checkpoint /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_sasa_ggsf/2026-02-26_15-51-06/epoch_14.pt \
+  --probe-checkpoint AAAIResults/selective_gaze/probes/gf_fixed_25811/layer_probes.pt \
+  --fusion sasa \
+  --spatial-prior ggsf \
   --data-path /newhome/fb/dataset/gooreal_data \
   --json-path /newhome/fb/dataset/gooreal_data/gooreal_val_preprocessed.json \
   --batch-size 16 \
@@ -621,11 +680,12 @@ GOO-Real val：
   --output-dir AAAIResults/selective_gaze/pilot/hierarchy_disagreement
 ```
 
-### 12.7 Full：训练 risk head
+### 12.7 Full：训练 risk head（未实现，第一阶段不要运行）
 
-先为 calibration split 缓存预测，命令与 12.5 相同，只需把 JSON 和输出改成 `risk_calibration.json` 与 `gf_risk_calibration.parquet`。
+本小节属于后续阶段。第一阶段没有实现完整 risk head，也不得启动该训练。
+以下仅保留为接口设计：
 
-```bash
+```text
 /home/fb/anaconda3/envs/py310/bin/python \
   -m AAAISelectiveGaze.scripts.train_risk_head \
   --train-predictions AAAIResults/selective_gaze/prediction_cache/gf_risk_train.parquet \
@@ -641,11 +701,15 @@ GOO-Real val：
 
 `r_vis` 不能从 GazeFollow source-only 数据可靠训练。VAT-ID 时使用 `/path/to/vat_checkpoint.pt` 和 VAT 的 `risk_train/risk_calibration` prediction cache，另行运行同一脚本，并设置 `--targets localization visibility --visibility-loss bce`。
 
-### 12.8 Full：三域 selective evaluation
+### 12.8 Full：三域 neural-risk selective evaluation（未实现，第一阶段不要运行）
+
+第一阶段已实现的 `evaluate_selective --synthetic-smoke` 和基于固定 baseline 的评价
+不加载 neural risk checkpoint。以下带 `--risk-checkpoint` 的命令属于后续阶段，
+当前脚本会明确拒绝执行。它们仅保留为接口设计。
 
 GazeFollow-ID：
 
-```bash
+```text
 /home/fb/anaconda3/envs/py310/bin/python \
   -m AAAISelectiveGaze.scripts.evaluate_selective \
   --dataset gazefollow \
@@ -659,7 +723,7 @@ GazeFollow-ID：
 
 GF -> VAT：
 
-```bash
+```text
 /home/fb/anaconda3/envs/py310/bin/python \
   -m AAAISelectiveGaze.scripts.evaluate_selective \
   --dataset vat \
@@ -674,7 +738,7 @@ GF -> VAT：
 
 GF -> GOO-Real：
 
-```bash
+```text
 /home/fb/anaconda3/envs/py310/bin/python \
   -m AAAISelectiveGaze.scripts.evaluate_selective \
   --dataset gooreal \
