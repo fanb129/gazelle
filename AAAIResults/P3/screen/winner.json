@@ -1,0 +1,114 @@
+{
+  "status": "selected_on_vat_train_derived_validation",
+  "test_used_for_selection": false,
+  "validation_protocol": {
+    "source": "train_preprocessed.json",
+    "unit": "VAT sequence directory",
+    "train_fraction": 0.9,
+    "validation_fraction": 0.1,
+    "seed": 3106
+  },
+  "selection_rules": {
+    "improvement": {
+      "l2": 0.002,
+      "auc": 0.001,
+      "inout_ap": 0.005
+    },
+    "maximum_degradation": {
+      "auc": 0.002,
+      "l2": 0.003,
+      "inout_ap": 0.01
+    },
+    "tie_break": [
+      "pareto_dominance",
+      "l2",
+      "auc",
+      "inout_ap"
+    ]
+  },
+  "pareto_candidates": [
+    "r0"
+  ],
+  "winner": {
+    "candidate": "r0",
+    "label": "continued_baseline",
+    "best_epoch": 0,
+    "auc": 0.9331574006969495,
+    "l2": 0.12681627523479128,
+    "inout_ap": 0.9551577567618557,
+    "manifest": "/home/fb/src/paper/gazelleV1/AAAIResults/P3/screen/r0_continued_baseline/run_manifest.json",
+    "manifest_sha256": "a91053a1caa04b4c8157f9af95aadc43297cc06bb334ffb4dad3d53c4dc104d2",
+    "delta_auc": 0.0,
+    "delta_l2": 0.0,
+    "delta_inout_ap": 0.0,
+    "major_improvement": false,
+    "no_collapse": true,
+    "qualified": true
+  },
+  "leaderboard": [
+    {
+      "candidate": "r0",
+      "label": "continued_baseline",
+      "best_epoch": 0,
+      "auc": 0.9331574006969495,
+      "l2": 0.12681627523479128,
+      "inout_ap": 0.9551577567618557,
+      "manifest": "/home/fb/src/paper/gazelleV1/AAAIResults/P3/screen/r0_continued_baseline/run_manifest.json",
+      "manifest_sha256": "a91053a1caa04b4c8157f9af95aadc43297cc06bb334ffb4dad3d53c4dc104d2",
+      "delta_auc": 0.0,
+      "delta_l2": 0.0,
+      "delta_inout_ap": 0.0,
+      "major_improvement": false,
+      "no_collapse": true,
+      "qualified": true
+    },
+    {
+      "candidate": "r1",
+      "label": "residual_refinement",
+      "best_epoch": 0,
+      "auc": 0.9324537083618061,
+      "l2": 0.12804158120812492,
+      "inout_ap": 0.9520626011232753,
+      "manifest": "/home/fb/src/paper/gazelleV1/AAAIResults/P3/screen/r1_residual_refinement/run_manifest.json",
+      "manifest_sha256": "e40d0ab85954af09c89b1d34742339e0539089e3c2e5a035696257c5672a3bba",
+      "delta_auc": -0.0007036923351434465,
+      "delta_l2": -0.0012253059733336458,
+      "delta_inout_ap": -0.003095155638580316,
+      "major_improvement": false,
+      "no_collapse": true,
+      "qualified": false
+    },
+    {
+      "candidate": "r2",
+      "label": "cross_layer_attention",
+      "best_epoch": 0,
+      "auc": 0.9312497123306565,
+      "l2": 0.12944332187271948,
+      "inout_ap": 0.9531296437244665,
+      "manifest": "/home/fb/src/paper/gazelleV1/AAAIResults/P3/screen/r2_cross_layer_attention/run_manifest.json",
+      "manifest_sha256": "03a84a09dd601dc93740376cba78da2e04b49ceb5c11c3b65c74eca82f85bca8",
+      "delta_auc": -0.00190768836629307,
+      "delta_l2": -0.0026270466379282043,
+      "delta_inout_ap": -0.0020281130373891454,
+      "major_improvement": false,
+      "no_collapse": true,
+      "qualified": false
+    },
+    {
+      "candidate": "r3",
+      "label": "residual_coord005",
+      "best_epoch": 0,
+      "auc": 0.9322319227145619,
+      "l2": 0.12778721031033644,
+      "inout_ap": 0.9523054656995473,
+      "manifest": "/home/fb/src/paper/gazelleV1/AAAIResults/P3/screen/r3_residual_coord005/run_manifest.json",
+      "manifest_sha256": "21257a9515a44d48d5957dbe5fac2e798d23812f84f8be17f7114a4bd87900ae",
+      "delta_auc": -0.0009254779823876236,
+      "delta_l2": -0.0009709350755451596,
+      "delta_inout_ap": -0.002852291062308332,
+      "major_improvement": false,
+      "no_collapse": true,
+      "qualified": false
+    }
+  ]
+}

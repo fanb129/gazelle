@@ -1,0 +1,62 @@
+[
+  {
+    "epoch": 0,
+    "train": {
+      "loss": 0.35195398612413553,
+      "heatmap_loss": 0.03689751671045087,
+      "inout_loss": 0.3150564696174115,
+      "coordinate_loss": 0.0
+    },
+    "validation": {
+      "sample_count": 1436,
+      "auc": 0.9331574006969495,
+      "l2": 0.12681627523479128,
+      "inout_ap": 0.9551577567618557,
+      "inout_count": 2179
+    },
+    "learning_rates": {
+      "base": 1e-05,
+      "inout": 0.001
+    }
+  },
+  {
+    "epoch": 1,
+    "train": {
+      "loss": 0.34005522578954694,
+      "heatmap_loss": 0.03701239501533564,
+      "inout_loss": 0.303042830422055,
+      "coordinate_loss": 0.0
+    },
+    "validation": {
+      "sample_count": 1436,
+      "auc": 0.9331368985511262,
+      "l2": 0.12758728585477275,
+      "inout_ap": 0.9530366290158732,
+      "inout_count": 2179
+    },
+    "learning_rates": {
+      "base": 7.525e-06,
+      "inout": 0.000750025
+    }
+  },
+  {
+    "epoch": 2,
+    "train": {
+      "loss": 0.33832136436831206,
+      "heatmap_loss": 0.03683962179347873,
+      "inout_loss": 0.3014817427843809,
+      "coordinate_loss": 0.0
+    },
+    "validation": {
+      "sample_count": 1436,
+      "auc": 0.9331178618796858,
+      "l2": 0.12758795666806821,
+      "inout_ap": 0.9536971218290793,
+      "inout_count": 2179
+    },
+    "learning_rates": {
+      "base": 2.575000000000001e-06,
+      "inout": 0.0002500750000000001
+    }
+  }
+]
