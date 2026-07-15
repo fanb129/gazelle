@@ -27,3 +27,26 @@ def test_nested_gooreal_zip_is_opened_and_cached(tmp_path):
         store.close()
 
     assert (cache_dir / "finalrealdatasetImgsV3.zip").is_file()
+
+
+def test_truncated_gooreal_jpeg_is_recovered_and_audited(tmp_path):
+    relative_path = "finalrealdatasetImgsV3/49/cam1/truncated.jpg"
+    image_bytes = io.BytesIO()
+    Image.new("RGB", (64, 48), color=(90, 40, 10)).save(
+        image_bytes, format="JPEG", quality=90
+    )
+    truncated = image_bytes.getvalue()[:-32]
+
+    inner_bytes = io.BytesIO()
+    with zipfile.ZipFile(inner_bytes, "w") as inner_zip:
+        inner_zip.writestr(relative_path, truncated)
+    with zipfile.ZipFile(tmp_path / "gooreal.zip", "w") as outer_zip:
+        outer_zip.writestr("finalrealdatasetImgsV3.zip", inner_bytes.getvalue())
+
+    store = _create_gooreal_image_store(tmp_path)
+    try:
+        image = store.open(relative_path)
+        assert image.size == (64, 48)
+        assert relative_path in store.recovered_paths
+    finally:
+        store.close()

@@ -669,6 +669,11 @@ GOO-Real val：
   --output AAAIResults/selective_gaze/prediction_cache/gooreal_val.parquet
 ```
 
+GOO-Real 的 nested zip 中可能包含数据流不完整但仍可解码的 JPEG。缓存脚本默认先
+严格解码，失败后仅对该图片启用 truncated-JPEG recovery，并在对应 per-sample
+记录中写入 `image_decode_recovered=true`。如需完全禁止容错，可额外传入
+`--strict-images`；一天 Pilot 默认保留可审计的容错行为。
+
 ### 12.6 Pilot：检验层级分歧是否真的预测错误
 
 ```bash

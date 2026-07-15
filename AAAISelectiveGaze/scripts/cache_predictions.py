@@ -8,15 +8,62 @@ from pathlib import Path
 from typing import Any
 
 
-def _create_gooreal_image_store(data_root: Path, zip_path=None, zip_cache_dir=None):
-    """Construct the repository's nested-zip-aware GOO-Real image store."""
+class _AuditedGoorealImageStore:
+    """Nested-zip store with per-image audited truncated-JPEG recovery."""
+
+    def __init__(self, store, *, strict_images: bool = False):
+        self.store = store
+        self.strict_images = strict_images
+        self.recovered_paths: set[str] = set()
+
+    def open(self, relative_path):
+        from PIL import ImageFile
+
+        previous = ImageFile.LOAD_TRUNCATED_IMAGES
+        try:
+            # Make the first attempt strict even if another caller changed this
+            # process-global Pillow setting.
+            ImageFile.LOAD_TRUNCATED_IMAGES = False
+            try:
+                return self.store.open(relative_path)
+            except OSError as strict_error:
+                if self.strict_images:
+                    raise OSError(
+                        f"strict JPEG decoding failed for GOO-Real image {relative_path!r}"
+                    ) from strict_error
+                ImageFile.LOAD_TRUNCATED_IMAGES = True
+                try:
+                    image = self.store.open(relative_path)
+                except OSError as recovery_error:
+                    raise OSError(
+                        f"truncated-image recovery failed for GOO-Real image {relative_path!r}"
+                    ) from recovery_error
+                normalized = str(relative_path).replace("\\", "/").lstrip("/")
+                if normalized not in self.recovered_paths:
+                    print(f"Recovered truncated GOO-Real JPEG: {normalized}")
+                    self.recovered_paths.add(normalized)
+                return image
+        finally:
+            ImageFile.LOAD_TRUNCATED_IMAGES = previous
+
+    def close(self):
+        self.store.close()
+
+
+def _create_gooreal_image_store(
+    data_root: Path, zip_path=None, zip_cache_dir=None, *, strict_images: bool = False
+):
+    """Construct an audited, nested-zip-aware GOO-Real image store."""
 
     from scripts.eval_gooreal import GoorealImageStore
 
-    return GoorealImageStore(
-        str(data_root),
-        zip_path=zip_path,
-        zip_cache_dir=zip_cache_dir,
+    return _AuditedGoorealImageStore(
+        GoorealImageStore(
+            str(data_root),
+            zip_path=zip_path,
+            zip_cache_dir=zip_cache_dir,
+        ),
+        strict_images=strict_images,
     )
 
 
@@ -40,6 +87,11 @@ def _parser() -> argparse.ArgumentParser:
         "--zip-cache-dir",
         default=None,
         help="Directory for extracted nested GOO-Real image archives.",
+    )
+    parser.add_argument(
+        "--strict-images",
+        action="store_true",
+        help="Disable audited truncated-JPEG recovery for GOO-Real.",
     )
     parser.add_argument("--device", default=None, help="Defaults to cuda when available")
     parser.add_argument("--fusion", default="raw_concat")
@@ -106,6 +158,7 @@ def main(argv: list[str] | None = None) -> int:
             data_root,
             args.zip_path,
             args.zip_cache_dir,
+            strict_images=args.strict_images,
         )
         # GoorealImageStore lazily opens an inner zip and owns open file handles.
         # Keeping reads in the main process avoids duplicate/racing extraction and
@@ -210,12 +263,21 @@ def main(argv: list[str] | None = None) -> int:
                             "bbox": head["bbox_norm"],
                             "checkpoint_hash": base_hash,
                             "probe_checkpoint_hash": probe_hash,
+                            "image_decode_recovered": bool(
+                                image_store is not None
+                                and frame["path"] in image_store.recovered_paths
+                            ),
                         }
                         records.append(record)
     finally:
         if image_store is not None:
             image_store.close()
     output = save_prediction_cache(records, args.output)
+    if image_store is not None and image_store.recovered_paths:
+        print(
+            f"Recovered {len(image_store.recovered_paths)} truncated GOO-Real JPEG(s); "
+            "records are marked with image_decode_recovered=true."
+        )
     print(f"Saved {len(records)} per-person predictions to {output}")
     return 0
 
