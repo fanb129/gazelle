@@ -1,0 +1,184 @@
+{
+  "status": "measured_raw_predictions",
+  "model_label": "pretrained_gazespot_512",
+  "model_source": "current",
+  "model": "gazelle_dinov3_vitb16_inout",
+  "architecture": {
+    "spatial_prior": "ggsf",
+    "fusion": "sasa",
+    "selected_layers": "all"
+  },
+  "annotation": {
+    "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+    "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa",
+    "size_bytes": 10318375
+  },
+  "checkpoint_load": {
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt",
+      "sha256": "058793f58a1ad3f6e08a721d776a2a0412a2f0ebc5917b11dd0f78b29672f9ea",
+      "size_bytes": 15261416
+    },
+    "expected_task_tensors": 58,
+    "loaded_task_tensors": 58,
+    "coverage": 1.0,
+    "backbone_in_checkpoint": false
+  },
+  "binding_config": {
+    "shared_target_radius": 0.06,
+    "min_pair_separation": 0.1,
+    "target_sigma": 0.04,
+    "margin": 0.2,
+    "duplicate_bbox_iou": 0.8,
+    "eps": 1e-06
+  },
+  "frame_sample_every": 1,
+  "evaluated_frames": 13127,
+  "standard": {
+    "query_count": 31978,
+    "inframe_count": 20655,
+    "auc": 0.9402297891032795,
+    "l2": 0.09904005093697521,
+    "inout_ap": 0.8867988613913109
+  },
+  "binding": {
+    "overall": {
+      "swap_error": {
+        "value": 0.03653894950520173,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 0.01527928710186231,
+        "ci95_high": 0.060220952205805256
+      },
+      "diagonal_accuracy": {
+        "value": 0.9634610504947982,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 0.9393524018418402,
+        "ci95_high": 0.9837945129344692
+      },
+      "diag_margin": {
+        "value": 6.854565056469561,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 5.407920516036318,
+        "ci95_high": 8.647509484026381
+      }
+    },
+    "far": {
+      "swap_error": {
+        "value": 0.01760851760851761,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 0.0037998368043922317,
+        "ci95_high": 0.0372850172540074
+      },
+      "diagonal_accuracy": {
+        "value": 0.9823914823914824,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 0.962124139911671,
+        "ci95_high": 0.9963449068555584
+      },
+      "diag_margin": {
+        "value": 8.620999093365546,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 6.821660503007026,
+        "ci95_high": 10.637092272213085
+      }
+    },
+    "crowd_ge4": {
+      "swap_error": {
+        "value": 0.05396825396825397,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 0.02274478466038546,
+        "ci95_high": 0.08557528686860487
+      },
+      "diagonal_accuracy": {
+        "value": 0.946031746031746,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 0.9131337367398105,
+        "ci95_high": 0.9772335774888056
+      },
+      "diag_margin": {
+        "value": 5.864904854921245,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 4.30781852697863,
+        "ci95_high": 7.775754963871558
+      }
+    },
+    "crowd_ge5": {
+      "swap_error": {
+        "value": 0.08589147286821705,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 0.022743682310469315,
+        "ci95_high": 0.13342391304347825
+      },
+      "diagonal_accuracy": {
+        "value": 0.9141085271317829,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 0.8665760869565218,
+        "ci95_high": 0.9772563176895307
+      },
+      "diag_margin": {
+        "value": 4.58199816969938,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 3.1130811319716516,
+        "ci95_high": 6.818893133646702
+      }
+    },
+    "far_crowd_ge4": {
+      "swap_error": {
+        "value": 0.024830220713073003,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 0.004550275215868371,
+        "ci95_high": 0.05428593117564295
+      },
+      "diagonal_accuracy": {
+        "value": 0.9751697792869269,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 0.9445334424608796,
+        "ci95_high": 0.9955386252940185
+      },
+      "diag_margin": {
+        "value": 7.7213424914255615,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 5.864249031759694,
+        "ci95_high": 9.623760639858986
+      }
+    }
+  },
+  "query_binding": {
+    "ownership_accuracy": {
+      "value": 0.8573948439620082,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 0.8070854804926465,
+      "ci95_high": 0.8984981732701484
+    },
+    "own_target_rank": {
+      "value": 1.1860922659430122,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 1.121311353813047,
+      "ci95_high": 1.261799678025792
+    },
+    "ownership_margin": {
+      "value": 3.3073892663623456,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 2.7031709353154754,
+      "ci95_high": 3.888580027417523
+    }
+  }
+}

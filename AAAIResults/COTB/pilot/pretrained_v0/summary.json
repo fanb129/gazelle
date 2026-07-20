@@ -1,0 +1,184 @@
+{
+  "status": "measured_raw_predictions",
+  "model_label": "pretrained_v0_448",
+  "model_source": "v0",
+  "model": "gazelle_dinov3_vitb16_inout",
+  "architecture": {
+    "spatial_prior": null,
+    "fusion": null,
+    "selected_layers": null
+  },
+  "annotation": {
+    "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+    "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa",
+    "size_bytes": 10318375
+  },
+  "checkpoint_load": {
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitb_v0/2026-03-20_22-30-50/epoch_7.pt",
+      "sha256": "2ee26d79ab5ebd11ac13c6a9ae433cc51448e5974e3d1464a5d3b40f47e05dad",
+      "size_bytes": 12256719
+    },
+    "expected_task_tensors": 45,
+    "loaded_task_tensors": 45,
+    "coverage": 1.0,
+    "backbone_in_checkpoint": false
+  },
+  "binding_config": {
+    "shared_target_radius": 0.06,
+    "min_pair_separation": 0.1,
+    "target_sigma": 0.04,
+    "margin": 0.2,
+    "duplicate_bbox_iou": 0.8,
+    "eps": 1e-06
+  },
+  "frame_sample_every": 1,
+  "evaluated_frames": 13127,
+  "standard": {
+    "query_count": 31978,
+    "inframe_count": 20655,
+    "auc": 0.9366151969274772,
+    "l2": 0.10327446076357369,
+    "inout_ap": 0.8986350419871314
+  },
+  "binding": {
+    "overall": {
+      "swap_error": {
+        "value": 0.05531590966759706,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 0.025395694727433585,
+        "ci95_high": 0.08527620657046789
+      },
+      "diagonal_accuracy": {
+        "value": 0.944684090332403,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 0.9141111350082962,
+        "ci95_high": 0.9743218403135729
+      },
+      "diag_margin": {
+        "value": 6.2408761426618655,
+        "row_count": 11823,
+        "cluster_count": 79,
+        "ci95_low": 4.830854284642241,
+        "ci95_high": 7.956122122714222
+      }
+    },
+    "far": {
+      "swap_error": {
+        "value": 0.04013104013104013,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 0.012757046162489346,
+        "ci95_high": 0.07125529212933639
+      },
+      "diagonal_accuracy": {
+        "value": 0.9598689598689598,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 0.9268046682983647,
+        "ci95_high": 0.9877226323972083
+      },
+      "diag_margin": {
+        "value": 7.749528619620177,
+        "row_count": 7326,
+        "cluster_count": 68,
+        "ci95_low": 6.041778121312876,
+        "ci95_high": 9.740315712508938
+      }
+    },
+    "crowd_ge4": {
+      "swap_error": {
+        "value": 0.084472049689441,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 0.04347087975312753,
+        "ci95_high": 0.12542059475665068
+      },
+      "diagonal_accuracy": {
+        "value": 0.915527950310559,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 0.8781977551358795,
+        "ci95_high": 0.9568059522512331
+      },
+      "diag_margin": {
+        "value": 4.930051064178646,
+        "row_count": 7245,
+        "cluster_count": 16,
+        "ci95_low": 3.505471650929047,
+        "ci95_high": 6.806097764040438
+      }
+    },
+    "crowd_ge5": {
+      "swap_error": {
+        "value": 0.10418604651162791,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 0.05236709865115049,
+        "ci95_high": 0.13838550247116968
+      },
+      "diagonal_accuracy": {
+        "value": 0.8958139534883721,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 0.8608490566037735,
+        "ci95_high": 0.9426015654118524
+      },
+      "diag_margin": {
+        "value": 3.870975867870242,
+        "row_count": 3225,
+        "cluster_count": 5,
+        "ci95_low": 2.5885047765808893,
+        "ci95_high": 5.7592406014941435
+      }
+    },
+    "far_crowd_ge4": {
+      "swap_error": {
+        "value": 0.06048387096774194,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 0.021769872961055783,
+        "ci95_high": 0.10463153025386372
+      },
+      "diagonal_accuracy": {
+        "value": 0.9395161290322581,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 0.892536609025188,
+        "ci95_high": 0.979497161213177
+      },
+      "diag_margin": {
+        "value": 6.545343813801055,
+        "row_count": 4712,
+        "cluster_count": 16,
+        "ci95_low": 4.806741451761,
+        "ci95_high": 8.41216948392154
+      }
+    }
+  },
+  "query_binding": {
+    "ownership_accuracy": {
+      "value": 0.8371099050203528,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 0.7808764184427196,
+      "ci95_high": 0.8883853943857808
+    },
+    "own_target_rank": {
+      "value": 1.2183175033921303,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 1.1370506601251344,
+      "ci95_high": 1.3027410603143508
+    },
+    "ownership_margin": {
+      "value": 3.087108839621699,
+      "row_count": 14740,
+      "cluster_count": 80,
+      "ci95_low": 2.481025227998134,
+      "ci95_high": 3.6950849067633547
+    }
+  }
+}

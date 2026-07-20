@@ -38,7 +38,7 @@ cd /home/fb/src/paper/gazelleV1
 mkdir -p AAAIResults/COTB
 
 setsid nohup env \
-  GPU=0 \
+  GPU=2 \
   PYTHON_BIN=/home/fb/anaconda3/envs/py310/bin/python \
   DATA_PATH=/newhome/fb/dataset/videoattentiontarget \
   OUTPUT_ROOT=/home/fb/src/paper/gazelleV1/AAAIResults/COTB/pilot \
