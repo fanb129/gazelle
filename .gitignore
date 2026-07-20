@@ -183,3 +183,4 @@ rebuttal/
 *.pt
 AAAIResults/selective_gaze/splits/
 *.parquet
+tmp/
