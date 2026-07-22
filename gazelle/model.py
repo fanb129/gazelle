@@ -228,10 +228,17 @@ class GazeLLE(nn.Module):
         if self.inout: self.inout_head = nn.Sequential(nn.Linear(self.dim, 128), nn.ReLU(), nn.Dropout(0.1), nn.Linear(128, 1), nn.Sigmoid())
 
     def forward(self, input):
-        num_ppl_per_img = [len(bbox_list) for bbox_list in input["bboxes"]]
-        
         # 1. 获取原始多层特征 [List of (B, 1024, H, W)]
         raw_features_list = self.backbone.forward(input["images"])
+        return self.forward_from_features(input, raw_features_list)
+
+    def forward_from_features(self, input, raw_features_list):
+        """Run the Gazelle heads from a precomputed four-level feature pyramid.
+
+        Keeping this path separate lets a routed backbone replace only DINO's
+        feature extraction while preserving the v1 decoder exactly.
+        """
+        num_ppl_per_img = [len(bbox_list) for bbox_list in input["bboxes"]]
         
         # 2. 将 Image 维度 repeat 成 Person 维度
         # [Total_Ppl, 1024, H, W]

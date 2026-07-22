@@ -1,0 +1,506 @@
+# Coverage-Aware Spatial Routing：实施计划与训练命令
+
+## 0. 当前状态
+
+- 基线分支：`v1`，基线提交 `03974fa`。
+- 本 idea 分支：`codex/coverage-aware-router`。
+- 首版目标：先完成 **固定 25% token 预算** 的闭环，证明 gaze-aware support 能在保留精度的同时减少 DINOv3 后半段的真实计算。
+- 首版默认模型：DINOv3 ViT-B/16，输入 `512×512`，patch 网格 `32×32=1024`。
+- 首版默认路由位置：`route_after_block=5`。该参数是从 0 开始的 block 下标，即 blocks 0–5 稠密执行，blocks 6–11 稀疏执行。
+- 首版有意使用 `spatial_prior=none` 和 `fusion=raw_concat`，不同时叠加 GGSF/SASA，避免无法判断收益来自哪里。
+
+本地机器只用于修改和静态检查。真实 DINOv3、CUDA、训练和速度测试均由服务器 `fb@3090.lab` 在拉取本分支后执行。
+
+## 1. 要解决的问题与论文故事
+
+### 1.1 不是只针对某一篇 object-aware 论文
+
+当前很多 gaze target estimation 方法虽然 decoder 形式不同，但有一个共同假设：**整张图的所有 patch 都值得经过同样深度、同样昂贵的语义推理**。以当前 Gaze-LLE/DINOv3 路径为例，人的 bbox 只在完整 DINO 推理之后进入 decoder；因此 DINO 的计算分配与“谁在看、可能看哪里、当前证据有多不确定”无关。
+
+这会产生一个结构性错配：
+
+- gaze target 往往只落在少量空间区域，但全部 1024 个 patch 都进入深层 blocks；
+- 简单样本与困难样本使用相同计算；
+- 固定射线或固定角度 FOV 虽能缩小搜索范围，却会把不确定性过早压成一个方向，方向错时容易漏掉真正目标；
+- 只在 decoder 上乘 mask 不会减少 DINOv3 的主要计算，不能形成可信的效率贡献。
+
+因此本文问题可以写成：
+
+> Existing gaze-target models perform person-agnostic dense scene reasoning before incorporating the queried person's evidence. Can the model first predict a high-recall, person-conditioned spatial support, and allocate deep visual reasoning only to that support without losing the target under uncertainty?
+
+### 1.2 这里的 mask 到底是什么
+
+这里的 mask 不是：
+
+- 检测器标出的“人 bbox”；
+- YOLO/SAM 得到的物体分割；
+- 一个固定开角的 FOV cone；
+- 最终 gaze heatmap 的第二份复制。
+
+它表示的是：**为了继续进行昂贵深层推理，当前人可能注视到的高召回候选空间 support**。它可以是不规则、多峰的；bbox 只用来说明“谁在看”，而不是指定“看什么”。
+
+### 1.3 方法核心
+
+在 DINOv3 中间层得到稠密特征后，对每个人预测 support：
+
+\[
+S_i(p)=\operatorname{softmax}_{p}\left(f(F_r(p),\operatorname{Pool}(F_r,b_i),\Delta(p,b_i)) / T\right),
+\]
+
+其中 `F_r(p)` 是位置语义，`Pool(F_r,b_i)` 是 bbox 内的头部外观，`Δ(p,b_i)` 是相对位置和 bbox 尺度。该预测没有 cone 形状约束。
+
+一张图有多个人时，不为每个人重复运行 DINO suffix，而是构造对人数稳定的共享 max-union：
+
+\[
+S_{img}(p)=\max_i S_i(p).
+\]
+
+然后选择 `Top-K(S_img)`，同时优先保留 head footprint、CLS token、4 个 DINOv3 storage tokens 和少量均匀分布的 escape tokens。被选 patch 及其原始空间位置对应的 RoPE 一起进入后续 blocks。
+
+深层稀疏输出再 scatter 回 `32×32`：选中位置使用深层结果，未选位置使用路由层 early-exit 特征。这样原 v1 四层 decoder 可以不改结构地消费完整特征图。
+
+```text
+image
+  └─ DINO blocks 0 ... 5：1024 个 patch，稠密
+       ├─ head appearance + local scene + geometry
+       └─ free-form support → per-image union → Top-K（默认约 256）
+            └─ DINO blocks 6 ... 11：K 个 patch + 全部 special tokens，真实稀疏
+                 └─ scatter 到 32×32（未选位置由 block 5 回填）
+                      └─ 原 v1 multi-layer decoder → gaze heatmap / in-out
+```
+
+这回答了“router 是否只针对 decoder”：**不是**。`backbone_sparse` 中 DINOv3 后半段实际只处理保留 token；只有 `support_pilot` 为了先验证假设而运行完整 DINO。
+
+## 2. 已实现代码
+
+| 文件 | 作用 |
+|---|---|
+| `gazelle/routing/router.py` | person-conditioned 空间分布、多人 max-union、精确固定 Top-K、head/escape token 优先级 |
+| `gazelle/routing/backbone.py` | DINOv3 稠密 prefix、patch/RoPE 同步 gather、稀疏 suffix、early-exit scatter |
+| `gazelle/routing/model.py` | `support_pilot` 与 `backbone_sparse` 两种路径，并复用 v1 decoder |
+| `gazelle/routing/losses.py` | coverage、budget、entropy 损失及 soft/hard coverage 指标 |
+| `gazelle/model.py` | 新增 `forward_from_features`，不改变原始 dense forward 行为 |
+| `scripts/train_coverage_router.py` | GazeFollow/VAT 统一训练、AMP、梯度累积、分组学习率、初始化/断点恢复 |
+| `scripts/eval_coverage_router.py` | 从 checkpoint 的 `model_config` 自动重建并完整评测 |
+| `scripts/smoke_coverage_router.py` | 检查 keep=100% 时稀疏路径与标准 dense DINO 输出等价，并检查 25% 路径形状 |
+| `tests/test_coverage_router.py` | support/union/预算/coverage loss 测试 |
+| `tests/test_routed_backbone_utils.py` | token gather、RoPE gather、scatter 测试 |
+
+### 2.1 损失
+
+总损失为：
+
+\[
+L=\lambda_{hm}L_{hm}+\lambda_{out}L_{out}
++\lambda_{cov}L_{cov}+\lambda_{budget}L_{budget}+\lambda_{ent}L_{ent}.
+\]
+
+- `L_cov` 最大化 GT gaze 分布落入 soft support 的概率质量，目标是高召回，不要求 router 逐像素复刻最终 heatmap。
+- `L_budget` 用空间分布熵对应的 effective support size 约束 soft union 接近目标预算。
+- `L_ent` 是可选的额外锐化项；首版默认权重为 0，避免与 budget 目标重复。
+- hard Top-K 不可导，所以主 heatmap loss不能单独训练 router；`L_cov` 是必要的独立梯度路径。
+- VAT 的 out-of-frame 样本不计算 heatmap/coverage loss，但仍计算 in/out loss；代码也处理了一个 batch 全部 out-of-frame 的情况。
+
+### 2.2 Checkpoint 规则
+
+新 checkpoint 包含：
+
+- `model_config`：模型、stage、路由 block、预算、router 尺寸与温度；
+- `train_config`：训练参数；
+- `model_state`：所有非 backbone 参数，以及所有实际解冻的 DINO suffix 参数；
+- optimizer、scheduler、AMP scaler、随机数状态；
+- epoch、global step、指标和 git commit。
+
+`--init_ckpt` 只初始化模型权重，兼容 v1 的裸 `state_dict` 和本方法的结构化 checkpoint。`--resume` 用于恢复完整训练状态。冻结的 DINO 参数不重复写进 checkpoint，而是在加载时从 `./checkpoints/*_pretrain.pth` 重建；一旦使用 `--train_backbone_after_router`，被训练的 suffix block 一定会保存。
+
+## 3. 分阶段实施计划
+
+### P0：结构正确性，必须先过
+
+1. Python 静态编译和 router 单元测试。
+2. `keep_ratio=1.0` 时，标准 dense backbone 与 routed prefix/suffix 的四层输出在数值容差内一致。
+3. 检查每个样本的 RoPE 与原 patch index 同步 gather。
+4. 检查 ViT-B 默认保留 CLS + 4 storage tokens；这些 token 永不裁剪。
+5. 25% 路径完成一次前向、反向和 checkpoint reload，无 NaN/OOM。
+
+只要 100% 等价测试不通过，就不能开始长训练。
+
+### P1：Support pilot，先验证假设
+
+`support_pilot` 完整运行 DINO，只训练 router，冻结现有 gaze decoder。它回答：用中层 head appearance、场景与几何，能否在 25% 空间预算下覆盖真实 gaze target？
+
+记录：
+
+- soft coverage；
+- hard Top-K coverage；
+- entropy 对应的 effective support ratio；
+- actual keep ratio；
+- support 可视化，特别是小头、遮挡、背头和多候选目标样本。
+
+Go/No-Go 不使用任意的“必须提升 10%”。Go 的证据应是：
+
+- 学习后的 25% hard coverage 稳定高于随机 25% 和未训练 router；
+- 多个 seed 的趋势一致，而非单次波动；
+- support 不是只记住 head 周围或固定扇形；
+- 困难样本中能出现合理的宽/多峰 support。
+
+如果 support 与随机选择相近，或总是塌缩成固定位置，应先停在这里分析，不进入稀疏微调。
+
+### P2：固定预算真实稀疏模型
+
+先用 P1 的 `best_coverage.pt` 初始化 `backbone_sparse`：
+
+1. smoke：4 个 train batch + 4 个 eval batch；
+2. 冻结 DINO suffix 的短 pilot，确认 decoder 能适应 early-exit scatter；
+3. 解冻 route 后的 suffix blocks，用 `1e-6` 小学习率完整训练；
+4. 对比 dense v1、100% routed control、50% 和 25%。
+
+主要结论必须同时报告两轴：
+
+- 准确率：GazeFollow AUC/Avg L2/Min L2，VAT AUC/L2/In-out AP；
+- 效率：真实 batch=1 latency、吞吐、峰值显存、suffix token 数和端到端 FLOPs。
+
+25% 并不意味着端到端必然加速 4 倍：prefix 仍然稠密，MLP 项与 special tokens 也存在。论文只能报告实测值。
+
+### P3：必要消融
+
+固定预算成立后再做：
+
+- 路由位置：ViT-B blocks `2 / 5 / 8`；
+- 保留比例：`12.5% / 25% / 50% / 75% / 100%`；
+- router 输入：geometry only、head appearance + geometry、完整 scene + head + geometry；
+- 回填：zero fill 与 route-layer early-exit fill；
+- escape tokens：`0 / 8 / 16`；
+- 多人：per-person 重复 suffix 与 per-image union suffix；
+- 冻结 suffix 与小学习率微调 suffix。
+
+### P4：自适应预算，暂不混入首版
+
+只有固定预算显示明确的 accuracy-efficiency Pareto 后，才加入离散预算 buckets，例如 `{12.5%, 25%, 50%}`。不要直接预测任意 K，否则每个样本长度不同会降低 GPU batching 效率，也更难复现实验。
+
+### P5：跨数据集与多人场景
+
+- GazeFollow 建立方法有效性。
+- VAT 做视频域和 out-of-frame 泛化。
+- 当前 `GazeDataset` 仍按“一人一个样本”展开；模型本身已经支持一图多人 union，但要证明 scene-once 的多人效率，还需新增 grouped-frame loader，确保同一帧的多人共享一次 DINO prefix/suffix。
+- 最终再做 hard-case、人数分桶、head size/遮挡/边界目标分桶和 paired bootstrap。
+
+## 4. 服务器目录与前置条件
+
+以下命令都假设服务器仓库为：
+
+```bash
+/home/fb/src/paper/gazelleV1
+```
+
+Python 固定使用：
+
+```bash
+/home/fb/anaconda3/envs/py310/bin/python
+```
+
+先在服务器拉取本分支，然后进入仓库根目录。DINOv3 使用相对路径，因此不能在其他目录启动脚本。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p logs/coverage_router experiments/coverage_router
+```
+
+下面统一显式指定 `CUDA_VISIBLE_DEVICES=0`。若 0 号卡正在使用，可整体替换为另一张物理卡；脚本内部仍使用逻辑设备 `cuda`。
+
+## 5. 建议按顺序运行的命令
+
+### 5.1 单元测试
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -m pytest -q \
+  tests/test_coverage_router.py \
+  tests/test_routed_backbone_utils.py \
+  > logs/coverage_router/unit_tests.log 2>&1 < /dev/null &
+```
+
+查看结果：
+
+```bash
+tail -f logs/coverage_router/unit_tests.log
+```
+
+### 5.2 DINOv3 100% 等价与 25% 结构 smoke
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/smoke_coverage_router.py \
+  --backbone dinov3_vitb16 \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --batch_size 2 \
+  --device cuda \
+  --amp \
+  > logs/coverage_router/backbone_smoke.log 2>&1 < /dev/null &
+```
+
+日志中必须同时出现 `PASS dense equivalence` 和 `PASS sparse shapes`。
+
+### 5.3 一小时内的小规模 support smoke
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --escape_tokens 8 \
+  --heatmap_loss_weight 0 \
+  --router_coverage_weight 1.0 \
+  --router_budget_weight 0.05 \
+  --router_entropy_weight 0.0 \
+  --lr_router 1e-3 \
+  --lr_decoder 0 \
+  --max_epochs 1 \
+  --batch_size 2 \
+  --n_workers 0 \
+  --max_train_batches 4 \
+  --max_eval_batches 4 \
+  --amp \
+  --wandb_mode disabled \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/support_smoke \
+  > logs/coverage_router/support_smoke.log 2>&1 < /dev/null &
+```
+
+### 5.4 完整 support pilot
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --heatmap_loss_weight 0 \
+  --router_coverage_weight 1.0 \
+  --router_budget_weight 0.05 \
+  --router_entropy_weight 0.0 \
+  --lr_router 1e-3 \
+  --lr_decoder 0 \
+  --max_epochs 3 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_support_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_support_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+该阶段使用完整 DINO，不能把耗时写成最终加速结果。主要查看 `best_coverage.pt` 和 `history.jsonl`。
+
+### 5.5 真实稀疏路径的 4-batch smoke
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --escape_tokens 8 \
+  --train_backbone_after_router \
+  --lr_router 3e-4 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 1e-6 \
+  --max_epochs 1 \
+  --batch_size 2 \
+  --n_workers 0 \
+  --max_train_batches 4 \
+  --max_eval_batches 4 \
+  --amp \
+  --wandb_mode disabled \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/sparse_smoke \
+  > logs/coverage_router/sparse_smoke.log 2>&1 < /dev/null &
+```
+
+### 5.6 GazeFollow 完整稀疏训练
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --train_backbone_after_router \
+  --router_coverage_weight 1.0 \
+  --router_budget_weight 0.05 \
+  --router_entropy_weight 0.0 \
+  --lr_router 3e-4 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 1e-6 \
+  --max_epochs 15 \
+  --batch_size 8 \
+  --grad_accum_steps 4 \
+  --n_workers 8 \
+  --amp \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_sparse_b5_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_sparse_b5_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+若 3090 OOM，先把 `--batch_size 8` 改为 `4`，并把 `--grad_accum_steps 4` 改为 `8`，保持有效 batch 不变。不要先降低输入分辨率。
+
+### 5.7 GazeFollow 最终评测
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/best_min_l2.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/test_metrics.json \
+  > logs/coverage_router/gf_sparse_b5_k025_seed3106_eval.log 2>&1 < /dev/null &
+```
+
+### 5.8 VAT 微调
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset vat \
+  --model gazelle_dinov3_vitb16_inout \
+  --data_path /newhome/fb/dataset/videoattentiontarget \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/best_min_l2.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --escape_tokens 8 \
+  --train_backbone_after_router \
+  --lr_router 1e-4 \
+  --lr_decoder 1e-5 \
+  --lr_inout 1e-3 \
+  --lr_backbone 1e-6 \
+  --inout_loss_lambda 1.0 \
+  --frame_sample_every 6 \
+  --eval_frame_sample_every 6 \
+  --max_epochs 8 \
+  --batch_size 8 \
+  --grad_accum_steps 4 \
+  --n_workers 8 \
+  --amp \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name vat_sparse_b5_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/vat_sparse_b5_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+训练中的 VAT eval 每 6 帧采样，只用于观察趋势，不是最终结果。
+
+### 5.9 VAT 每帧最终评测
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106/best_l2.pt \
+  --dataset vat \
+  --data_path /newhome/fb/dataset/videoattentiontarget \
+  --frame_sample_every 1 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106/test_every_frame_metrics.json \
+  > logs/coverage_router/vat_sparse_b5_k025_seed3106_eval_every_frame.log 2>&1 < /dev/null &
+```
+
+### 5.10 断点恢复示例
+
+恢复时继续写入原 run directory：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --resume /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/last.resume.pt \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106 \
+  --max_epochs 15 \
+  --batch_size 8 \
+  --grad_accum_steps 4 \
+  --n_workers 8 \
+  --amp \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  > logs/coverage_router/gf_sparse_b5_k025_seed3106_resume.log 2>&1 < /dev/null &
+```
+
+## 6. 运行监控与结果反馈
+
+```bash
+tail -f logs/coverage_router/gf_sparse_b5_k025_seed3106.log
+```
+
+```bash
+watch -n 1 nvidia-smi -i 0
+```
+
+```bash
+pgrep -af train_coverage_router.py
+```
+
+每个 run directory 会生成：
+
+- `run_manifest.json`：完整配置和 git commit；
+- `history.jsonl`：逐 epoch train/eval 指标；
+- `best_coverage.pt`、`best_auc.pt`、`best_min_l2.pt` 或 `best_l2.pt`；
+- `last.resume.pt`：断点恢复；
+- `summary.json`：最佳结果摘要。
+
+第一轮请先反馈以下三个日志/文件，不要直接并行启动全部消融：
+
+1. `backbone_smoke.log`；
+2. `support_smoke.log`；
+3. 完整 support pilot 的 `history.jsonl` 与 `best_coverage.pt` 路径。
+
+确认 P0/P1 后，再决定 25% 是否进入完整稀疏训练，还是先把预算放宽到 50% 排查 coverage 与 downstream accuracy 的关系。
