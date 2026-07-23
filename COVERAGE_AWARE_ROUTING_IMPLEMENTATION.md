@@ -464,9 +464,15 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 - K=25% 是“任何更新前”的真实精度。若它已经接近 5.6 epoch 0，主要问题是突变后的 sparse 表示；若它接近 dense、训练后才崩，则主要问题是 joint optimization。
 - K=50% 用来区分 K=25% 是否过激，但不要直接复制 5.6 的 joint recipe 长跑。
 
-### 5.6.3 固定 router 和 suffix 的 decoder curriculum
+### 5.6.3 K50：固定 router 和整个 DINO 的 decoder curriculum
 
-纯评测对照通过后，补做 P2 中原本要求但 5.6 跳过的冻结阶段。此时只训练 decoder；router、DINO prefix 和 DINO suffix 都冻结。前四个 epoch 的训练预算依次为 `100% → 75% → 50% → 25%`，后两个 epoch 保持 25%；每个 epoch 的完整评测都固定使用最终 K=25%：
+5.6.2 已确认：
+
+- K100 完全复现 dense baseline，完整 routed 路径没有通用实现错误；
+- K50 虽然 GT point coverage 已有 94.32%，但仍只有 `0.88956 / 0.24057 / 0.17511`；
+- K25 为 `0.84675 / 0.26396 / 0.19451`。25%→50% 带来很大的 coverage 增长，却只带来很小的定位改善。
+
+所以不要直接长跑 K25。先用 K50 作为当前 single-mask + early-fill 结构的高覆盖可适配性上界。此时只训练 decoder；router、DINO prefix 和 DINO suffix 全部冻结。前三个 epoch 的训练预算依次为 `100% → 75% → 50%`，后两个 epoch 保持 50%；每个 epoch 的完整评测都固定使用最终 K=50%：
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 \
@@ -479,8 +485,8 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
   --router_stage backbone_sparse \
   --route_after_block 5 \
-  --keep_ratio 0.25 \
-  --router_warmup_epochs 4 \
+  --keep_ratio 0.50 \
+  --router_warmup_epochs 3 \
   --router_temperature 1.0 \
   --escape_tokens 8 \
   --heatmap_loss_weight 1.0 \
@@ -490,7 +496,7 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --lr_router 0 \
   --lr_decoder 1e-4 \
   --lr_backbone 0 \
-  --max_epochs 6 \
+  --max_epochs 5 \
   --batch_size 8 \
   --grad_accum_steps 4 \
   --n_workers 8 \
@@ -498,13 +504,23 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --clip_grad_norm 1.0 \
   --wandb_project GazeRoute \
   --wandb_mode online \
-  --exp_name gf_sparse_fixedrouter_decoder_k025_seed3106 \
-  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106 \
+  --exp_name gf_sparse_fixedrouter_decoder_k050_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k050_seed3106 \
   --seed 3106 \
-  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106.log 2>&1 < /dev/null &
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k050_seed3106.log 2>&1 < /dev/null &
 ```
 
-不要在这个阶段加入 `--train_backbone_after_router`。若该阶段稳定恢复，再从它的 `best_avg_l2.pt` 初始化，保持 router 冻结并以 `1e-6` 解冻 suffix；最后才考虑以更小学习率重新打开 router。若 K=50% 用同样分阶段 recipe 仍无法明显恢复，则优先修改 early-exit fill / decoder 适配方式，不继续堆消融。
+不要在这个阶段加入 `--train_backbone_after_router`。判定使用从 K50 zero-shot 到 dense 的 gap recovery，而不是要求任意“提升 10%”：
+
+| 判定 | AUC ↑ | Avg L2 ↓ | Min L2 ↓ | 下一步 |
+|---|---:|---:|---:|---|
+| 少于 50% gap recovery | < 0.92351 | > 0.17162 | > 0.10958 | 停止当前 early-fill recipe，先改 feature adapter/context preservation |
+| 50%–80% | 0.92351–0.94388 | 0.13025–0.17162 | 0.07026–0.10958 | 只做一次短 K25 curriculum probe |
+| 至少 80% | ≥ 0.94388 | ≤ 0.13025 | ≤ 0.07026 | K50 明确可行，再测试 K25 和固定-router suffix 微调 |
+
+三个指标应整体落入同一档，同时最后两轮不能相对最佳轮掉 AUC 超过 0.01 或增加 L2 超过 0.015。若指标跨档，按较差的一档决策。
+
+该阶段若能稳定恢复，再从 `best_avg_l2.pt` 初始化，继续保持 router 冻结并以 `1e-6` 解冻 suffix；最后才考虑用更小学习率重新打开 router。若不能恢复，下一步不是继续调学习率，而是用 dense-context masked-fill 对照拆分“混合深度回填”和“稀疏 token 丢失全局语境”这两个原因。
 
 ### 5.7 GazeFollow 最终评测
 
