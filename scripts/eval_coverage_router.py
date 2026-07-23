@@ -10,7 +10,7 @@ from typing import Iterable, Optional
 import torch
 
 from gazelle.dataloader import GazeDataset, collate_fn
-from gazelle.routing.model import get_coverage_router_model
+from gazelle.routing.model import ROUTER_STAGES, get_coverage_router_model
 
 try:  # Works both as ``python scripts/eval_...py`` and as a module import.
     from train_coverage_router import (
@@ -37,6 +37,25 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--dataset", choices=("gazefollow", "vat"), default=None)
     parser.add_argument("--data_path", default=None)
+    parser.add_argument(
+        "--router_stage_override",
+        choices=ROUTER_STAGES,
+        default=None,
+        help=(
+            "Evaluation-only override for diagnostic controls. For example, "
+            "evaluate a support_pilot checkpoint through backbone_sparse "
+            "without taking an optimizer step."
+        ),
+    )
+    parser.add_argument(
+        "--keep_ratio_override",
+        type=float,
+        default=None,
+        help=(
+            "Evaluation-only sparse keep-ratio override. This does not alter "
+            "the checkpoint on disk."
+        ),
+    )
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--n_workers", type=int, default=8)
     parser.add_argument(
@@ -61,6 +80,11 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--frame_sample_every must be positive")
     if args.max_eval_batches is not None and args.max_eval_batches <= 0:
         raise ValueError("--max_eval_batches must be positive")
+    if (
+        args.keep_ratio_override is not None
+        and not 0.0 < args.keep_ratio_override <= 1.0
+    ):
+        raise ValueError("--keep_ratio_override must be in (0, 1]")
 
 
 def resolve_dataset(args: argparse.Namespace, checkpoint: dict) -> str:
@@ -102,6 +126,16 @@ def build_model(model_config: dict):
     )
 
 
+def apply_eval_overrides(model_config: dict, args: argparse.Namespace) -> dict:
+    """Return the effective model config without mutating checkpoint metadata."""
+    effective = dict(model_config)
+    if args.router_stage_override is not None:
+        effective["router_stage"] = args.router_stage_override
+    if args.keep_ratio_override is not None:
+        effective["keep_ratio"] = float(args.keep_ratio_override)
+    return effective
+
+
 def make_eval_loader(args: argparse.Namespace, transform):
     if args.dataset == "gazefollow":
         dataset = GazeDataset("gazefollow", args.data_path, "test", transform)
@@ -137,9 +171,10 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
 
     args.dataset = resolve_dataset(args, checkpoint)
     args.data_path = args.data_path or DEFAULT_DATA_PATHS[args.dataset]
-    model_config = checkpoint.get("model_config")
-    if not isinstance(model_config, dict):
+    checkpoint_model_config = checkpoint.get("model_config")
+    if not isinstance(checkpoint_model_config, dict):
         raise ValueError("checkpoint has no model_config")
+    model_config = apply_eval_overrides(checkpoint_model_config, args)
     args.keep_ratio = float(model_config["keep_ratio"])
 
     device = torch.device(args.device)
@@ -171,7 +206,12 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "vat_frame_sample_every": (
             args.frame_sample_every if args.dataset == "vat" else None
         ),
+        "checkpoint_model_config": checkpoint_model_config,
         "model_config": model_config,
+        "evaluation_overrides": {
+            "router_stage": args.router_stage_override,
+            "keep_ratio": args.keep_ratio_override,
+        },
         "metrics": metrics,
         "note": (
             "support_pilot runs dense DINOv3 and is not an efficiency result"

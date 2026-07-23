@@ -381,6 +381,131 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 
 若 3090 OOM，先把 `--batch_size 8` 改为 `4`，并把 `--grad_accum_steps 4` 改为 `8`，保持有效 batch 不变。不要先降低输入分辨率。
 
+### 5.6.1 5.6 结果判定：当前 joint recipe No-Go
+
+`gf_sparse_b5_k025_seed3106` 的最佳结果仍显著差于 dense v1：
+
+| checkpoint / epoch | AUC ↑ | Avg L2 ↓ | Min L2 ↓ | GT point coverage ↑ | hard coverage ↑ |
+|---|---:|---:|---:|---:|---:|
+| dense v1 / support pilot | 0.95746 | 0.10268 | 0.04405 | 0.82573 | 0.66334 |
+| sparse epoch 0（最佳 L2） | 0.85826 | 0.23706 | 0.16240 | 0.70840 | 0.57764 |
+| sparse epoch 2（最佳 AUC） | 0.86679 | 0.25617 | 0.18204 | 0.76353 | 0.64370 |
+| sparse epoch 7（最佳 coverage） | 0.76745 | 0.40437 | 0.32595 | 0.80143 | 0.67309 |
+| sparse epoch 14 | 0.59460 | 0.48882 | 0.40331 | 0.79059 | 0.66887 |
+
+因此不能继续把 5.7、VAT 或正式消融当作论文实验。这个结果否定的是“从第一个 epoch 起同时更新 router、decoder 和 DINO suffix”的训练 recipe，还没有单独否定 coverage-aware routing：
+
+- coverage 后期恢复，而 gaze 精度继续恶化，问题不只是目标没有进入 Top-K；
+- baseline decoder 原来消费 dense blocks `2/5/8/11`，K=25% 后 blocks `8/11` 的 75% 位置突然改成 block 5 early-exit 回填，输入分布发生大幅变化；
+- router 同时更新会不断改变离散 Top-K，decoder 和 4253 万参数的 suffix 在追逐一个非平稳输入；
+- effective support 多数只有约 4%–10%，远小于实际 K=25%。当前 `router_budget_weight=0.05` 对约 0.03 量级的 budget loss 贡献只有约 0.0015，几乎没有约束剩余低分 token 的排序稳定性。
+
+先完成下面两个诊断阶段。只有分阶段训练恢复出可接受的 accuracy–compute 点，才回到 5.7。
+
+### 5.6.2 不训练的 sparse-init 对照
+
+评测脚本的两个 override 只改变内存中的评测配置，不修改 checkpoint。三个命令必须在同一张 GPU 上**顺序执行**，不要同时启动。
+
+先做 K=100% 完整路径对照：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --router_stage_override backbone_sparse \
+  --keep_ratio_override 1.0 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_init_controls/k100.json \
+  > logs/coverage_router/gf_sparse_init_k100.log 2>&1 < /dev/null &
+```
+
+完成后分别做 K=50% 和 K=25%：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --router_stage_override backbone_sparse \
+  --keep_ratio_override 0.50 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_init_controls/k050.json \
+  > logs/coverage_router/gf_sparse_init_k050.log 2>&1 < /dev/null &
+```
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --router_stage_override backbone_sparse \
+  --keep_ratio_override 0.25 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_init_controls/k025.json \
+  > logs/coverage_router/gf_sparse_init_k025.log 2>&1 < /dev/null &
+```
+
+判定：
+
+- K=100% 必须在数值容差内复现 dense baseline；否则先查完整模型加载或 sparse scatter 路径，不能训练。
+- K=25% 是“任何更新前”的真实精度。若它已经接近 5.6 epoch 0，主要问题是突变后的 sparse 表示；若它接近 dense、训练后才崩，则主要问题是 joint optimization。
+- K=50% 用来区分 K=25% 是否过激，但不要直接复制 5.6 的 joint recipe 长跑。
+
+### 5.6.3 固定 router 和 suffix 的 decoder curriculum
+
+纯评测对照通过后，补做 P2 中原本要求但 5.6 跳过的冻结阶段。此时只训练 decoder；router、DINO prefix 和 DINO suffix 都冻结。前四个 epoch 的训练预算依次为 `100% → 75% → 50% → 25%`，后两个 epoch 保持 25%；每个 epoch 的完整评测都固定使用最终 K=25%：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --router_warmup_epochs 4 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --heatmap_loss_weight 1.0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --max_epochs 6 \
+  --batch_size 8 \
+  --grad_accum_steps 4 \
+  --n_workers 8 \
+  --amp \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_sparse_fixedrouter_decoder_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+不要在这个阶段加入 `--train_backbone_after_router`。若该阶段稳定恢复，再从它的 `best_avg_l2.pt` 初始化，保持 router 冻结并以 `1e-6` 解冻 suffix；最后才考虑以更小学习率重新打开 router。若 K=50% 用同样分阶段 recipe 仍无法明显恢复，则优先修改 early-exit fill / decoder 适配方式，不继续堆消融。
+
 ### 5.7 GazeFollow 最终评测
 
 ```bash

@@ -428,7 +428,11 @@ def autocast_context(device: torch.device, enabled: bool):
 def current_keep_ratio(target: float, epoch: int, warmup_epochs: int) -> float:
     if warmup_epochs <= 0:
         return target
-    progress = min(1.0, float(epoch + 1) / float(warmup_epochs))
+    if warmup_epochs == 1:
+        return target
+    # Include both endpoints: the first curriculum epoch is fully dense and
+    # the last warmup epoch reaches the requested sparse budget.
+    progress = min(1.0, float(epoch) / float(warmup_epochs - 1))
     return 1.0 + progress * (target - 1.0)
 
 
@@ -822,18 +826,28 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     start_epoch = 0
     global_step = 0
     best_metrics = {
-        "min_l2": float("inf"),
-        "l2": float("inf"),
         "auc": float("-inf"),
         "routing_hard_coverage": float("-inf"),
     }
+    if args.dataset == "gazefollow":
+        best_metrics.update(
+            {
+                "avg_l2": float("inf"),
+                "min_l2": float("inf"),
+            }
+        )
+    else:
+        best_metrics["l2"] = float("inf")
     if resume_payload is not None:
         optimizer.load_state_dict(resume_payload["optimizer_state"])
         scheduler.load_state_dict(resume_payload["scheduler_state"])
         scaler.load_state_dict(resume_payload.get("scaler_state", {}))
         start_epoch = int(resume_payload["epoch"]) + 1
         global_step = int(resume_payload.get("global_step", 0))
-        best_metrics.update(resume_payload.get("best_metrics", {}))
+        resumed_best_metrics = resume_payload.get("best_metrics", {})
+        for name in best_metrics:
+            if name in resumed_best_metrics:
+                best_metrics[name] = resumed_best_metrics[name]
         restore_rng_state(resume_payload.get("rng_state"))
         print(f"Resuming from epoch {start_epoch}, global step {global_step}")
 
@@ -1030,6 +1044,10 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             best_metrics["auc"] = auc
             improved_paths.append(run_dir / "best_auc.pt")
         if args.dataset == "gazefollow":
+            avg_l2 = eval_metrics.get("avg_l2")
+            if avg_l2 is not None and avg_l2 < best_metrics["avg_l2"]:
+                best_metrics["avg_l2"] = avg_l2
+                improved_paths.append(run_dir / "best_avg_l2.pt")
             min_l2 = eval_metrics.get("min_l2")
             if min_l2 is not None and min_l2 < best_metrics["min_l2"]:
                 best_metrics["min_l2"] = min_l2
@@ -1063,7 +1081,8 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "last_epoch": args.max_epochs - 1,
     }
     (run_dir / "summary.json").write_text(
-        json.dumps(final_metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(final_metrics, allow_nan=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
     if wandb is not None:
         wandb.finish()
