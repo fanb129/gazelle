@@ -650,6 +650,102 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 
 脚本同时写出 JSON 和 Markdown 表，报告 median/mean/p95 latency、连续推理 FPS、steady/peak/activation memory、实际 patch/special/suffix token 数，以及相对 dense 的 speedup。速度结论不使用任意百分比门槛：要求 K25 相对 dense 和 K50 的每轮 latency median 都同方向改善，且改善幅度明显大于五次 repeat 的波动；否则选择更稳定的 K50，或停止把加速作为主要 contribution。
 
+#### 5.6.5-v2 实际结果与复测要求
+
+`benchmark_b1_amp_v2.json` 已经通过 AMP cache 公平性检查。Dense 的
+`autocast_cache_eligible_parameters / total_parameters` 为
+`89,086,208 / 89,086,208`，所有 routed variant 为
+`89,549,313 / 89,549,313`；两者相差的 `463,105` 个参数正是 router。
+v1 中约 `169.3 MiB` 的虚假 steady-memory 差异也已消失，v2 routed
+仅比 dense 多 `1.86–5.15 MiB`。
+
+| variant | median / p95 latency | median FPS | peak memory |
+|---|---:|---:|---:|
+| dense | 42.891 / 44.490 ms | 24.081 | 589.0 MiB |
+| support | 62.237 / 64.659 ms | 16.663 | 594.1 MiB |
+| K100 | 59.803 / 60.177 ms | 16.672 | 597.7 MiB |
+| K50 | 59.880 / 60.059 ms | 17.599 | 600.6 MiB |
+| K25 | 59.912 / 61.160 ms | 17.311 | 600.4 MiB |
+
+但是这次 timing **不能作为模型效率结论**。同一个 dense 路径从 v1 的
+`22.490 ms` 变成 v2 的 `42.891 ms`，慢了 `90.7%`；K100 的五轮
+latency median 又是 `39.376 / 59.884 / 59.903 / 59.769 / 59.880 ms`，
+同一次运行内出现约 `52%` 的状态漂移。同步结果后在服务器检查到另一个
+`python3` 计算进程同时占用四张 3090，`nvidia-smi pmon` 显示每张卡均为
+`99% SM`。因此，v2 只能确认 benchmark 公平性修复成功，不能据此声称
+router 固定开销为 `support - dense`，也不能据此给当前方法作最终
+效率 No-Go。
+
+不过，v1 和 v2 都没有观察到 K25 优于 K50：v2 中 K25 的 median latency
+比 K50 慢 `0.052%`、p95 慢 `1.833%`、FPS 低 `1.634%`，峰值显存只少
+`0.254 MiB`。在得到干净复测前，默认保留精度更好的 **K50**，暂停
+suffix 微调、VAT 和多 seed。
+
+下一步只做空闲单卡复测。运行前先确认 GPU 0 没有 compute process，
+并且利用率持续接近 0：
+
+```bash
+nvidia-smi --id=0 \
+  --query-compute-apps=pid,process_name,used_memory \
+  --format=csv,noheader
+
+nvidia-smi --id=0 \
+  --query-gpu=index,utilization.gpu,memory.used,temperature.gpu,power.draw,clocks.sm,pstate \
+  --format=csv
+```
+
+空闲后先按正序运行，保留 v2 原文件不覆盖：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/best_avg_l2.pt \
+  --variants dense support k100 k50 k25 \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --latency_iters 200 \
+  --throughput_iters 500 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/benchmark_b1_amp_v2_clean_forward.json \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106_benchmark_b1_amp_v2_clean_forward.log 2>&1 < /dev/null &
+```
+
+只有正序结果满足以下条件，才运行反序确认：
+
+- dense 与 K100 的五个 repeat 不再出现几十个百分点的漂移；
+- 整次运行期间没有其他 compute process 进入 GPU 0；
+- K50 或 K25 相对 dense/K100 的改善方向一致。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/best_avg_l2.pt \
+  --variants k25 k50 k100 support dense \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --latency_iters 200 \
+  --throughput_iters 500 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/benchmark_b1_amp_v2_clean_reverse.json \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106_benchmark_b1_amp_v2_clean_reverse.log 2>&1 < /dev/null &
+```
+
+若干净的正反序结果都显示 K50/K25 不快于 dense，则效率路线正式
+No-Go，下一步才是用 CUDA event / profiler 分解 dense prefix、router、
+Top-K/gather/RoPE、sparse suffix、scatter/norm 和 decoder；在完成该
+profile 与实现优化前不继续训练。若 routed 路径快于 dense，但 K25
+仍未明显快于 K50，则用 K50 作为主 Pareto 点。
+
 ### 5.7 GazeFollow 最终评测
 
 ```bash
