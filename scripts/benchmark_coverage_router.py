@@ -283,7 +283,10 @@ def token_metadata(model, variant_name: str, image_size: int) -> dict:
         if variant_name in ("dense", "support")
         else min(patch_tokens, max(1, int(round(ratio * patch_tokens))))
     )
-    special_tokens = int(getattr(model.backbone, "prefix_token_count", 0))
+    special_tokens = getattr(model.backbone, "prefix_token_count", None)
+    if special_tokens is None:
+        special_tokens = int(getattr(model.backbone.model, "n_storage_tokens", 0)) + 1
+    special_tokens = int(special_tokens)
     return {
         "patch_grid": [int(patch_height), int(patch_width)],
         "dense_patch_tokens": patch_tokens,
