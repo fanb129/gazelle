@@ -625,6 +625,10 @@ Benchmark 使用同一个 K25 `best_avg_l2.pt`，以排除权重差异；比较�
 
 单请求 latency 每次 forward 都执行 CUDA synchronize；连续 throughput 只在一组 forward 的前后 synchronize。输入预先放在 GPU，checkpoint load、数据读取和 image H2D 不计入模型时间；router 在 forward 内部正常处理 bbox，因此其开销会被计入。运行时不要同时启动其他 GPU 任务。
 
+首轮 `benchmark_b1_amp.json` 不能作为最终效率结论。它得到 dense `22.49 ms`、K50 `23.28 ms`、K25 `23.40 ms`，但 dense steady allocated memory 为 `531.6 MiB`，routed 只有 `362.3 MiB`，相差约 `169.3 MiB`，接近 DINO 的 FP16 权重副本大小。原因是 legacy dense 参数默认 `requires_grad=True`，而 routed DINO 在训练阶段被冻结；外层 autocast 因此只缓存 dense 的 FP16 权重，routed 每轮需要重新转换权重。该差异同时污染 latency 与 memory。
+
+修正版在 `inference_mode` 下统一把所有浮点参数设为 autocast-cache eligible。`inference_mode` 仍保证不构建 autograd graph；`requires_grad` 在这里仅用于统一 PyTorch autocast 的权重缓存策略。必须重新运行并写入 `_v2` 文件：
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 \
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
@@ -640,8 +644,8 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --throughput_iters 500 \
   --repeats 5 \
   --amp \
-  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/benchmark_b1_amp.json \
-  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106_benchmark_b1_amp.log 2>&1 < /dev/null &
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/benchmark_b1_amp_v2.json \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106_benchmark_b1_amp_v2.log 2>&1 < /dev/null &
 ```
 
 脚本同时写出 JSON 和 Markdown 表，报告 median/mean/p95 latency、连续推理 FPS、steady/peak/activation memory、实际 patch/special/suffix token 数，以及相对 dense 的 speedup。速度结论不使用任意百分比门槛：要求 K25 相对 dense 和 K50 的每轮 latency median 都同方向改善，且改善幅度明显大于五次 repeat 的波动；否则选择更稳定的 K50，或停止把加速作为主要 contribution。

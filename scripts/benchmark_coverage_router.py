@@ -161,8 +161,30 @@ def percentile(values, fraction: float) -> float:
     return ordered[lower] * (1.0 - weight) + ordered[upper] * weight
 
 
+def equalize_autocast_weight_cache(model) -> dict:
+    """Give every variant the same persistent autocast weight-cache policy.
+
+    The routed training model freezes DINO while the legacy dense model leaves
+    its parameters trainable. CUDA autocast caches FP16 casts of leaf weights
+    that require gradients. Under inference_mode this flag cannot create an
+    autograd graph, but unequal flags would let dense reuse cached casts while
+    forcing routed DINO weights to be recast on every benchmark iteration.
+    """
+    for parameter in model.parameters():
+        if parameter.is_floating_point():
+            parameter.requires_grad_(True)
+    return {
+        "total_parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "autocast_cache_eligible_parameters": sum(
+            parameter.numel()
+            for parameter in model.parameters()
+            if parameter.is_floating_point() and parameter.requires_grad
+        ),
+    }
+
+
 def amp_context(enabled: bool):
-    return torch.cuda.amp.autocast(enabled=enabled)
+    return torch.cuda.amp.autocast(enabled=enabled, cache_enabled=True)
 
 
 def synchronize(device: torch.device) -> None:
@@ -364,7 +386,9 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     results = []
     for variant_name in args.variants:
         print(f"BENCHMARK variant={variant_name}", flush=True)
-        model = build_variant(checkpoint, variant_name).to(device).eval()
+        model = build_variant(checkpoint, variant_name)
+        parameters = equalize_autocast_weight_cache(model)
+        model = model.to(device).eval()
         tokens = token_metadata(model, variant_name, args.image_size)
         timing = benchmark_variant(model, model_input, args, device)
         results.append(
@@ -372,6 +396,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
                 "variant": variant_name,
                 "router_stage": VARIANTS[variant_name]["router_stage"],
                 "keep_ratio": VARIANTS[variant_name]["keep_ratio"],
+                "parameters": parameters,
                 "tokens": tokens,
                 "timing": timing,
             }
@@ -396,6 +421,9 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             "cudnn_version": torch.backends.cudnn.version(),
             "amp": bool(args.amp),
             "amp_dtype": "float16" if args.amp else "float32",
+            "autocast_weight_cache_enabled": True,
+            "parameter_requires_grad_equalized_for_autocast_cache": True,
+            "inference_mode_disables_autograd_graph": True,
             "batch_size": args.batch_size,
             "num_people_per_image": args.num_people,
             "image_size": [args.image_size, args.image_size],

@@ -3,8 +3,10 @@ from argparse import Namespace
 import pytest
 
 pytest.importorskip("torch")
+import torch
 
 from scripts.benchmark_coverage_router import (
+    equalize_autocast_weight_cache,
     make_bboxes,
     percentile,
     validate_args,
@@ -48,3 +50,13 @@ def test_validate_args_rejects_duplicate_variants():
     with pytest.raises(ValueError, match="duplicates"):
         validate_args(_args(variants=["k25", "k25"]))
 
+
+def test_equalize_autocast_weight_cache_makes_variants_symmetric():
+    model = torch.nn.Sequential(torch.nn.Linear(4, 3), torch.nn.Linear(3, 2))
+    for parameter in model[0].parameters():
+        parameter.requires_grad_(False)
+
+    metadata = equalize_autocast_weight_cache(model)
+
+    assert all(parameter.requires_grad for parameter in model.parameters())
+    assert metadata["autocast_cache_eligible_parameters"] == metadata["total_parameters"]
