@@ -82,6 +82,7 @@ image
 | `gazelle/model.py` | 新增 `forward_from_features`，不改变原始 dense forward 行为 |
 | `scripts/train_coverage_router.py` | GazeFollow/VAT 统一训练、AMP、梯度累积、分组学习率、初始化/断点恢复 |
 | `scripts/eval_coverage_router.py` | 从 checkpoint 的 `model_config` 自动重建并完整评测 |
+| `scripts/benchmark_coverage_router.py` | 同 checkpoint 比较 dense/K100/K50/K25 的同步 latency、throughput 与 CUDA 峰值显存 |
 | `scripts/smoke_coverage_router.py` | 检查 keep=100% 时稀疏路径与标准 dense DINO 输出等价，并检查 25% 路径形状 |
 | `tests/test_coverage_router.py` | support/union/预算/coverage loss 测试 |
 | `tests/test_routed_backbone_utils.py` | token gather、RoPE gather、scatter 测试 |
@@ -589,6 +590,61 @@ K25 zero-shot 到 dense 的判定门槛：
 | 至少 80% | ≥ 0.93532 | ≤ 0.13493 | ≤ 0.07414 | K25 强 Go，进入固定-router suffix 微调与真实速度测试 |
 
 同样要求三个指标整体落入同一档，并检查最后两轮稳定性。
+
+5.6.4 实际结果为：
+
+| epoch | 训练 K | AUC ↑ | Avg L2 ↓ | Min L2 ↓ |
+|---:|---:|---:|---:|---:|
+| 0 | 100% | 0.84226 | 0.26255 | 0.19293 |
+| 1 | 75% | 0.94654 | **0.11131** | **0.05106** |
+| 2 | 50% | 0.94862 | 0.11203 | 0.05174 |
+| 3 | 25% | **0.94886** | 0.11361 | 0.05208 |
+| 4 | 25% | 0.94696 | 0.11290 | 0.05274 |
+| 5 | 25% | 0.94848 | 0.11298 | 0.05168 |
+
+必须注意，`summary.json` 中的逐指标最佳值不属于同一个 checkpoint：
+
+- `best_auc.pt` 是 epoch 3，完整 tuple 为 `0.94886 / 0.11361 / 0.05208`；
+- `best_avg_l2.pt` 与 `best_min_l2.pt` 是 epoch 1，完整 tuple 为 `0.94654 / 0.11131 / 0.05106`；
+- `last.resume.pt` 是 epoch 5，完整 tuple 为 `0.94848 / 0.11298 / 0.05168`。
+
+按照预先采用的 Avg L2 选模规则，应使用 epoch 1 的 `best_avg_l2.pt`。以该单一 checkpoint 计算，K25 zero-shot 到 dense 的 gap recovery 为 AUC 90.14%、Avg L2 94.64%、Min L2 95.34%，三项均为 Strong Go。epochs 3–5 真正使用 K25 训练后的波动范围也只有 0.00190 AUC、0.00071 Avg L2 和 0.00106 Min L2，没有失稳。
+
+K25 相对 K50 的最佳指标只差约 `-0.00345 AUC / +0.00128 Avg L2 / +0.00100 Min L2`。因此暂不解冻 suffix；先用真实速度决定 K25 还是 K50 是主 Pareto 点。
+
+最终多 seed 不能继续从 GazeFollow test 上分别挑每个指标的最佳轮并拼成结果。正式实验前必须固定单一 checkpoint 规则/epoch，或建立 validation split，然后在 test 上一次性报告该 checkpoint 的完整 metric tuple。
+
+### 5.6.5 K100/K50/K25 真实 CUDA benchmark
+
+Benchmark 使用同一个 K25 `best_avg_l2.pt`，以排除权重差异；比较：
+
+- `dense`：真正的原始 GazeLLE 路径，完全绕过 router；
+- `support`：完整 dense DINO + router；
+- `k100`：带 Top-K、gather/scatter 的 routed 实现开销对照；
+- `k50` 和 `k25`：真实稀疏 suffix。
+
+单请求 latency 每次 forward 都执行 CUDA synchronize；连续 throughput 只在一组 forward 的前后 synchronize。输入预先放在 GPU，checkpoint load、数据读取和 image H2D 不计入模型时间；router 在 forward 内部正常处理 bbox，因此其开销会被计入。运行时不要同时启动其他 GPU 任务。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/best_avg_l2.pt \
+  --variants dense support k100 k50 k25 \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --latency_iters 200 \
+  --throughput_iters 500 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106/benchmark_b1_amp.json \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106_benchmark_b1_amp.log 2>&1 < /dev/null &
+```
+
+脚本同时写出 JSON 和 Markdown 表，报告 median/mean/p95 latency、连续推理 FPS、steady/peak/activation memory、实际 patch/special/suffix token 数，以及相对 dense 的 speedup。速度结论不使用任意百分比门槛：要求 K25 相对 dense 和 K50 的每轮 latency median 都同方向改善，且改善幅度明显大于五次 repeat 的波动；否则选择更稳定的 K50，或停止把加速作为主要 contribution。
 
 ### 5.7 GazeFollow 最终评测
 
