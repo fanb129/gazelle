@@ -522,6 +522,74 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 
 该阶段若能稳定恢复，再从 `best_avg_l2.pt` 初始化，继续保持 router 冻结并以 `1e-6` 解冻 suffix；最后才考虑用更小学习率重新打开 router。若不能恢复，下一步不是继续调学习率，而是用 dense-context masked-fill 对照拆分“混合深度回填”和“稀疏 token 丢失全局语境”这两个原因。
 
+5.6.3 实际结果为：
+
+| epoch | 训练 K | AUC ↑ | Avg L2 ↓ | Min L2 ↓ |
+|---:|---:|---:|---:|---:|
+| 0 | 100% | 0.88644 | 0.23860 | 0.17296 |
+| 1 | 75% | 0.95132 | 0.11113 | 0.05075 |
+| 2 | 50% | **0.95231** | **0.11003** | **0.05007** |
+| 3 | 50% | 0.95079 | 0.11480 | 0.05307 |
+| 4 | 50% | 0.95084 | 0.11497 | 0.05315 |
+
+最佳 epoch 2 相对 K50 zero-shot 到 dense 的 gap recovery 分别为：
+
+- AUC：92.41%；
+- Avg L2：94.67%；
+- Min L2：95.41%。
+
+最后两轮相对最佳轮只下降约 0.0015 AUC、增加约 0.0049 Avg L2 和 0.0031 Min L2，通过稳定性要求，但已有轻微过拟合。K50 路径因此为强 Go：主要缺口确实来自 decoder 对 mixed-depth feature distribution 不适配，而不是 sparse representation 完全不可恢复。后续使用 epoch 2 的 `best_avg_l2.pt`（它同时也是本次 best AUC/Min L2），不要使用 `last.resume.pt`。
+
+### 5.6.4 K25：固定 router 和整个 DINO 的 decoder curriculum
+
+K50 已通过 80% recovery 门槛，可以独立测试原始 K25 目标。为了让 K25 与 K50 的结论可比较，本阶段仍从 support checkpoint 出发，不从 K50 decoder checkpoint 继续训练；router 和整个 DINO 保持冻结。训练预算为 `100% → 75% → 50% → 25% → 25% → 25%`，每轮评测固定 K25：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_support_k025_seed3106/best_coverage.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --router_warmup_epochs 4 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --heatmap_loss_weight 1.0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --max_epochs 6 \
+  --batch_size 8 \
+  --grad_accum_steps 4 \
+  --n_workers 8 \
+  --amp \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_sparse_fixedrouter_decoder_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+K25 zero-shot 到 dense 的判定门槛：
+
+| 判定 | AUC ↑ | Avg L2 ↓ | Min L2 ↓ | 下一步 |
+|---|---:|---:|---:|---|
+| 少于 50% gap recovery | < 0.90211 | > 0.18332 | > 0.11928 | 保留 K50，停止 K25 early-fill 路径 |
+| 50%–80% | 0.90211–0.93532 | 0.13493–0.18332 | 0.07414–0.11928 | K50 作为主 Pareto 点；仅在速度收益足够大时微调 K25 suffix |
+| 至少 80% | ≥ 0.93532 | ≤ 0.13493 | ≤ 0.07414 | K25 强 Go，进入固定-router suffix 微调与真实速度测试 |
+
+同样要求三个指标整体落入同一档，并检查最后两轮稳定性。
+
 ### 5.7 GazeFollow 最终评测
 
 ```bash
