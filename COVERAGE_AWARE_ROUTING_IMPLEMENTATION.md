@@ -11,6 +11,25 @@
 
 本地机器只用于修改和静态检查。真实 DINOv3、CUDA、训练和速度测试均由服务器 `fb@3090.lab` 在拉取本分支后执行。
 
+### 0.1 进度审计（截至 clean benchmark）
+
+- **P0 工程闭环已完成**：dense/sparse 路径、Top-K、RoPE gather、
+  early-fill scatter、训练/评测/checkpoint 和 benchmark 均已实现。
+- **P1 support pilot 已完成一个 seed**：只训练 `463,105` 参数的 router；
+  K25 exact-point coverage 达到 `82.57%`，K50 为 `94.32%`。
+- **P2 已完成 decoder-only proof-of-concept**：成功配置固定 router 和
+  整个 DINO，只训练 `3,416,576` 参数的 decoder。K50 最佳完整 tuple
+  为 `0.95231 / 0.11003 / 0.05007`；K25 按 Avg L2 选模的 tuple 为
+  `0.94654 / 0.11131 / 0.05106`。
+- router、decoder 和 DINO suffix 同时训练的 K25 15-epoch run 已失败；
+  成功配置中的 DINO suffix **从未微调**，不能表述成成功的端到端训练。
+- 当前真实 latency 收益约为 `0–2%` 且无显存收益，效率证据尚未闭环。
+- validation 选模、多 seed、关键消融、VAT/多人共享和跨数据集尚未完成。
+
+按完成内容估计：工程原型约 `70–75%`，论文证据闭环约 `35–40%`，
+综合进度约 **50%**。这里的百分比是工作量/证据完整度估计，不是方法
+成功概率。
+
 ## 1. 要解决的问题与论文故事
 
 ### 1.1 不是只针对某一篇 object-aware 论文
@@ -745,6 +764,53 @@ No-Go，下一步才是用 CUDA event / profiler 分解 dense prefix、router、
 Top-K/gather/RoPE、sparse suffix、scatter/norm 和 decoder；在完成该
 profile 与实现优化前不继续训练。若 routed 路径快于 dense，但 K25
 仍未明显快于 K50，则用 K50 作为主 Pareto 点。
+
+#### 5.6.5-clean 实际结果
+
+正序 `dense → support → K100 → K50 → K25` 全程基本稳定，可用于当前
+实现的初步判断：
+
+| variant | median / p95 latency | median FPS | peak / activation memory |
+|---|---:|---:|---:|
+| dense | 20.532 / 21.339 ms | 48.899 | 588.955 / 57.343 MiB |
+| support | 23.655 / 24.694 ms | 42.246 | 594.139 / 57.377 MiB |
+| K100 | 20.198 / 21.107 ms | 49.358 | 597.650 / 64.183 MiB |
+| K50 | 20.601 / 21.743 ms | 48.465 | 600.643 / 64.271 MiB |
+| K25 | 20.167 / 21.120 ms | 49.557 | 600.389 / 64.112 MiB |
+
+正序中 K25 相对 dense 的 median latency 仅降低 `1.78%`，相对同一
+routed 路径的 K100 仅降低 `0.15%`；K50 反而比 K100 慢 `2.00%`。
+因此，把 suffix patch token 从 1024 减到 256 尚未转化为有意义的
+端到端收益。K25 activation peak 还比 dense 多 `6.77 MiB`，没有显存
+优势。
+
+反序 `K25 → K50 → K100 → support → dense` 在 K100 的第一轮之后再次
+受到外部负载污染：K100 的 repeat median 从 `22.211 ms` 漂移到
+`53.688 / 52.450 / 57.356 / 63.377 ms`，后续 support 和 dense 因而
+不能与前两个 variant 横向比较。反序只再次观察到 K25 比 K50 快约
+`2.05%`；正序对应差异为 `2.10%`。这个 K25/K50 差异方向一致，但幅度
+很小，而且两次运行的绝对状态仍不同。
+
+主效率基线必须是 `dense`，因为它代表用户不采用 router 时实际运行的
+原始 GazeLLE。`support` 在完整 dense DINO 后额外运行 router，却不利用
+路由结果裁剪 token，是为了训练/诊断 support 的刻意控制组；只和它比较
+会把“先人为增加 router 开销、再回收一部分开销”误写成最终加速。
+`K100` 才是隔离 token pruning 作用的 matched control：它与 K25 使用
+同一个 router、prefix/suffix、Top-K、gather/scatter 路径，只是不删
+patch token。
+
+当前结论是：机制和精度路线可以继续，但 wall-clock efficiency 尚未
+通过。可以暂缓 profiler/内核优化，不能把效率写成已完成贡献；若后续
+最终仍没有真实加速，则需要改成更早 routing、直接 sparse decoder 或
+其他能够消除 dense reconstruction 的实现。
+
+> **后续命令状态更新：暂时不要直接执行下面旧版 5.7–5.9。** 它们引用
+> 已失败的 `gf_sparse_b5_k025_seed3106` joint checkpoint，并且仍采用
+> 同时训练 router/decoder/suffix 的不稳定 recipe。若先走精度路线，
+> 应改为从成功的
+> `gf_sparse_fixedrouter_decoder_k050_seed3106/best_avg_l2.pt` 开始，
+> 固定 router，以小学习率分阶段微调 suffix，再建立 validation 选模，
+> 最后才进入 VAT。
 
 ### 5.7 GazeFollow 最终评测
 
