@@ -1133,6 +1133,104 @@ image-grouped validation 才能为多人 union 提供真实证据。训练集上
 5.7 checkpoint 只能做 wiring diagnostic；正式结论仍需按 5.10 从
 split-clean baseline 重跑。
 
+#### 5.9b/5.9c 实际结果
+
+Matched B4 AMP 的 official-test K100 comparison 已完全通过：
+`passed=true`，person/image 的 AUC、Avg L2、Min L2、soft/hard/point
+coverage 和 mean support 全部逐位相同，三项 gaze delta 均为 0。此前
+B16/B4 的 L2 小差异确认只是 batch shape 与 AMP 的数值效应，不是
+flatten/index bug。
+
+固定 10% holdout 的 query 分布为：
+
+| subset | 可评图像 | 多人图像 | 多人 person | 2-head | 3+ |
+|---|---:|---:|---:|---:|---:|
+| full train | 107,580 | 4,345 | 10,223 | 3,235 | 1,110 |
+| 90% train | 96,834 | 3,917 | 9,215 | 2,907 | 1,010 |
+| 10% validation | 10,746 | 428 | 1,008 | 328 | 100 |
+
+Validation 中 multi-head 图占可评图 `3.98%`，multi-head person 占
+全部 person `8.90%`；2-head 有 656 人，3+ 有 352 人，最多 7 人。
+这个规模足以做 multi overall、2-head、3+ 的 feasibility/guardrail，
+但 4+/5+/6+/7 不应分别下统计结论。
+
+Official test 全是 single-head，因此取消在其上运行 K50 union。下一步只
+在固定 holdout 的 428 张 multi-head 图上做旧 checkpoint 的短 gate。
+旧 checkpoint 已见过这些训练图，结果只能验证 wiring 和排除灾难性容量
+竞争，不能写成正式泛化结果，也不能据此扫参。
+
+#### 5.9d Multi-head holdout K100 wiring（当前下一步）
+
+该命令只评测固定 holdout 的 `multi` 子集。person 模式有 1,008 次
+query/backbone 输入，image 模式有 428 张图；使用 batch 1 和 FP32：
+
+```bash
+mkdir -p logs/coverage_router
+
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/compare_gazefollow_query_units.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gazefollow_eval_split train_holdout \
+  --gazefollow_val_fraction 0.10 \
+  --gazefollow_split_seed 3106 \
+  --gazefollow_head_count_subset multi \
+  --keep_ratio_override 1.0 \
+  --person_batch_size 1 \
+  --image_batch_size 1 \
+  --n_workers 8 \
+  --expected_person_count 1008 \
+  --expected_image_count 428 \
+  --auc_tolerance 1e-5 \
+  --l2_tolerance 5e-4 \
+  --coverage_tolerance 1e-6 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_multi_holdout_k100_b1_fp32.json \
+  > logs/coverage_router/gf_suffix_multi_holdout_k100_b1_fp32.log 2>&1 < /dev/null &
+```
+
+必须满足 `passed=true`、`multi_person_audit_applicable=true`、
+person/image=`1008/428`，且 grouped hard/point coverage 约为 1。
+
+#### 5.9e Multi-head holdout K50 catastrophic gate
+
+5.9d 通过后运行同一子集的 K50。该 comparison 的 image-person delta
+隔离了“每人各有 K50”与“多人共享总 K50”的额外容量竞争：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/compare_gazefollow_query_units.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gazefollow_eval_split train_holdout \
+  --gazefollow_val_fraction 0.10 \
+  --gazefollow_split_seed 3106 \
+  --gazefollow_head_count_subset multi \
+  --keep_ratio_override 0.5 \
+  --person_batch_size 1 \
+  --image_batch_size 1 \
+  --n_workers 8 \
+  --expected_person_count 1008 \
+  --expected_image_count 428 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_multi_holdout_k050_b1_fp32.json \
+  > logs/coverage_router/gf_suffix_multi_holdout_k050_b1_fp32.log 2>&1 < /dev/null &
+```
+
+该 pilot 不使用任意“必须提升 10%”规则。先看完整 tuple 和 coverage：
+
+- shared-union 额外 AUC 下降不超过约 `0.004`、Avg L2 增加不超过约
+  `0.005`：可进入 split-clean chain；
+- AUC 下降超过 `0.01` 或 Avg L2 增加超过 `0.02`：灾难性 No-Go，
+  正式训练前先做 grouped/mixed-query training 或人数自适应预算；
+- 中间区间结合 point coverage 和 2-head/3+ 分层决定。
+
+由于 train validation 每个 head 只有一个 gaze 标注，Avg L2 与 Min L2
+等价，只能算一个证据。正式多人置信区间应按 image clustered bootstrap，
+不能把同图的 1,008 个人当独立样本。
+
 ### 5.10 正式验证与最终顺序
 
 多人审计通过后，使用代码中的
@@ -1157,7 +1255,7 @@ train/validation；validation 默认以 image 为单位运行真实多人 union�
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100_b4_amp.log
+tail -f logs/coverage_router/gf_suffix_multi_holdout_k100_b1_fp32.log
 ```
 
 ```bash
@@ -1179,7 +1277,6 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-当前运行 5.9b 的 matched-batch K100 复核，并执行 5.9c 的 CPU 数据分布
-统计；不要启动 official-test K50、VAT 或正式多 seed。完成后同步
-`query_unit_k100_b4_amp.json` 和
-`gazefollow_train_query_groups_seed3106.json`。
+当前只运行 5.9d 的 multi-head holdout K100 wiring；通过后运行 5.9e
+K50 catastrophic gate。不要启动 official-test K50、VAT 或正式多 seed。
+完成后同步对应的两个 `query_unit_multi_holdout_*.json`。

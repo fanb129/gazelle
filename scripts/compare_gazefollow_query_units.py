@@ -16,6 +16,13 @@ except ModuleNotFoundError:
 
 GAZE_METRICS = ("auc", "avg_l2", "min_l2")
 COVERAGE_METRICS = ("routing_hard_coverage", "routing_gt_point_coverage")
+ROUTING_METRICS = (
+    "routing_soft_coverage",
+    "routing_hard_coverage",
+    "routing_gt_point_coverage",
+    "routing_mean_support",
+    "routing_actual_keep_ratio",
+)
 
 
 def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
@@ -27,6 +34,18 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--data_path", required=True)
+    parser.add_argument(
+        "--gazefollow_eval_split",
+        choices=("official_test", "train_holdout"),
+        default="official_test",
+    )
+    parser.add_argument("--gazefollow_val_fraction", type=float, default=0.10)
+    parser.add_argument("--gazefollow_split_seed", type=int, default=3106)
+    parser.add_argument(
+        "--gazefollow_head_count_subset",
+        choices=("all", "single", "multi", "two", "three_plus"),
+        default="all",
+    )
     parser.add_argument("--keep_ratio_override", type=float, default=None)
     parser.add_argument("--person_batch_size", type=int, default=16)
     parser.add_argument("--image_batch_size", type=int, default=4)
@@ -34,7 +53,11 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--amp", action="store_true")
     parser.add_argument("--equivalence_tolerance", type=float, default=1e-5)
+    parser.add_argument("--auc_tolerance", type=float, default=None)
+    parser.add_argument("--l2_tolerance", type=float, default=None)
+    parser.add_argument("--coverage_tolerance", type=float, default=None)
     parser.add_argument("--expected_person_count", type=int, default=None)
+    parser.add_argument("--expected_image_count", type=int, default=None)
     parser.add_argument("--output", required=True)
     return parser.parse_args(argv)
 
@@ -52,6 +75,14 @@ def _evaluation_argv(
         "gazefollow",
         "--data_path",
         args.data_path,
+        "--gazefollow_eval_split",
+        args.gazefollow_eval_split,
+        "--gazefollow_val_fraction",
+        str(args.gazefollow_val_fraction),
+        "--gazefollow_split_seed",
+        str(args.gazefollow_split_seed),
+        "--gazefollow_head_count_subset",
+        args.gazefollow_head_count_subset,
         "--gazefollow_eval_unit",
         unit,
         "--batch_size",
@@ -76,8 +107,14 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         raise ValueError("batch sizes must be positive")
     if args.equivalence_tolerance < 0:
         raise ValueError("--equivalence_tolerance must be non-negative")
+    for name in ("auc_tolerance", "l2_tolerance", "coverage_tolerance"):
+        value = getattr(args, name)
+        if value is not None and value < 0:
+            raise ValueError(f"--{name} must be non-negative")
     if args.expected_person_count is not None and args.expected_person_count <= 0:
         raise ValueError("--expected_person_count must be positive")
+    if args.expected_image_count is not None and args.expected_image_count <= 0:
+        raise ValueError("--expected_image_count must be positive")
 
     person_result = evaluate_checkpoint(
         _evaluation_argv(
@@ -95,10 +132,31 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         metric: image_metrics[metric] - person_metrics[metric]
         for metric in GAZE_METRICS
     }
+    routing_metric_deltas = {
+        metric: image_metrics[metric] - person_metrics[metric]
+        for metric in ROUTING_METRICS
+        if image_metrics.get(metric) is not None
+        and person_metrics.get(metric) is not None
+    }
 
     effective_keep_ratio = float(image_result["model_config"]["keep_ratio"])
     equivalence_expected = math.isclose(
         effective_keep_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12
+    )
+    auc_tolerance = (
+        args.equivalence_tolerance
+        if args.auc_tolerance is None
+        else args.auc_tolerance
+    )
+    l2_tolerance = (
+        args.equivalence_tolerance
+        if args.l2_tolerance is None
+        else args.l2_tolerance
+    )
+    coverage_tolerance = (
+        args.equivalence_tolerance
+        if args.coverage_tolerance is None
+        else args.coverage_tolerance
     )
     head_count_strata = image_metrics.get("head_count_strata") or {}
     multi_head_person_count = int(
@@ -128,16 +186,21 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         checks["expected_person_count"] = (
             image_metrics["sample_count"] == args.expected_person_count
         )
+    if args.expected_image_count is not None:
+        checks["expected_image_count"] = (
+            image_metrics["image_count"] == args.expected_image_count
+        )
     if equivalence_expected:
         for metric, delta in metric_deltas.items():
+            tolerance = auc_tolerance if metric == "auc" else l2_tolerance
             checks[f"{metric}_equivalent"] = (
-                abs(delta) <= args.equivalence_tolerance
+                abs(delta) <= tolerance
             )
         for metric in COVERAGE_METRICS:
             value = image_metrics.get(metric)
             checks[f"{metric}_is_one"] = (
                 value is not None
-                and abs(float(value) - 1.0) <= args.equivalence_tolerance
+                and abs(float(value) - 1.0) <= coverage_tolerance
             )
 
     result = {
@@ -145,6 +208,11 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "effective_keep_ratio": effective_keep_ratio,
         "equivalence_expected": equivalence_expected,
         "equivalence_tolerance": args.equivalence_tolerance,
+        "metric_tolerances": {
+            "auc": auc_tolerance,
+            "l2": l2_tolerance,
+            "coverage": coverage_tolerance,
+        },
         "checks": checks,
         "passed": all(checks.values()),
         "dataset_diagnostics": {
@@ -165,6 +233,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             ),
         },
         "gaze_metric_delta_image_minus_person": metric_deltas,
+        "routing_metric_delta_image_minus_person": routing_metric_deltas,
         "person_evaluation": person_result,
         "image_grouped_evaluation": image_result,
         "interpretation": (

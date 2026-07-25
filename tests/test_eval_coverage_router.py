@@ -4,7 +4,11 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from scripts.eval_coverage_router import apply_eval_overrides, validate_args
+from scripts.eval_coverage_router import (
+    _filter_gazefollow_indices,
+    apply_eval_overrides,
+    validate_args,
+)
 from scripts.train_coverage_router import current_keep_ratio, unpack_batch
 
 
@@ -16,6 +20,8 @@ def _args(**overrides):
         "max_eval_batches": None,
         "router_stage_override": None,
         "keep_ratio_override": None,
+        "gazefollow_eval_split": "official_test",
+        "gazefollow_val_fraction": 0.10,
     }
     values.update(overrides)
     return Namespace(**values)
@@ -49,6 +55,23 @@ def test_keep_ratio_curriculum_includes_dense_and_sparse_endpoints():
     ratios = [current_keep_ratio(0.25, epoch, 4) for epoch in range(5)]
 
     assert ratios == pytest.approx([1.0, 0.75, 0.5, 0.25, 0.25])
+
+
+def test_gazefollow_holdout_can_select_only_multi_head_images():
+    records = [
+        {"heads": [{"inout": 1}]},
+        {"heads": [{"inout": 1}, {"inout": 1}, {"inout": 0}]},
+        {"heads": [{"inout": 1}, {"inout": 1}, {"inout": 1}]},
+        {"heads": [{"inout": 0}]},
+    ]
+
+    indices, person_count, histogram = _filter_gazefollow_indices(
+        records, (0, 1, 2, 3), "multi"
+    )
+
+    assert indices == (1, 2)
+    assert person_count == 5
+    assert histogram == {"0": 1, "1": 1, "2": 1, "3": 1}
 
 
 def test_unpack_preserves_image_grouped_multi_person_bboxes():
