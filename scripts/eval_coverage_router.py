@@ -9,7 +9,12 @@ from typing import Iterable, Optional
 
 import torch
 
-from gazelle.dataloader import GazeDataset, collate_fn
+from gazelle.dataloader import (
+    GazeDataset,
+    GazeFollowImageDataset,
+    collate_fn,
+    collate_gazefollow_images,
+)
 from gazelle.routing.model import ROUTER_STAGES, get_coverage_router_model
 
 try:  # Works both as ``python scripts/eval_...py`` and as a module import.
@@ -58,6 +63,16 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--n_workers", type=int, default=8)
+    parser.add_argument(
+        "--gazefollow_eval_unit",
+        choices=("person", "image"),
+        default="person",
+        help=(
+            "person preserves the legacy one-head-per-image evaluation; image "
+            "queries every annotated head together and exercises the shared "
+            "per-image router union."
+        ),
+    )
     parser.add_argument(
         "--frame_sample_every",
         type=int,
@@ -138,7 +153,16 @@ def apply_eval_overrides(model_config: dict, args: argparse.Namespace) -> dict:
 
 def make_eval_loader(args: argparse.Namespace, transform):
     if args.dataset == "gazefollow":
-        dataset = GazeDataset("gazefollow", args.data_path, "test", transform)
+        if args.gazefollow_eval_unit == "image":
+            dataset = GazeFollowImageDataset(
+                args.data_path, "test", transform
+            )
+            batch_collate = collate_gazefollow_images
+        else:
+            dataset = GazeDataset(
+                "gazefollow", args.data_path, "test", transform
+            )
+            batch_collate = collate_fn
     else:
         dataset = GazeDataset(
             "videoattentiontarget",
@@ -148,11 +172,12 @@ def make_eval_loader(args: argparse.Namespace, transform):
             in_frame_only=False,
             sample_rate=args.frame_sample_every,
         )
+        batch_collate = collate_fn
     loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        collate_fn=collate_fn,
+        collate_fn=batch_collate,
         num_workers=args.n_workers,
         pin_memory=torch.cuda.is_available(),
         persistent_workers=args.n_workers > 0,
@@ -170,6 +195,8 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         raise ValueError("unsupported or missing checkpoint format_version")
 
     args.dataset = resolve_dataset(args, checkpoint)
+    if args.dataset != "gazefollow" and args.gazefollow_eval_unit != "person":
+        raise ValueError("--gazefollow_eval_unit=image is only valid for GazeFollow")
     args.data_path = args.data_path or DEFAULT_DATA_PATHS[args.dataset]
     checkpoint_model_config = checkpoint.get("model_config")
     if not isinstance(checkpoint_model_config, dict):
@@ -200,9 +227,16 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "checkpoint": str(Path(args.checkpoint).resolve()),
         "checkpoint_epoch": checkpoint.get("epoch"),
         "checkpoint_git_commit": checkpoint.get("git_commit"),
+        "checkpoint_data_split": checkpoint.get("data_split"),
+        "checkpoint_selection": checkpoint.get("selection"),
         "dataset": args.dataset,
         "data_path": args.data_path,
-        "dataset_sample_count": len(dataset),
+        "gazefollow_eval_unit": (
+            args.gazefollow_eval_unit if args.dataset == "gazefollow" else None
+        ),
+        "dataset_sample_count": metrics["sample_count"],
+        "dataset_image_count": metrics["image_count"],
+        "dataset_loader_item_count": len(dataset),
         "vat_frame_sample_every": (
             args.frame_sample_every if args.dataset == "vat" else None
         ),

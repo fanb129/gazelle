@@ -804,54 +804,52 @@ patch token。
 最终仍没有真实加速，则需要改成更早 routing、直接 sparse decoder 或
 其他能够消除 dense reconstruction 的实现。
 
-> **后续命令状态更新：暂时不要直接执行下面旧版 5.7–5.9。** 它们引用
-> 已失败的 `gf_sparse_b5_k025_seed3106` joint checkpoint，并且仍采用
-> 同时训练 router/decoder/suffix 的不稳定 recipe。若先走精度路线，
-> 应改为从成功的
-> `gf_sparse_fixedrouter_decoder_k050_seed3106/best_avg_l2.pt` 开始，
-> 固定 router，以小学习率分阶段微调 suffix，再建立 validation 选模，
-> 最后才进入 VAT。
+> **旧版 5.7–5.9 已废弃。** 它们引用了失败的
+> `gf_sparse_b5_k025_seed3106` joint checkpoint。下面保留的新 5.7 和
+> 5.8 是已经完成的 staged pilot 及 matched control；当前动作见 5.9a。
 
-### 5.7 GazeFollow 最终评测
+### 5.7 K50 fixed-router suffix pilot
 
-```bash
-CUDA_VISIBLE_DEVICES=0 \
-nohup /home/fb/anaconda3/envs/py310/bin/python -u \
-  scripts/eval_coverage_router.py \
-  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/best_min_l2.pt \
-  --dataset gazefollow \
-  --data_path /newhome/fb/dataset/gazefollow_extended \
-  --batch_size 16 \
-  --n_workers 8 \
-  --amp \
-  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/test_metrics.json \
-  > logs/coverage_router/gf_sparse_b5_k025_seed3106_eval.log 2>&1 < /dev/null &
-```
+目的：从已经成功适配 mixed-depth feature 的 K50 decoder checkpoint
+继续训练，但仍固定 support router；只以很小学习率微调 DINO blocks
+6–11，并同时小幅更新 decoder。它与失败的 joint run 的关键区别是：
 
-### 5.8 VAT 微调
+- router 固定，`lr_router=0`；
+- blocks 0–5 固定，只有 blocks 6–11 可训练；
+- 从成功的 K50 decoder checkpoint 初始化，而不是从 support checkpoint
+  同时学习所有模块；
+- 全程固定 K50，不再做预算 curriculum；
+- suffix/decoder 学习率分别只有 `1e-6/1e-5`。
+
+在服务器仓库根目录执行：
 
 ```bash
+mkdir -p logs/coverage_router
+
 CUDA_VISIBLE_DEVICES=0 \
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   scripts/train_coverage_router.py \
-  --dataset vat \
-  --model gazelle_dinov3_vitb16_inout \
-  --data_path /newhome/fb/dataset/videoattentiontarget \
-  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/best_min_l2.pt \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k050_seed3106/best_avg_l2.pt \
   --router_stage backbone_sparse \
   --route_after_block 5 \
-  --keep_ratio 0.25 \
+  --keep_ratio 0.5 \
   --escape_tokens 8 \
   --train_backbone_after_router \
-  --lr_router 1e-4 \
+  --lr_router 0 \
   --lr_decoder 1e-5 \
-  --lr_inout 1e-3 \
   --lr_backbone 1e-6 \
-  --inout_loss_lambda 1.0 \
-  --frame_sample_every 6 \
-  --eval_frame_sample_every 6 \
-  --max_epochs 8 \
+  --lr_inout 0 \
+  --heatmap_loss_weight 1.0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --router_warmup_epochs 0 \
+  --weight_decay 0 \
+  --max_epochs 3 \
   --batch_size 8 \
   --grad_accum_steps 4 \
   --n_workers 8 \
@@ -859,57 +857,279 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --clip_grad_norm 1.0 \
   --wandb_project GazeRoute \
   --wandb_mode online \
-  --exp_name vat_sparse_b5_k025_seed3106 \
-  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106 \
+  --exp_name gf_sparse_fixedrouter_suffix_k050_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106 \
   --seed 3106 \
-  > logs/coverage_router/vat_sparse_b5_k025_seed3106.log 2>&1 < /dev/null &
+  > logs/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106.log 2>&1 < /dev/null &
 ```
 
-训练中的 VAT eval 每 6 帧采样，只用于观察趋势，不是最终结果。
-
-### 5.9 VAT 每帧最终评测
+启动后先检查：
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 \
-nohup /home/fb/anaconda3/envs/py310/bin/python -u \
-  scripts/eval_coverage_router.py \
-  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106/best_l2.pt \
-  --dataset vat \
-  --data_path /newhome/fb/dataset/videoattentiontarget \
-  --frame_sample_every 1 \
-  --batch_size 16 \
-  --n_workers 8 \
-  --amp \
-  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_sparse_b5_k025_seed3106/test_every_frame_metrics.json \
-  > logs/coverage_router/vat_sparse_b5_k025_seed3106_eval_every_frame.log 2>&1 < /dev/null &
+tail -n 80 logs/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106.log
 ```
 
-### 5.10 断点恢复示例
+`run_manifest.json` 中预期 trainable parameter 必须是：
 
-恢复时继续写入原 run directory：
+```json
+{
+  "backbone": 42536448,
+  "decoder": 3416576,
+  "inout": 0,
+  "router": 0
+}
+```
+
+即总计 `45,953,024` 个参数；如果 router 不为 0，立即停止。三个 epoch
+结束后同步以下文件：
+
+```text
+experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/
+  run_manifest.json
+  history.jsonl
+  summary.json
+```
+
+判断时用同一个 checkpoint 的完整 tuple，与 decoder-only K50 基准
+`0.95231 / 0.11003 / 0.05007` 比较，不能拼接逐指标 best：
+
+- 至少两个指标改善，第三个没有明显恶化：继续 validation/多 seed；
+- 基本持平：停止 suffix 训练，保留更简单的 decoder-only K50；
+- 明显波动或退化：该阶段 No-Go，回退 decoder-only K50。
+
+#### 5.7 实际结果
+
+训练范围和配置符合预期：DINO blocks 6–11 为 `42,536,448` 个可训练参数，
+decoder 为 `3,416,576`，router 和 in/out 均为 0。三轮 router eval
+指标完全相同，证明 router 确实固定。逐 epoch 的完整
+`AUC / Avg L2 / Min L2` 为：
+
+| epoch | AUC ↑ | Avg L2 ↓ | Min L2 ↓ |
+|---:|---:|---:|---:|
+| 0 | 0.953156 | 0.107457 | 0.047803 |
+| 1 | 0.953693 | 0.107747 | 0.047758 |
+| 2 | **0.954059** | **0.106171** | **0.046624** |
+
+三项最优都来自 epoch 2 的同一个 checkpoint，不存在 summary envelope。
+相对原 decoder-only K50，epoch 2 的 AUC 提升 `0.001754`，Avg L2
+降低 `0.003858`（`3.51%`），Min L2 降低 `0.003444`（`6.88%`）。
+它分别追回了 decoder-only K50 到 dense 剩余 gap 的
+`34.0% / 52.5% / 57.3%`。
+
+这是对“suffix + decoder 小学习率继续训练 recipe”的 Strong Go，但还
+不能把提升归因于 suffix：5.7 同时让 decoder 以 `1e-5` 额外训练了三轮。
+必须先补一个 matched decoder-only continuation control。
+
+### 5.8 K50 decoder-only continuation control
+
+该 control 使用与 5.7 完全相同的初始化、seed、K、decoder 学习率、
+batch 和三个 epoch，唯一差异是 DINO suffix 冻结。不要添加
+`--train_backbone_after_router`，并明确设置 `--lr_backbone 0`：
 
 ```bash
+mkdir -p logs/coverage_router
+
 CUDA_VISIBLE_DEVICES=0 \
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   scripts/train_coverage_router.py \
   --dataset gazefollow \
-  --resume /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106/last.resume.pt \
-  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_b5_k025_seed3106 \
-  --max_epochs 15 \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_k050_seed3106/best_avg_l2.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.5 \
+  --escape_tokens 8 \
+  --lr_router 0 \
+  --lr_decoder 1e-5 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --heatmap_loss_weight 1.0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --router_warmup_epochs 0 \
+  --weight_decay 0 \
+  --max_epochs 3 \
   --batch_size 8 \
   --grad_accum_steps 4 \
   --n_workers 8 \
   --amp \
+  --clip_grad_norm 1.0 \
   --wandb_project GazeRoute \
   --wandb_mode online \
-  > logs/coverage_router/gf_sparse_b5_k025_seed3106_resume.log 2>&1 < /dev/null &
+  --exp_name gf_sparse_fixedrouter_decoder_continue_k050_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_decoder_continue_k050_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_sparse_fixedrouter_decoder_continue_k050_seed3106.log 2>&1 < /dev/null &
 ```
+
+启动后 `run_manifest.json` 必须是：
+
+```json
+{
+  "backbone": 0,
+  "decoder": 3416576,
+  "inout": 0,
+  "router": 0
+}
+```
+
+完成后同步：
+
+```text
+experiments/coverage_router/gf_sparse_fixedrouter_decoder_continue_k050_seed3106/
+  run_manifest.json
+  history.jsonl
+  summary.json
+```
+
+必须比较 5.7 和 5.8 相同 epoch 的完整 tuple，而不是两个 summary 的逐指标
+best：
+
+- 5.7 在至少两个指标上一致优于 5.8：suffix 有独立贡献；
+- 两者基本相同：提升主要来自 decoder 额外训练，使用更简单的
+  decoder-only checkpoint；
+- 5.8 更好：suffix 微调 No-Go，回退 decoder-only。
+
+#### 5.8 实际结果与 matched 结论
+
+配置核验通过：decoder 可训练参数为 `3,416,576`，backbone、router 和
+in/out 均为 0；三轮 router coverage 和实际 keep ratio 完全不变。
+
+| epoch | 5.8 AUC ↑ | 5.8 Avg L2 ↓ | 5.8 Min L2 ↓ |
+|---:|---:|---:|---:|
+| 0 | 0.952664 | 0.108858 | 0.049118 |
+| 1 | 0.953053 | 0.108793 | 0.049109 |
+| 2 | **0.953157** | **0.107365** | **0.048062** |
+
+将 5.7 suffix+decoder 与 5.8 decoder-only 的同 epoch tuple 配对相减：
+
+| epoch | suffix ΔAUC ↑ | suffix ΔAvg L2 ↓ | suffix ΔMin L2 ↓ |
+|---:|---:|---:|---:|
+| 0 | +0.000492 | -0.001401 | -0.001315 |
+| 1 | +0.000640 | -0.001046 | -0.001352 |
+| 2 | **+0.000902** | **-0.001194** | **-0.001437** |
+
+5.7 在所有三个 epoch 的所有三个指标上都优于 matched control。epoch 2
+的 suffix 独立贡献对应 Avg L2 相对降低 `1.11%`、Min L2 相对降低
+`2.99%`。因此 suffix 微调本身是 **Strong Go**，不是 decoder 多训练三轮
+造成的假提升；当前 pilot 候选固定为 5.7 epoch 2。
+
+但现有 5.x 仍有两个不能带入论文正式结论的问题：
+
+1. 每个 epoch 都直接在 official test 上评估并保存 best，属于 test
+   peeking；
+2. `GazeDataset` 把同图不同 head 展平成独立输入，现有结果没有触发
+   “多人 support max-union 后共享一个 K50 route”。
+
+因此现在不进入 VAT，也不直接堆多 seed；先做不需训练的真实多人
+query-unit 审计。
+
+### 5.9 GazeFollow 多人共享 route 审计（当前下一步）
+
+代码新增两种显式评测单位：
+
+- `person`：旧行为，每个 head 重复运行一次图像 backbone；
+- `image`：一张图的所有 head 同时输入，DINO 每图运行一次，所有人的
+  support 做 max-union，并共享同一个固定 K。
+
+还新增了 image-level 分层结果：`single_head`、`multi_head`、
+`two_head`、`three_plus_head`。
+
+#### 5.9a 先运行 K100 等价性验收
+
+该命令会在一个 nohup 任务中依次跑 person 和 image 两种完整评测，并自动
+比较结果。K100 保留全部 token，不存在稀疏信息差，因此三项 gaze 指标
+差值绝对值应不超过 `1e-5`，两种模式都必须有 `4782` 个 person，
+grouped hard/point coverage 必须为 1。
+
+```bash
+mkdir -p logs/coverage_router
+
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/compare_gazefollow_query_units.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --keep_ratio_override 1.0 \
+  --person_batch_size 16 \
+  --image_batch_size 4 \
+  --n_workers 8 \
+  --amp \
+  --expected_person_count 4782 \
+  --equivalence_tolerance 1e-5 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_k100_comparison.json \
+  > logs/coverage_router/gf_suffix_k050_query_unit_k100.log 2>&1 < /dev/null &
+```
+
+监控：
+
+```bash
+tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100.log
+```
+
+只有输出 JSON 顶层 `"passed": true` 才运行 5.9b；否则先修复
+image/head flatten 对齐，不能解释 K50。
+
+#### 5.9b K50 真实多人 union
+
+K100 通过后，原命令只把 keep ratio 和输出文件改为 K50：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/compare_gazefollow_query_units.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --keep_ratio_override 0.5 \
+  --person_batch_size 16 \
+  --image_batch_size 4 \
+  --n_workers 8 \
+  --amp \
+  --expected_person_count 4782 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_k050_comparison.json \
+  > logs/coverage_router/gf_suffix_k050_query_unit_k050.log 2>&1 < /dev/null &
+```
+
+K50 不要求 person/image 指标相同；重点检查：
+
+- `single_head` 应与旧 per-person K50 基本一致；
+- `multi_head`，尤其 `three_plus_head`，不能出现不可接受的明显退化；
+- grouped 的总 person count 仍为 `4782`；
+- image count 必须小于 person count，证明 backbone 确实按图共享。
+
+如果 multi-head 明显退化，当前固定总 K 的 union 还不能支撑论文故事，
+下一步应做 grouped training 或人数自适应预算，而不是进入 VAT。
+
+### 5.10 正式验证与最终顺序
+
+多人审计通过后，使用代码中的
+`--gf_val_fraction 0.10 --gf_split_seed 3106`。split 在
+`train_preprocessed.json` 的 image path 层生成，同图所有 heads 不跨
+train/validation；validation 默认以 image 为单位运行真实多人 union。
+每个 run 会写 `data_split.json`，checkpoint 初始化和 resume 时会核验
+源文件与 assignment fingerprint。
+
+正式链路不能从旧 `epoch_14.pt`、旧 support best 或旧 K50 best 开始，
+因为它们见过完整 train 或由 test 指标选过。固定顺序是：
+
+1. 从 DINO 预训练和随机 task decoder 重训 split-clean dense baseline；
+2. 固定 dense checkpoint，训练 support router，以 validation hard
+   coverage 选择唯一 checkpoint；
+3. 训练 K50 decoder，以 validation Avg L2 选择唯一 checkpoint；
+4. 重做 suffix 与 matched decoder-only control；
+5. 三个训练 seed 共用同一个 split seed；
+6. recipe 和 epoch 固定后，official test 只评测一次；
+7. 再进入 VAT；wall-clock 加速仍作为独立支线。
 
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_sparse_b5_k025_seed3106.log
+tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100.log
 ```
 
 ```bash
@@ -923,15 +1143,13 @@ pgrep -af train_coverage_router.py
 每个 run directory 会生成：
 
 - `run_manifest.json`：完整配置和 git commit；
+- `data_split.json`：正式 validation 的分组策略与 fingerprint；
 - `history.jsonl`：逐 epoch train/eval 指标；
-- `best_coverage.pt`、`best_auc.pt`、`best_min_l2.pt` 或 `best_l2.pt`；
+- `best_val_selection.pt`：正式 validation 唯一选定 checkpoint；
+- 旧模式仍兼容 `best_coverage.pt`、`best_auc.pt`、`best_min_l2.pt`
+  或 `best_l2.pt`；
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-第一轮请先反馈以下三个日志/文件，不要直接并行启动全部消融：
-
-1. `backbone_smoke.log`；
-2. `support_smoke.log`；
-3. 完整 support pilot 的 `history.jsonl` 与 `best_coverage.pt` 路径。
-
-确认 P0/P1 后，再决定 25% 是否进入完整稀疏训练，还是先把预算放宽到 50% 排查 coverage 与 downstream accuracy 的关系。
+当前只运行 5.9a 的 K100 query-unit 等价性审计，不并行启动 K50、VAT
+或正式多 seed。完成后同步 `query_unit_k100_comparison.json`。

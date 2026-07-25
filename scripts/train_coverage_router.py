@@ -15,10 +15,12 @@ import argparse
 from contextlib import nullcontext
 from dataclasses import replace
 from datetime import datetime
+import hashlib
 import json
 import math
 import os
 from pathlib import Path
+import posixpath
 import random
 import subprocess
 from typing import Dict, Iterable, Optional
@@ -28,7 +30,14 @@ from sklearn.metrics import average_precision_score
 import torch
 import torch.nn as nn
 
-from gazelle.dataloader import GazeDataset, collate_fn
+from gazelle.data_splits import grouped_holdout_split
+from gazelle.dataloader import (
+    GazeDataset,
+    GazeFollowImageDataset,
+    collate_fn,
+    collate_gazefollow_images,
+    load_data_gazefollow,
+)
 from gazelle.routing.losses import coverage_router_loss
 from gazelle.routing.model import ROUTER_STAGES, get_coverage_router_model
 from gazelle.utils import gazefollow_auc, gazefollow_l2, get_heatmap, vat_auc, vat_l2
@@ -65,6 +74,25 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--dataset", choices=("gazefollow", "vat"), default=None)
     parser.add_argument("--model", default=None)
     parser.add_argument("--data_path", default=None)
+    parser.add_argument(
+        "--gazefollow_val_fraction",
+        "--gf_val_fraction",
+        dest="gazefollow_val_fraction",
+        type=float,
+        default=0.0,
+        help=(
+            "Hold out this fraction of GazeFollow training-image groups for "
+            "validation. The default 0 keeps the legacy official-test eval."
+        ),
+    )
+    parser.add_argument(
+        "--gazefollow_split_seed",
+        "--gf_split_seed",
+        dest="gazefollow_split_seed",
+        type=int,
+        default=3106,
+        help="Seed for the stable image-level GazeFollow validation split.",
+    )
     parser.add_argument("--run_dir", default=None)
     parser.add_argument("--ckpt_save_dir", default="./experiments/coverage_router")
     parser.add_argument("--exp_name", default="coverage_router")
@@ -115,6 +143,15 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--fusion", choices=("raw_concat",), default="raw_concat")
     parser.add_argument("--max_epochs", type=int, default=None)
     parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument(
+        "--eval_batch_size",
+        type=int,
+        default=None,
+        help=(
+            "Evaluation images per batch. Defaults to --batch_size; use a "
+            "smaller value for image-grouped multi-person validation."
+        ),
+    )
     parser.add_argument("--grad_accum_steps", type=int, default=1)
     parser.add_argument("--lr_router", type=float, default=1e-3)
     parser.add_argument("--lr_decoder", type=float, default=1e-4)
@@ -157,8 +194,14 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--escape_tokens must be non-negative")
     if args.router_warmup_epochs < 0:
         raise ValueError("--router_warmup_epochs must be non-negative")
-    if args.batch_size <= 0 or args.grad_accum_steps <= 0:
-        raise ValueError("--batch_size and --grad_accum_steps must be positive")
+    if (
+        args.batch_size <= 0
+        or args.grad_accum_steps <= 0
+        or (args.eval_batch_size is not None and args.eval_batch_size <= 0)
+    ):
+        raise ValueError(
+            "--batch_size, --grad_accum_steps, and --eval_batch_size must be positive"
+        )
     if args.max_epochs is not None and args.max_epochs <= 0:
         raise ValueError("--max_epochs must be positive")
     if args.frame_sample_every <= 0:
@@ -178,6 +221,10 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError(f"--{name} must be non-negative")
     if args.heatmap_loss_weight < 0:
         raise ValueError("--heatmap_loss_weight must be non-negative")
+    if not 0.0 <= args.gazefollow_val_fraction < 1.0:
+        raise ValueError("--gazefollow_val_fraction must be in [0, 1)")
+    if args.dataset == "vat" and args.gazefollow_val_fraction:
+        raise ValueError("--gazefollow_val_fraction is only valid for GazeFollow")
 
 
 def seed_everything(seed: int) -> None:
@@ -309,6 +356,9 @@ def _resume_model_overrides(args: argparse.Namespace, checkpoint: dict) -> None:
         "router_budget_weight",
         "router_entropy_weight",
         "router_warmup_epochs",
+        "gazefollow_val_fraction",
+        "gazefollow_split_seed",
+        "eval_batch_size",
         "frame_sample_every",
         "eval_frame_sample_every",
         "amp",
@@ -336,17 +386,101 @@ def resolve_model_name(args: argparse.Namespace) -> str:
     return args.model
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _gazefollow_group_key(record: dict, index: int) -> str:
+    raw_path = record.get("path")
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        raise ValueError(
+            f"GazeFollow record {index} has no non-empty string 'path' group key"
+        )
+    normalized = posixpath.normpath(raw_path.strip().replace("\\", "/"))
+    if normalized in ("", "."):
+        raise ValueError(f"GazeFollow record {index} has an invalid image path")
+    return normalized
+
+
 def make_dataloaders(args: argparse.Namespace, transform):
     common = {
-        "batch_size": args.batch_size,
-        "collate_fn": collate_fn,
         "num_workers": args.n_workers,
         "pin_memory": torch.cuda.is_available(),
         "persistent_workers": args.n_workers > 0,
     }
     if args.dataset == "gazefollow":
-        train_dataset = GazeDataset("gazefollow", args.data_path, "train", transform)
-        eval_dataset = GazeDataset("gazefollow", args.data_path, "test", transform)
+        if args.gazefollow_val_fraction:
+            source_path = Path(args.data_path) / "train_preprocessed.json"
+            records = load_data_gazefollow(source_path)
+            group_keys = [
+                _gazefollow_group_key(record, index)
+                for index, record in enumerate(records)
+            ]
+            split = grouped_holdout_split(
+                group_keys,
+                validation_fraction=args.gazefollow_val_fraction,
+                seed=args.gazefollow_split_seed,
+            )
+            train_dataset = GazeDataset(
+                "gazefollow",
+                args.data_path,
+                "train",
+                transform,
+                image_indices=split.train_indices,
+                augment=True,
+                return_heatmap=True,
+                records=records,
+            )
+            eval_dataset = GazeFollowImageDataset(
+                args.data_path,
+                "train",
+                transform,
+                image_indices=split.validation_indices,
+                records=records,
+            )
+            eval_collate_fn = collate_gazefollow_images
+            data_split = {
+                **split.metadata(),
+                "evaluation_split": "gazefollow_train_holdout",
+                "selection_is_formal": True,
+                "group_key": "normalized_image_path",
+                "source_annotation_file": str(source_path.resolve()),
+                "source_annotation_sha256": _sha256_file(source_path),
+                "train_head_sample_count": len(train_dataset),
+                "validation_image_count": len(eval_dataset),
+                "validation_head_sample_count": eval_dataset.person_count,
+                "validation_query_unit": "image_with_all_heads",
+            }
+        else:
+            train_dataset = GazeDataset(
+                "gazefollow", args.data_path, "train", transform
+            )
+            eval_dataset = GazeDataset(
+                "gazefollow", args.data_path, "test", transform
+            )
+            eval_collate_fn = collate_fn
+            train_source = Path(args.data_path) / "train_preprocessed.json"
+            eval_source = Path(args.data_path) / "test_preprocessed.json"
+            data_split = {
+                "strategy": "legacy_official_test_per_epoch",
+                "evaluation_split": "gazefollow_official_test",
+                "selection_is_formal": False,
+                "warning": (
+                    "Official test is evaluated every epoch; checkpoints from "
+                    "this mode are exploratory and must not be reported as "
+                    "validation-selected paper results."
+                ),
+                "train_annotation_file": str(train_source.resolve()),
+                "train_annotation_sha256": _sha256_file(train_source),
+                "eval_annotation_file": str(eval_source.resolve()),
+                "eval_annotation_sha256": _sha256_file(eval_source),
+                "train_head_sample_count": len(train_dataset),
+                "eval_head_sample_count": len(eval_dataset),
+            }
     else:
         eval_rate = args.eval_frame_sample_every or args.frame_sample_every
         train_dataset = GazeDataset(
@@ -365,9 +499,39 @@ def make_dataloaders(args: argparse.Namespace, transform):
             in_frame_only=False,
             sample_rate=eval_rate,
         )
-    train_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, **common)
-    eval_loader = torch.utils.data.DataLoader(eval_dataset, shuffle=False, **common)
-    return train_dataset, eval_dataset, train_loader, eval_loader
+        eval_collate_fn = collate_fn
+        data_split = {
+            "strategy": "vat_official_train_test",
+            "evaluation_split": "vat_official_test",
+            "selection_is_formal": False,
+            "warning": (
+                "VAT test is evaluated every epoch; use a grouped validation "
+                "protocol before treating checkpoint selection as formal."
+            ),
+            "train_annotation_file": str(
+                (Path(args.data_path) / "train_preprocessed.json").resolve()
+            ),
+            "eval_annotation_file": str(
+                (Path(args.data_path) / "test_preprocessed.json").resolve()
+            ),
+            "train_frame_sample_every": args.frame_sample_every,
+            "eval_frame_sample_every": eval_rate,
+        }
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=args.batch_size,
+        shuffle=True,
+        collate_fn=collate_fn,
+        **common,
+    )
+    eval_loader = torch.utils.data.DataLoader(
+        eval_dataset,
+        batch_size=args.eval_batch_size or args.batch_size,
+        shuffle=False,
+        collate_fn=eval_collate_fn,
+        **common,
+    )
+    return train_dataset, eval_dataset, train_loader, eval_loader, data_split
 
 
 def parameter_group_name(name: str) -> str:
@@ -443,9 +607,16 @@ def unpack_batch(batch, device: torch.device, *, training: bool):
     else:
         images, bboxes, gazex, gazey, inout, heights, widths = batch
         heatmaps = None
+    image_grouped = bool(
+        bboxes
+        and isinstance(bboxes[0], (list, tuple))
+        and bboxes[0]
+        and isinstance(bboxes[0][0], (list, tuple, torch.Tensor))
+    )
     model_input = {
         "images": images.to(device, non_blocking=True),
-        "bboxes": [[bbox] for bbox in bboxes],
+        "bboxes": bboxes if image_grouped else [[bbox] for bbox in bboxes],
+        "_query_unit": "image" if image_grouped else "person",
     }
     return (
         model_input,
@@ -556,7 +727,17 @@ def evaluate_model(
     inout_predictions = []
     inout_targets = []
     sample_count = 0
+    image_count = 0
     inframe_count = 0
+    query_units = set()
+    gazefollow_strata = {
+        name: {
+            "auc": WeightedMean(),
+            "avg_l2": WeightedMean(),
+            "min_l2": WeightedMean(),
+        }
+        for name in ("single_head", "multi_head", "two_head", "three_plus_head")
+    }
 
     with torch.inference_mode():
         for batch_index, batch in enumerate(loader):
@@ -569,23 +750,49 @@ def evaluate_model(
                 predictions = model(model_input)
             heatmap_predictions, inout_scores = stack_predictions(predictions)
             batch_size = heatmap_predictions.shape[0]
+            batch_image_count = int(model_input["images"].shape[0])
             sample_count += batch_size
+            image_count += batch_image_count
+            query_units.add(model_input["_query_unit"])
 
             if args.dataset == "gazefollow":
+                routing = predictions["routing"]
+                people_per_image = torch.bincount(
+                    routing.person_to_image.detach().cpu(),
+                    minlength=batch_image_count,
+                ).tolist()
+                head_counts = [
+                    people_per_image[image_index]
+                    for image_index in routing.person_to_image.detach().cpu().tolist()
+                ]
                 for index in range(batch_size):
                     heatmap = heatmap_predictions[index].float().cpu()
-                    auc_meter.update(
-                        gazefollow_auc(
-                            heatmap,
-                            gazex[index],
-                            gazey[index],
-                            heights[index],
-                            widths[index],
-                        )
+                    auc_value = gazefollow_auc(
+                        heatmap,
+                        gazex[index],
+                        gazey[index],
+                        heights[index],
+                        widths[index],
                     )
+                    auc_meter.update(auc_value)
                     avg_l2, min_l2 = gazefollow_l2(heatmap, gazex[index], gazey[index])
                     l2_meter.update(avg_l2)
                     min_l2_meter.update(min_l2)
+                    if model_input["_query_unit"] == "image":
+                        count = head_counts[index]
+                        stratum_names = (
+                            ("single_head",)
+                            if count == 1
+                            else (
+                                ("multi_head", "two_head")
+                                if count == 2
+                                else ("multi_head", "three_plus_head")
+                            )
+                        )
+                        for name in stratum_names:
+                            gazefollow_strata[name]["auc"].update(auc_value)
+                            gazefollow_strata[name]["avg_l2"].update(avg_l2)
+                            gazefollow_strata[name]["min_l2"].update(min_l2)
                 inframe_count += batch_size
             else:
                 flags = inout.detach().cpu().bool()
@@ -620,11 +827,19 @@ def evaluate_model(
                 predictions["routing"], gazex, gazey, inout
             )
             route_point.update(point_coverage, point_count)
-            route_support.update(route_values["mean_support"].item(), batch_size)
-            route_keep.update(predictions["routing"].actual_keep_ratio, batch_size)
+            route_support.update(
+                route_values["mean_support"].item(), batch_image_count
+            )
+            route_keep.update(
+                predictions["routing"].actual_keep_ratio, batch_image_count
+            )
 
     metrics = {
         "dataset": args.dataset,
+        "query_unit": (
+            next(iter(query_units)) if len(query_units) == 1 else "mixed"
+        ),
+        "image_count": image_count,
         "sample_count": sample_count,
         "inframe_count": inframe_count,
         "auc": auc_meter.mean(),
@@ -638,6 +853,16 @@ def evaluate_model(
     if args.dataset == "gazefollow":
         metrics["avg_l2"] = metrics.pop("l2")
         metrics["min_l2"] = min_l2_meter.mean()
+        if "image" in query_units:
+            metrics["head_count_strata"] = {
+                name: {
+                    "sample_count": int(values["auc"].count),
+                    "auc": values["auc"].mean(),
+                    "avg_l2": values["avg_l2"].mean(),
+                    "min_l2": values["min_l2"].mean(),
+                }
+                for name, values in gazefollow_strata.items()
+            }
     elif inout_targets and len(set(inout_targets)) > 1:
         metrics["inout_ap"] = float(
             average_precision_score(inout_targets, inout_predictions)
@@ -681,6 +906,92 @@ def restore_rng_state(state: Optional[dict]) -> None:
         torch.cuda.set_rng_state_all(state["cuda"])
 
 
+def _split_identity(data_split: dict) -> dict:
+    keys = (
+        "strategy",
+        "evaluation_split",
+        "source_annotation_sha256",
+        "source_group_fingerprint",
+        "assignment_fingerprint",
+        "validation_fraction",
+        "seed",
+    )
+    return {key: data_split.get(key) for key in keys}
+
+
+def validate_checkpoint_split_provenance(
+    checkpoint: dict,
+    data_split: dict,
+    *,
+    checkpoint_role: str,
+) -> None:
+    """Fail fast when a formal holdout run would cross split provenance."""
+
+    if not data_split.get("selection_is_formal"):
+        return
+    checkpoint_split = checkpoint.get("data_split")
+    if not isinstance(checkpoint_split, dict):
+        raise ValueError(
+            f"{checkpoint_role} has no data_split provenance. A formal "
+            "GazeFollow holdout run must start from scratch or from a "
+            "checkpoint produced with the exact same holdout."
+        )
+    expected = _split_identity(data_split)
+    observed = _split_identity(checkpoint_split)
+    if observed != expected:
+        raise ValueError(
+            f"{checkpoint_role} data split does not match the current holdout: "
+            f"checkpoint={observed}, current={expected}"
+        )
+
+
+def selection_spec(args: argparse.Namespace) -> tuple[str, str, tuple[tuple[str, str], ...]]:
+    if (
+        args.dataset == "gazefollow"
+        and args.router_stage == "support_pilot"
+        and args.heatmap_loss_weight == 0.0
+    ):
+        return (
+            "routing_hard_coverage",
+            "max",
+            (("routing_gt_point_coverage", "max"), ("auc", "max")),
+        )
+    if args.dataset == "gazefollow":
+        return "avg_l2", "min", (("auc", "max"),)
+    return "l2", "min", (("auc", "max"), ("inout_ap", "max"))
+
+
+def _metric_is_better(candidate, incumbent, mode: str) -> Optional[bool]:
+    if candidate is None or not math.isfinite(float(candidate)):
+        return False
+    if incumbent is None or not math.isfinite(float(incumbent)):
+        return True
+    candidate = float(candidate)
+    incumbent = float(incumbent)
+    if math.isclose(candidate, incumbent, rel_tol=0.0, abs_tol=1e-12):
+        return None
+    return candidate < incumbent if mode == "min" else candidate > incumbent
+
+
+def selection_improved(eval_metrics: dict, selection: dict) -> bool:
+    comparison = _metric_is_better(
+        eval_metrics.get(selection["metric"]),
+        selection.get("value"),
+        selection["mode"],
+    )
+    if comparison is not None:
+        return comparison
+    incumbent_metrics = selection.get("metrics") or {}
+    for metric, mode in selection["tie_breakers"]:
+        comparison = _metric_is_better(
+            eval_metrics.get(metric), incumbent_metrics.get(metric), mode
+        )
+        if comparison is not None:
+            return comparison
+    # Exact ties keep the earlier checkpoint.
+    return False
+
+
 def checkpoint_payload(
     model,
     optimizer,
@@ -692,6 +1003,8 @@ def checkpoint_payload(
     global_step: int,
     metrics: dict,
     best_metrics: dict,
+    data_split: dict,
+    selection: dict,
 ) -> dict:
     return {
         "format_version": CHECKPOINT_FORMAT_VERSION,
@@ -706,6 +1019,8 @@ def checkpoint_payload(
         "scaler_state": scaler.state_dict(),
         "metrics": metrics,
         "best_metrics": best_metrics.copy(),
+        "data_split": data_split.copy(),
+        "selection": selection.copy(),
         "rng_state": rng_state(),
         "git_commit": git_commit(),
     }
@@ -739,6 +1054,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     args = parse_args(argv)
     validate_args(args)
     resume_payload = _torch_load(args.resume) if args.resume else None
+    init_payload = _torch_load(args.init_ckpt) if args.init_ckpt else None
     if resume_payload is not None:
         if not isinstance(resume_payload, dict):
             raise ValueError(
@@ -775,16 +1091,37 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     model.set_trainable_backbone_suffix(args.train_backbone_after_router)
     apply_zero_lr_freezing(model, args)
 
-    if args.init_ckpt:
+    if init_payload is not None:
         print(f"Initializing model weights from {args.init_ckpt}")
-        load_model_state(model, _torch_load(args.init_ckpt), initialization=True)
+        load_model_state(model, init_payload, initialization=True)
     elif resume_payload is not None:
         load_model_state(model, resume_payload, initialization=False)
 
     model.to(device)
-    train_dataset, eval_dataset, train_loader, eval_loader = make_dataloaders(
-        args, transform
-    )
+    (
+        train_dataset,
+        eval_dataset,
+        train_loader,
+        eval_loader,
+        data_split,
+    ) = make_dataloaders(args, transform)
+    if resume_payload is not None:
+        validate_checkpoint_split_provenance(
+            resume_payload,
+            data_split,
+            checkpoint_role="resume checkpoint",
+        )
+    if init_payload is not None and data_split.get("selection_is_formal"):
+        if not isinstance(init_payload, dict):
+            raise ValueError(
+                "initialization checkpoint is not structured and has no "
+                "verifiable data_split provenance"
+            )
+        validate_checkpoint_split_provenance(
+            init_payload,
+            data_split,
+            checkpoint_role="initialization checkpoint",
+        )
     optimizer, parameter_counts = make_optimizer(model, args)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=args.max_epochs, eta_min=0.0
@@ -806,7 +1143,17 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "dataset": args.dataset,
         "data_path": args.data_path,
         "train_sample_count": len(train_dataset),
-        "eval_sample_count": len(eval_dataset),
+        "eval_sample_count": (
+            eval_dataset.person_count
+            if isinstance(eval_dataset, GazeFollowImageDataset)
+            else len(eval_dataset)
+        ),
+        "eval_image_count": (
+            len(eval_dataset)
+            if isinstance(eval_dataset, GazeFollowImageDataset)
+            else None
+        ),
+        "data_split": data_split,
         "model_config": model.get_model_config(),
         "train_config": vars(args),
         "trainable_parameters": parameter_counts,
@@ -819,6 +1166,10 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     }
     (run_dir / "run_manifest.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    (run_dir / "data_split.json").write_text(
+        json.dumps(data_split, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
     wandb = init_wandb(args, model.get_model_config())
     print(json.dumps(metadata, indent=2, sort_keys=True))
@@ -838,6 +1189,20 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         )
     else:
         best_metrics["l2"] = float("inf")
+    primary_metric, primary_mode, tie_breakers = selection_spec(args)
+    selection = {
+        "metric": primary_metric,
+        "mode": primary_mode,
+        "tie_breakers": list(tie_breakers),
+        "value": float("inf") if primary_mode == "min" else float("-inf"),
+        "epoch": None,
+        "metrics": None,
+        "checkpoint": (
+            "best_val_selection.pt"
+            if data_split.get("selection_is_formal")
+            else "best_selection.pt"
+        ),
+    }
     if resume_payload is not None:
         optimizer.load_state_dict(resume_payload["optimizer_state"])
         scheduler.load_state_dict(resume_payload["scheduler_state"])
@@ -848,6 +1213,17 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         for name in best_metrics:
             if name in resumed_best_metrics:
                 best_metrics[name] = resumed_best_metrics[name]
+        resumed_selection = resume_payload.get("selection")
+        if isinstance(resumed_selection, dict):
+            if (
+                resumed_selection.get("metric") != selection["metric"]
+                or resumed_selection.get("mode") != selection["mode"]
+            ):
+                raise ValueError(
+                    "resume checkpoint selection rule conflicts with the "
+                    "current training configuration"
+                )
+            selection.update(resumed_selection)
         restore_rng_state(resume_payload.get("rng_state"))
         print(f"Resuming from epoch {start_epoch}, global step {global_step}")
 
@@ -1008,6 +1384,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         eval_metrics = evaluate_model(
             model, eval_loader, args, device, max_batches=args.max_eval_batches
         )
+        eval_metrics["split"] = data_split["evaluation_split"]
         train_metrics = {name: meter.mean() for name, meter in train_meters.items()}
         epoch_metrics = {
             "epoch": epoch,
@@ -1035,6 +1412,15 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             )
 
         improved_paths = []
+        if selection_improved(eval_metrics, selection):
+            selection.update(
+                {
+                    "value": eval_metrics[selection["metric"]],
+                    "epoch": epoch,
+                    "metrics": eval_metrics.copy(),
+                }
+            )
+            improved_paths.append(run_dir / selection["checkpoint"])
         coverage = eval_metrics.get("routing_hard_coverage")
         if coverage is not None and coverage > best_metrics["routing_hard_coverage"]:
             best_metrics["routing_hard_coverage"] = coverage
@@ -1068,6 +1454,8 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             global_step=global_step,
             metrics=epoch_metrics,
             best_metrics=best_metrics,
+            data_split=data_split,
+            selection=selection,
         )
         save_checkpoint(run_dir / "last.resume.pt", payload)
         for path in improved_paths:
@@ -1077,6 +1465,8 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
 
     final_metrics = {
         "run_dir": str(run_dir),
+        "evaluation_split": data_split["evaluation_split"],
+        "selection": selection,
         "best_metrics": best_metrics,
         "last_epoch": args.max_epochs - 1,
     }
