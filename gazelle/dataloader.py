@@ -170,7 +170,18 @@ class GazeFollowImageDataset(torch.utils.data.dataset.Dataset):
 
         self.image_indices = []
         self.head_indices = {}
+        seen_paths = {}
         for image_index in candidate_indices:
+            normalized_path = os.path.normpath(
+                str(self.data[image_index]["path"]).replace("\\", "/")
+            )
+            if normalized_path in seen_paths:
+                raise ValueError(
+                    "GazeFollowImageDataset requires one record per image path; "
+                    f"records {seen_paths[normalized_path]} and {image_index} "
+                    f"both use {normalized_path!r}"
+                )
+            seen_paths[normalized_path] = image_index
             selected_heads = [
                 head_index
                 for head_index, head in enumerate(self.data[image_index]["heads"])

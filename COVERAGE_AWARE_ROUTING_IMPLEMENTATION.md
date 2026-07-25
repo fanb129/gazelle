@@ -1027,7 +1027,7 @@ in/out 均为 0；三轮 router coverage 和实际 keep ratio 完全不变。
 因此现在不进入 VAT，也不直接堆多 seed；先做不需训练的真实多人
 query-unit 审计。
 
-### 5.9 GazeFollow 多人共享 route 审计（当前下一步）
+### 5.9 GazeFollow 多人共享 route 审计
 
 代码新增两种显式评测单位：
 
@@ -1038,12 +1038,43 @@ query-unit 审计。
 还新增了 image-level 分层结果：`single_head`、`multi_head`、
 `two_head`、`three_plus_head`。
 
-#### 5.9a 先运行 K100 等价性验收
+#### 5.9a 首次 K100 等价性结果
 
-该命令会在一个 nohup 任务中依次跑 person 和 image 两种完整评测，并自动
-比较结果。K100 保留全部 token，不存在稀疏信息差，因此三项 gaze 指标
-差值绝对值应不超过 `1e-5`，两种模式都必须有 `4782` 个 person，
-grouped hard/point coverage 必须为 1。
+首次命令使用 person batch 16、image batch 4，并开启 AMP。输出
+`passed=false`，但不是 person/GT flatten 错位。失败项只有：
+
+- `avg_l2_equivalent=false`；
+- `min_l2_equivalent=false`；
+- `image_grouping_reduces_backbone_inputs=false`。
+
+两种模式的 person count、loader item 和 image count 都是 `4782`；
+grouped strata 为 `single_head=4782, multi_head=0`。因此当前 official
+GazeFollow test 根本没有同图多人 query，无法减少 backbone 输入，也
+无法验证 max-union；这个检查在该 split 上应是 N/A，而不是失败。
+
+其余结果支持数据对齐正确：
+
+| metric | image − person |
+|---|---:|
+| AUC | +0.00000129 |
+| Avg L2 | +0.00019267 |
+| Min L2 | +0.00008709 |
+| soft coverage | -0.00000571 |
+| hard coverage | -0.0000000017 |
+| point coverage | 0 |
+
+Hard/point coverage 均通过，AUC 也通过。L2 使用 `64×64` heatmap
+硬 argmax；batch 16 与 batch 4 在 AMP 下的微小 kernel/舍入差异会让少量
+近似并列峰跳格，因此不能据此判定 indexing bug。
+
+比较脚本已经修正：当 `multi_head=0` 时，将 backbone reduction 标记为
+不可审计；仍强制检查 image count 不大于 person count、单人数据上二者
+相等。
+
+#### 5.9b matched-batch K100 复核（当前下一步）
+
+两条路径都使用 batch 4 和相同 AMP。此时输入顺序、batch shape、精度和
+最后一个 batch 都一致，可以隔离首次运行中的 batch-shape 数值漂移：
 
 ```bash
 mkdir -p logs/coverage_router
@@ -1055,55 +1086,52 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
   --data_path /newhome/fb/dataset/gazefollow_extended \
   --keep_ratio_override 1.0 \
-  --person_batch_size 16 \
+  --person_batch_size 4 \
   --image_batch_size 4 \
   --n_workers 8 \
   --amp \
   --expected_person_count 4782 \
   --equivalence_tolerance 1e-5 \
-  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_k100_comparison.json \
-  > logs/coverage_router/gf_suffix_k050_query_unit_k100.log 2>&1 < /dev/null &
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_k100_b4_amp.json \
+  > logs/coverage_router/gf_suffix_k050_query_unit_k100_b4_amp.log 2>&1 < /dev/null &
 ```
 
-监控：
+预期顶层为：
 
-```bash
-tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100.log
+```json
+{
+  "passed": true,
+  "dataset_diagnostics": {
+    "multi_person_audit_applicable": false,
+    "multi_head_person_count": 0
+  }
+}
 ```
 
-只有输出 JSON 顶层 `"passed": true` 才运行 5.9b；否则先修复
-image/head flatten 对齐，不能解释 K50。
+若 matched B4 AMP 仍不通过，再用完全相同命令去掉 `--amp` 做 FP32
+复核；FP32 仍失败才进入逐样本 heatmap/argmax 排查。
 
-#### 5.9b K50 真实多人 union
+#### 5.9c 统计 train holdout 是否能审计多人 union
 
-K100 通过后，原命令只把 keep ratio 和输出文件改为 K50：
+official test 的 K50 grouped 对比已经取消，因为没有任何 multi-head
+query。使用下面的 CPU-only 命令统计完整 train，以及固定
+10% image holdout 中的 head-count 分布：
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 \
-PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 nohup /home/fb/anaconda3/envs/py310/bin/python -u \
-  scripts/compare_gazefollow_query_units.py \
-  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/best_avg_l2.pt \
+  scripts/audit_gazefollow_query_groups.py \
   --data_path /newhome/fb/dataset/gazefollow_extended \
-  --keep_ratio_override 0.5 \
-  --person_batch_size 16 \
-  --image_batch_size 4 \
-  --n_workers 8 \
-  --amp \
-  --expected_person_count 4782 \
-  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_sparse_fixedrouter_suffix_k050_seed3106/query_unit_k050_comparison.json \
-  > logs/coverage_router/gf_suffix_k050_query_unit_k050.log 2>&1 < /dev/null &
+  --split train \
+  --val_fraction 0.10 \
+  --split_seed 3106 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gazefollow_train_query_groups_seed3106.json \
+  > logs/coverage_router/gazefollow_train_query_groups_seed3106.log 2>&1 < /dev/null &
 ```
 
-K50 不要求 person/image 指标相同；重点检查：
-
-- `single_head` 应与旧 per-person K50 基本一致；
-- `multi_head`，尤其 `three_plus_head`，不能出现不可接受的明显退化；
-- grouped 的总 person count 仍为 `4782`；
-- image count 必须小于 person count，证明 backbone 确实按图共享。
-
-如果 multi-head 明显退化，当前固定总 K 的 union 还不能支撑论文故事，
-下一步应做 grouped training 或人数自适应预算，而不是进入 VAT。
+只有 holdout 的 `validation.multi_head_record_count > 0`，后续
+image-grouped validation 才能为多人 union 提供真实证据。训练集上的旧
+5.7 checkpoint 只能做 wiring diagnostic；正式结论仍需按 5.10 从
+split-clean baseline 重跑。
 
 ### 5.10 正式验证与最终顺序
 
@@ -1129,7 +1157,7 @@ train/validation；validation 默认以 image 为单位运行真实多人 union�
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100.log
+tail -f logs/coverage_router/gf_suffix_k050_query_unit_k100_b4_amp.log
 ```
 
 ```bash
@@ -1151,5 +1179,7 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-当前只运行 5.9a 的 K100 query-unit 等价性审计，不并行启动 K50、VAT
-或正式多 seed。完成后同步 `query_unit_k100_comparison.json`。
+当前运行 5.9b 的 matched-batch K100 复核，并执行 5.9c 的 CPU 数据分布
+统计；不要启动 official-test K50、VAT 或正式多 seed。完成后同步
+`query_unit_k100_b4_amp.json` 和
+`gazefollow_train_query_groups_seed3106.json`。

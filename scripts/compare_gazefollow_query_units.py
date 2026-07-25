@@ -100,14 +100,30 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     equivalence_expected = math.isclose(
         effective_keep_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12
     )
+    head_count_strata = image_metrics.get("head_count_strata") or {}
+    multi_head_person_count = int(
+        (head_count_strata.get("multi_head") or {}).get("sample_count") or 0
+    )
+    multi_person_audit_applicable = multi_head_person_count > 0
+    grouping_reduces_backbone_inputs = (
+        image_metrics["image_count"] < person_metrics["image_count"]
+    )
     checks = {
         "same_person_count": (
             image_metrics["sample_count"] == person_metrics["sample_count"]
         ),
-        "image_grouping_reduces_backbone_inputs": (
-            image_metrics["image_count"] < person_metrics["image_count"]
+        "image_count_not_greater_than_person_count": (
+            image_metrics["image_count"] <= person_metrics["image_count"]
         ),
     }
+    if multi_person_audit_applicable:
+        checks["image_grouping_reduces_backbone_inputs"] = (
+            grouping_reduces_backbone_inputs
+        )
+    else:
+        checks["single_head_image_count_matches_person_count"] = (
+            image_metrics["image_count"] == person_metrics["image_count"]
+        )
     if args.expected_person_count is not None:
         checks["expected_person_count"] = (
             image_metrics["sample_count"] == args.expected_person_count
@@ -131,16 +147,36 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "equivalence_tolerance": args.equivalence_tolerance,
         "checks": checks,
         "passed": all(checks.values()),
+        "dataset_diagnostics": {
+            "multi_person_audit_applicable": multi_person_audit_applicable,
+            "multi_head_person_count": multi_head_person_count,
+            "image_grouping_reduces_backbone_inputs": (
+                grouping_reduces_backbone_inputs
+            ),
+            "note": (
+                "No multi-head query groups are present; backbone-input "
+                "reduction and shared-union behavior are not observable on "
+                "this split."
+                if not multi_person_audit_applicable
+                else (
+                    "Multi-head query groups are present, so image grouping "
+                    "must reduce the number of backbone inputs."
+                )
+            ),
+        },
         "gaze_metric_delta_image_minus_person": metric_deltas,
         "person_evaluation": person_result,
         "image_grouped_evaluation": image_result,
         "interpretation": (
-            "K100 must preserve per-person predictions; a failure indicates "
-            "a flattening/indexing bug."
+            (
+                "K100 compares the two input pipelines. Use matched batch "
+                "sizes and precision before treating a metric mismatch as a "
+                "flattening/indexing bug."
+            )
             if equivalence_expected
             else (
-                "At K<100, deltas quantify the real shared fixed-budget "
-                "multi-person union effect and are not expected to be zero."
+                "At K<100, deltas quantify shared fixed-budget union effects "
+                "only when multi_person_audit_applicable is true."
             )
         ),
     }
