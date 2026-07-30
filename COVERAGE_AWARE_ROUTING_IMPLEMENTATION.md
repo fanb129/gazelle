@@ -1159,7 +1159,7 @@ Official test 全是 single-head，因此取消在其上运行 K50 union。下�
 旧 checkpoint 已见过这些训练图，结果只能验证 wiring 和排除灾难性容量
 竞争，不能写成正式泛化结果，也不能据此扫参。
 
-#### 5.9d Multi-head holdout K100 wiring（当前下一步）
+#### 5.9d Multi-head holdout K100 wiring
 
 该命令只评测固定 holdout 的 `multi` 子集。person 模式有 1,008 次
 query/backbone 输入，image 模式有 428 张图；使用 batch 1 和 FP32：
@@ -1231,6 +1231,39 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 等价，只能算一个证据。正式多人置信区间应按 image clustered bootstrap，
 不能把同图的 1,008 个人当独立样本。
 
+#### 5.9d/5.9e 实际结果：Pass，进入 split-clean chain
+
+K100 的 `passed=true`，10 项检查全部通过。person 与 image-grouped
+都评测同样的 1,008 人；image-grouped 只需 428 次 backbone 输入，
+而 person 模式需要 1,008 次。AUC delta 为 `-1.62e-8`，Avg/Min L2
+delta 都为 0，point coverage 为 1，hard coverage 约为 1。因此
+image grouping、head 顺序、GT 映射和多人预测 flatten 均已验证正确。
+
+K50 的结果为：
+
+| 指标 | 每人独立 K50 | 多人共享总 K50 | grouped - person |
+|---|---:|---:|---:|
+| AUC ↑ | 0.964709 | 0.963904 | -0.000805 |
+| Avg/Min L2 ↓ | 0.111670 | 0.110322 | -0.001348 |
+| hard coverage ↑ | 0.874800 | 0.864990 | -0.009809 |
+| point coverage ↑ | 0.954365 | 0.945437 | -0.008929 |
+| mean support | 0.070416 | 0.090075 | +0.019659 |
+
+其中 mean support 的口径由单人的 support 均值变成多人 max-union 的图像
+均值，因此不能把它的增加解释成退化。共享总 K50 只比“每人各有 K50”
+少 `0.000805` AUC、少约 `0.9` 个百分点的 point coverage，Avg L2
+反而改善 `0.001348`，显著优于前述 catastrophic gate。
+
+从 grouped K100 降到 grouped K50 时，overall AUC 下降 `0.002145`，
+Avg L2 增加 `0.001530`。2-head 的 AUC/L2 变化为
+`-0.001746/+0.001416`，3+ head 为 `-0.002890/+0.001742`。人数增加
+会让固定预算的代价略微扩大，但没有容量崩溃。因此不需要先引入
+grouped/mixed-query training 或 adaptive K。
+
+这两个结果仍来自见过全部 GazeFollow train 的旧 checkpoint，只能作为
+wiring/capacity gate，不能作为正式泛化结果或论文表格。至此停止在旧
+checkpoint 上扫参，下一步只运行 5.10 的 split-clean 正式链路。
+
 ### 5.10 正式验证与最终顺序
 
 多人审计通过后，使用代码中的
@@ -1252,10 +1285,349 @@ train/validation；validation 默认以 image 为单位运行真实多人 union�
 6. recipe 和 epoch 固定后，official test 只评测一次；
 7. 再进入 VAT；wall-clock 加速仍作为独立支线。
 
+#### 5.10a split-clean dense protocol smoke（先运行）
+
+这是几分钟级的协议 smoke，只验证 formal split、image-grouped
+validation、checkpoint provenance 和训练参数分组。它不是论文实验，
+其 checkpoint 也不能初始化后续阶段。命令刻意不传 `--init_ckpt`：
+模型会加载本地 DINOv3 预训练权重，而 task decoder 从随机初始化开始。
+
+```bash
+mkdir -p logs/coverage_router
+
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 1.0 \
+  --escape_tokens 8 \
+  --lr_router 0 \
+  --lr_decoder 1e-3 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --heatmap_loss_weight 1 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --router_warmup_epochs 0 \
+  --weight_decay 0 \
+  --max_epochs 1 \
+  --batch_size 2 \
+  --eval_batch_size 1 \
+  --grad_accum_steps 1 \
+  --n_workers 0 \
+  --max_train_batches 2 \
+  --max_eval_batches 2 \
+  --wandb_mode disabled \
+  --exp_name gf_splitclean_dense_protocol_smoke_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_protocol_smoke_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_dense_protocol_smoke_seed3106.log 2>&1 < /dev/null &
+```
+
+进程正常结束后检查：
+
+```bash
+tail -n 80 logs/coverage_router/gf_splitclean_dense_protocol_smoke_seed3106.log
+
+jq '{
+  train_sample_count,
+  eval_sample_count,
+  eval_image_count,
+  trainable_parameters,
+  data_split: {
+    selection_is_formal: .data_split.selection_is_formal,
+    train_group_count: .data_split.train_group_count,
+    validation_group_count: .data_split.validation_group_count,
+    assignment_fingerprint: .data_split.assignment_fingerprint
+  }
+}' \
+  /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_protocol_smoke_seed3106/run_manifest.json
+```
+
+预期值必须是：
+
+- `train/eval person/eval image = 102132/11326/10746`；
+- trainable 参数仅 `decoder=3416576`，router/backbone/inout 均为 0；
+- `selection_is_formal=true`；
+- train/validation group 为 `105954/11773`；
+- assignment fingerprint 为
+  `817d9f2200ebc9881f6d2318cdb60d7d8d7af394f98f0e3461a6d8bd2c26b5e3`；
+- 生成 `best_val_selection.pt` 和 `summary.json`。
+
+smoke 的 validation 只跑两个 batch，指标没有意义。
+
+#### 5.10b split-clean dense baseline（smoke 通过后运行）
+
+该 run 对齐原 dense baseline 的核心 recipe：FP32、真实 batch 60、
+decoder LR `1e-3`、15 epochs、冻结 DINOv3 和 router，并在固定的
+image-grouped validation 上按 Avg L2 选 checkpoint（AUC 只作
+tie-breaker）。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 1.0 \
+  --escape_tokens 8 \
+  --lr_router 0 \
+  --lr_decoder 1e-3 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --heatmap_loss_weight 1 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --router_warmup_epochs 0 \
+  --weight_decay 0 \
+  --max_epochs 15 \
+  --batch_size 60 \
+  --eval_batch_size 4 \
+  --grad_accum_steps 1 \
+  --n_workers 8 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_splitclean_dense_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_dense_seed3106.log 2>&1 < /dev/null &
+```
+
+不要添加 `--init_ckpt`、`--resume`、`--train_backbone_after_router` 或
+`--amp`。若真实 batch 60 在服务器 OOM，再改成
+`--batch_size 30 --grad_accum_steps 2`，不要改输入分辨率、split 或学习率。
+完整 run 结束后，后续 support router 必须只从该目录的
+`best_val_selection.pt` 初始化。
+
+#### 5.10b 实际结果：正式 dense validation baseline 通过
+
+该 run 已完整运行 15 epochs，`history.jsonl` 连续包含 epochs 0–14，
+没有 NaN、样本数变化或 split 漂移。协议核验为：
+
+- FP32，train/eval batch 为 `60/4`；
+- 只训练 `3,416,576` 个 decoder 参数；
+- DINOv3、router 和 in/out 均冻结；
+- `init_ckpt=null`、`resume=null`；
+- validation 为固定的 image-grouped GazeFollow train holdout；
+- train/eval person 和 eval image 数分别为
+  `102132/11326/10746`；
+- assignment fingerprint 为
+  `817d9f2200ebc9881f6d2318cdb60d7d8d7af394f98f0e3461a6d8bd2c26b5e3`。
+
+预先固定的选模规则是 validation Avg L2 最小、AUC 仅作完全并列时的
+tie-breaker。它选择 epoch 14 的单一 checkpoint：
+
+| subset | AUC ↑ | Avg/Min L2 ↓ | persons |
+|---|---:|---:|---:|
+| overall | 0.964691 | 0.114705 | 11,326 |
+| single-head | 0.965114 | 0.114341 | 10,318 |
+| multi-head | 0.960356 | 0.118436 | 1,008 |
+| two-head | 0.959825 | 0.115968 | 656 |
+| three-plus-head | 0.961346 | 0.123036 | 352 |
+
+`summary.best_metrics.auc=0.964715` 来自 epoch 13，不能与 epoch 14 的
+L2 拼成一个 tuple。epoch 14 相对 epoch 13 仅少 `0.0000247` AUC，
+但 Avg L2 改善 `0.0002705`，因此 epoch 14 的选择符合规则。epoch
+0→14 的 overall AUC 增加 `0.01911`，Avg L2 降低 `0.04328`，没有出现
+后期崩溃。
+
+服务器正式权重已核验：
+
+```text
+best_val_selection.pt
+epoch = 14
+sha256 = 4752899dbedde10cf211684c07ef3fee9acb2db990f031e484eed07b8f5d911d
+```
+
+当前本地目录已同步 JSON/JSONL 结果文件，但没有同步 `.pt` 权重。开始
+下一阶段前，应至少归档 `best_val_selection.pt`，并建议同时归档
+`last.resume.pt` 和训练日志。该结果是一个 seed 的正式 validation
+baseline，不是 official-test 结果，也不是 coverage router 的方法结果。
+
+#### 5.10c FP32 eval batch 4/16 parity：Pass
+
+使用 epoch 14 的同一个 `best_val_selection.pt`，在完全相同的
+image-grouped holdout 上以 batch 16 重评。相对训练期间的 batch 4
+结果：
+
+| metric | B16 - B4 |
+|---|---:|
+| overall AUC | `+6.20e-8` |
+| overall Avg/Min L2 | `+4.75e-6` |
+| single-head AUC | `+6.45e-8` |
+| single-head Avg/Min L2 | `+5.21e-6` |
+| multi-head AUC | `+3.67e-8` |
+| multi-head Avg/Min L2 | `0` |
+| two-head AUC | `+1.55e-7` |
+| three-plus-head AUC | `-1.84e-7` |
+
+所有 image/person/strata 计数和 split provenance 完全相同；routing
+指标最大差异为 mean support 的 `5.95e-7`。结果满足既有 gaze
+`1e-5`、L2 `5e-4` 和 routing `1e-6` 容差。因此，后续 formal
+validation 固定使用 **batch 16、FP32**。最终横向表也统一使用 B16
+重评结果，不混用 B4/B16 数值。
+
+当前评测 JSON 尚未显式记录 batch size、AMP、workers 和 device，这些
+runtime 参数只由命令和文件名证明；后续应补入输出 schema。
+
+正式训练 router 前，先用 dense checkpoint 中从未训练过的 router 做
+K25 initialization control。它不是纯 random Top-K，因为 head footprint
+和 escape-token priority 仍然生效：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gazefollow_eval_split train_holdout \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --gazefollow_eval_unit image \
+  --gazefollow_head_count_subset all \
+  --keep_ratio_override 0.25 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/eval_holdout_untrained_router_k025_b16_fp32.json \
+  > logs/coverage_router/gf_splitclean_dense_untrained_router_k025_b16_fp32.log 2>&1 < /dev/null &
+```
+
+必须满足相同 epoch/split/fingerprint、`10746 images / 11326 persons`、
+`query_unit=image` 和 actual keep ratio `0.25`。由于 `support_pilot`
+只观察 route 而不裁剪 DINO，gaze tuple 应与 B16 K100 相差不超过
+`1e-5 AUC / 5e-4 L2`。hard/point coverage 不预设任意绝对提升门槛；
+它们作为正式 support training 的学习前基线，完成后再按相对变化和旧
+diagnostic 参考共同判断。
+
+#### 5.10d K25 untrained-router initialization control：Pass
+
+实际输出为
+`gf_splitclean_dense_seed3106/eval_holdout_untrained_router_k025_b16_fp32.json`。
+它与 K100 B16 FP32 评估使用相同 epoch 14 checkpoint、split、
+assignment fingerprint、`10746 images / 11326 persons` 和
+image-grouped all-head protocol。除预期的 keep-ratio override 外，
+provenance 和模型配置完全一致。
+
+| metric | K100 dense | K25 untrained | K25 - K100 |
+|---|---:|---:|---:|
+| AUC | 0.964690885 | 0.964690885 | `0` |
+| Avg/Min L2 | 0.114710056 | 0.114710056 | `0` |
+| actual keep ratio | 1.000000 | 0.250000 | -0.750000 |
+| hard coverage | 1.000000 | 0.159233 | -0.840767 |
+| exact-point coverage | 1.000000 | 0.153629 | -0.846371 |
+| soft coverage | 0.0411611 | 0.0411611 | `0` |
+| mean support | 1.0000006 | 1.0000006 | `0` |
+
+overall、single-head、multi-head、two-head 和 three-plus-head 的
+所有 gaze 指标也逐值相同。这符合 `support_pilot` 的语义：K25 只改变
+Top-K hard route，不裁剪 DINO 或改变 decoder 输入；soft coverage 和
+mean support 是 Top-K 前的 router 输出，因此也不会仅因 K 改变。
+
+由此得到正式学习前基线：
+
+```text
+H0 (hard coverage)        = 0.1592328867
+P0 (exact-point coverage) = 0.1536288186
+S0 (soft coverage)        = 0.0411610833
+```
+
+这不是失败结果，而是之后衡量 Router 学习增量的零点。正式 support
+run 不使用任意的“必须提高 10%/20%”绝对门槛，而是报告相同协议下的
+`Δhard = Htrained-H0`、`Δpoint = Ptrained-P0`、`Δsoft = Strained-S0`
+及三轮轨迹。论文级显著性与稳定性需在后续 image-clustered bootstrap
+和多 seed 中确认。
+
+#### 5.10e split-clean formal support K25（当前下一步）
+
+只训练 Router 三轮。训练与评估均固定 FP32；train batch 16 沿用已验证的
+support recipe，eval batch 16 来自 5.10c parity 结果。不要添加 `--amp`，
+否则训练和选模数值协议会与上述 FP32 baseline/control 不一致。
+
+启动前必须确认目标 `run_dir` 不存在或为空，避免 `history.jsonl`
+追加到旧实验：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 0.25 \
+  --router_hidden_dim 256 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --spatial_prior none \
+  --fusion raw_concat \
+  --heatmap_loss_weight 0 \
+  --inout_loss_lambda 0 \
+  --router_coverage_weight 1.0 \
+  --router_budget_weight 0.05 \
+  --router_entropy_weight 0 \
+  --lr_router 1e-3 \
+  --lr_decoder 0 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --router_warmup_epochs 0 \
+  --weight_decay 0 \
+  --max_epochs 3 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --grad_accum_steps 1 \
+  --n_workers 8 \
+  --log_iter 10 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_splitclean_support_k025_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_support_k025_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_support_k025_seed3106.log 2>&1 < /dev/null &
+```
+
+正式启动后先检查 `run_manifest.json`：
+
+- trainable 参数必须为 router `463105`，decoder/backbone/inout 均为 0；
+- init checkpoint 必须指向 split-clean dense epoch 14；
+- `amp=false`，train/eval batch 为 `16/16`；
+- assignment fingerprint 必须仍为
+  `817d9f2200ebc9881f6d2318cdb60d7d8d7af394f98f0e3461a6d8bd2c26b5e3`；
+- train/eval person 和 eval image 必须为
+  `102132/11326/10746`。
+
+选模规则由代码固定为 validation hard coverage 最大，其次 exact-point
+coverage，再其次 AUC；formal checkpoint 为 `best_val_selection.pt`。
+三轮 gaze AUC/L2 应始终与 dense B16 FP32 处于
+`1e-5 AUC / 5e-4 L2` 容差内，因为本阶段所有 gaze 模块均冻结。若第一批
+意外 OOM，不修改其他超参，换一个新 run directory，改为
+`--batch_size 8 --grad_accum_steps 2`，eval 仍保持 16。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_suffix_multi_holdout_k100_b1_fp32.log
+tail -f logs/coverage_router/gf_splitclean_support_k025_seed3106.log
 ```
 
 ```bash
@@ -1277,6 +1649,6 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-当前只运行 5.9d 的 multi-head holdout K100 wiring；通过后运行 5.9e
-K50 catastrophic gate。不要启动 official-test K50、VAT 或正式多 seed。
-完成后同步对应的两个 `query_unit_multi_holdout_*.json`。
+5.10b–5.10d 均已通过。当前只启动 5.10e：从 split-clean dense
+`best_val_selection.pt` 初始化，在同一 split 上正式训练 K25 support
+router。暂不运行 official test、VAT 或多 seed。
