@@ -1554,7 +1554,7 @@ run 不使用任意的“必须提高 10%/20%”绝对门槛，而是报告相�
 及三轮轨迹。论文级显著性与稳定性需在后续 image-clustered bootstrap
 和多 seed 中确认。
 
-#### 5.10e split-clean formal support K25（当前下一步）
+#### 5.10e split-clean formal support K25
 
 只训练 Router 三轮。训练与评估均固定 FP32；train batch 16 沿用已验证的
 support recipe，eval batch 16 来自 5.10c parity 结果。不要添加 `--amp`，
@@ -1624,10 +1624,147 @@ coverage，再其次 AUC；formal checkpoint 为 `best_val_selection.pt`。
 意外 OOM，不修改其他超参，换一个新 run directory，改为
 `--batch_size 8 --grad_accum_steps 2`，eval 仍保持 16。
 
+#### 5.10e 实际结果：Formal P1 Strong Go
+
+协议和运行完整性全部通过：与 dense baseline 使用同一 formal
+split、source SHA、assignment fingerprint 和样本计数；从 dense epoch
+14 `best_val_selection.pt` 初始化；FP32 train/eval batch `16/16`；
+epochs 0–2 完整且只训练 router `463105` 个参数。decoder、
+backbone 和 in/out 均为 0。
+
+相对 5.10d 未训练 K25 零点：
+
+| epoch | hard / delta | exact point / delta | soft / delta | effective support |
+|---:|---:|---:|---:|---:|
+| untrained | 0.159233 | 0.153629 | 0.041161 | 1.000001 |
+| 0 | 0.677605 / `+0.518372` | 0.815645 / `+0.662017` | 0.275250 / `+0.234089` | 0.099416 |
+| 1 | 0.692841 / `+0.533608` | 0.828713 / `+0.675084` | 0.282280 / `+0.241119` | 0.105503 |
+| **2 selected** | **0.700287 / `+0.541054`** | **0.839926 / `+0.686297`** | **0.333380 / `+0.292219`** | **0.065661** |
+
+hard、point 和 soft coverage 三轮整体上升，所以按预先固定的
+hard-coverage 最大化规则正确选中 epoch 2。在 actual keep ratio 始终
+精确为 `0.25` 的前提下，selected router 的 hard、point 和 soft
+coverage 分别提高 `54.11 / 68.63 / 29.22` 个百分点，不是通过
+增加 token 数换取 coverage。
+
+三轮 overall 和所有 head-count strata 的 gaze tuple 都与 dense B16
+FP32 逐值相同：overall 始终为
+`AUC=0.9646908849 / Avg/Min L2=0.1147100560`。这证明结果没有
+混入 decoder/backbone 更新。当前可以成立的结论是：在严格
+image-disjoint validation 上，router 能在 25% 固定预算下学到对
+gaze target 强得多的空间排序。
+
+该结论仍只是一个 seed 的 formal support 证据，不是 sparse accuracy
+或 efficiency 结果。effective support 最终只有 `6.57%`，说明分布高度
+聚焦，但也意味着 K25 中低分 tail 的排序可能不稳定；因此下一阶段
+仍固定 router，不恢复 joint training。当前 JSON 也没有 per-stratum routing
+coverage、per-image 预测或 CI，不能由 overall `83.99%` point coverage
+推断每个多人分层都达到同样数值。
+
+#### 5.10f selected checkpoint 重载审计（可选，不阻塞主实验）
+
+可以在独立进程中重载落盘的 epoch 2
+`best_val_selection.pt`，确认 checkpoint artifact 能复现 summary。这只是
+额外审计，不是新泛化证据，也不再作为启动真实 sparse 主实验的
+前置门槛：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/eval_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_support_k025_seed3106/best_val_selection.pt \
+  --dataset gazefollow \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gazefollow_eval_split train_holdout \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --gazefollow_eval_unit image \
+  --gazefollow_head_count_subset all \
+  --keep_ratio_override 0.25 \
+  --batch_size 16 \
+  --n_workers 8 \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_support_k025_seed3106/eval_holdout_selected_k025_b16_fp32.json \
+  > logs/coverage_router/gf_splitclean_support_selected_k025_b16_fp32.log 2>&1 < /dev/null &
+```
+
+若运行，应复现 checkpoint epoch 2、相同 fingerprint/counts 和 summary 中的
+gaze/routing tuple；gaze 容差为 `1e-5 AUC / 5e-4 L2`，routing 容差为
+`1e-6`。
+
+#### 5.10g split-clean K50 sparse decoder curriculum（当前主实验）
+
+这是 coverage-router idea 第一个真正的端到端 sparse 正式实验：DINOv3
+blocks 0–5 仍稠密运行，固定的 learned router 为每张图像的所有人共享
+一个 K50 route，blocks 6–11 只处理保留 token，然后将 sparse 特征
+回填给 gaze decoder。
+
+不再等待 5.10f 或重复 K100/K50 zero-shot gate。这些诊断之前已在
+同一代码路径上多次通过，如果本 run 异常再回补。本阶段固定 router
+和整个 DINO，只训练 decoder；训练 K 为
+`100% → 75% → 50% → 50% → 50%`，每轮 validation 始终使用 K50。
+选模规则固定为 Avg L2 最小，AUC 只作完全并列时的 tie-breaker。
+
+启动前确认目标 run directory 不存在或为空，然后运行：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_support_k025_seed3106/best_val_selection.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.50 \
+  --router_hidden_dim 256 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --spatial_prior none \
+  --fusion raw_concat \
+  --router_warmup_epochs 3 \
+  --heatmap_loss_weight 1.0 \
+  --inout_loss_lambda 0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --weight_decay 0 \
+  --max_epochs 5 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --grad_accum_steps 2 \
+  --n_workers 8 \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106.log 2>&1 < /dev/null &
+```
+
+预期 `run_manifest.json` 中只有 decoder `3416576` 个参数可训练，
+router/backbone/inout 必须都为 0；`router_stage=backbone_sparse`、
+`amp=false`、train/eval batch `16/16`、相同 assignment fingerprint。
+若 B16 在第一批意外 OOM，停止该进程并换新 run directory，仅改为
+`--batch_size 8 --grad_accum_steps 4`，其他参数不变。
+
+暂不同时跑 K25：旧 benchmark 中 K25 相对 K50 仅约 2% 延迟差，
+且相对 dense 没有有意义的端到端收益。先用 K50 回答“learned
+route 真正作用于 DINO suffix 后，gaze accuracy 能否恢复”这个主问题。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_splitclean_support_k025_seed3106.log
+tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106.log
 ```
 
 ```bash
@@ -1649,6 +1786,6 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-5.10b–5.10d 均已通过。当前只启动 5.10e：从 split-clean dense
-`best_val_selection.pt` 初始化，在同一 split 上正式训练 K25 support
-router。暂不运行 official test、VAT 或多 seed。
+5.10b–5.10e 均已通过。5.10f 改为可选 artifact audit，不再阻塞。
+当前直接运行 5.10g split-clean K50 sparse decoder 主实验。暂不运行
+official test、VAT、K25 sparse 长训练或多 seed。
