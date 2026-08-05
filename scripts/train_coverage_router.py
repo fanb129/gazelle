@@ -93,12 +93,45 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         default=3106,
         help="Seed for the stable image-level GazeFollow validation split.",
     )
+    parser.add_argument(
+        "--vat_val_fraction",
+        type=float,
+        default=0.0,
+        help=(
+            "Hold out this fraction of VAT training sequences for validation. "
+            "The default 0 keeps the legacy official-test-per-epoch mode."
+        ),
+    )
+    parser.add_argument(
+        "--vat_split_seed",
+        type=int,
+        default=3106,
+        help="Seed for the stable sequence-level VAT validation split.",
+    )
     parser.add_argument("--run_dir", default=None)
     parser.add_argument("--ckpt_save_dir", default="./experiments/coverage_router")
     parser.add_argument("--exp_name", default="coverage_router")
     checkpoint_group = parser.add_mutually_exclusive_group()
     checkpoint_group.add_argument("--init_ckpt", default=None)
     checkpoint_group.add_argument("--resume", default=None)
+    parser.add_argument(
+        "--reinitialize_router_on_init",
+        action="store_true",
+        help=(
+            "When --init_ckpt is used, keep the current seed-specific router "
+            "initialization instead of loading router.* tensors from the checkpoint. "
+            "All other checkpoint tensors are still loaded."
+        ),
+    )
+    parser.add_argument(
+        "--allow_init_without_split_provenance",
+        action="store_true",
+        help=(
+            "Allow a legacy pretrained --init_ckpt with no data_split metadata "
+            "to initialize a formal holdout run. A checkpoint carrying a "
+            "different formal split is still rejected."
+        ),
+    )
 
     parser.add_argument(
         "--router_stage", choices=ROUTER_STAGES, default="support_pilot"
@@ -223,8 +256,18 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--heatmap_loss_weight must be non-negative")
     if not 0.0 <= args.gazefollow_val_fraction < 1.0:
         raise ValueError("--gazefollow_val_fraction must be in [0, 1)")
+    if not 0.0 <= args.vat_val_fraction < 1.0:
+        raise ValueError("--vat_val_fraction must be in [0, 1)")
     if args.dataset == "vat" and args.gazefollow_val_fraction:
         raise ValueError("--gazefollow_val_fraction is only valid for GazeFollow")
+    if args.dataset == "gazefollow" and args.vat_val_fraction:
+        raise ValueError("--vat_val_fraction is only valid for VAT")
+    if args.reinitialize_router_on_init and not args.init_ckpt:
+        raise ValueError("--reinitialize_router_on_init requires --init_ckpt")
+    if args.allow_init_without_split_provenance and not args.init_ckpt:
+        raise ValueError(
+            "--allow_init_without_split_provenance requires --init_ckpt"
+        )
 
 
 def seed_everything(seed: int) -> None:
@@ -272,7 +315,17 @@ def checkpoint_model_state(model: nn.Module) -> Dict[str, torch.Tensor]:
     }
 
 
-def load_model_state(model: nn.Module, payload, *, initialization: bool) -> None:
+def load_model_state(
+    model: nn.Module,
+    payload,
+    *,
+    initialization: bool,
+    excluded_prefixes: Iterable[str] = (),
+) -> None:
+    excluded_prefixes = tuple(excluded_prefixes)
+    if excluded_prefixes and not initialization:
+        raise ValueError("checkpoint key exclusions are only allowed for initialization")
+
     if _is_tensor_state_dict(payload):
         state = payload
     elif isinstance(payload, dict) and isinstance(payload.get("model_state"), dict):
@@ -282,6 +335,16 @@ def load_model_state(model: nn.Module, payload, *, initialization: bool) -> None
             "checkpoint is neither a legacy state_dict nor a coverage-router checkpoint"
         )
 
+    excluded_keys = {
+        key for key in state if excluded_prefixes and key.startswith(excluded_prefixes)
+    }
+    if excluded_keys:
+        state = {key: value for key, value in state.items() if key not in excluded_keys}
+        print(
+            "Initialization keeps current parameters for "
+            f"{len(excluded_keys)} checkpoint tensors matching {excluded_prefixes}"
+        )
+
     incompatible = model.load_state_dict(state, strict=False)
     trainable_names = {
         name for name, parameter in model.named_parameters() if parameter.requires_grad
@@ -289,7 +352,8 @@ def load_model_state(model: nn.Module, payload, *, initialization: bool) -> None
     missing_required = [
         key
         for key in incompatible.missing_keys
-        if not key.startswith("backbone.") or key in trainable_names
+        if key not in excluded_keys
+        and (not key.startswith("backbone.") or key in trainable_names)
     ]
     if not initialization and missing_required:
         raise RuntimeError(
@@ -358,6 +422,8 @@ def _resume_model_overrides(args: argparse.Namespace, checkpoint: dict) -> None:
         "router_warmup_epochs",
         "gazefollow_val_fraction",
         "gazefollow_split_seed",
+        "vat_val_fraction",
+        "vat_split_seed",
         "eval_batch_size",
         "frame_sample_every",
         "eval_frame_sample_every",
@@ -404,6 +470,32 @@ def _gazefollow_group_key(record: dict, index: int) -> str:
     if normalized in ("", "."):
         raise ValueError(f"GazeFollow record {index} has an invalid image path")
     return normalized
+
+
+def _vat_source_video_key(sequence: dict, index: int) -> str:
+    raw_path = sequence.get("path")
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        raise ValueError(
+            f"VAT sequence {index} has no non-empty string 'path' group key"
+        )
+    normalized_clip = posixpath.normpath(raw_path.strip().replace("\\", "/"))
+    normalized_source_video = posixpath.dirname(normalized_clip)
+    if normalized_clip in ("", ".") or normalized_source_video in ("", "."):
+        raise ValueError(f"VAT sequence {index} has an invalid path")
+    return normalized_source_video
+
+
+def _flatten_vat_sequences(sequences, indices, *, sample_rate: int) -> list[dict]:
+    frames = []
+    for sequence_index in indices:
+        sequence = sequences[int(sequence_index)]
+        sequence_frames = sequence.get("frames")
+        if not isinstance(sequence_frames, list):
+            raise ValueError(
+                f"VAT sequence {sequence_index} has no list-valued 'frames'"
+            )
+        frames.extend(sequence_frames[::sample_rate])
+    return frames
 
 
 def make_dataloaders(args: argparse.Namespace, transform):
@@ -483,40 +575,103 @@ def make_dataloaders(args: argparse.Namespace, transform):
             }
     else:
         eval_rate = args.eval_frame_sample_every or args.frame_sample_every
-        train_dataset = GazeDataset(
-            "videoattentiontarget",
-            args.data_path,
-            "train",
-            transform,
-            in_frame_only=False,
-            sample_rate=args.frame_sample_every,
-        )
-        eval_dataset = GazeDataset(
-            "videoattentiontarget",
-            args.data_path,
-            "test",
-            transform,
-            in_frame_only=False,
-            sample_rate=eval_rate,
-        )
+        if args.vat_val_fraction:
+            source_path = Path(args.data_path) / "train_preprocessed.json"
+            sequences = json.loads(source_path.read_text(encoding="utf-8"))
+            if not isinstance(sequences, list):
+                raise ValueError("VAT train_preprocessed.json must contain a list")
+            source_video_keys = [
+                _vat_source_video_key(sequence, index)
+                for index, sequence in enumerate(sequences)
+            ]
+            split = grouped_holdout_split(
+                source_video_keys,
+                validation_fraction=args.vat_val_fraction,
+                seed=args.vat_split_seed,
+            )
+            train_frames = _flatten_vat_sequences(
+                sequences,
+                split.train_indices,
+                sample_rate=args.frame_sample_every,
+            )
+            validation_frames = _flatten_vat_sequences(
+                sequences,
+                split.validation_indices,
+                sample_rate=eval_rate,
+            )
+            train_dataset = GazeDataset(
+                "videoattentiontarget",
+                args.data_path,
+                "train",
+                transform,
+                in_frame_only=False,
+                sample_rate=args.frame_sample_every,
+                augment=True,
+                return_heatmap=True,
+                records=train_frames,
+            )
+            eval_dataset = GazeDataset(
+                "videoattentiontarget",
+                args.data_path,
+                "train",
+                transform,
+                in_frame_only=False,
+                sample_rate=eval_rate,
+                augment=False,
+                return_heatmap=False,
+                records=validation_frames,
+            )
+            data_split = {
+                **split.metadata(),
+                "evaluation_split": "vat_train_source_video_holdout",
+                "selection_is_formal": True,
+                "group_key": "normalized_source_video_path",
+                "source_annotation_file": str(source_path.resolve()),
+                "source_annotation_sha256": _sha256_file(source_path),
+                "train_sequence_count": len(split.train_indices),
+                "validation_sequence_count": len(split.validation_indices),
+                "train_frame_count": len(train_frames),
+                "validation_frame_count": len(validation_frames),
+                "train_head_sample_count": len(train_dataset),
+                "validation_head_sample_count": len(eval_dataset),
+                "train_frame_sample_every": args.frame_sample_every,
+                "eval_frame_sample_every": eval_rate,
+            }
+        else:
+            train_dataset = GazeDataset(
+                "videoattentiontarget",
+                args.data_path,
+                "train",
+                transform,
+                in_frame_only=False,
+                sample_rate=args.frame_sample_every,
+            )
+            eval_dataset = GazeDataset(
+                "videoattentiontarget",
+                args.data_path,
+                "test",
+                transform,
+                in_frame_only=False,
+                sample_rate=eval_rate,
+            )
+            train_source = Path(args.data_path) / "train_preprocessed.json"
+            eval_source = Path(args.data_path) / "test_preprocessed.json"
+            data_split = {
+                "strategy": "vat_official_train_test",
+                "evaluation_split": "vat_official_test",
+                "selection_is_formal": False,
+                "warning": (
+                    "VAT test is evaluated every epoch; use a grouped validation "
+                    "protocol before treating checkpoint selection as formal."
+                ),
+                "train_annotation_file": str(train_source.resolve()),
+                "train_annotation_sha256": _sha256_file(train_source),
+                "eval_annotation_file": str(eval_source.resolve()),
+                "eval_annotation_sha256": _sha256_file(eval_source),
+                "train_frame_sample_every": args.frame_sample_every,
+                "eval_frame_sample_every": eval_rate,
+            }
         eval_collate_fn = collate_fn
-        data_split = {
-            "strategy": "vat_official_train_test",
-            "evaluation_split": "vat_official_test",
-            "selection_is_formal": False,
-            "warning": (
-                "VAT test is evaluated every epoch; use a grouped validation "
-                "protocol before treating checkpoint selection as formal."
-            ),
-            "train_annotation_file": str(
-                (Path(args.data_path) / "train_preprocessed.json").resolve()
-            ),
-            "eval_annotation_file": str(
-                (Path(args.data_path) / "test_preprocessed.json").resolve()
-            ),
-            "train_frame_sample_every": args.frame_sample_every,
-            "eval_frame_sample_every": eval_rate,
-        }
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.batch_size,
@@ -915,6 +1070,9 @@ def _split_identity(data_split: dict) -> dict:
         "assignment_fingerprint",
         "validation_fraction",
         "seed",
+        "group_key",
+        "train_frame_sample_every",
+        "eval_frame_sample_every",
     )
     return {key: data_split.get(key) for key in keys}
 
@@ -924,6 +1082,7 @@ def validate_checkpoint_split_provenance(
     data_split: dict,
     *,
     checkpoint_role: str,
+    allow_missing_provenance: bool = False,
 ) -> None:
     """Fail fast when a formal holdout run would cross split provenance."""
 
@@ -931,10 +1090,17 @@ def validate_checkpoint_split_provenance(
         return
     checkpoint_split = checkpoint.get("data_split")
     if not isinstance(checkpoint_split, dict):
+        if allow_missing_provenance:
+            print(
+                f"WARNING: {checkpoint_role} has no data_split provenance; "
+                "using it only as an explicitly allowed pretrained initialization"
+            )
+            return
         raise ValueError(
-            f"{checkpoint_role} has no data_split provenance. A formal "
-            "GazeFollow holdout run must start from scratch or from a "
-            "checkpoint produced with the exact same holdout."
+            f"{checkpoint_role} has no data_split provenance. A formal holdout "
+            "run must start from scratch, from an explicitly allowed legacy "
+            "pretrained initialization, or from a checkpoint produced with "
+            "the exact same holdout."
         )
     expected = _split_identity(data_split)
     observed = _split_identity(checkpoint_split)
@@ -947,8 +1113,7 @@ def validate_checkpoint_split_provenance(
 
 def selection_spec(args: argparse.Namespace) -> tuple[str, str, tuple[tuple[str, str], ...]]:
     if (
-        args.dataset == "gazefollow"
-        and args.router_stage == "support_pilot"
+        args.router_stage == "support_pilot"
         and args.heatmap_loss_weight == 0.0
     ):
         return (
@@ -1093,7 +1258,15 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
 
     if init_payload is not None:
         print(f"Initializing model weights from {args.init_ckpt}")
-        load_model_state(model, init_payload, initialization=True)
+        excluded_prefixes = (
+            ("router.",) if args.reinitialize_router_on_init else ()
+        )
+        load_model_state(
+            model,
+            init_payload,
+            initialization=True,
+            excluded_prefixes=excluded_prefixes,
+        )
     elif resume_payload is not None:
         load_model_state(model, resume_payload, initialization=False)
 
@@ -1121,6 +1294,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             init_payload,
             data_split,
             checkpoint_role="initialization checkpoint",
+            allow_missing_provenance=args.allow_init_without_split_provenance,
         )
     optimizer, parameter_counts = make_optimizer(model, args)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -1156,6 +1330,14 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "data_split": data_split,
         "model_config": model.get_model_config(),
         "train_config": vars(args),
+        "initialization_checkpoint": (
+            {
+                "path": str(Path(args.init_ckpt).resolve()),
+                "sha256": _sha256_file(Path(args.init_ckpt)),
+            }
+            if args.init_ckpt
+            else None
+        ),
         "trainable_parameters": parameter_counts,
         "git_commit": git_commit(),
         "note": (

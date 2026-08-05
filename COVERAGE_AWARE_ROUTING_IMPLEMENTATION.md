@@ -2416,6 +2416,194 @@ tail -f logs/coverage_router/gf_splitclean_k50_formal_efficiency_sweep.log
   和 routed 固定成本尚未收回，继续做公共路径优化；
 - 显存目前只按持平报告，不设置 saving 目标。
 
+#### 5.10m 实际结果：批量效率 gate 通过，B1 延迟持平
+
+六组正式结果均已完成，JSON/Markdown 一一对应。测试协议一致：RTX 3090、
+AMP FP16、512×512、每图一人、`50` 次 warmup、`200×5` 次 latency、
+`500×5` 次 throughput；每个 batch 都同时跑了正序
+`dense→support→K100→K50` 和完全反序，避免把“后运行的模型更快”误当成
+模型收益。
+
+下表使用正序/反序运行内比例的几何平均。通俗地说，它把两种运行顺序各占一半，
+是当前最稳妥的正式数字：
+
+| batch | K50 相对 dense 的 batch latency | 端到端 speedup | 吞吐变化 | p95 latency | 峰值显存变化 | 结论 |
+|---:|---:|---:|---:|---:|---:|---|
+| 1 | `-0.15%` | `1.002×` | `+0.25%` | `-0.22%` | `+1.05%` | 持平，不声称加速 |
+| 4 | **`-5.72%`** | **`1.061×`** | **`+5.49%`** | `-2.34%` | `+1.75%` | Pass |
+| 8 | **`-12.93%`** | **`1.149×`** | **`+14.56%`** | `-11.77%` | `+2.79%` | Strong Pass |
+
+其中负的 latency 表示用时降低，正的显存变化表示反而多占显存。B1 正序中
+K50 比 dense 慢 `1.93%`，反序中快 `2.19%`，方向会随运行顺序翻转，平衡后
+只差 `0.15%`，所以本质是持平。B4 两种顺序都快 `5.02%–6.42%`，B8
+两种顺序都快 `11.21%–14.62%`，因此 B4/B8 的收益不是测试顺序造成的。
+
+K100 使用相同 Router 和 routed 代码路径，但后六层仍保留全部 patch；它用于
+隔离“真正删除 token”带来的净收益：
+
+| batch | K50 相对 K100 的 latency | speedup | 吞吐变化 | 峰值显存变化 |
+|---:|---:|---:|---:|---:|
+| 1 | `+0.21%`（略慢） | `0.998×` | `+0.40%` | `-0.13%` |
+| 4 | **`-15.85%`** | **`1.188×`** | **`+18.39%`** | `-0.30%` |
+| 8 | **`-19.24%`** | **`1.238×`** | **`+23.58%`** | `+0.05%` |
+
+这个对照说明：Router 和稀疏数据整理本身要付固定成本；batch 1 时，后六层少算
+一半 patch 节省的时间刚好被固定成本吃掉。batch 变大后，Transformer 计算
+占比上升，少算的部分才真正转化为端到端加速。`support` 相对 dense 在
+B1/B4/B8 分别慢约 `12.9% / 16.1% / 8.5%`，也直接证明“只加 Router、
+不裁剪 token”不会凭空加速。
+
+因此效率贡献现在可以严谨地写为：K50 将 blocks 6–11 的 patch token 从
+`1024` 减到 `512`；单请求 B1 延迟持平，在 B4/B8 批量推理中相对原始
+dense 获得 `1.061× / 1.149×` 端到端加速和 `5.49% / 14.56%` 吞吐提升。
+不能写成“所有场景都更快”“端到端计算减半”“单张实时加速”或“节省显存”。
+
+结果中有两个局部波动：B1 forward K100 前后 repeat 有状态跳变，B8 forward
+K50 第一轮偏快；但 B4/B8 的 K50 与 dense/K100 repeat 区间不重叠，去掉这些
+点也不会改变 gate 结论。
+
+正式运行版本已经归档：六份 JSON 记录的 runtime commit
+`b0c15d2b654d2336df874e61083a1cad8c1cb3cb` 是 `53978e0` 的直接后继，服务器
+worktree 运行后保持干净。逐文件比较确认它只在 `.gitignore` 中新增
+`AutoGPTQ/`，`scripts/`、`gazelle/` 和 `tests/` 与 `53978e0` 完全相同，
+因此 benchmark/model/routing 源码等价，无需重跑效率矩阵。该 commit 已推送到
+`origin/codex/coverage-aware-router`，并由 tag
+`formal-efficiency-20260805-b0c15d2` 固定保存。
+
+#### 5.10n 当前下一步：冻结结构，转入精度稳健性
+
+效率结构现在冻结，不再继续搜索 K、route block 或 kernel。三张空闲卡分工固定
+如下：
+
+| GPU | 实验 | 作用 |
+|---:|---|---|
+| 1 | GazeFollow seed 3107 | 第一个额外重复 |
+| 2 | GazeFollow seed 3108 | 第二个额外重复 |
+| 3 | VAT seed 3106 formal holdout pipeline | 检查方法能否跨到视频/out-of-frame 数据 |
+
+已有 seed 3106 加上 3107/3108，最终得到三次 GazeFollow 重复。它们固定使用
+同一个 dense seed-3106 base checkpoint，并重新初始化各自 Router，然后重复
+support、K50 和 matched dense adaptation。因此严谨名称是“固定 dense 起点后的
+routing-stage 三 seed 稳健性”，不是把 dense 15 epochs 也从头重复的完整
+end-to-end 三 seed。`--gf_split_seed` 始终为 `3106`，只改变训练 `--seed`。
+
+代码新增 `--reinitialize_router_on_init`：support 阶段只加载 dense checkpoint
+中的 decoder 等权重，明确跳过 `router.*`，保留由 3107/3108 随机种子生成的
+Router。K50 阶段必须从同 seed 的 support checkpoint 加载，不能再加该开关；
+否则会把刚学好的 Router 丢掉。每个 seed 自动顺序运行：
+
+```text
+support K25（3 epochs）
+  -> learned Router K50（5 epochs）
+  -> matched dense continuation（5 epochs）
+```
+
+VAT 不沿用“每轮看 official test”的旧协议。训练集包含 475 个 clip，来自
+40 个原始视频；按 clip 上一级的 source-video path 做固定 `90%/10%`
+holdout，同一原始视频的相邻 clips 和帧都不会跨到训练和 validation 两边；
+训练/validation 每 6 帧采样一次。先用相同 GazeFollow
+pretrain 训练一个新的 VAT dense base，再运行 support、K50 和 matched dense。
+pretrain 固定为现有标准 VAT baseline 使用的 2026-02-10 GazeFollow checkpoint，
+runner 校验其 SHA256 `26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef`，
+避免误传另一个同名 epoch-14 文件。
+本轮 runner 到 validation gate 为止，不读取 official test。若 VAT holdout 也
+支持 K50，才冻结各阶段 epoch/recipe，用 100% VAT train 做 full-train refit，
+最后对固定 K50/dense 各运行一次 frame-rate-1 official test。这样最终数字才能
+与使用完整 VAT train 的文献结果公平比较。
+
+VAT 顺序为：
+
+```text
+formal VAT dense（8 epochs）
+  -> support K25（3 epochs）
+  -> learned Router K50（5 epochs）
+  -> matched dense continuation（5 epochs）
+```
+
+代码提交并同步服务器后，先用任意一张空闲卡执行协议测试：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+CUDA_VISIBLE_DEVICES=1 \
+/home/fb/anaconda3/envs/py310/bin/python -m pytest -q \
+  tests/test_coverage_router_training_protocol.py \
+  tests/test_data_splits.py \
+  tests/test_gazefollow_dataset_views.py
+```
+
+测试通过后创建日志目录：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p logs/coverage_router
+```
+
+GPU 1 启动 seed 3107：
+
+```bash
+CUDA_VISIBLE_DEVICES=1 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup bash scripts/run_coverage_router_multiseed_pipeline.sh \
+  3107 \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  > logs/coverage_router/gf_splitclean_multiseed_pipeline_seed3107_gpu1.log 2>&1 < /dev/null &
+```
+
+GPU 2 同时启动 seed 3108：
+
+```bash
+CUDA_VISIBLE_DEVICES=2 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup bash scripts/run_coverage_router_multiseed_pipeline.sh \
+  3108 \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  > logs/coverage_router/gf_splitclean_multiseed_pipeline_seed3108_gpu2.log 2>&1 < /dev/null &
+```
+
+GPU 3 同时启动 VAT formal pipeline：
+
+```bash
+CUDA_VISIBLE_DEVICES=3 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup bash scripts/run_coverage_router_vat_pipeline.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt \
+  > logs/coverage_router/vat_splitclean_pipeline_seed3106_gpu3.log 2>&1 < /dev/null &
+```
+
+三个 runner 都要求工作区完全干净、目标目录尚不存在，并固定一张物理 GPU；任一
+阶段失败或 manifest/history/checkpoint 不符合预定协议，当前链会立即停止，不会
+带着错误 checkpoint 继续下一阶段。监控命令：
+
+```bash
+tail -f logs/coverage_router/gf_splitclean_multiseed_pipeline_seed3107_gpu1.log
+tail -f logs/coverage_router/gf_splitclean_multiseed_pipeline_seed3108_gpu2.log
+tail -f logs/coverage_router/vat_splitclean_pipeline_seed3106_gpu3.log
+```
+
+```bash
+pgrep -af 'run_coverage_router_(multiseed|vat)_pipeline|train_coverage_router.py'
+nvidia-smi
+```
+
+完成标志分别是：
+
+```text
+MULTISEED_PIPELINE complete seed=3107
+MULTISEED_PIPELINE complete seed=3108
+VAT_HOLDOUT_PIPELINE complete
+```
+
+GazeFollow 最终汇总 3106/3107/3108 的 learned K50、matched dense 和 seed 内
+配对差值，报告 AUC、Avg L2 的 `mean±std`，同时报告 support/K50 routing
+coverage。VAT 本轮先报告 source-video-disjoint validation 的 AUC/L2/In-out AP
+以及 K50 相对 matched dense 的差值；它通过后才进行 full-train refit 和一次
+official test。VAT 当前是单 seed 的方法跨数据集适用性证据：模型会在 VAT
+上重新训练，不属于 GazeFollow 模型的 zero-shot 泛化，也不冒充 multi-seed。效率无需
+随 seed 或 VAT 重跑，因为部署图结构和 token 数不变。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
@@ -2442,8 +2630,8 @@ pgrep -af train_coverage_router.py
 - `summary.json`：最佳结果摘要。
 
 5.10b–5.10i 已完成：Router 因果贡献已建立，且 K50 在相同额外训练预算下
-为整体 L2 持平、AUC 损失约 `0.0012`。5.10j 已证明当前实现没有形成真实
-端到端加速或显存节省；5.10k 进一步确认 K50 suffix 只快约几个百分点，B1
-端到端交叉平衡后基本持平；5.10l 则证明 B8 相对 K100 有约 `1.263×` speedup
-和 `26.47%` throughput gain。当前进入 5.10m 正式 B1/B4/B8 dense 对照矩阵；
-暂不运行 suffix 微调、official test、VAT、K25 sparse 长训练或多 seed。
+为整体 L2 持平、AUC 损失约 `0.0012`。5.10m 的正式 dense 对照进一步确认：
+B1 延迟持平，B4/B8 分别达到 `1.061×/1.149×` 端到端加速，但不节省显存。
+formal benchmark runtime commit 已归档，K50 结构冻结。当前并行运行
+GazeFollow 3107/3108 downstream seeds 与 VAT formal transferability；暂不运行
+suffix 微调、K25 sparse 长训练或新的效率搜索。

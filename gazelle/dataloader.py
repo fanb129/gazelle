@@ -59,9 +59,16 @@ class GazeDataset(torch.utils.data.dataset.Dataset):
                 )
             )
         elif dataset_name == "videoattentiontarget":
-            if records is not None:
-                raise ValueError("records is only supported for GazeFollow")
-            self.data = load_data_vat(os.path.join(self.path, "{}_preprocessed.json".format(split)), sample_rate=sample_rate)
+            self.data = (
+                records
+                if records is not None
+                else load_data_vat(
+                    os.path.join(
+                        self.path, "{}_preprocessed.json".format(split)
+                    ),
+                    sample_rate=sample_rate,
+                )
+            )
         else:
             raise ValueError("Invalid dataset: {}".format(dataset_name))
 
