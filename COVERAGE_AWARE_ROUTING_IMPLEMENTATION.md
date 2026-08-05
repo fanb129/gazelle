@@ -103,6 +103,7 @@ image
 | `scripts/eval_coverage_router.py` | 从 checkpoint 的 `model_config` 自动重建并完整评测 |
 | `scripts/benchmark_coverage_router.py` | 同 checkpoint 比较 dense/K100/K50/K25 的同步 latency、throughput 与 CUDA 峰值显存 |
 | `scripts/profile_coverage_router_stages.py` | 保持正式 forward 不变，以独立 CUDA Event 路径分解 prefix、Router、suffix、scatter 与 decoder 时间 |
+| `scripts/run_coverage_router_efficiency_sweep.sh` | 在干净 Git 版本上顺序运行 B1/B4/B8 的 dense/support/K100/K50 正反序正式效率矩阵 |
 | `scripts/smoke_coverage_router.py` | 检查 keep=100% 时稀疏路径与标准 dense DINO 输出等价，并检查 25% 路径形状 |
 | `tests/test_coverage_router.py` | support/union/预算/coverage loss 测试 |
 | `tests/test_routed_backbone_utils.py` | token gather、RoPE gather、scatter 测试 |
@@ -2341,6 +2342,80 @@ nohup /home/fb/anaconda3/envs/py310/bin/python -u \
 延迟和吞吐都优于 K100，且差值明显大于各自三次 repeat 波动；单次翻向或只
 快约 1% 仍按失败处理。
 
+#### 5.10l 实际结果：B8 runtime gate 明确通过
+
+两种顺序协议一致，均为 RTX 3090、AMP FP16、batch 8、每图一人、512×512、
+三次 repeat。K50 与 K100 的结果完全分离：
+
+| B8 matched comparison | K100→K50 正序 | K50→K100 反序 |
+|---|---:|---:|
+| batch latency 降低 | **19.99%** | **21.65%** |
+| speedup | **1.250×** | **1.276×** |
+| FPS 提升 | **25.17%** | **27.79%** |
+| K50 peak memory 变化 | +1.79 MiB | +0.20 MiB |
+
+AB/BA 运行内比例做几何平衡后：
+
+- batch latency 降低 `20.83%`，即 `1.263×` speedup；
+- throughput 提高 `26.47%`；
+- K50 峰值显存约多 `0.095%`（约 `0.99 MiB`），应视为持平而不是节省。
+
+三次 repeat 的 latency/FPS 波动均不超过约 `1.3%`；最慢 K50 仍远快于最快
+K100，所以结论不依赖异常点或运行顺序。B8 runtime gate 为 Strong Pass。
+
+通俗口径是：单张图片推理时 GPU 吃不满，少算 token 没有明显缩短时间；一次
+处理八张图片时计算成为主要开销，后六层少算一半 token 就转化成了约 26%
+吞吐提升。论文可以形成“batched high-throughput efficiency”方向，但不能把
+B8 每图摊销时间冒充 B1 在线延迟，也不能声称显存下降。
+
+当前还不能写“比原始 GazeLLE 更快”，因为 5.10l 只比较了 matched K100 和
+K50，没有真正的 dense。也不能把全部收益归因于 opt1，因为没有 pre-opt1 B8
+对照；严谨表述是“当前 opt1 实现下，K50 相对 K100 稳定加速”。
+
+#### 5.10m 当前下一步：正式 B1/B4/B8 效率矩阵
+
+现在先不做新 kernel 或结构升级，也不训练。补齐四条路径：
+
+- `dense`：原始 GazeLLE，最终论文主基线；
+- `support`：完整 DINO 加 Router，显示 Router 固定成本；
+- `K100`：完整 routed 实现但不删 token；
+- `K50`：最终方法。
+
+对 batch `1/4/8` 分别运行正序和反序，统一使用 `50` warmup、`200`
+latency iterations、`500` throughput iterations、`5` repeats。已新增
+`scripts/run_coverage_router_efficiency_sweep.sh` 顺序执行六组测试，避免人工
+漏参数或两个进程同时占 GPU；benchmark JSON 也新增 `runtime_git_commit`。
+
+这是正式结果，运行代码必须先提交，且服务器 tracked worktree 必须干净；脚本
+检测到未提交修改会直接停止。代码提交并同步服务器后，在空闲 GPU 0 上运行：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup bash scripts/run_coverage_router_efficiency_sweep.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency \
+  > logs/coverage_router/gf_splitclean_k50_formal_efficiency_sweep.log 2>&1 < /dev/null &
+```
+
+监控：
+
+```bash
+tail -f logs/coverage_router/gf_splitclean_k50_formal_efficiency_sweep.log
+```
+
+完成标志是日志末尾出现 `FORMAL_EFFICIENCY complete`，输出目录中应有
+`benchmark_formal_b{1,4,8}_{forward,reverse}.json/.md` 共 12 个文件。
+
+最终 gate：
+
+- 若 K50 在 B4/B8 正反序都快于 dense，可建立批量高吞吐效率贡献；
+- B1 即使与 dense 持平也可接受，但必须如实区分在线 latency 与 batched
+  throughput；
+- 若 K50 只快于 K100 而不快于 dense，说明 token pruning 有效，但 Router
+  和 routed 固定成本尚未收回，继续做公共路径优化；
+- 显存目前只按持平报告，不设置 saving 目标。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
@@ -2369,6 +2444,6 @@ pgrep -af train_coverage_router.py
 5.10b–5.10i 已完成：Router 因果贡献已建立，且 K50 在相同额外训练预算下
 为整体 L2 持平、AUC 损失约 `0.0012`。5.10j 已证明当前实现没有形成真实
 端到端加速或显存节省；5.10k 进一步确认 K50 suffix 只快约几个百分点，B1
-端到端交叉平衡后基本持平。当前完成 opt1 等价工程清理并进入 5.10l B8
-利用率探针；暂不运行 suffix 微调、official test、VAT、K25 sparse 长训练
-或多 seed。
+端到端交叉平衡后基本持平；5.10l 则证明 B8 相对 K100 有约 `1.263×` speedup
+和 `26.47%` throughput gain。当前进入 5.10m 正式 B1/B4/B8 dense 对照矩阵；
+暂不运行 suffix 微调、official test、VAT、K25 sparse 长训练或多 seed。

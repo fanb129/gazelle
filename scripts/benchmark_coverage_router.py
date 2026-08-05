@@ -25,6 +25,7 @@ try:  # Works as both ``python scripts/benchmark_...py`` and a module import.
     from train_coverage_router import (
         CHECKPOINT_FORMAT_VERSION,
         _torch_load,
+        git_commit,
         load_model_state,
     )
 except ModuleNotFoundError:
@@ -32,6 +33,7 @@ except ModuleNotFoundError:
     from scripts.train_coverage_router import (
         CHECKPOINT_FORMAT_VERSION,
         _torch_load,
+        git_commit,
         load_model_state,
     )
 
@@ -417,6 +419,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             "checkpoint": str(Path(args.checkpoint).resolve()),
             "checkpoint_epoch": checkpoint.get("epoch"),
             "checkpoint_git_commit": checkpoint.get("git_commit"),
+            "runtime_git_commit": git_commit(),
             "device": str(device),
             "device_name": torch.cuda.get_device_name(device),
             "torch_version": torch.__version__,
