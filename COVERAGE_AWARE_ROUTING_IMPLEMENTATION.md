@@ -2225,6 +2225,122 @@ tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3
 固定开销抵消了收益。只有正序和反序的主要差值同方向时才据此改代码；若方向
 翻转，先处理 GPU 时钟/温度或系统负载，不凭其中一次结果选择瓶颈。
 
+#### 5.10k 实际结果：suffix 略快，但 B1 端到端仍然持平
+
+正序和反序文件均通过脚本的 production/profiled 输出等价检查，JSON 与
+Markdown 一致。最重要的结果如下；数字均为 `K50 - K100`：
+
+| 项目 | K100→K50 正序 | K50→K100 反序 | 是否可复现 |
+|---|---:|---:|---|
+| 未插桩端到端 | -0.563 ms | +0.616 ms | 否，方向翻转 |
+| prefix blocks | -0.021 ms | +0.230 ms | 否；本应相同 |
+| Router | -0.032 ms | +0.137 ms | 否 |
+| suffix blocks | **-0.393 ms** | **-0.076 ms** | 是，K50 均略快 |
+| scatter + norm | +0.035 ms | +0.036 ms | 是，K50 均略慢 |
+| Decoder | -0.034 ms | +0.106 ms | 否；本应相同 |
+| 插桩未归因部分 | +0.271 ms | +0.339 ms | 是，但不能直接当正式模块耗时 |
+
+正序约 `21 ms`，反序整场却约 `26–27 ms`；而且两次都是第二个运行的
+variant 快约 `0.6 ms`。将 AB/BA 顺序效应交叉平衡后，K50/K100 端到端
+几何比约为 `0.9982`，即 K50 只快约 `0.18%`，应视为完全持平。
+
+可以确定的机制事实是：512-token suffix 确实比 1024-token suffix 快，但
+原始降幅只有 `0.86%–5.48%`；交叉平衡约为 `3.2%`。所以真实稀疏已经生效，
+但 batch 1 下短序列 kernel 的启动和低利用率吞掉了绝大部分理论计算收益。
+当前 accuracy 继续为 Go，efficiency 仍为 No-Go。
+
+#### 5.10k-opt1：删除两处确定的重复工作（无需训练）
+
+已完成两个保持数学结果不变的工程清理：
+
+1. prefix 已经保存 block-5 feature map；Router 现在直接复用它，不再重复
+   执行一次 `norm + reshape + contiguous`；非 out-index route block 保留原
+   计算作为兼容 fallback。
+2. dense 回填从 `clone() + scatter()` 改为 `clone() + scatter_()`；原实现的
+   非原地 `scatter()` 会在 clone 之后再生成一份 dense tensor。新增测试同时
+   对比输出值、base gradient 和 sparse gradient。
+
+这两项只是去掉浪费，不声称已经解决 suffix kernel 利用率问题，也不需要重训
+Router 或 Decoder。代码同步到服务器后先运行：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+/home/fb/anaconda3/envs/py310/bin/python -m pytest -q \
+  tests/test_routed_backbone_utils.py \
+  tests/test_profile_coverage_router_stages.py \
+  tests/test_routing_timing.py
+```
+
+再做一次结构 smoke：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/smoke_coverage_router.py \
+  --backbone dinov3_vitb16 \
+  --route_after_block 5 \
+  --keep_ratio 0.5 \
+  --batch_size 1 \
+  --device cuda \
+  --amp \
+  > logs/coverage_router/gf_splitclean_k50_opt1_smoke.log 2>&1 < /dev/null &
+```
+
+只有 pytest 和 smoke 都通过，才进入下一项效率 gate。
+
+#### 5.10l 当前下一步：B8 利用率探针（不训练）
+
+现在不立刻重跑大规模实验。只用 batch 8 检查一个问题：如果一次同时处理更多
+图片，GPU 更容易吃满，K50 相对 K100 的收益是否会明显增大？若 B8 仍然
+持平，就不再靠小修小补救当前结构；若 B8 在正反序均稳定更快，再补完整
+B1/B4/B8 与 dense 的正式效率表。
+
+空闲 GPU 上先运行正序：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  --variants k100 k50 \
+  --device cuda \
+  --batch_size 8 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 30 \
+  --latency_iters 50 \
+  --throughput_iters 100 \
+  --repeats 3 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/benchmark_opt1_b8_forward_k100_k50.json \
+  > logs/coverage_router/gf_splitclean_k50_benchmark_opt1_b8_forward.log 2>&1 < /dev/null &
+```
+
+正序完成且 GPU 再次空闲后，单独运行反序：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  --variants k50 k100 \
+  --device cuda \
+  --batch_size 8 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 30 \
+  --latency_iters 50 \
+  --throughput_iters 100 \
+  --repeats 3 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/benchmark_opt1_b8_reverse_k50_k100.json \
+  > logs/coverage_router/gf_splitclean_k50_benchmark_opt1_b8_reverse.log 2>&1 < /dev/null &
+```
+
+同步两个 JSON 和两个自动生成的 Markdown。B8 gate 要求正序、反序中的 K50
+延迟和吞吐都优于 K100，且差值明显大于各自三次 repeat 波动；单次翻向或只
+快约 1% 仍按失败处理。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
@@ -2252,5 +2368,7 @@ pgrep -af train_coverage_router.py
 
 5.10b–5.10i 已完成：Router 因果贡献已建立，且 K50 在相同额外训练预算下
 为整体 L2 持平、AUC 损失约 `0.0012`。5.10j 已证明当前实现没有形成真实
-端到端加速或显存节省。当前进入 5.10k 阶段 profile；暂不运行 suffix 微调、
-official test、VAT、K25 sparse 长训练或多 seed。
+端到端加速或显存节省；5.10k 进一步确认 K50 suffix 只快约几个百分点，B1
+端到端交叉平衡后基本持平。当前完成 opt1 等价工程清理并进入 5.10l B8
+利用率探针；暂不运行 suffix 微调、official test、VAT、K25 sparse 长训练
+或多 seed。

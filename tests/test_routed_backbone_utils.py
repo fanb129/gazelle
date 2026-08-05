@@ -54,3 +54,26 @@ def test_scatter_uses_early_exit_values_for_unselected_tokens():
     assert torch.equal(dense[1, 0], sparse[1, 0])
     assert torch.equal(dense[1, 5], sparse[1, 1])
     assert dense[0, [0, 2, 3, 5]].eq(0).all()
+
+
+def test_inplace_scatter_helper_matches_out_of_place_values_and_gradients():
+    torch.manual_seed(23)
+    indices = torch.tensor([[0, 3, 5], [1, 2, 4]])
+    base = torch.randn(2, 6, 4, requires_grad=True)
+    sparse = torch.randn(2, 3, 4, requires_grad=True)
+    reference_base = base.detach().clone().requires_grad_(True)
+    reference_sparse = sparse.detach().clone().requires_grad_(True)
+
+    actual = scatter_patch_tokens(base, sparse, indices)
+    reference = reference_base.clone().scatter(
+        1,
+        indices.unsqueeze(-1).expand_as(reference_sparse),
+        reference_sparse,
+    )
+    weights = torch.randn_like(actual)
+    (actual * weights).sum().backward()
+    (reference * weights).sum().backward()
+
+    assert torch.equal(actual, reference)
+    assert torch.equal(base.grad, reference_base.grad)
+    assert torch.equal(sparse.grad, reference_sparse.grad)

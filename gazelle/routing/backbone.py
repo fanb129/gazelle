@@ -67,7 +67,7 @@ def scatter_patch_tokens(
     if base_tokens.shape[0] != sparse_tokens.shape[0] or base_tokens.shape[2] != sparse_tokens.shape[2]:
         raise ValueError("base and sparse token batch/channel dimensions must match")
     output = base_tokens.clone()
-    return output.scatter(1, indices.unsqueeze(-1).expand_as(sparse_tokens), sparse_tokens)
+    return output.scatter_(1, indices.unsqueeze(-1).expand_as(sparse_tokens), sparse_tokens)
 
 
 class RoutedDinoV3Backbone(DinoV3Backbone):

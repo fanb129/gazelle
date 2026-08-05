@@ -83,11 +83,13 @@ class CoverageAwareGazeLLE(GazeLLE):
             routing = self.router(route_features, bboxes)
         else:
             prefix_state = self.backbone.forward_prefix(images, self.route_after_block)
-            route_features = self.backbone.tokens_to_map(
-                prefix_state.tokens,
-                prefix_state.height,
-                prefix_state.width,
-            )
+            route_features = prefix_state.dense_features.get(self.route_after_block)
+            if route_features is None:
+                route_features = self.backbone.tokens_to_map(
+                    prefix_state.tokens,
+                    prefix_state.height,
+                    prefix_state.width,
+                )
             routing = self.router(route_features, bboxes)
             raw_features = self.backbone.forward_suffix(prefix_state, routing.image_keep_indices)
 
@@ -114,11 +116,13 @@ class CoverageAwareGazeLLE(GazeLLE):
                 stage_recorder,
             )
             with record_stage(stage_recorder, "route_map"):
-                route_features = self.backbone.tokens_to_map(
-                    prefix_state.tokens,
-                    prefix_state.height,
-                    prefix_state.width,
-                )
+                route_features = prefix_state.dense_features.get(self.route_after_block)
+                if route_features is None:
+                    route_features = self.backbone.tokens_to_map(
+                        prefix_state.tokens,
+                        prefix_state.height,
+                        prefix_state.width,
+                    )
             with record_stage(stage_recorder, "router"):
                 routing = self.router(route_features, bboxes)
             raw_features = self.backbone.forward_suffix_profiled(
