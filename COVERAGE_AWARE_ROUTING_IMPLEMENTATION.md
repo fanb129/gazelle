@@ -102,9 +102,11 @@ image
 | `scripts/train_coverage_router.py` | GazeFollow/VAT 统一训练、AMP、梯度累积、分组学习率、初始化/断点恢复 |
 | `scripts/eval_coverage_router.py` | 从 checkpoint 的 `model_config` 自动重建并完整评测 |
 | `scripts/benchmark_coverage_router.py` | 同 checkpoint 比较 dense/K100/K50/K25 的同步 latency、throughput 与 CUDA 峰值显存 |
+| `scripts/profile_coverage_router_stages.py` | 保持正式 forward 不变，以独立 CUDA Event 路径分解 prefix、Router、suffix、scatter 与 decoder 时间 |
 | `scripts/smoke_coverage_router.py` | 检查 keep=100% 时稀疏路径与标准 dense DINO 输出等价，并检查 25% 路径形状 |
 | `tests/test_coverage_router.py` | support/union/预算/coverage loss 测试 |
 | `tests/test_routed_backbone_utils.py` | token gather、RoPE gather、scatter 测试 |
+| `tests/test_profile_coverage_router_stages.py` | 阶段聚合、repeat 统计与 K50/K100 差值口径测试 |
 
 ### 2.1 损失
 
@@ -1761,10 +1763,472 @@ router/backbone/inout 必须都为 0；`router_stage=backbone_sparse`、
 且相对 dense 没有有意义的端到端收益。先用 K50 回答“learned
 route 真正作用于 DINO suffix 后，gaze accuracy 能否恢复”这个主问题。
 
+#### 5.10g 实际结果：真实 K50 sparse accuracy Strong Go
+
+用通俗的话说：DINOv3 前半段仍然看整张图，Router 选出一半区域后，
+后六个 blocks 只看这一半。刚切换时 decoder 不习惯这种“一半是新特征、
+一半是早期特征”的输入，精度很差；经过分阶段适应后，几乎追回完整模型。
+
+协议完整通过：同一 formal split，FP32 train/eval batch `16/16`，训练
+K 确实为 `100% → 75% → 50% → 50% → 50%`，只训练 decoder
+`3416576` 个参数，Router 和 DINO 始终冻结。Router 的 coverage 五轮逐值
+相同，证明它没有偷偷更改选择区域。
+
+| epoch | 训练时保留比例 | AUC ↑ | Avg/Min L2 ↓ |
+|---:|---:|---:|---:|
+| 0 | 100% | 0.908518 | 0.244444 |
+| 1 | 75% | 0.962911 | 0.114695 |
+| 2 | 50% | 0.963152 | 0.116060 |
+| 3 | 50% | **0.963751** | 0.114303 |
+| **4 selected** | 50% | **0.963612** | **0.113830** |
+
+预先固定的选模规则是 Avg L2 最小，所以正式 checkpoint 是 epoch 4 的
+完整 tuple `0.9636116678 / 0.1138296177`。`summary.best_metrics.auc`
+中的 `0.9637505912` 来自 epoch 3，不能与 epoch 4 的 L2 拼成一行。
+
+与 dense B16 FP32 `0.9646908849 / 0.1147100560` 相比：
+
+- AUC 只减少 `0.0010792`，约为 dense 值的 `0.112%`；
+- Avg/Min L2 反而减少 `0.0008804`，即定位距离约改善 `0.77%`；
+- 以 epoch 0 首个 observed K50 evaluation 为起点，AUC gap 追回约
+  `98.08%`，L2 gap 追回超过 100%。epoch 0 已训练过一轮 K100，因此不称为
+  纯 zero-shot。
+
+K50 固定选择一半 patch，覆盖 `89.05%` 的 GT heatmap 质量和
+`95.13%` 的真实注视点。这说明 learned route 进入真实 DINO suffix 后，
+decoder 可以恢复到几乎 dense 的精度。
+
+但不能将 L2 的小幅改善直接写成“稀疏化让模型更准”：K50 模型在
+dense decoder 之后又多训练了五轮，完整 dense 模型还没得到相同额外
+训练预算。当前只能说 K50 基本保住了精度。
+
+多人图像比单人略难：
+
+| subset | K50 - dense AUC | K50 - dense Avg/Min L2 |
+|---|---:|---:|
+| single-head | -0.000995 | **-0.001080** |
+| multi-head | -0.001943 | +0.001158 |
+| two-head | -0.001987 | +0.002398 |
+| three-plus-head | -0.001862 | **-0.001152** |
+
+没有多人容量崩溃，但 multi-head AUC 损失约为 overall 的两倍；
+three-plus 只有 352 人，当前不对其 L2 改善做强结论。
+
+#### 5.10h untrained-router K50 因果对照（当前下一个长实验）
+
+5.10g 证明了“学过的 Router + K50”能成功，但还差一个最直接的问题：
+成功真的来自 gaze-aware Router，还是随便保留一半 token，decoder 最后都能
+学会？
+
+因此用 dense epoch 14 checkpoint 中从未训练过的 Router 重复与 5.10g
+完全相同的 K50 curriculum。support 训练期间 decoder 一直冻结，所以这两个
+checkpoint 的 decoder 起点相同；主要差别就是 Router 有没有学过注视目标。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.50 \
+  --router_hidden_dim 256 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --spatial_prior none \
+  --fusion raw_concat \
+  --router_warmup_epochs 3 \
+  --heatmap_loss_weight 1.0 \
+  --inout_loss_lambda 0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --weight_decay 0 \
+  --max_epochs 5 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --grad_accum_steps 2 \
+  --n_workers 8 \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_splitclean_sparse_untrainedrouter_decoder_k050_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_untrainedrouter_decoder_k050_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_sparse_untrainedrouter_decoder_k050_seed3106.log 2>&1 < /dev/null &
+```
+
+启动后 manifest 必须与 5.10g 一致：只有 decoder `3416576` 可训练，
+Router/DINO/inout 均为 0，K 课程、batch、LR、split 全部一样；唯一有意义的
+变量是 Router 权重没有 support 训练。比较两个预先规则选中的完整
+`AUC / Avg L2` tuple，不设任意的 10% 门槛。
+
+若 learned Router 在相同 K50 下明显更好，则建立“先学目标区域，再稀疏推理”
+的因果证据；若两者基本一样，则 K50 下的成功主要来自 decoder 适应，
+Router 的创新性证据会显著变弱，届时再决定是否用 K25 拉开差距。
+
+在该因果对照之后，再运行一次相同五轮额外训练的 dense continuation，
+公平判断 5.10g 的 L2 小幅优势是否只来自“多训五轮”。当前不优先解冻
+suffix：冻结 DINO 已经接近 dense，先完成更简单、更能支撑故事的对照。
+
+#### 5.10h 实际结果：Learned Router 有明确因果贡献
+
+用通俗的话说：两个模型都只让 DINO 后六层看一半区域，也都让
+decoder 以完全相同的方式学五轮。唯一关键区别是：一个 Router 学过“人可能在看哪里”，
+另一个没学过。最后学过的 Router 在所有 gaze 指标上都明显更好。
+
+协议核验通过：两个 run 使用相同 formal split、K 课程、FP32
+batch `16/16`、decoder LR、五个 epochs 和 Avg-L2 选模规则；均只训练
+decoder `3416576` 个参数。两者都正确选中 epoch 4。
+
+| selected epoch 4 | learned Router | untrained Router | learned - untrained |
+|---|---:|---:|---:|
+| AUC ↑ | **0.963612** | 0.958509 | **+0.005102** |
+| Avg/Min L2 ↓ | **0.113830** | 0.125419 | **-0.011589** |
+| hard heatmap coverage ↑ | **0.890519** | 0.534865 | **+0.355654** |
+| exact-point coverage ↑ | **0.951263** | 0.535582 | **+0.415681** |
+| actual keep ratio | 0.50 | 0.50 | `0` |
+
+两者都只保留 50% patch，但学过的 Router 多覆盖 `41.57` 个百分点的
+真实注视点，并让最终定位距离降低约 `0.01159`（相对 untrained 约
+`9.24%`）。它追回了 untrained Router 到 dense 之间约 `82.54%` 的 AUC gap，
+L2 gap 追回超过 100%。
+
+epoch 0 的 K100 训练 heatmap loss 只差 `4.6e-10`，进一步说明两个 decoder
+起点和训练流程实质相同。当 K 降到 75%/50% 后，learned Router 在
+epochs 1–4 的 AUC 和 L2 都持续优于 untrained Router，不是只有某一轮的巧合。
+
+分人数后也是同一方向：
+
+| subset | learned - untrained AUC | learned - untrained Avg/Min L2 |
+|---|---:|---:|
+| single-head | +0.005222 | **-0.011716** |
+| multi-head | +0.003882 | **-0.010287** |
+| two-head | +0.004431 | **-0.007403** |
+| three-plus-head | +0.002860 | **-0.015661** |
+
+因此当前可以成立比 5.10g 更强的结论：
+
+> 真实 K50 sparse 的成功不只是 decoder 对“任意一半 token”的适应；
+> 先用 gaze supervision 学习要保留的区域，对最终 gaze accuracy 有明确贡献。
+
+这已经是一个完整的单-seed formal 因果对照，不需要再用 K25 才“挽救”
+Router 故事。还没有 paired image bootstrap 或多 seed，因此论文最终仍需要
+置信区间与重复实验，但该对照的差距远大于数值误差。
+
+#### 5.10i matched dense continuation（当前下一个长实验）
+
+现在 Router 的作用已经证明。剩下一个精度公平性问题：5.10g 在 dense
+baseline 之后额外训练了 decoder 五轮，而当前 dense 对照没有得到这五轮。
+因此让完整 dense 模型也用同样 LR、batch 和五轮额外训练，就像让两名
+选手拥有相同备赛时间。它不是在重新证明 Router，只用于得到公平的最终
+accuracy gap。
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset gazefollow \
+  --model gazelle_dinov3_vitb16 \
+  --data_path /newhome/fb/dataset/gazefollow_extended \
+  --gf_val_fraction 0.10 \
+  --gf_split_seed 3106 \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_seed3106/best_val_selection.pt \
+  --router_stage support_pilot \
+  --route_after_block 5 \
+  --keep_ratio 1.0 \
+  --router_hidden_dim 256 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --spatial_prior none \
+  --fusion raw_concat \
+  --router_warmup_epochs 0 \
+  --heatmap_loss_weight 1.0 \
+  --inout_loss_lambda 0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --lr_inout 0 \
+  --weight_decay 0 \
+  --max_epochs 5 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --grad_accum_steps 2 \
+  --n_workers 8 \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name gf_splitclean_dense_decoder_continue_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_dense_decoder_continue_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/gf_splitclean_dense_decoder_continue_seed3106.log 2>&1 < /dev/null &
+```
+
+manifest 必须只有 decoder `3416576` 可训练，Router/DINO/inout 均为 0；
+`support_pilot + keep_ratio=1.0` 表示 DINO 后半段仍看全部 patch，不会
+实际裁剪。与 5.10g 都用 Avg L2 选中的单一 checkpoint 比较，不拼接
+不同 epoch 的指标。
+
+完成后就可以公平表述“K50 用一半 suffix patch 换取了多少 accuracy”。
+再下一步是对已固定的 epoch-4 K50 checkpoint 做空闲单卡速度测试，而不是
+解冻 suffix 或跑 K25。
+
+#### 5.10i 实际结果：同训练预算下 K50 accuracy 几乎无损
+
+用通俗的话说：现在 dense 和 K50 都在相同起点之后多学了五轮，
+比赛已经公平。完整模型让 DINO 后六层看全部 patch，K50 只让它们看
+一半；两者最终定位距离几乎一样，K50 只损失很小的 AUC。
+
+协议通过：dense continuation 使用同一 split/seed、FP32 batch `16/16`、
+decoder LR `1e-4`、五轮训练，也只训练 decoder `3416576` 个参数。
+dense 和 K50 都按 Avg L2 最小正确选中 epoch 4。
+
+| 相同额外训练预算 | AUC ↑ | Avg/Min L2 ↓ |
+|---|---:|---:|
+| matched dense | **0.964819** | 0.113860 |
+| learned Router K50 | 0.963612 | **0.113830** |
+| K50 - dense | -0.001208 | -0.000030 |
+
+K50 保留了 matched dense 约 `99.875%` 的 AUC；L2 只差 `3.0e-5`，应视为
+基本持平，而不是稀疏化带来的精度改善。与最初 15-epoch dense 比较时，
+dense 多训五轮本身将 L2 改善了 `0.000850`，几乎解释了 5.10g 原先看到的
+K50 L2 小幅优势。所以最终口径是“几乎无损”，不是“稀疏更准”。
+
+多人场景仍有小幅代价：
+
+| subset | K50 - matched dense AUC | K50 - matched dense Avg/Min L2 |
+|---|---:|---:|
+| single-head | -0.001158 | **-0.000248** |
+| multi-head | -0.001714 | +0.002205 |
+| two-head | -0.001906 | +0.001585 |
+| three-plus-head | -0.001357 | +0.003362 |
+
+overall 成功，但不声称每个人数分层都完全无损。结合 5.10h，当前
+accuracy 故事已闭环：untrained Router K50 明显落后，learned Router K50
+在相同训练预算下几乎追平 dense。
+
+#### 5.10j final K50 空闲单卡效率测试
+
+精度问题已经答完。现在最关键、也最通俗的问题是：
+
+> 虽然 DINO 后六层少算了一半 patch，真实 GPU 时间到底有没有变短？
+
+使用 5.10g epoch-4 `best_val_selection.pt`，在没有其他计算进程的单卡上
+比较四种路径：
+
+- `dense`：原始完整模型，真实主基线；
+- `support`：完整 DINO 再额外跑 Router，观察 Router 本身开销；
+- `k100`：走全套稀疏代码但不删 token，观察 gather/scatter 等固定开销；
+- `k50`：真正删掉一半 suffix token 的最终方法。
+
+运行前先确认 GPU 0 没有其他计算进程，利用率在稳定观察中接近 0：
+
+```bash
+nvidia-smi --id=0 \
+  --query-compute-apps=pid,process_name,used_memory \
+  --format=csv,noheader
+
+nvidia-smi --id=0 \
+  --query-gpu=index,utilization.gpu,memory.used,temperature.gpu,power.draw,clocks.sm,pstate \
+  --format=csv
+```
+
+空闲后运行：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/benchmark_coverage_router.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  --variants dense support k100 k50 \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --latency_iters 200 \
+  --throughput_iters 500 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/benchmark_b1_amp_final_clean.json \
+  > logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_benchmark_b1_amp_final_clean.log 2>&1 < /dev/null &
+```
+
+AMP 只用于这次部署速度测试，不会改变前面的 FP32 accuracy 协议。判断时先看
+五次 repeat 是否稳定，再看 K50 相对 dense 和 K100 是否都同方向变快，
+并且差距大于运行波动。
+
+若 K50 真正稳定变快，再固定 recipe、补两个 seed，最后只评一次
+official test。若 K50 仍不快，就不继续堆训练，而是先 profile 并优化
+Top-K、gather/scatter、dense 回填和 decoder 固定开销；这表示“选对 token”
+已成功，但“省下真实时间”还没成功。
+
+#### 5.10j 实际结果：K50 没有形成真实端到端加速
+
+最终文件：
+
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/benchmark_b1_amp_final_clean.json`
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/benchmark_b1_amp_final_clean.md`
+
+测试使用 5.10g 正式选中的 epoch-4 checkpoint，在 RTX 3090 上以
+batch size 1、单人、512×512、AMP 重复五轮。输入已提前放到 GPU，加载
+checkpoint 和图片传输时间不计入推理时间。
+
+| 路径 | suffix patch | 中位延迟（ms）↓ | 中位 FPS ↑ | 峰值显存（MiB）↓ |
+|---|---:|---:|---:|---:|
+| dense | 1024 | 21.472 | 46.150 | **589.0** |
+| support | 1024 | 24.619 | 41.284 | 594.1 |
+| K100 | 1024 | **20.705** | **47.840** | 597.7 |
+| K50 | 512 | 21.299 | 46.438 | 600.6 |
+
+最容易误读的是：K50 相对 dense 的五轮 repeat 确实都略快，但总体只快
+`0.173 ms`（`0.8%`）；这个量级相对 K50 五轮约 `0.499 ms` 的首尾范围
+太小，尚不足以支撑有实际意义、可跨运行复现的加速主张。更关键的 matched
+control 是 K100：它和 K50 走同一套
+Router、Top-K、gather/scatter、prefix/suffix 代码，只是不删除 patch。
+K50 反而比 K100 慢 `0.594 ms`（`2.87%`），FPS 低 `2.93%`。K50 的五个
+repeat 中位数也全部慢于 K100 的五个 repeat 中位数，不是单个异常值造成。
+
+显存也没有下降：K50 比 dense 多用约 `11.7 MiB`（`1.98%`），比 K100
+多用约 `3.0 MiB`（`0.50%`）。所以当前不能在论文中声称真实 speedup、
+throughput gain 或 memory saving，也不能用“少了 50% token”替代真实效率
+结果。
+
+这次失败的是**当前工程路径的端到端效率**，不是 Router 的选点能力：
+
+- 5.10e/5.10h 已证明 learned Router 的确比未训练 Router 更会选中目标；
+- 5.10g/5.10i 已证明后六层只看一半 patch 时，整体 L2 基本持平，AUC 只降
+  `0.001208`；
+- 5.10j 则证明这些计算削减尚未在 RTX 3090、batch 1 上变成可测的时间或
+  显存收益。
+
+还要区分“后半段少 50% patch”和“整网少 50% 时间”：前六个 DINO block
+仍然处理全部 patch，Router 和原 decoder 也都要运行。按 ViT block 的常见
+线性层与 attention 计算量粗略估算，K50 对十二个 DINO block 的理论削减约
+`27%`，对包含 Router 和 decoder 的整网只会更低；因此本来就不应期待
+`2×` 加速。但 5.10j 只得到约 `0.8%`，仍说明理论计算削减基本被当前实现的
+固定开销和实际 GPU kernel 效率抵消了。
+
+#### 5.10k 当前下一步：停止训练，先定位时间花在哪里
+
+现在不运行 K25 长训练、suffix 微调、多 seed、official test 或 VAT。先做
+阶段级 profile，把一次前向拆成下面几段分别计时：
+
+1. DINO dense prefix（block 0–5）；
+2. route feature 转换、Router、Top-K；
+3. K100/K50 suffix（block 6–11）；
+4. gather RoPE、scatter、norm 和两张 dense 深层特征图重建；
+5. 原始 dense decoder。
+
+优先检查三类原因：batch 1 下 517-token attention/MLP kernel 是否没有吃满
+GPU；Router 每次重建坐标网格与 bbox tensor 的固定开销；为了兼容原 decoder
+而两次恢复 32×32×768 dense 特征图的开销。阶段 profile 完成前不猜测具体
+瓶颈，也不开始新的训练。
+
+profile 后只允许选择一个最小优化方向并重新跑 5.10j：
+
+- 若 Router/Top-K 占时高，缓存固定网格并向量化 bbox/geometry；
+- 若 scatter/dense 重建占时高，延迟或取消高维 dense 回填；
+- 若 K50 suffix 本身不比 K100 快，检查 517-token kernel 路径，并补一个
+  batch-size sweep 判断这是单请求延迟问题还是所有吞吐场景都无收益；
+- 若固定开销优化后仍无稳定收益，再考虑更早 routing 或让 decoder 直接消费
+  sparse token。这两项属于结构升级，不能和当前 K50 混成同一个实验。
+
+最终 gate 不变：优化后的 K50 必须在相同设备、相同 AMP、相同 batch 下，
+稳定快于 dense 和 K100，且差距明显大于重复波动，才能继续多 seed 和
+official test；否则当前版本不能以“高效推理”为论文主贡献。
+
+阶段计时已经实现为 `scripts/profile_coverage_router_stages.py`。它保留两条
+相互分开的计时线：无插桩的端到端同步延迟用于复核；CUDA Event 插桩结果
+只用来定位阶段，不能替代 5.10j 的正式效率数字。正常训练与 benchmark 继续
+调用原来的 `forward`；诊断工具单独调用 `forward_profiled`，不会给正式路径
+增加计时上下文开销。脚本还会先逐项核对两条 forward 的输出是否一致。
+
+代码同步到服务器后，在空闲 GPU 0 上只比较 matched K100/K50。由于本次要
+判断的差值很小，必须做正序和反序两个独立进程，并要求主要阶段结论同方向。
+先运行正序：
+
+```bash
+mkdir -p logs/coverage_router
+
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/profile_coverage_router_stages.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  --variants k100 k50 \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --e2e_iters 100 \
+  --profile_iters 100 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.json \
+  > logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_stage_profile_forward_k100_k50_b1_amp.log 2>&1 < /dev/null &
+```
+
+确认正序进程已经结束、GPU 再次空闲后，再运行反序；不要让两个进程同时跑：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/profile_coverage_router_stages.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt \
+  --variants k50 k100 \
+  --device cuda \
+  --batch_size 1 \
+  --num_people 1 \
+  --image_size 512 \
+  --warmup_iters 50 \
+  --e2e_iters 100 \
+  --profile_iters 100 \
+  --repeats 5 \
+  --amp \
+  --output /home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.json \
+  > logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_stage_profile_reverse_k50_k100_b1_amp.log 2>&1 < /dev/null &
+```
+
+运行状态（按当前运行的顺序选择日志）：
+
+```bash
+tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_stage_profile_forward_k100_k50_b1_amp.log
+
+tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_stage_profile_reverse_k50_k100_b1_amp.log
+```
+
+完成后同步四个文件：
+
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.json`
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.md`
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.json`
+- `experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.md`
+
+结果判断只先看 `K50 minus K100` 表：正数表示 K50 更慢，负数表示 K50
+在该阶段省时。第一优先看 `suffix_blocks`；若它没有明显负值，问题首先在
+517-token 的后六层 kernel，而不在 Router loss。若它明显省时，再看是哪项
+固定开销抵消了收益。只有正序和反序的主要差值同方向时才据此改代码；若方向
+翻转，先处理 GPU 时钟/温度或系统负载，不凭其中一次结果选择瓶颈。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106.log
+tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_benchmark_b1_amp_final_clean.log
 ```
 
 ```bash
@@ -1786,6 +2250,7 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
-5.10b–5.10e 均已通过。5.10f 改为可选 artifact audit，不再阻塞。
-当前直接运行 5.10g split-clean K50 sparse decoder 主实验。暂不运行
+5.10b–5.10i 已完成：Router 因果贡献已建立，且 K50 在相同额外训练预算下
+为整体 L2 持平、AUC 损失约 `0.0012`。5.10j 已证明当前实现没有形成真实
+端到端加速或显存节省。当前进入 5.10k 阶段 profile；暂不运行 suffix 微调、
 official test、VAT、K25 sparse 长训练或多 seed。

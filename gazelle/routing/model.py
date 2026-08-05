@@ -3,6 +3,7 @@ from typing import Optional
 from gazelle.model import GazeLLE
 from gazelle.routing.backbone import RoutedDinoV3Backbone
 from gazelle.routing.router import CoverageAwareSpatialRouter
+from gazelle.routing.timing import record_stage
 
 
 ROUTER_STAGES = ("support_pilot", "backbone_sparse")
@@ -91,6 +92,43 @@ class CoverageAwareGazeLLE(GazeLLE):
             raw_features = self.backbone.forward_suffix(prefix_state, routing.image_keep_indices)
 
         predictions = self.forward_from_features(input, raw_features)
+        predictions["routing"] = routing
+        return predictions
+
+    def forward_profiled(self, input, stage_recorder):
+        """Run the same forward graph with diagnostic stage boundaries."""
+        images = input["images"]
+        bboxes = input["bboxes"]
+
+        if self.router_stage == "support_pilot":
+            with record_stage(stage_recorder, "dense_backbone"):
+                raw_features = self.backbone(images)
+            feature_index = self.backbone.out_indices.index(self.route_after_block)
+            route_features = raw_features[feature_index]
+            with record_stage(stage_recorder, "router"):
+                routing = self.router(route_features, bboxes)
+        else:
+            prefix_state = self.backbone.forward_prefix_profiled(
+                images,
+                self.route_after_block,
+                stage_recorder,
+            )
+            with record_stage(stage_recorder, "route_map"):
+                route_features = self.backbone.tokens_to_map(
+                    prefix_state.tokens,
+                    prefix_state.height,
+                    prefix_state.width,
+                )
+            with record_stage(stage_recorder, "router"):
+                routing = self.router(route_features, bboxes)
+            raw_features = self.backbone.forward_suffix_profiled(
+                prefix_state,
+                routing.image_keep_indices,
+                stage_recorder,
+            )
+
+        with record_stage(stage_recorder, "decoder"):
+            predictions = self.forward_from_features(input, raw_features)
         predictions["routing"] = routing
         return predictions
 

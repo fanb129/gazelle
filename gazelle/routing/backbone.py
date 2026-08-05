@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 import torch
 
 from gazelle.backbone import DinoV3Backbone
+from gazelle.routing.timing import record_stage
 
 
 Rope = Optional[Tuple[torch.Tensor, torch.Tensor]]
@@ -115,6 +116,35 @@ class RoutedDinoV3Backbone(DinoV3Backbone):
             route_after_block=route_after_block,
         )
 
+    def forward_prefix_profiled(
+        self,
+        images: torch.Tensor,
+        route_after_block: int,
+        stage_recorder,
+    ) -> PrefixState:
+        """Run the prefix with diagnostic CUDA-event stage boundaries."""
+        self._validate_route(route_after_block)
+        with record_stage(stage_recorder, "token_prepare_rope"):
+            tokens, (height, width) = self.model.prepare_tokens_with_masks(images)
+            rope = self.model.rope_embed(H=height, W=width) if self.model.rope_embed is not None else None
+        dense_features: Dict[int, torch.Tensor] = {}
+
+        for block_index in range(route_after_block + 1):
+            with record_stage(stage_recorder, f"prefix.block_{block_index}"):
+                tokens = self.model.blocks[block_index](tokens, rope)
+            if block_index in self.out_indices:
+                with record_stage(stage_recorder, f"prefix.map_{block_index}"):
+                    dense_features[block_index] = self.tokens_to_map(tokens, height, width)
+
+        return PrefixState(
+            tokens=tokens,
+            height=height,
+            width=width,
+            rope=rope,
+            dense_features=dense_features,
+            route_after_block=route_after_block,
+        )
+
     def forward_suffix(self, state: PrefixState, keep_indices: torch.Tensor):
         """Run selected patches through the suffix and return dense feature maps."""
         self._validate_route(state.route_after_block)
@@ -156,6 +186,64 @@ class RoutedDinoV3Backbone(DinoV3Backbone):
             dense_features[block_index] = self.model.norm(dense_patches).reshape(
                 batch_size, state.height, state.width, -1
             ).permute(0, 3, 1, 2).contiguous()
+
+        missing = [index for index in self.out_indices if index not in dense_features]
+        if missing:
+            raise RuntimeError(
+                "route_after_block must not skip requested intermediate layers; "
+                f"missing outputs at blocks {missing}"
+            )
+        return [dense_features[index] for index in self.out_indices]
+
+    def forward_suffix_profiled(
+        self,
+        state: PrefixState,
+        keep_indices: torch.Tensor,
+        stage_recorder,
+    ):
+        """Run the suffix with diagnostic CUDA-event stage boundaries."""
+        self._validate_route(state.route_after_block)
+        batch_size = state.tokens.shape[0]
+        if keep_indices.ndim != 2 or keep_indices.shape[0] != batch_size:
+            raise ValueError("keep_indices must have shape [B, K]")
+        if keep_indices.dtype != torch.long:
+            raise ValueError("keep_indices must use torch.long indices")
+        if keep_indices.shape[1] > state.height * state.width:
+            raise ValueError("keep_indices cannot contain more entries than the dense patch grid")
+        with record_stage(stage_recorder, "sparse_prepare"):
+            prefix = state.tokens[:, : self.prefix_token_count]
+            dense_route_patches = state.tokens[:, self.prefix_token_count :]
+            selected_patches = gather_patch_tokens(dense_route_patches, keep_indices)
+
+            # Fixed K keeps the suffix batched, so each block performs one SDPA
+            # call instead of a Python loop over samples.
+            sparse_tokens = torch.cat([prefix, selected_patches], dim=1)
+            if state.rope is None:
+                sparse_rope = None
+            else:
+                selected_rope = gather_rope(state.rope, keep_indices)
+                # q/k are [B, heads, K, D_head]; insert a singleton head
+                # dimension so per-image RoPE broadcasts over attention heads.
+                sin = selected_rope[0].unsqueeze(1) if selected_rope[0].ndim == 3 else selected_rope[0]
+                cos = selected_rope[1].unsqueeze(1) if selected_rope[1].ndim == 3 else selected_rope[1]
+                sparse_rope = (
+                    sin,
+                    cos,
+                )
+
+        dense_features = dict(state.dense_features)
+        for block_index in range(state.route_after_block + 1, len(self.model.blocks)):
+            with record_stage(stage_recorder, f"suffix.block_{block_index}"):
+                sparse_tokens = self.model.blocks[block_index](sparse_tokens, sparse_rope)
+            if block_index not in self.out_indices:
+                continue
+
+            with record_stage(stage_recorder, f"scatter_norm_{block_index}"):
+                sparse_patches = sparse_tokens[:, self.prefix_token_count :]
+                dense_patches = scatter_patch_tokens(dense_route_patches, sparse_patches, keep_indices)
+                dense_features[block_index] = self.model.norm(dense_patches).reshape(
+                    batch_size, state.height, state.width, -1
+                ).permute(0, 3, 1, 2).contiguous()
 
         missing = [index for index in self.out_indices if index not in dense_features]
         if missing:
