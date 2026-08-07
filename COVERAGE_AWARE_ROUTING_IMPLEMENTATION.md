@@ -2604,21 +2604,425 @@ official test。VAT 当前是单 seed 的方法跨数据集适用性证据：模
 上重新训练，不属于 GazeFollow 模型的 zero-shot 泛化，也不冒充 multi-seed。效率无需
 随 seed 或 VAT 重跑，因为部署图结构和 token 数不变。
 
+#### 5.10o VAT holdout 实际结果：Router 能找到目标，但 K50 尚未保持 dense 精度
+
+四个阶段均完整结束，epoch 数分别为 `8 / 3 / 5 / 5`。四阶段使用同一份
+source-video-disjoint 划分：40 个原始视频中 36 个用于训练、4 个用于验证，
+训练与验证没有源视频交叉。初始化 checkpoint、SHA256、可训练参数和
+`data_split.json` 均通过正式 validator；因此下面的差距不是断点接错、数据泄漏
+或训练提前退出造成的。
+
+必须使用各自 `best_val_selection.pt` 所在 epoch 的完整指标，不能从不同 epoch
+拼接 `summary.best_metrics`：
+
+| VAT holdout | selected epoch | AUC ↑ | L2 ↓ | In-out AP ↑ | GT point coverage ↑ | hard coverage ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| dense base | 0 | 0.948849 | 0.100565 | 0.920883 | 1.0000 | 1.0000 |
+| support K25 | 1 | 0.948849 | 0.100565 | 0.920883 | 0.864264 | 0.618282 |
+| learned K50 | 3 | 0.925232 | 0.108179 | 0.940644 | 0.963961 | 0.837562 |
+| matched dense | 0 | 0.946727 | 0.103769 | 0.938995 | 1.0000 | 1.0000 |
+
+learned K50 相对 matched dense 的 AUC 低 `0.021495`，L2 高 `0.004410`
+（越低越好），In-out AP 高 `0.001649`。AP 的差异很小，而且 validation 实际
+只有 4 个独立源视频，不能当作可靠提升。K50 的真实注视点保留率已经达到
+`96.40%`，但 gaze 定位仍然退化；通俗地说，Router 大多保住了“答案所在的
+patch”，却删掉了 VAT 中帮助判断人物—目标关系的周围场景。当前问题集中在
+heatmap 定位，不是 in/out 分类整体失效。
+
+结论分成两个 gate：
+
+- support/routing gate 通过：Router 确实学会了高召回目标区域；
+- K50 accuracy gate 未通过：不能写成 VAT 上与 dense 精度持平，也暂不进入
+  full-train refit 或 official test。
+
+下一步只运行一个 K75 诊断，复用现有 support best checkpoint，不重跑 dense、
+support 或 matched dense。训练 curriculum 自动为 `K100 -> K87.5 -> K75`，
+其余训练预算与 K50 完全一致：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p logs/coverage_router
+
+CUDA_VISIBLE_DEVICES=3 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  scripts/train_coverage_router.py \
+  --dataset vat \
+  --model gazelle_dinov3_vitb16_inout \
+  --data_path /newhome/fb/dataset/videoattentiontarget \
+  --vat_val_fraction 0.10 \
+  --vat_split_seed 3106 \
+  --frame_sample_every 6 \
+  --eval_frame_sample_every 6 \
+  --init_ckpt /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_splitclean_support_k025_seed3106/best_val_selection.pt \
+  --router_stage backbone_sparse \
+  --route_after_block 5 \
+  --keep_ratio 0.75 \
+  --router_hidden_dim 256 \
+  --router_temperature 1.0 \
+  --escape_tokens 8 \
+  --spatial_prior none \
+  --fusion raw_concat \
+  --router_warmup_epochs 3 \
+  --heatmap_loss_weight 1.0 \
+  --inout_loss_lambda 1.0 \
+  --router_coverage_weight 0 \
+  --router_budget_weight 0 \
+  --router_entropy_weight 0 \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_backbone 0 \
+  --lr_inout 1e-3 \
+  --weight_decay 0 \
+  --max_epochs 5 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --grad_accum_steps 2 \
+  --n_workers 8 \
+  --clip_grad_norm 1.0 \
+  --wandb_project GazeRoute \
+  --wandb_mode online \
+  --exp_name vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106 \
+  --run_dir /home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106 \
+  --seed 3106 \
+  > logs/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106.log 2>&1 < /dev/null &
+```
+
+监控：
+
+```bash
+tail -f logs/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106.log
+```
+
+训练结束后执行协议校验：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python \
+  scripts/validate_coverage_router_run.py \
+  --run_dir experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106 \
+  --dataset vat \
+  --seed 3106 \
+  --router_stage backbone_sparse \
+  --keep_ratio 0.75 \
+  --epochs 5 \
+  --batch_size 16 \
+  --eval_batch_size 16 \
+  --router_trainable 0 \
+  --decoder_trainable 3416576 \
+  --inout_trainable 33281 \
+  --evaluation_split vat_train_source_video_holdout \
+  --split_seed 3106 \
+  --assignment_fingerprint 42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793 \
+  --source_annotation_sha256 9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43 \
+  --train_sample_count 18607 \
+  --eval_sample_count 4034 \
+  --train_group_count 36 \
+  --validation_group_count 4 \
+  --init_checkpoint experiments/coverage_router/vat_splitclean_support_k025_seed3106/best_val_selection.pt \
+  --selection_metric l2 \
+  --selection_mode min \
+  --lr_router 0 \
+  --lr_decoder 1e-4 \
+  --lr_inout 1e-3 \
+  --router_warmup_epochs 3 \
+  --grad_accum_steps 2 \
+  --frame_sample_every 6 \
+  --eval_frame_sample_every 6 \
+  --reinitialize_router_on_init false
+```
+
+K75 不是为了事后挑一个好看的 K，而是一次诊断：判断 K50 的损失是否主要来自
+上下文删得太多。预先使用以下“是否值得继续”的工程 gate；这不是领域公认阈值，
+只是避免在明显失败的配置上消耗 full-train 和 official test 的决策规则：
+
+```text
+K75 - matched dense:
+  delta AUC >= -0.005
+  delta L2  <= +0.002
+  delta In-out AP >= -0.005
+```
+
+若 K75 通过，再补同一 K 下的 untrained-router control、K75 B8 效率和多个
+source-video holdout；这些都通过后才进行 100% VAT train refit 和一次 official
+test。若 K75 仍明显失败，则停止 VAT full-train，不继续盲目延长 epoch；当前
+结果作为“视频域需要保留更多关系上下文”的 limitation，并转向设计 context
+halo/global context token，而不是继续调训练时长。
+
+#### 5.10p VAT K75 实际结果：上下文损失得到验证，但 accuracy gate 仍失败
+
+K75 协议校验通过：它与 K50 使用相同 support checkpoint、相同 source-video
+holdout、相同训练模块和优化预算，仅把 keep ratio 从 `0.50` 改成 `0.75`。
+训练 curriculum 实际为 `1.0 -> 0.875 -> 0.75 -> 0.75 -> 0.75`，验证始终
+使用 K75。按 L2 选中的 epoch 3 完整指标如下：
+
+| VAT selected tuple | AUC ↑ | L2 ↓ | In-out AP ↑ | GT point coverage ↑ | hard coverage ↑ |
+|---|---:|---:|---:|---:|---:|
+| matched dense | 0.946727 | 0.103769 | 0.938995 | 1.000000 | 1.000000 |
+| K50 | 0.925232 | 0.108179 | 0.940644 | 0.963961 | 0.837562 |
+| K75 | 0.936652 | 0.107026 | 0.941260 | 0.990232 | 0.947077 |
+| K75 - matched dense | -0.010075 | +0.003258 | +0.002265 | -0.009768 | -0.052923 |
+
+K75 相对 K50 的 AUC 提高 `0.011421`，L2 改善 `0.001153`，分别收回约
+`53.1%` 和 `26.1%` 的 dense 差距。这证明“删掉太多上下文”确实是 VAT
+退化的重要原因。但是 K75 只通过 AP gate；AUC 要求不低于 dense `0.005`，
+实际低 `0.010075`，L2 要求最多高 `0.002`，实际高 `0.003258`，所以 overall
+gate 为 Fail。epoch 4 的 AUC 几乎不变，L2 和 AP 反而变差，也不支持继续增加
+相同训练 epoch。
+
+因此当前停止 VAT 的 K87.5、untrained-router、效率、多 holdout、full-train 和
+official test。K87.5 即使可能进一步追回精度，也只删除 12.5% suffix token，
+很难形成有意义的端到端加速。若后续重开 VAT，必须在固定 K50 总预算下改为
+context-preserving 单 mask，例如把一部分名额分配给目标邻域 halo 或均匀的
+global context anchors；仍然只产生一个 mask，不增加第二条 DINO 分支。
+
+#### 5.10q GazeFollow routing-stage 三 seed：小而稳定的精度代价
+
+seed 3107/3108 初次同步时，K50 JSON 被误放进 `dense_decoder_continue` 目录。
+现已从服务器重新同步 support、K50、matched dense 六个目录，只接收 JSON/JSONL，
+没有下载任何 `.pt`；目录名、manifest stage、keep ratio、seed 和 history 行数均
+再次核对一致。
+
+三次实验使用同一个 seed3106 dense base 和同一个 split，只重新初始化并训练
+Router，然后分别执行 K50 与 matched dense adaptation。因此这是
+“固定 dense 起点后的 routing-stage 三 seed”，不是完整端到端三 seed。
+
+| seed | K50 AUC ↑ | dense AUC ↑ | delta AUC | K50 Avg L2 ↓ | dense Avg L2 ↓ | delta L2 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 3106 | 0.963612 | 0.964819 | -0.001208 | 0.113830 | 0.113860 | -0.000030 |
+| 3107 | 0.963424 | 0.964701 | -0.001277 | 0.114433 | 0.113704 | +0.000729 |
+| 3108 | 0.963651 | 0.964624 | -0.000973 | 0.114407 | 0.113811 | +0.000596 |
+
+使用 sample standard deviation：
+
+| metric | K50 mean ± std | matched dense mean ± std | paired K50-dense mean ± std |
+|---|---:|---:|---:|
+| AUC ↑ | 0.963562 ± 0.000121 | 0.964715 ± 0.000099 | -0.001153 ± 0.000159 |
+| Avg L2 ↓ | 0.114223 ± 0.000341 | 0.113792 ± 0.000080 | +0.000432 ± 0.000405 |
+
+三个 seed 的 K50 AUC 都略低于 dense，所以不能写成“完全无损”；但差距很小且
+方向稳定。结合已通过的正式效率矩阵，可以严谨表述为：K50 在固定 dense 起点的
+三次 routing-stage 重复中，平均付出 `0.00115` AUC 和 `0.00043` Avg L2，换取
+B4/B8 相对原始 dense 的 `1.061x / 1.149x` 端到端 speedup。K50 的 point
+coverage 为 `0.9486 ± 0.0023`，hard coverage 为 `0.8907 ± 0.0029`；support
+K25 分别为 `0.8339 ± 0.0063` 和 `0.6997 ± 0.0007`，说明 Router 学习并未依赖
+某个幸运随机种子。seed3106 的 learned K50 也明显优于 untrained-router K50：
+AUC `+0.00510`、Avg L2 `-0.01159`。
+
+三个 seed 的五轮 adaptation 中，K50 和 dense 的平均 Avg L2 都在最后一轮最好，
+所以后续 full-train refit 固定使用 5 epochs，而不是按某个单独 seed 的最佳 epoch
+临时挑轮数。
+
+当前先不要直接设置 `--gf_val_fraction 0` 开始最终训练。现有实现会在该模式下
+每个 epoch 读取 official test，并将 run 标为 `legacy_official_test_per_epoch`；
+这会污染最终 test。下一项代码工作必须先增加“100% train、固定 epoch、完全不
+构造 eval loader、只保存 final checkpoint”的 formal refit 模式。完成并测试后，
+最终顺序才是：
+
+```text
+100% GazeFollow dense 15 epochs（不评测）
+  -> support 3 epochs（不评测）
+  -> K50 adaptation 5 epochs（不评测）
+  -> matched dense adaptation 5 epochs（不评测）
+  -> 冻结 K50/dense checkpoint，各执行一次 official test
+```
+
+VAT 当前停止在 holdout limitation；论文主线优先完成上述 GazeFollow formal
+refit/test，不再让 VAT 失败阻塞 GazeFollow 的正式结果。
+
+#### 5.10r 当前该运行：100% train 固定轮次 refit + official test 各一次
+
+5.10q 中“暂时不要把 `--gf_val_fraction 0` 当作最终训练”的警告仍然有效；
+不要手工使用这个旧入口。现在新增的 `--formal_full_train_no_eval` 是独立的
+正式模式，训练期间只读取 `train_preprocessed.json`，根本不构造 validation/test
+dataset 或 loader，也不会生成 `best*.pt`。轮数在启动前固定，每阶段只把最后一轮
+的 `final.pt` 作为下一阶段输入。
+
+正式依赖图为：
+
+```text
+full-train dense 15 epochs
+  ├─ GPU 2: support K25 3 epochs -> learned K50 5 epochs
+  └─ GPU 1: matched dense continuation 5 epochs
+
+四个 final.pt 全部通过 formal validator
+  ├─ GPU 2: learned K50 official test，一次
+  └─ GPU 1: matched dense official test，一次
+```
+
+GPU 3 不需要占用：dense base 完成以后最多只有两条互相独立的分支，使用第三张卡
+不会缩短关键路径。训练使用 FP32；dense base 是真实 batch 60，support 是 batch
+16，K50 和 matched dense 都是 batch 16、梯度累积 2。official test 的 K50 和
+dense 使用完全相同的 image-unit、batch 16、FP32 配置。当前 GazeFollow official
+test 的 4,782 张图都是单 head，所以这里的 image unit 不会引入多人 union 口径
+差异。
+
+runner 会在真正训练前检查：Git worktree 必须干净、commit 在整个流程中不变、
+训练标注 SHA/记录数/有效 person 数正确、DINOv3 checkpoint SHA 正确，以及被
+Git 忽略的 `dinov3/**/*.py` 内容指纹正确。每个训练阶段结束后还会检查 epoch、
+history、可训练参数、初始化 checkpoint SHA、无 eval 记录、无 best checkpoint
+和 `final.pt` role。四个训练阶段全部通过以前，代码不会读取 official test。
+
+本实现已在服务器 `/home/fb/anaconda3/envs/py310/bin/python` 的临时 worktree
+通过 63 项相关测试；临时目录已清理，服务器主工作区没有被修改。
+
+##### 5.10r-1 同步代码并检查 GPU
+
+本次代码 commit/push 完成后，在服务器运行：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only origin codex/coverage-aware-router
+git status --short
+```
+
+`git status --short` 必须没有任何输出。然后确认 GPU 1、2 没有其他 compute
+进程：
+
+```bash
+nvidia-smi -i 1,2
+```
+
+如其中一张卡有任务，先不要启动；runner 本身也会拒绝占用非空闲 GPU。恢复同一
+pipeline 时必须继续使用最初的两张物理卡，不能中途换卡。
+
+可手工复核协议测试；runner 启动时还会再自动运行一遍：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python -m pytest -q \
+  tests/test_coverage_router_training_protocol.py \
+  tests/test_formal_coverage_router_eval.py \
+  tests/test_validate_coverage_router_refit.py \
+  tests/test_eval_coverage_router.py \
+  tests/test_gazefollow_dataset_views.py \
+  tests/test_data_splits.py
+
+bash -n scripts/run_coverage_router_gf_fulltrain_pipeline.sh
+```
+
+##### 5.10r-2 推荐启动命令
+
+下面是一条完整命令。GPU 1 负责 dense 分支，GPU 2 负责 routed 分支；脚本内部
+会为每个实际 Python 进程单独设置 `CUDA_VISIBLE_DEVICES`，因此外层不要再设置
+该变量：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+mkdir -p logs/coverage_router
+
+nohup bash scripts/run_coverage_router_gf_fulltrain_pipeline.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  1 \
+  2 \
+  > logs/coverage_router/gf_fulltrain_pipeline_seed3106_gpu1_gpu2.log \
+  2>&1 < /dev/null &
+
+echo "pipeline_pid=$!"
+```
+
+这一个 runner 会自动完成 dense、support、K50、matched dense、两次固定官方
+评测、结果校验和 K50-vs-dense 汇总，不要再并行手工启动其中任一阶段。
+W&B 使用 offline 模式，断网不会阻塞训练；正式记录仍完整写入 manifest、history
+和 stage log。
+
+##### 5.10r-3 监控、断点恢复与完成判断
+
+看总调度日志：
+
+```bash
+tail -n 100 -f logs/coverage_router/gf_fulltrain_pipeline_seed3106_gpu1_gpu2.log
+```
+
+看当前具体训练阶段；不存在的日志说明该阶段尚未开始：
+
+```bash
+tail -n 50 -f logs/coverage_router/gf_fulltrain_dense_seed3106.log
+tail -n 50 -f logs/coverage_router/gf_fulltrain_support_k025_seed3106.log
+tail -n 50 -f logs/coverage_router/gf_fulltrain_sparse_fixedrouter_decoder_k050_seed3106.log
+tail -n 50 -f logs/coverage_router/gf_fulltrain_dense_decoder_continue_seed3106.log
+```
+
+查看进程和显卡：
+
+```bash
+pgrep -af 'run_coverage_router_gf_fulltrain_pipeline|train_coverage_router.py|eval_coverage_router.py'
+nvidia-smi -i 1,2
+```
+
+若训练阶段因断网、SSH 退出或进程异常而停止，先确认原进程确实不存在，然后原样
+重跑 5.10r-2 的同一条 `nohup` 命令。已完成阶段会重新校验后跳过；有
+`last.resume.pt` 的未完成训练会自动续跑，不会重新初始化。若日志提示
+`official_test_*.started without .completed`，不要删除 marker、不要自行重跑
+official test，把对应 official log 和 output 状态同步回来再审计；这是有意设置的
+“官方测试已经开始就不自动看第二次”保护。
+
+整个流程只在以下文件存在、其中 `completed=true`，并且总日志最后出现
+`GAZEFOLLOW_FULLTRAIN_PIPELINE complete` 时才算完成：
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+/home/fb/anaconda3/envs/py310/bin/python -m json.tool \
+  experiments/coverage_router/gf_fulltrain_official_test_seed3106/pipeline_complete.json
+/home/fb/anaconda3/envs/py310/bin/python -m json.tool \
+  experiments/coverage_router/gf_fulltrain_official_test_seed3106/comparison.json
+```
+
+最终需要分析的两个原始结果是：
+
+```text
+experiments/coverage_router/gf_fulltrain_official_test_seed3106/learned_k50_image_b16_fp32.json
+experiments/coverage_router/gf_fulltrain_official_test_seed3106/matched_dense_image_b16_fp32.json
+```
+
+##### 5.10r-4 完成后同步回本地，明确不下载 PT
+
+下面的命令在本地 Mac 的仓库执行。它使用白名单，只同步 JSON、JSONL 和 MD；
+不会下载 `.pt` 或其它大文件：
+
+```bash
+cd /Users/fanb/src/gazelle
+
+for run in \
+  gf_fulltrain_dense_seed3106 \
+  gf_fulltrain_support_k025_seed3106 \
+  gf_fulltrain_sparse_fixedrouter_decoder_k050_seed3106 \
+  gf_fulltrain_dense_decoder_continue_seed3106 \
+  gf_fulltrain_official_test_seed3106
+do
+  mkdir -p "experiments/coverage_router/${run}"
+  rsync -av --prune-empty-dirs \
+    --include='*/' \
+    --include='*.json' \
+    --include='*.jsonl' \
+    --include='*.md' \
+    --exclude='*' \
+    "fb@3090.lab:/home/fb/src/paper/gazelleV1/experiments/coverage_router/${run}/" \
+    "experiments/coverage_router/${run}/"
+done
+```
+
+同步后先不要根据 official test 再改 K、epoch 或选择另一个 checkpoint。下一步是
+检查两个 JSON 的协议字段和完整指标，并报告固定 K50 相对固定 matched dense 的
+AUC、Avg L2、Min L2、coverage 及已有正式效率结果；official test 只用于最终
+报告，不再承担调参或选模。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
-tail -f logs/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106_benchmark_b1_amp_final_clean.log
+tail -n 100 -f logs/coverage_router/gf_fulltrain_pipeline_seed3106_gpu1_gpu2.log
 ```
 
 ```bash
-watch -n 1 nvidia-smi -i 0
+nvidia-smi -i 1,2
 ```
 
 ```bash
-pgrep -af train_coverage_router.py
+pgrep -af 'run_coverage_router_gf_fulltrain_pipeline|train_coverage_router.py|eval_coverage_router.py'
 ```
 
-每个 run directory 会生成：
+validation-selected run directory 会生成：
 
 - `run_manifest.json`：完整配置和 git commit；
 - `data_split.json`：正式 validation 的分组策略与 fingerprint；
@@ -2629,9 +3033,13 @@ pgrep -af train_coverage_router.py
 - `last.resume.pt`：断点恢复；
 - `summary.json`：最佳结果摘要。
 
+5.10r 的 full-train/no-eval run 则只生成 `last.resume.pt` 和固定轮次
+`final.pt`，不会生成任何 `best*.pt`，`history.jsonl` 也只有 train 指标。
+
 5.10b–5.10i 已完成：Router 因果贡献已建立，且 K50 在相同额外训练预算下
 为整体 L2 持平、AUC 损失约 `0.0012`。5.10m 的正式 dense 对照进一步确认：
 B1 延迟持平，B4/B8 分别达到 `1.061×/1.149×` 端到端加速，但不节省显存。
-formal benchmark runtime commit 已归档，K50 结构冻结。当前并行运行
-GazeFollow 3107/3108 downstream seeds 与 VAT formal transferability；暂不运行
-suffix 微调、K25 sparse 长训练或新的效率搜索。
+formal benchmark runtime commit 已归档，K50 结构冻结。GazeFollow 3107/3108
+downstream seed 与 VAT K50/K75 诊断均已完成；VAT accuracy gate 未通过并暂停。
+当前唯一主实验是 5.10r 的 GazeFollow full-train refit 和固定 K50/dense 各一次
+official test，暂不运行新的 K、suffix 微调或效率搜索。

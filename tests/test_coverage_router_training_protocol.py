@@ -10,8 +10,10 @@ from scripts.train_coverage_router import (
     load_model_state,
     make_dataloaders,
     parse_args,
+    reconcile_formal_resume_history,
     selection_improved,
     selection_spec,
+    split_requires_matching_provenance,
     validate_args,
     validate_checkpoint_split_provenance,
 )
@@ -127,6 +129,33 @@ def test_legacy_exploratory_runs_do_not_require_split_provenance():
     )
 
 
+def test_full_train_no_eval_still_requires_exact_provenance():
+    current = _formal_split(
+        selection_is_formal=False,
+        provenance_requires_match=True,
+        strategy="gazefollow_full_train_no_eval_v1",
+        evaluation_split=None,
+        evaluation_mode="none",
+        selection_policy="fixed_final_epoch_no_validation",
+        official_test_accessed=False,
+        validation_fraction=0.0,
+        seed=None,
+    )
+    assert split_requires_matching_provenance(current)
+
+    validate_checkpoint_split_provenance(
+        {"data_split": dict(current)},
+        current,
+        checkpoint_role="full-train initialization checkpoint",
+    )
+    with pytest.raises(ValueError, match="does not match"):
+        validate_checkpoint_split_provenance(
+            {"data_split": {**current, "assignment_fingerprint": "other"}},
+            current,
+            checkpoint_role="full-train initialization checkpoint",
+        )
+
+
 def test_formal_holdout_can_explicitly_allow_legacy_pretrained_initialization():
     validate_checkpoint_split_provenance(
         {},
@@ -227,9 +256,7 @@ def test_router_reinitialization_uses_training_seed_but_keeps_common_decoder():
 
 
 def test_router_reinitialization_flag_requires_initialization_checkpoint():
-    valid = parse_args(
-        ["--init_ckpt", "dense.pt", "--reinitialize_router_on_init"]
-    )
+    valid = parse_args(["--init_ckpt", "dense.pt", "--reinitialize_router_on_init"])
     validate_args(valid)
 
     without_init = parse_args(["--reinitialize_router_on_init"])
@@ -241,6 +268,146 @@ def test_router_reinitialization_flag_requires_initialization_checkpoint():
     )
     with pytest.raises(ValueError, match="requires --init_ckpt"):
         validate_args(with_resume)
+
+
+def test_formal_full_train_no_eval_cli_rejects_unsafe_combinations():
+    valid = parse_args(
+        ["--formal_full_train_no_eval", "--max_epochs", "5", "--dataset", "gazefollow"]
+    )
+    validate_args(valid)
+
+    for extra_args, error in (
+        ([], "explicit --max_epochs"),
+        (["--max_epochs", "5", "--gazefollow_val_fraction", "0.1"], "validation split"),
+        (["--max_epochs", "5", "--eval_batch_size", "16"], "evaluation batch"),
+        (["--max_epochs", "5", "--max_eval_batches", "1"], "evaluation batch"),
+        (["--max_epochs", "5", "--max_train_batches", "1"], "complete training set"),
+        (["--max_epochs", "5", "--save_every", "1"], "only saves"),
+        (["--max_epochs", "5", "--dataset", "vat"], "only GazeFollow"),
+    ):
+        args = parse_args(["--formal_full_train_no_eval", *extra_args])
+        with pytest.raises(ValueError, match=error):
+            validate_args(args)
+
+
+def test_formal_full_train_builds_no_eval_dataset_and_never_reads_test(tmp_path):
+    records = [
+        {
+            "path": "train/a.jpg",
+            "heads": [{"inout": 1}, {"inout": 0}],
+        },
+        {
+            "path": "train/b.jpg",
+            "heads": [{"inout": 1}],
+        },
+        {
+            "path": "train/a.jpg",
+            "heads": [{"inout": 1}],
+        },
+    ]
+    (tmp_path / "train_preprocessed.json").write_text(
+        json.dumps(records), encoding="utf-8"
+    )
+    # Deliberately do not create test_preprocessed.json. Construction succeeding
+    # proves this protocol does not even open the official test annotation.
+    args = Namespace(
+        dataset="gazefollow",
+        data_path=str(tmp_path),
+        n_workers=0,
+        batch_size=2,
+        eval_batch_size=None,
+        formal_full_train_no_eval=True,
+        gazefollow_val_fraction=0.0,
+        gazefollow_split_seed=3106,
+        vat_val_fraction=0.0,
+        vat_split_seed=3106,
+        frame_sample_every=6,
+        eval_frame_sample_every=None,
+    )
+
+    train_dataset, eval_dataset, train_loader, eval_loader, split = make_dataloaders(
+        args, lambda image: image
+    )
+
+    assert len(train_dataset) == 3
+    assert len(train_loader.dataset) == 3
+    assert eval_dataset is None
+    assert eval_loader is None
+    assert split["strategy"] == "gazefollow_full_train_no_eval_v1"
+    assert split["evaluation_split"] is None
+    assert split["evaluation_mode"] == "none"
+    assert split["selection_policy"] == "fixed_final_epoch_no_validation"
+    assert split["selection_is_formal"] is False
+    assert split["provenance_requires_match"] is True
+    assert split["official_test_accessed"] is False
+    assert split["train_record_count"] == 3
+    assert split["train_head_sample_count"] == 3
+    assert split["train_group_count"] == 2
+
+
+def test_formal_resume_truncates_history_rows_newer_than_checkpoint(tmp_path):
+    committed = {
+        "epoch": 0,
+        "active_train_keep_ratio": 1.0,
+        "train": {"total": 1.0},
+    }
+    uncommitted = {
+        "epoch": 1,
+        "active_train_keep_ratio": 0.75,
+        "train": {"total": 0.9},
+    }
+    history_path = tmp_path / "history.jsonl"
+    history_path.write_text(
+        json.dumps(committed) + "\n" + json.dumps(uncommitted) + "\n",
+        encoding="utf-8",
+    )
+
+    reconcile_formal_resume_history(
+        tmp_path,
+        {"epoch": 0, "metrics": committed},
+    )
+
+    assert history_path.read_text(encoding="utf-8").splitlines() == [
+        json.dumps(committed, sort_keys=True)
+    ]
+
+
+def test_formal_resume_truncates_a_partially_written_trailing_row(tmp_path):
+    committed = {
+        "epoch": 0,
+        "active_train_keep_ratio": 1.0,
+        "train": {"total": 1.0},
+    }
+    history_path = tmp_path / "history.jsonl"
+    history_path.write_text(
+        json.dumps(committed) + '\n{"epoch": 1, "train":',
+        encoding="utf-8",
+    )
+
+    reconcile_formal_resume_history(
+        tmp_path,
+        {"epoch": 0, "metrics": committed},
+    )
+
+    assert json.loads(history_path.read_text(encoding="utf-8")) == committed
+
+
+def test_formal_resume_rejects_a_corrupt_committed_history_prefix(tmp_path):
+    committed = {
+        "epoch": 0,
+        "active_train_keep_ratio": 1.0,
+        "train": {"total": 1.0},
+    }
+    (tmp_path / "history.jsonl").write_text(
+        json.dumps({**committed, "epoch": 3}) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="non-contiguous committed prefix"):
+        reconcile_formal_resume_history(
+            tmp_path,
+            {"epoch": 0, "metrics": committed},
+        )
 
 
 def test_vat_holdout_is_formal_and_has_no_source_video_leakage(tmp_path):

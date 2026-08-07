@@ -108,6 +108,15 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         default=3106,
         help="Seed for the stable sequence-level VAT validation split.",
     )
+    parser.add_argument(
+        "--formal_full_train_no_eval",
+        action="store_true",
+        help=(
+            "Use every GazeFollow training sample for a fixed-epoch formal refit "
+            "without constructing or reading any validation/test dataset. This "
+            "mode saves final.pt and never creates a best-selection checkpoint."
+        ),
+    )
     parser.add_argument("--run_dir", default=None)
     parser.add_argument("--ckpt_save_dir", default="./experiments/coverage_router")
     parser.add_argument("--exp_name", default="coverage_router")
@@ -262,12 +271,36 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--gazefollow_val_fraction is only valid for GazeFollow")
     if args.dataset == "gazefollow" and args.vat_val_fraction:
         raise ValueError("--vat_val_fraction is only valid for VAT")
+    if args.formal_full_train_no_eval:
+        if args.dataset not in (None, "gazefollow"):
+            raise ValueError(
+                "--formal_full_train_no_eval currently supports only GazeFollow"
+            )
+        if args.gazefollow_val_fraction or args.vat_val_fraction:
+            raise ValueError(
+                "--formal_full_train_no_eval cannot be combined with a validation split"
+            )
+        if args.max_eval_batches is not None or args.eval_batch_size is not None:
+            raise ValueError(
+                "--formal_full_train_no_eval cannot accept evaluation batch options"
+            )
+        if args.max_train_batches is not None:
+            raise ValueError(
+                "--formal_full_train_no_eval must use the complete training set"
+            )
+        if args.save_every:
+            raise ValueError(
+                "--formal_full_train_no_eval only saves last.resume.pt and final.pt"
+            )
+        if args.max_epochs is None and not args.resume:
+            raise ValueError(
+                "--formal_full_train_no_eval requires an explicit --max_epochs; "
+                "the final epoch is fixed before training"
+            )
     if args.reinitialize_router_on_init and not args.init_ckpt:
         raise ValueError("--reinitialize_router_on_init requires --init_ckpt")
     if args.allow_init_without_split_provenance and not args.init_ckpt:
-        raise ValueError(
-            "--allow_init_without_split_provenance requires --init_ckpt"
-        )
+        raise ValueError("--allow_init_without_split_provenance requires --init_ckpt")
 
 
 def seed_everything(seed: int) -> None:
@@ -324,7 +357,9 @@ def load_model_state(
 ) -> None:
     excluded_prefixes = tuple(excluded_prefixes)
     if excluded_prefixes and not initialization:
-        raise ValueError("checkpoint key exclusions are only allowed for initialization")
+        raise ValueError(
+            "checkpoint key exclusions are only allowed for initialization"
+        )
 
     if _is_tensor_state_dict(payload):
         state = payload
@@ -414,6 +449,7 @@ def _resume_model_overrides(args: argparse.Namespace, checkpoint: dict) -> None:
         "lr_inout",
         "lr_backbone",
         "weight_decay",
+        "clip_grad_norm",
         "heatmap_loss_weight",
         "inout_loss_lambda",
         "router_coverage_weight",
@@ -428,6 +464,7 @@ def _resume_model_overrides(args: argparse.Namespace, checkpoint: dict) -> None:
         "frame_sample_every",
         "eval_frame_sample_every",
         "amp",
+        "formal_full_train_no_eval",
     ):
         if key in train_config:
             setattr(args, key, train_config[key])
@@ -472,6 +509,29 @@ def _gazefollow_group_key(record: dict, index: int) -> str:
     return normalized
 
 
+def _full_train_group_metadata(group_keys: Iterable[str]) -> dict:
+    """Fingerprint an immutable all-train assignment without making a split."""
+
+    normalized = tuple(str(group) for group in group_keys)
+    if not normalized:
+        raise ValueError("formal full-train data must contain at least one group")
+    unique_groups = sorted(set(normalized))
+
+    def fingerprint(lines: Iterable[str]) -> str:
+        return hashlib.sha256("\n".join(lines).encode("utf-8")).hexdigest()
+
+    return {
+        "source_group_fingerprint": fingerprint(
+            f"{index}\0{group}" for index, group in enumerate(normalized)
+        ),
+        "train_group_fingerprint": fingerprint(unique_groups),
+        "assignment_fingerprint": fingerprint(
+            f"{index}\0{group}\0train" for index, group in enumerate(normalized)
+        ),
+        "train_group_count": len(unique_groups),
+    }
+
+
 def _vat_source_video_key(sequence: dict, index: int) -> str:
     raw_path = sequence.get("path")
     if not isinstance(raw_path, str) or not raw_path.strip():
@@ -505,7 +565,43 @@ def make_dataloaders(args: argparse.Namespace, transform):
         "persistent_workers": args.n_workers > 0,
     }
     if args.dataset == "gazefollow":
-        if args.gazefollow_val_fraction:
+        if getattr(args, "formal_full_train_no_eval", False):
+            source_path = Path(args.data_path) / "train_preprocessed.json"
+            records = load_data_gazefollow(source_path)
+            group_keys = [
+                _gazefollow_group_key(record, index)
+                for index, record in enumerate(records)
+            ]
+            train_dataset = GazeDataset(
+                "gazefollow",
+                args.data_path,
+                "train",
+                transform,
+                augment=True,
+                return_heatmap=True,
+                records=records,
+            )
+            eval_dataset = None
+            eval_collate_fn = None
+            data_split = {
+                "strategy": "gazefollow_full_train_no_eval_v1",
+                "evaluation_split": None,
+                "evaluation_mode": "none",
+                "selection_policy": "fixed_final_epoch_no_validation",
+                "selection_is_formal": False,
+                "provenance_requires_match": True,
+                "official_test_accessed": False,
+                "validation_fraction": 0.0,
+                "group_key": "normalized_image_path",
+                "source_annotation_file": str(source_path.resolve()),
+                "source_annotation_sha256": _sha256_file(source_path),
+                "train_record_count": len(records),
+                "train_head_sample_count": len(train_dataset),
+                "validation_record_count": 0,
+                "validation_head_sample_count": 0,
+                **_full_train_group_metadata(group_keys),
+            }
+        elif args.gazefollow_val_fraction:
             source_path = Path(args.data_path) / "train_preprocessed.json"
             records = load_data_gazefollow(source_path)
             group_keys = [
@@ -551,9 +647,7 @@ def make_dataloaders(args: argparse.Namespace, transform):
             train_dataset = GazeDataset(
                 "gazefollow", args.data_path, "train", transform
             )
-            eval_dataset = GazeDataset(
-                "gazefollow", args.data_path, "test", transform
-            )
+            eval_dataset = GazeDataset("gazefollow", args.data_path, "test", transform)
             eval_collate_fn = collate_fn
             train_source = Path(args.data_path) / "train_preprocessed.json"
             eval_source = Path(args.data_path) / "test_preprocessed.json"
@@ -679,13 +773,15 @@ def make_dataloaders(args: argparse.Namespace, transform):
         collate_fn=collate_fn,
         **common,
     )
-    eval_loader = torch.utils.data.DataLoader(
-        eval_dataset,
-        batch_size=args.eval_batch_size or args.batch_size,
-        shuffle=False,
-        collate_fn=eval_collate_fn,
-        **common,
-    )
+    eval_loader = None
+    if eval_dataset is not None:
+        eval_loader = torch.utils.data.DataLoader(
+            eval_dataset,
+            batch_size=args.eval_batch_size or args.batch_size,
+            shuffle=False,
+            collate_fn=eval_collate_fn,
+            **common,
+        )
     return train_dataset, eval_dataset, train_loader, eval_loader, data_split
 
 
@@ -982,18 +1078,14 @@ def evaluate_model(
                 predictions["routing"], gazex, gazey, inout
             )
             route_point.update(point_coverage, point_count)
-            route_support.update(
-                route_values["mean_support"].item(), batch_image_count
-            )
+            route_support.update(route_values["mean_support"].item(), batch_image_count)
             route_keep.update(
                 predictions["routing"].actual_keep_ratio, batch_image_count
             )
 
     metrics = {
         "dataset": args.dataset,
-        "query_unit": (
-            next(iter(query_units)) if len(query_units) == 1 else "mixed"
-        ),
+        "query_unit": (next(iter(query_units)) if len(query_units) == 1 else "mixed"),
         "image_count": image_count,
         "sample_count": sample_count,
         "inframe_count": inframe_count,
@@ -1065,6 +1157,10 @@ def _split_identity(data_split: dict) -> dict:
     keys = (
         "strategy",
         "evaluation_split",
+        "evaluation_mode",
+        "selection_policy",
+        "provenance_requires_match",
+        "official_test_accessed",
         "source_annotation_sha256",
         "source_group_fingerprint",
         "assignment_fingerprint",
@@ -1077,6 +1173,13 @@ def _split_identity(data_split: dict) -> dict:
     return {key: data_split.get(key) for key in keys}
 
 
+def split_requires_matching_provenance(data_split: dict) -> bool:
+    return bool(
+        data_split.get("selection_is_formal")
+        or data_split.get("provenance_requires_match")
+    )
+
+
 def validate_checkpoint_split_provenance(
     checkpoint: dict,
     data_split: dict,
@@ -1084,9 +1187,9 @@ def validate_checkpoint_split_provenance(
     checkpoint_role: str,
     allow_missing_provenance: bool = False,
 ) -> None:
-    """Fail fast when a formal holdout run would cross split provenance."""
+    """Fail fast when a formal data protocol would cross provenance."""
 
-    if not data_split.get("selection_is_formal"):
+    if not split_requires_matching_provenance(data_split):
         return
     checkpoint_split = checkpoint.get("data_split")
     if not isinstance(checkpoint_split, dict):
@@ -1097,10 +1200,10 @@ def validate_checkpoint_split_provenance(
             )
             return
         raise ValueError(
-            f"{checkpoint_role} has no data_split provenance. A formal holdout "
-            "run must start from scratch, from an explicitly allowed legacy "
+            f"{checkpoint_role} has no data_split provenance. A formal run "
+            "must start from scratch, from an explicitly allowed legacy "
             "pretrained initialization, or from a checkpoint produced with "
-            "the exact same holdout."
+            "the exact same data assignment."
         )
     expected = _split_identity(data_split)
     observed = _split_identity(checkpoint_split)
@@ -1111,11 +1214,10 @@ def validate_checkpoint_split_provenance(
         )
 
 
-def selection_spec(args: argparse.Namespace) -> tuple[str, str, tuple[tuple[str, str], ...]]:
-    if (
-        args.router_stage == "support_pilot"
-        and args.heatmap_loss_weight == 0.0
-    ):
+def selection_spec(
+    args: argparse.Namespace,
+) -> tuple[str, str, tuple[tuple[str, str], ...]]:
+    if args.router_stage == "support_pilot" and args.heatmap_loss_weight == 0.0:
         return (
             "routing_hard_coverage",
             "max",
@@ -1167,12 +1269,15 @@ def checkpoint_payload(
     epoch: int,
     global_step: int,
     metrics: dict,
-    best_metrics: dict,
+    best_metrics: Optional[dict],
     data_split: dict,
-    selection: dict,
+    selection: Optional[dict],
+    checkpoint_role: str = "training_checkpoint",
+    initialization_checkpoint: Optional[dict] = None,
 ) -> dict:
     return {
         "format_version": CHECKPOINT_FORMAT_VERSION,
+        "checkpoint_role": checkpoint_role,
         "epoch": epoch,
         "global_step": global_step,
         "model_config": model.get_model_config(),
@@ -1183,9 +1288,14 @@ def checkpoint_payload(
         "scheduler_state": scheduler.state_dict(),
         "scaler_state": scaler.state_dict(),
         "metrics": metrics,
-        "best_metrics": best_metrics.copy(),
+        "best_metrics": best_metrics.copy() if best_metrics is not None else None,
         "data_split": data_split.copy(),
-        "selection": selection.copy(),
+        "selection": selection.copy() if selection is not None else None,
+        "initialization_checkpoint": (
+            initialization_checkpoint.copy()
+            if initialization_checkpoint is not None
+            else None
+        ),
         "rng_state": rng_state(),
         "git_commit": git_commit(),
     }
@@ -1197,6 +1307,94 @@ def save_checkpoint(path: Path, payload: dict) -> None:
     torch.save(payload, temporary)
     os.replace(temporary, path)
     print(f"Saved checkpoint to {path}")
+
+
+def reconcile_formal_resume_history(run_dir: Path, checkpoint: dict) -> None:
+    """Drop only epoch rows that are newer than the atomic resume checkpoint.
+
+    Formal training appends an epoch's JSON row before atomically replacing
+    ``last.resume.pt``.  A process interruption in that narrow interval leaves
+    one uncommitted row behind.  The checkpoint is the commit boundary: its
+    epoch prefix must be intact and identical, while any later rows are safely
+    replayed after truncation.
+    """
+
+    checkpoint_epoch = checkpoint.get("epoch")
+    if not isinstance(checkpoint_epoch, int) or isinstance(checkpoint_epoch, bool):
+        raise ValueError("formal resume checkpoint epoch must be an integer")
+    expected_rows = checkpoint_epoch + 1
+    if expected_rows <= 0:
+        raise ValueError("formal resume checkpoint epoch must be non-negative")
+
+    history_path = run_dir / "history.jsonl"
+    if not history_path.is_file():
+        raise FileNotFoundError(
+            f"formal resume checkpoint has no history.jsonl beside it: {history_path}"
+        )
+    lines = [
+        line
+        for line in history_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if len(lines) < expected_rows:
+        raise ValueError(
+            "formal resume history ends before the checkpoint epoch: "
+            f"rows={len(lines)}, required={expected_rows}"
+        )
+
+    committed_rows = []
+    for index, line in enumerate(lines[:expected_rows]):
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"formal resume history row {index} is invalid before the "
+                "checkpoint boundary"
+            ) from error
+        actual_epoch = row.get("epoch") if isinstance(row, dict) else None
+        if actual_epoch != index:
+            raise ValueError(
+                "formal resume history has a non-contiguous committed prefix: "
+                f"row={index}, epoch={actual_epoch}"
+            )
+        committed_rows.append(row)
+
+    if checkpoint.get("metrics") != committed_rows[-1]:
+        raise ValueError(
+            "formal resume checkpoint metrics do not match its committed history row"
+        )
+
+    has_uncommitted_suffix = len(lines) > expected_rows
+    if has_uncommitted_suffix:
+        for index, line in enumerate(lines[expected_rows:], start=expected_rows):
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                # A partially written trailing row is precisely the crash case
+                # this reconciliation is designed to recover.
+                break
+            if (
+                not isinstance(row, dict)
+                or row.get("epoch", expected_rows) < expected_rows
+            ):
+                raise ValueError(
+                    "formal resume history suffix overlaps the committed prefix: "
+                    f"row={index}"
+                )
+
+        temporary = history_path.with_suffix(history_path.suffix + ".resume.tmp")
+        temporary.write_text(
+            "".join(
+                json.dumps(row, allow_nan=False, sort_keys=True) + "\n"
+                for row in committed_rows
+            ),
+            encoding="utf-8",
+        )
+        os.replace(temporary, history_path)
+        print(
+            "Recovered formal history by dropping rows newer than "
+            f"last.resume.pt epoch {checkpoint_epoch}"
+        )
 
 
 def init_wandb(args: argparse.Namespace, model_config: dict):
@@ -1218,6 +1416,7 @@ def init_wandb(args: argparse.Namespace, model_config: dict):
 def main(argv: Optional[Iterable[str]] = None) -> dict:
     args = parse_args(argv)
     validate_args(args)
+    requested_max_epochs = args.max_epochs
     resume_payload = _torch_load(args.resume) if args.resume else None
     init_payload = _torch_load(args.init_ckpt) if args.init_ckpt else None
     if resume_payload is not None:
@@ -1226,14 +1425,27 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
                 "--resume requires a structured coverage-router checkpoint"
             )
         _resume_model_overrides(args, resume_payload)
+        resume_train_config = resume_payload.get("train_config", {})
+        if resume_train_config.get("formal_full_train_no_eval"):
+            checkpoint_max_epochs = int(resume_train_config["max_epochs"])
+            if (
+                requested_max_epochs is not None
+                and requested_max_epochs != checkpoint_max_epochs
+            ):
+                raise ValueError(
+                    "a formal full-train run cannot change --max_epochs on resume: "
+                    f"checkpoint={checkpoint_max_epochs}, requested={requested_max_epochs}"
+                )
+            args.max_epochs = checkpoint_max_epochs
 
     args.dataset = args.dataset or "gazefollow"
     args.model = resolve_model_name(args)
     args.data_path = args.data_path or DEFAULT_DATA_PATHS[args.dataset]
     args.max_epochs = args.max_epochs or (8 if args.dataset == "vat" else 15)
-    args.eval_frame_sample_every = (
-        args.eval_frame_sample_every or args.frame_sample_every
-    )
+    if not args.formal_full_train_no_eval:
+        args.eval_frame_sample_every = (
+            args.eval_frame_sample_every or args.frame_sample_every
+        )
     validate_args(args)
     seed_everything(args.seed)
 
@@ -1258,9 +1470,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
 
     if init_payload is not None:
         print(f"Initializing model weights from {args.init_ckpt}")
-        excluded_prefixes = (
-            ("router.",) if args.reinitialize_router_on_init else ()
-        )
+        excluded_prefixes = ("router.",) if args.reinitialize_router_on_init else ()
         load_model_state(
             model,
             init_payload,
@@ -1284,7 +1494,7 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             data_split,
             checkpoint_role="resume checkpoint",
         )
-    if init_payload is not None and data_split.get("selection_is_formal"):
+    if init_payload is not None and split_requires_matching_provenance(data_split):
         if not isinstance(init_payload, dict):
             raise ValueError(
                 "initialization checkpoint is not structured and has no "
@@ -1310,17 +1520,45 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
     else:
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         run_dir = Path(args.ckpt_save_dir) / args.exp_name / timestamp
+    if (
+        args.formal_full_train_no_eval
+        and not args.resume
+        and run_dir.exists()
+        and any(run_dir.iterdir())
+    ):
+        raise FileExistsError(
+            "formal full-train run_dir must be absent or empty so history and "
+            f"fixed-final artifacts cannot be mixed: {run_dir}"
+        )
     run_dir.mkdir(parents=True, exist_ok=True)
 
+    if args.init_ckpt:
+        initialization_checkpoint = {
+            "path": str(Path(args.init_ckpt).resolve()),
+            "sha256": _sha256_file(Path(args.init_ckpt)),
+        }
+    elif resume_payload is not None:
+        resumed_initialization = resume_payload.get("initialization_checkpoint")
+        initialization_checkpoint = (
+            resumed_initialization.copy()
+            if isinstance(resumed_initialization, dict)
+            else None
+        )
+    else:
+        initialization_checkpoint = None
     metadata = {
         "format_version": CHECKPOINT_FORMAT_VERSION,
         "dataset": args.dataset,
         "data_path": args.data_path,
         "train_sample_count": len(train_dataset),
         "eval_sample_count": (
-            eval_dataset.person_count
-            if isinstance(eval_dataset, GazeFollowImageDataset)
-            else len(eval_dataset)
+            None
+            if eval_dataset is None
+            else (
+                eval_dataset.person_count
+                if isinstance(eval_dataset, GazeFollowImageDataset)
+                else len(eval_dataset)
+            )
         ),
         "eval_image_count": (
             len(eval_dataset)
@@ -1330,84 +1568,138 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         "data_split": data_split,
         "model_config": model.get_model_config(),
         "train_config": vars(args),
-        "initialization_checkpoint": (
-            {
-                "path": str(Path(args.init_ckpt).resolve()),
-                "sha256": _sha256_file(Path(args.init_ckpt)),
-            }
-            if args.init_ckpt
-            else None
-        ),
+        "initialization_checkpoint": initialization_checkpoint,
         "trainable_parameters": parameter_counts,
         "git_commit": git_commit(),
         "note": (
-            "support_pilot runs the full DINOv3 backbone and is not an efficiency result"
-            if args.router_stage == "support_pilot"
-            else "backbone_sparse routes patch tokens before the DINOv3 suffix"
+            "formal full-train refit; no evaluation dataset is constructed"
+            if args.formal_full_train_no_eval
+            else (
+                "support_pilot runs the full DINOv3 backbone and is not an efficiency result"
+                if args.router_stage == "support_pilot"
+                else "backbone_sparse routes patch tokens before the DINOv3 suffix"
+            )
         ),
     }
-    (run_dir / "run_manifest.json").write_text(
-        json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    (run_dir / "data_split.json").write_text(
-        json.dumps(data_split, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    manifest_path = run_dir / "run_manifest.json"
+    split_path = run_dir / "data_split.json"
+    if args.formal_full_train_no_eval and resume_payload is not None:
+        if not manifest_path.is_file() or not split_path.is_file():
+            raise FileNotFoundError(
+                "formal resume requires the original run_manifest.json and "
+                "data_split.json beside last.resume.pt"
+            )
+        original_metadata = json.loads(manifest_path.read_text(encoding="utf-8"))
+        original_split = json.loads(split_path.read_text(encoding="utf-8"))
+        if (
+            original_split != data_split
+            or original_metadata.get("data_split") != data_split
+        ):
+            raise ValueError(
+                "formal resume metadata does not match the reconstructed full-train "
+                "data provenance"
+            )
+        metadata = original_metadata
+    else:
+        manifest_path.write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        split_path.write_text(
+            json.dumps(data_split, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    if args.formal_full_train_no_eval and resume_payload is not None:
+        reconcile_formal_resume_history(run_dir, resume_payload)
     wandb = init_wandb(args, model.get_model_config())
     print(json.dumps(metadata, indent=2, sort_keys=True))
 
     start_epoch = 0
     global_step = 0
-    best_metrics = {
-        "auc": float("-inf"),
-        "routing_hard_coverage": float("-inf"),
-    }
-    if args.dataset == "gazefollow":
-        best_metrics.update(
-            {
-                "avg_l2": float("inf"),
-                "min_l2": float("inf"),
-            }
-        )
+    if args.formal_full_train_no_eval:
+        best_metrics = None
+        selection = None
     else:
-        best_metrics["l2"] = float("inf")
-    primary_metric, primary_mode, tie_breakers = selection_spec(args)
-    selection = {
-        "metric": primary_metric,
-        "mode": primary_mode,
-        "tie_breakers": list(tie_breakers),
-        "value": float("inf") if primary_mode == "min" else float("-inf"),
-        "epoch": None,
-        "metrics": None,
-        "checkpoint": (
-            "best_val_selection.pt"
-            if data_split.get("selection_is_formal")
-            else "best_selection.pt"
-        ),
-    }
+        best_metrics = {
+            "auc": float("-inf"),
+            "routing_hard_coverage": float("-inf"),
+        }
+        if args.dataset == "gazefollow":
+            best_metrics.update(
+                {
+                    "avg_l2": float("inf"),
+                    "min_l2": float("inf"),
+                }
+            )
+        else:
+            best_metrics["l2"] = float("inf")
+        primary_metric, primary_mode, tie_breakers = selection_spec(args)
+        selection = {
+            "metric": primary_metric,
+            "mode": primary_mode,
+            "tie_breakers": list(tie_breakers),
+            "value": float("inf") if primary_mode == "min" else float("-inf"),
+            "epoch": None,
+            "metrics": None,
+            "checkpoint": (
+                "best_val_selection.pt"
+                if data_split.get("selection_is_formal")
+                else "best_selection.pt"
+            ),
+        }
     if resume_payload is not None:
         optimizer.load_state_dict(resume_payload["optimizer_state"])
         scheduler.load_state_dict(resume_payload["scheduler_state"])
         scaler.load_state_dict(resume_payload.get("scaler_state", {}))
         start_epoch = int(resume_payload["epoch"]) + 1
         global_step = int(resume_payload.get("global_step", 0))
-        resumed_best_metrics = resume_payload.get("best_metrics", {})
-        for name in best_metrics:
-            if name in resumed_best_metrics:
-                best_metrics[name] = resumed_best_metrics[name]
         resumed_selection = resume_payload.get("selection")
-        if isinstance(resumed_selection, dict):
-            if (
-                resumed_selection.get("metric") != selection["metric"]
-                or resumed_selection.get("mode") != selection["mode"]
-            ):
+        if args.formal_full_train_no_eval:
+            if resume_payload.get("best_metrics") is not None:
                 raise ValueError(
-                    "resume checkpoint selection rule conflicts with the "
-                    "current training configuration"
+                    "formal full-train resume checkpoint unexpectedly contains "
+                    "best-metric selection state"
                 )
-            selection.update(resumed_selection)
+            if resumed_selection is not None:
+                raise ValueError(
+                    "formal full-train resume checkpoint unexpectedly contains "
+                    "validation selection state"
+                )
+        else:
+            resumed_best_metrics = resume_payload.get("best_metrics", {})
+            for name in best_metrics:
+                if name in resumed_best_metrics:
+                    best_metrics[name] = resumed_best_metrics[name]
+            if isinstance(resumed_selection, dict):
+                if (
+                    resumed_selection.get("metric") != selection["metric"]
+                    or resumed_selection.get("mode") != selection["mode"]
+                ):
+                    raise ValueError(
+                        "resume checkpoint selection rule conflicts with the "
+                        "current training configuration"
+                    )
+                selection.update(resumed_selection)
         restore_rng_state(resume_payload.get("rng_state"))
         print(f"Resuming from epoch {start_epoch}, global step {global_step}")
+
+    if start_epoch > args.max_epochs:
+        raise ValueError(
+            f"resume checkpoint starts at epoch {start_epoch}, beyond the fixed "
+            f"training length {args.max_epochs}"
+        )
+    if (
+        args.formal_full_train_no_eval
+        and start_epoch == args.max_epochs
+        and not (run_dir / "final.pt").exists()
+    ):
+        # Recover the narrow interruption window after last.resume.pt was saved
+        # for the final epoch but before final.pt/summary.json were written.
+        recovered_final = {
+            **resume_payload,
+            "checkpoint_role": "fixed_epoch_final",
+            "initialization_checkpoint": initialization_checkpoint,
+        }
+        save_checkpoint(run_dir / "final.pt", recovered_final)
 
     for epoch in range(start_epoch, args.max_epochs):
         active_keep_ratio = current_keep_ratio(
@@ -1563,17 +1855,22 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         scheduler.step()
         model.router.keep_ratio = args.keep_ratio
         args._active_keep_ratio = args.keep_ratio
-        eval_metrics = evaluate_model(
-            model, eval_loader, args, device, max_batches=args.max_eval_batches
-        )
-        eval_metrics["split"] = data_split["evaluation_split"]
         train_metrics = {name: meter.mean() for name, meter in train_meters.items()}
         epoch_metrics = {
             "epoch": epoch,
             "active_train_keep_ratio": active_keep_ratio,
             "train": train_metrics,
-            "eval": eval_metrics,
         }
+        if args.formal_full_train_no_eval:
+            eval_metrics = None
+        else:
+            if eval_loader is None:
+                raise RuntimeError("evaluation loader is unexpectedly missing")
+            eval_metrics = evaluate_model(
+                model, eval_loader, args, device, max_batches=args.max_eval_batches
+            )
+            eval_metrics["split"] = data_split["evaluation_split"]
+            epoch_metrics["eval"] = eval_metrics
         print(json.dumps(epoch_metrics, indent=2, sort_keys=True))
         with (run_dir / "history.jsonl").open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(epoch_metrics, sort_keys=True) + "\n")
@@ -1581,50 +1878,59 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
         if wandb is not None:
             log_values = {
                 **{f"train/{key}": value for key, value in train_metrics.items()},
-                **{
-                    f"eval/{key}": value
-                    for key, value in eval_metrics.items()
-                    if isinstance(value, (int, float))
-                },
                 "epoch": epoch,
                 "train/active_keep_ratio": active_keep_ratio,
             }
+            if eval_metrics is not None:
+                log_values.update(
+                    {
+                        f"eval/{key}": value
+                        for key, value in eval_metrics.items()
+                        if isinstance(value, (int, float))
+                    }
+                )
             wandb.log(
                 {key: value for key, value in log_values.items() if value is not None}
             )
 
         improved_paths = []
-        if selection_improved(eval_metrics, selection):
-            selection.update(
-                {
-                    "value": eval_metrics[selection["metric"]],
-                    "epoch": epoch,
-                    "metrics": eval_metrics.copy(),
-                }
-            )
-            improved_paths.append(run_dir / selection["checkpoint"])
-        coverage = eval_metrics.get("routing_hard_coverage")
-        if coverage is not None and coverage > best_metrics["routing_hard_coverage"]:
-            best_metrics["routing_hard_coverage"] = coverage
-            improved_paths.append(run_dir / "best_coverage.pt")
-        auc = eval_metrics.get("auc")
-        if auc is not None and auc > best_metrics["auc"]:
-            best_metrics["auc"] = auc
-            improved_paths.append(run_dir / "best_auc.pt")
-        if args.dataset == "gazefollow":
-            avg_l2 = eval_metrics.get("avg_l2")
-            if avg_l2 is not None and avg_l2 < best_metrics["avg_l2"]:
-                best_metrics["avg_l2"] = avg_l2
-                improved_paths.append(run_dir / "best_avg_l2.pt")
-            min_l2 = eval_metrics.get("min_l2")
-            if min_l2 is not None and min_l2 < best_metrics["min_l2"]:
-                best_metrics["min_l2"] = min_l2
-                improved_paths.append(run_dir / "best_min_l2.pt")
-        else:
-            l2 = eval_metrics.get("l2")
-            if l2 is not None and l2 < best_metrics["l2"]:
-                best_metrics["l2"] = l2
-                improved_paths.append(run_dir / "best_l2.pt")
+        if eval_metrics is not None:
+            if selection is None or best_metrics is None:
+                raise RuntimeError("evaluation selection state is unexpectedly missing")
+            if selection_improved(eval_metrics, selection):
+                selection.update(
+                    {
+                        "value": eval_metrics[selection["metric"]],
+                        "epoch": epoch,
+                        "metrics": eval_metrics.copy(),
+                    }
+                )
+                improved_paths.append(run_dir / selection["checkpoint"])
+            coverage = eval_metrics.get("routing_hard_coverage")
+            if (
+                coverage is not None
+                and coverage > best_metrics["routing_hard_coverage"]
+            ):
+                best_metrics["routing_hard_coverage"] = coverage
+                improved_paths.append(run_dir / "best_coverage.pt")
+            auc = eval_metrics.get("auc")
+            if auc is not None and auc > best_metrics["auc"]:
+                best_metrics["auc"] = auc
+                improved_paths.append(run_dir / "best_auc.pt")
+            if args.dataset == "gazefollow":
+                avg_l2 = eval_metrics.get("avg_l2")
+                if avg_l2 is not None and avg_l2 < best_metrics["avg_l2"]:
+                    best_metrics["avg_l2"] = avg_l2
+                    improved_paths.append(run_dir / "best_avg_l2.pt")
+                min_l2 = eval_metrics.get("min_l2")
+                if min_l2 is not None and min_l2 < best_metrics["min_l2"]:
+                    best_metrics["min_l2"] = min_l2
+                    improved_paths.append(run_dir / "best_min_l2.pt")
+            else:
+                l2 = eval_metrics.get("l2")
+                if l2 is not None and l2 < best_metrics["l2"]:
+                    best_metrics["l2"] = l2
+                    improved_paths.append(run_dir / "best_l2.pt")
 
         payload = checkpoint_payload(
             model,
@@ -1638,19 +1944,35 @@ def main(argv: Optional[Iterable[str]] = None) -> dict:
             best_metrics=best_metrics,
             data_split=data_split,
             selection=selection,
+            checkpoint_role=(
+                "resume_checkpoint"
+                if args.formal_full_train_no_eval
+                else "training_checkpoint"
+            ),
+            initialization_checkpoint=initialization_checkpoint,
         )
         save_checkpoint(run_dir / "last.resume.pt", payload)
+        if args.formal_full_train_no_eval and epoch + 1 == args.max_epochs:
+            final_payload = {**payload, "checkpoint_role": "fixed_epoch_final"}
+            save_checkpoint(run_dir / "final.pt", final_payload)
         for path in improved_paths:
             save_checkpoint(path, payload)
         if args.save_every and (epoch + 1) % args.save_every == 0:
             save_checkpoint(run_dir / f"epoch_{epoch}.pt", payload)
 
+    if args.formal_full_train_no_eval and not (run_dir / "final.pt").is_file():
+        raise RuntimeError("formal full-train run did not produce final.pt")
+
     final_metrics = {
         "run_dir": str(run_dir),
         "evaluation_split": data_split["evaluation_split"],
+        "evaluation_performed": not args.formal_full_train_no_eval,
+        "checkpoint_policy": data_split.get("selection_policy"),
         "selection": selection,
         "best_metrics": best_metrics,
         "last_epoch": args.max_epochs - 1,
+        "final_checkpoint": ("final.pt" if args.formal_full_train_no_eval else None),
+        "completed": True,
     }
     (run_dir / "summary.json").write_text(
         json.dumps(final_metrics, allow_nan=False, indent=2, sort_keys=True) + "\n",
