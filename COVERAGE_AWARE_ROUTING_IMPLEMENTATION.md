@@ -2862,6 +2862,8 @@ runner 会在真正训练前检查：Git worktree 必须干净、commit 在整�
 Git 忽略的 `dinov3/**/*.py` 内容指纹正确。每个训练阶段结束后还会检查 epoch、
 history、可训练参数、初始化 checkpoint SHA、无 eval 记录、无 best checkpoint
 和 `final.pt` role。四个训练阶段全部通过以前，代码不会读取 official test。
+源码指纹内部固定使用 `LC_ALL=C` 排序；因此服务器交互 shell 是中文 locale、
+`nohup` shell 是其它 locale 时，也不会把完全相同的 DINOv3 源码误判成变化。
 
 本实现已在服务器 `/home/fb/anaconda3/envs/py310/bin/python` 的临时 worktree
 通过 63 项相关测试；临时目录已清理，服务器主工作区没有被修改。

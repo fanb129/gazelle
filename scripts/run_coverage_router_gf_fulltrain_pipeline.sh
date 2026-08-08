@@ -61,6 +61,10 @@ sha_file() { sha256sum "$1" | awk '{print $1}'; }
 
 source_fingerprint() {
   (
+    # File-name collation differs between C and UTF-8 locales.  Pin it so the
+    # same ignored DINOv3 tree has one fingerprint in interactive and nohup
+    # shells alike.
+    export LC_ALL=C
     cd "${ROOT}"
     find dinov3 -type f -name '*.py' -print0 \
       | sort -z \
@@ -68,6 +72,13 @@ source_fingerprint() {
       | sha256sum \
       | awk '{print $1}'
   )
+}
+
+check_dino_source() {
+  local actual
+  actual=$(source_fingerprint)
+  [[ "${actual}" == "${DINO_SOURCE_FP}" ]] \
+    || die "DINOv3 source fingerprint mismatch: expected ${DINO_SOURCE_FP}, got ${actual}"
 }
 
 clean_git() {
@@ -111,8 +122,7 @@ assert_runtime() {
   clean_git
   check_hash "${TRAIN_JSON}" "${TRAIN_SHA}" "train annotation"
   check_hash "${DINO_CKPT}" "${DINO_SHA}" "DINOv3 checkpoint"
-  [[ "$(source_fingerprint)" == "${DINO_SOURCE_FP}" ]] \
-    || die "ignored DINOv3 Python source fingerprint changed"
+  check_dino_source
   idle_gpu "$1"
 }
 
@@ -188,7 +198,7 @@ idle_gpu "${DENSE_GPU}"
 idle_gpu "${ROUTED_GPU}"
 check_hash "${TRAIN_JSON}" "${TRAIN_SHA}" "train annotation"
 check_hash "${DINO_CKPT}" "${DINO_SHA}" "DINOv3 checkpoint"
-[[ "$(source_fingerprint)" == "${DINO_SOURCE_FP}" ]] || die "DINOv3 source fingerprint mismatch"
+check_dino_source
 
 "${PYTHON_BIN}" - "${TRAIN_JSON}" "${TRAIN_RECORDS}" "${TRAIN_PERSONS}" <<'PY'
 import json, sys
