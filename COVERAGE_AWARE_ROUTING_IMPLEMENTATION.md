@@ -11,24 +11,27 @@
 
 本地机器只用于修改和静态检查。真实 DINOv3、CUDA、训练和速度测试均由服务器 `fb@3090.lab` 在拉取本分支后执行。
 
-### 0.1 进度审计（截至 clean benchmark）
+### 0.1 进度审计（截至 full-train official test）
 
 - **P0 工程闭环已完成**：dense/sparse 路径、Top-K、RoPE gather、
   early-fill scatter、训练/评测/checkpoint 和 benchmark 均已实现。
-- **P1 support pilot 已完成一个 seed**：只训练 `463,105` 参数的 router；
-  K25 exact-point coverage 达到 `82.57%`，K50 为 `94.32%`。
-- **P2 已完成 decoder-only proof-of-concept**：成功配置固定 router 和
-  整个 DINO，只训练 `3,416,576` 参数的 decoder。K50 最佳完整 tuple
-  为 `0.95231 / 0.11003 / 0.05007`；K25 按 Avg L2 选模的 tuple 为
-  `0.94654 / 0.11131 / 0.05106`。
+- **P1 Router 因果证据已完成**：固定 dense 起点的 routing-stage 三 seed
+  趋势稳定；相同 K50 下，learned Router 相对未训练 Router 的 holdout AUC
+  提高 `0.00510`、Avg L2 降低 `0.01159`。
+- **P2 GazeFollow 主闭环已完成**：100% train、固定轮次、训练期不评测，最后
+  对固定 K50/dense 各执行一次 official test。K50 相对 matched dense 为
+  `-0.000802 AUC / +0.001783 Avg L2 / +0.001296 Min L2`，并保留
+  `94.12%` 的标注注视点。
 - router、decoder 和 DINO suffix 同时训练的 K25 15-epoch run 已失败；
   成功配置中的 DINO suffix **从未微调**，不能表述成成功的端到端训练。
-- 当前真实 latency 收益约为 `0–2%` 且无显存收益，效率证据尚未闭环。
-- validation 选模、多 seed、关键消融、VAT/多人共享和跨数据集尚未完成。
+- **正式效率 gate 已通过批量场景**：B1 延迟持平，B4/B8 相对原始 dense
+  分别为 `1.061x / 1.149x` 端到端 speedup；没有显存收益。
+- VAT K50/K75 未保持 dense 精度并暂停；Router 输入、预算、回填和路由位置等
+  关键消融，以及多人 union 的实际效率证据尚未完成。
 
-按完成内容估计：工程原型约 `70–75%`，论文证据闭环约 `35–40%`，
-综合进度约 **50%**。这里的百分比是工作量/证据完整度估计，不是方法
-成功概率。
+按完成内容估计：工程主闭环约 `90%`，GazeFollow 核心证据约 `80%`，完整论文
+实验包约 `60–65%`。剩余工作主要是消融、多人证据和第二数据集，而不是再次
+证明 K50 主结果。这里的百分比是工作量/证据完整度估计，不是方法成功概率。
 
 ## 1. 要解决的问题与论文故事
 
@@ -3010,6 +3013,108 @@ done
 AUC、Avg L2、Min L2、coverage 及已有正式效率结果；official test 只用于最终
 报告，不再承担调参或选模。
 
+#### 5.10s GazeFollow full-train official test：主结论成立，但不是完全无损
+
+五个目录已经按上面的白名单同步到本地，共 22 个 JSON/JSONL/MD 文件，没有
+下载任何 `.pt`。本地四个正式结果文件的 SHA256 与服务器
+`pipeline_complete.json` 逐项一致；pipeline 标记为 `completed=true`，运行
+commit 为 `efa15f731561988545d97e2d5b5012c15c73bf3d`。
+
+协议检查通过：dense/support/K50/matched dense 分别完整运行 `15/3/5/5`
+epochs；训练期间都只读取完整 train，`validation=0`、
+`official_test_accessed=false`，没有 best-checkpoint 或测试后选模。K50 和
+matched dense 从同一个 dense final 初始化，并使用相同的五轮 decoder 更新预算；
+官方评测均为完整 `4,782` 张图、FP32、batch 16、无子集和无配置覆盖。
+
+固定 checkpoint 的 official-test 结果为：
+
+| metric | learned K50 | matched dense | K50 - dense |
+|---|---:|---:|---:|
+| AUC ↑ | `0.956462` | `0.957264` | `-0.000802` |
+| Avg L2 ↓ | `0.104375` | `0.102592` | `+0.001783` |
+| Min L2 ↓ | `0.045044` | `0.043748` | `+0.001296` |
+| 实际保留 patch 比例 | `0.500000` | `1.000000` | `-0.500000` |
+| 精确注视点所在 patch 被保留 | `94.123%` | `100%` | `-5.877 pp` |
+| GT 高斯热图质量被 hard mask 保留 | `86.300%` | `100%` | `-13.700 pp` |
+
+通俗地说：前六个 DINO block 仍看完整图；后六个 block 从 `1,024` 个 patch
+减到 `512` 个。这样做以后，AUC 只少 `0.00080`，但两个 L2 都略有变差。
+所以正确说法是“用很小的定位精度代价换取后半段 token 减半”，不能写成
+“完全无损”或“稀疏模型比 dense 更准”。AUC 保留比例虽然是 `99.916%`，
+论文表格仍应优先报告原始绝对差值，避免用不同分母制造好看的百分比。
+
+训练过程没有异常：dense loss 从 `0.053527` 单调降到 `0.040304`；support
+K25 的 hard coverage 从 `58.99%` 升到 `64.12%`，实际 keep 始终精确为
+`25%`；K50 curriculum 正确执行
+`100% -> 75% -> 50% -> 50% -> 50%`，到达 K50 后 loss 继续下降。K50 与
+matched dense 的 epoch-0 loss 只差 `2.54e-10`，说明两条 decoder 分支的起点
+确实对齐。因为 formal refit 有意不设 validation，仅凭 train history 不能声称
+排除了过拟合；其轮数依据来自此前固定 split 的三 seed 实验。
+
+结合此前已经冻结的证据，现在可以成立的完整 GazeFollow 结论是：
+
+1. 在相同 K50 和相同 decoder 训练下，learned Router 相对未训练 Router 的
+   holdout AUC 提高 `0.00510`、Avg L2 降低 `0.01159`，说明不是随便删一半
+   token 都可以；
+2. routing-stage 三 seed 的 K50-dense 配对差为
+   `-0.001153 ± 0.000159 AUC`、`+0.000432 ± 0.000405 Avg L2`，方向稳定；
+3. 本次无测试后选模的 official test 得到
+   `-0.000802 AUC / +0.001783 Avg L2 / +0.001296 Min L2`；
+4. RTX 3090 正反序正式效率矩阵中，B1 延迟持平，B4/B8 相对原始 dense
+   分别为 `1.061x / 1.149x` 端到端 speedup，显存没有节省。
+
+因此 GazeFollow 上的核心 idea 已被支持：gaze-aware Router 能把深层计算集中到
+一半空间，并以小幅精度代价换取批量推理加速。但当前证据不能支持以下说法：
+
+- 不能说精度“完全无损”或与 dense 统计等价；当前没有逐样本置信区间；
+- 不能说整网计算减半或达到 `2x`，也不能声称 batch-1 实时加速或节省显存；
+- official test 全部是 single-head，不能用它证明多人 union 的收益；
+- VAT K50/K75 尚未保持 dense 精度，不能声称方法已经跨数据集普适；
+- 成功 recipe 冻结了 DINO 和 Router、只适配 decoder，不能写成成功的端到端
+  joint fine-tuning。
+
+##### 5.10s-1 下一步顺序
+
+从现在开始冻结 K50 official checkpoint 和上表结果，不再次读取 official test，
+也不根据本次 test 改 K、epoch 或挑另一个 checkpoint。新的方法分析全部回到已经
+固定的 split-clean validation 上完成。
+
+当前第一个代码和实验任务是 **Router 输入消融**，因为主结果已经证明“学过的
+Router 有用”，但还要回答它为什么需要本文设计的输入，而不是一个廉价的几何
+FOV。固定相同 K25 support 训练、K50 decoder curriculum 和 split，比较：
+
+1. `geometry_only`：只看 bbox 相对几何；
+2. `head_geometry`：头部外观加几何，不看每个候选位置的 scene semantic；
+3. `full`：当前 scene + head appearance + geometry，复用已有结果。
+
+当前代码还没有 `router_input_mode` 参数，所以现在不要手工拼命令；否则只会重复
+现有 full 模型。下一次实现应同时加入参数、checkpoint provenance、单元测试、
+两条新 variant 的 runner，并把服务器 `nohup + 单卡 CUDA` 命令写入本文档。
+先跑 seed 3106；若 full 相对两个简化版本有清晰且跨 epoch 一致的优势，再补其它
+seed。若三者接近，则应简化 Router 和论文表述，而不是强行声称 scene/head 分支
+都有贡献。
+
+Router 输入消融之后，按以下顺序补论文证据：
+
+1. **预算 Pareto**：在同一 validation 上补 K25、K75，和已有
+   K50/K100/matched dense 组成精度—token—B4/B8 latency 曲线；只做消融，
+   不回到 official test 重新选 K；
+2. **回填消融**：比较当前 route-layer early-exit fill 与 zero fill，确认被删位置
+   保留浅层空间信息是否是精度接近 dense 的关键；
+3. **路由位置**：比较 blocks `2/5/8`，解释为什么在 block 5 切分，而不是把它
+   当作未经验证的默认值；
+4. **多人证据**：在 split-clean multi-head 子集报告精度，并以每图 `1/2/4`
+   人比较 per-image union 与逐人重复 suffix 的实际耗时；official test 不能承担
+   这项证明；
+5. **第二数据集 Go/No-Go**：VAT 不再继续扫 K87.5。若重开，必须在固定 K50
+   总预算内实现 context-preserving 单 mask，例如将少量名额分给 target halo 或
+   全局 anchors，再只在 source-video-disjoint holdout 上判断；失败就如实作为
+   limitation，不进行 VAT official test。
+
+优先级上，Router 输入消融、预算 Pareto 和回填消融属于投稿前必须完成；路由位置
+与多人效率属于强烈建议；VAT 修复是决定论文能否形成跨数据集主张的高风险工作，
+不再让它阻塞已经成立的 GazeFollow 主结果。
+
 ## 6. 运行监控与结果反馈
 
 ```bash
@@ -3043,5 +3148,7 @@ validation-selected run directory 会生成：
 B1 延迟持平，B4/B8 分别达到 `1.061×/1.149×` 端到端加速，但不节省显存。
 formal benchmark runtime commit 已归档，K50 结构冻结。GazeFollow 3107/3108
 downstream seed 与 VAT K50/K75 诊断均已完成；VAT accuracy gate 未通过并暂停。
-当前唯一主实验是 5.10r 的 GazeFollow full-train refit 和固定 K50/dense 各一次
-official test，暂不运行新的 K、suffix 微调或效率搜索。
+5.10r 的 GazeFollow full-train refit 和固定 K50/dense official test 也已完成，
+结果见 5.10s；不再读取 official test。当前下一项是先实现 Router 输入消融的
+代码、测试和 runner，再在 split-clean validation 上运行
+`geometry_only / head_geometry / full`，暂不手工启动其它长训练。
