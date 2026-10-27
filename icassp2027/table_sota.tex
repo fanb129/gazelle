@@ -1,0 +1,34 @@
+\begin{table*}[t]
+  \centering
+  \caption{Comparison with representative gaze target estimation methods on GazeFollow and VideoAttentionTarget. Competing results are taken from the corresponding papers, and ``Params'' denotes reported trainable parameters. Best and second-best values are bold and underlined.}
+  \label{tab:sota}
+  \setlength{\tabcolsep}{2.0pt}
+  \renewcommand{\arraystretch}{1.00}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llcccccccc}
+    \toprule
+    \multirow{2}{*}{Category} & \multirow{2}{*}{Method} & \multirow{2}{*}{Venue} & \multirow{2}{*}{Params} & \multicolumn{3}{c}{GazeFollow} & \multicolumn{3}{c}{VideoAttentionTarget}\\
+    \cmidrule(lr){5-7}\cmidrule(lr){8-10}
+    & & & & AUC $\uparrow$ & Avg $L_2$ $\downarrow$ & Min $L_2$ $\downarrow$ & AUC $\uparrow$ & $L_2$ $\downarrow$ & In/Out AP $\uparrow$\\
+    \midrule
+    \multirow{9}{*}{\shortstack[l]{Multi-branch /\\Multi-modal}}
+    & Chong et al.~\cite{chong2018connecting} & ECCV 2018 & 51M & 0.896 & 0.187 & 0.112 & 0.833 & 0.171 & 0.712\\
+    & Lian et al.~\cite{lian2018believe} & ACCV 2018 & 55M & 0.906 & 0.145 & 0.081 & 0.837 & 0.165 & --\\
+    & Chong et al.~\cite{chong2020detecting} & CVPR 2020 & 61M & 0.921 & 0.137 & 0.077 & 0.860 & 0.134 & 0.853\\
+    & Fang et al.~\cite{fang2021dual} & CVPR 2021 & 68M & 0.922 & 0.124 & 0.067 & 0.905 & 0.108 & 0.896\\
+    & Bao et al.~\cite{bao2022escnet} & CVPR 2022 & 29M & 0.928 & 0.122 & -- & 0.885 & 0.120 & 0.869\\
+    & Jin et al.~\cite{jin2022depth} & EAAI 2022 & 52M & 0.920 & 0.118 & 0.063 & 0.900 & 0.104 & 0.895\\
+    & Miao et al.~\cite{miao2023patch} & WACV 2023 & 61M & 0.934 & 0.123 & 0.065 & 0.917 & 0.109 & \underline{0.908}\\
+    & Tafasca et al.~\cite{tafasca2023childplay} & ICCV 2023 & 25M & 0.939 & 0.122 & 0.062 & 0.914 & 0.109 & 0.834\\
+    & Sharingan~\cite{tafasca2024sharingan} & CVPR 2024 & 105M & 0.944 & 0.113 & 0.057 & -- & 0.107 & 0.891\\
+    \midrule
+    \multirow{4}{*}{\shortstack[l]{VFM-based /\\Single-branch}}
+    & ViTGaze~\cite{song2024vitgaze} & VI 2024 & 22M & 0.949 & 0.105 & 0.047 & \underline{0.938} & \underline{0.102} & 0.905\\
+    & GT360~\cite{dai2025gazetarget360} & IROS 2025 & 1.9M & 0.957 & 0.101 & -- & 0.934 & 0.103 & 0.887\\
+    & Gaze-LLE (ViT-B)~\cite{ryan2025gaze} & CVPR 2025 & 2.8M & \underline{0.958} & 0.104 & 0.045 & 0.933 & 0.107 & 0.897\\
+    & Gaze-LLE (ViT-L)~\cite{ryan2025gaze} & CVPR 2025 & 2.9M & \underline{0.958} & \underline{0.099} & \underline{0.041} & 0.937 & 0.103 & 0.903\\
+    \midrule
+    Ours & GazeSpot (ViT-L) & -- & 3.8M & \textbf{0.961} & \textbf{0.093} & \textbf{0.038} & \textbf{0.944} & \textbf{0.092} & \textbf{0.912}\\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

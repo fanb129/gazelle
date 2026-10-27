@@ -1,0 +1,112 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{recasens2015they}
+\citation{chong2020detecting}
+\citation{recasens2017following}
+\citation{fathi2012learning}
+\citation{zander2010combining}
+\citation{emery2000eyes}
+\citation{chong2020detecting}
+\citation{fang2021dual}
+\citation{bao2022escnet}
+\citation{gupta2022modular}
+\citation{tonini2022multimodal}
+\citation{tonini2023object}
+\citation{wang2022gatector}
+\citation{song2024vitgaze}
+\citation{ryan2025gaze}
+\citation{kellnhofer2019gaze360}
+\citation{lin2017feature}
+\citation{caron2021emerging}
+\citation{simeoni2021localizing}
+\citation{oquab2023dinov2}
+\citation{simeoni2025dinov3}
+\citation{mi2026objectaware}
+\citation{chong2018connecting}
+\citation{lian2018believe}
+\citation{chong2020detecting}
+\citation{fang2021dual}
+\citation{bao2022escnet}
+\citation{jin2022depth}
+\citation{miao2023patch}
+\citation{tafasca2023childplay}
+\citation{tafasca2024sharingan}
+\citation{song2024vitgaze}
+\citation{dai2025gazetarget360}
+\citation{ryan2025gaze}
+\citation{ryan2025gaze}
+\@writefile{toc}{\contentsline {section}{\numberline {1} Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Motivation. Decoding only the final VFM layer can draw the response toward a salient distractor in a crowded scene. GazeSpot instead combines multiple feature levels with a head-conditioned Spotlight Mask, yielding a more concentrated response near the annotated target.}}{1}{figure.1}\protected@file@percent }
+\newlabel{fig:motivation}{{1}{1}{Motivation. Decoding only the final VFM layer can draw the response toward a salient distractor in a crowded scene. GazeSpot instead combines multiple feature levels with a head-conditioned Spotlight Mask, yielding a more concentrated response near the annotated target}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces GazeSpot extracts four levels from a frozen VFM. HCSG applies a head-conditioned Spotlight Mask to each level, SASA fuses the gated features with image-dependent weights, and a lightweight decoder predicts the gaze heatmap and the in/out-of-frame score.}}{2}{figure.2}\protected@file@percent }
+\newlabel{fig:pipeline}{{2}{2}{GazeSpot extracts four levels from a frozen VFM. HCSG applies a head-conditioned Spotlight Mask to each level, SASA fuses the gated features with image-dependent weights, and a lightweight decoder predicts the gaze heatmap and the in/out-of-frame score}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2} Method}{2}{section.2}\protected@file@percent }
+\newlabel{sec:method}{{2}{2}{Method}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1} Overview}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2} Head-conditioned spatial gating}{2}{subsection.2.2}\protected@file@percent }
+\newlabel{eq:geometry}{{1}{2}{Head-conditioned spatial gating}{equation.1}{}}
+\newlabel{eq:gating}{{2}{2}{Head-conditioned spatial gating}{equation.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3} Adaptive multi-level fusion}{2}{subsection.2.3}\protected@file@percent }
+\newlabel{eq:gap}{{3}{2}{Adaptive multi-level fusion}{equation.3}{}}
+\newlabel{eq:weights}{{4}{2}{Adaptive multi-level fusion}{equation.4}{}}
+\citation{recasens2015they}
+\citation{chong2020detecting}
+\citation{wang2022gatector}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Comparison with representative gaze target estimation methods on GazeFollow and VideoAttentionTarget. Competing results are taken from the corresponding papers, and ``Params'' denotes reported trainable parameters. Best and second-best values are bold and underlined.}}{3}{table.1}\protected@file@percent }
+\newlabel{tab:sota}{{1}{3}{Comparison with representative gaze target estimation methods on GazeFollow and VideoAttentionTarget. Competing results are taken from the corresponding papers, and ``Params'' denotes reported trainable parameters. Best and second-best values are bold and underlined}{table.1}{}}
+\newlabel{eq:sasa}{{5}{3}{Adaptive multi-level fusion}{equation.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4} Gaze decoding}{3}{subsection.2.4}\protected@file@percent }
+\newlabel{eq:decoder_input}{{6}{3}{Gaze decoding}{equation.6}{}}
+\newlabel{eq:predictions}{{7}{3}{Gaze decoding}{equation.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5} Training objective}{3}{subsection.2.5}\protected@file@percent }
+\newlabel{eq:objective}{{8}{3}{Training objective}{equation.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3} Experiments}{3}{section.3}\protected@file@percent }
+\newlabel{sec:experiments}{{3}{3}{Experiments}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1} Datasets and Evaluation Metrics}{3}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2} Implementation Details}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3} Main results}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces OOD evaluation on GOO-real using GazeFollow-trained checkpoints without fine-tuning.}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:goo}{{2}{4}{OOD evaluation on GOO-real using GazeFollow-trained checkpoints without fine-tuning}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Localization by crowd density on VAT. Relative $L_2$ reduction is computed against the last-layer baseline.}}{4}{table.3}\protected@file@percent }
+\newlabel{tab:crowd}{{3}{4}{Localization by crowd density on VAT. Relative $L_2$ reduction is computed against the last-layer baseline}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4} Ablation Studies}{4}{subsection.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Qualitative comparison on crowded VAT frames. From top to bottom: input and query head box, ground truth, Spotlight Mask, last-layer baseline heatmap, and GazeSpot heatmap.}}{4}{figure.3}\protected@file@percent }
+\newlabel{fig:crowd_visualization}{{3}{4}{Qualitative comparison on crowded VAT frames. From top to bottom: input and query head box, ground truth, Spotlight Mask, last-layer baseline heatmap, and GazeSpot heatmap}{figure.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Controlled ViT-B/16 analyses: (a) component ablation with DINOv3; (b) backbone comparison in $L_2$ error ($\downarrow $).}}{4}{table.4}\protected@file@percent }
+\newlabel{tab:ablation}{{4}{4}{Controlled ViT-B/16 analyses: (a) component ablation with DINOv3; (b) backbone comparison in $L_2$ error ($\downarrow $)}{table.4}{}}
+\newlabel{tab:backbone}{{4}{4}{Controlled ViT-B/16 analyses: (a) component ablation with DINOv3; (b) backbone comparison in $L_2$ error ($\downarrow $)}{table.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4} Conclusion}{4}{section.4}\protected@file@percent }
+\bibstyle{IEEEbib}
+\bibdata{refs_icassp}
+\bibcite{recasens2015they}{1}
+\bibcite{chong2020detecting}{2}
+\bibcite{recasens2017following}{3}
+\bibcite{fathi2012learning}{4}
+\bibcite{zander2010combining}{5}
+\bibcite{emery2000eyes}{6}
+\bibcite{fang2021dual}{7}
+\bibcite{bao2022escnet}{8}
+\bibcite{gupta2022modular}{9}
+\bibcite{tonini2022multimodal}{10}
+\bibcite{tonini2023object}{11}
+\bibcite{wang2022gatector}{12}
+\bibcite{song2024vitgaze}{13}
+\bibcite{ryan2025gaze}{14}
+\bibcite{kellnhofer2019gaze360}{15}
+\bibcite{lin2017feature}{16}
+\bibcite{caron2021emerging}{17}
+\bibcite{simeoni2021localizing}{18}
+\bibcite{oquab2023dinov2}{19}
+\bibcite{simeoni2025dinov3}{20}
+\bibcite{mi2026objectaware}{21}
+\bibcite{chong2018connecting}{22}
+\bibcite{lian2018believe}{23}
+\bibcite{jin2022depth}{24}
+\bibcite{miao2023patch}{25}
+\bibcite{tafasca2023childplay}{26}
+\bibcite{tafasca2024sharingan}{27}
+\bibcite{dai2025gazetarget360}{28}
+\@writefile{toc}{\contentsline {section}{\numberline {5} References}{5}{section.5}\protected@file@percent }
+\gdef \@abspage@last{5}

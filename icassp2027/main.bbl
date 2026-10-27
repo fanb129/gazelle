@@ -1,0 +1,184 @@
+\begin{thebibliography}{10}
+
+\bibitem{recasens2015they}
+Adria Recasens, Aditya Khosla, Carl Vondrick, and Antonio Torralba,
+\newblock ``Where are they looking?,''
+\newblock {\em Advances in Neural Information Processing Systems}, vol. 28,
+  2015.
+
+\bibitem{chong2020detecting}
+Eunji Chong, Yongxin Wang, Nataniel Ruiz, and James~M. Rehg,
+\newblock ``Detecting attended visual targets in video,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2020, pp. 5396--5406.
+
+\bibitem{recasens2017following}
+Adria Recasens, Carl Vondrick, Aditya Khosla, and Antonio Torralba,
+\newblock ``Following gaze in video,''
+\newblock in {\em Proc. IEEE Int. Conf. Computer Vision}, 2017, pp. 1435--1443.
+
+\bibitem{fathi2012learning}
+Alireza Fathi, Yin Li, and James~M. Rehg,
+\newblock ``Learning to recognize daily actions using gaze,''
+\newblock in {\em Proc. European Conf. Computer Vision}, 2012, pp. 314--327.
+
+\bibitem{zander2010combining}
+Thorsten~O. Zander, Matti Gaertner, Christian Kothe, and Roman Vilimek,
+\newblock ``Combining eye gaze input with a brain-computer interface for
+  touchless human-computer interaction,''
+\newblock {\em Int. J. Human-Computer Interaction}, vol. 27, no. 1, pp. 38--51,
+  2011.
+
+\bibitem{emery2000eyes}
+Nathan~J. Emery,
+\newblock ``The eyes have it: The neuroethology, function and evolution of
+  social gaze,''
+\newblock {\em Neuroscience and Biobehavioral Reviews}, vol. 24, no. 6, pp.
+  581--604, 2000.
+
+\bibitem{fang2021dual}
+Yi~Fang, Jiapeng Tang, Wang Shen, Wei Shen, Xiao Gu, Li~Song, and Guangtao
+  Zhai,
+\newblock ``Dual attention guided gaze target detection in the wild,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2021, pp. 11390--11399.
+
+\bibitem{bao2022escnet}
+Jun Bao, Buyu Liu, and Jun Yu,
+\newblock ``{ESCNet}: Gaze target detection with the understanding of 3d
+  scenes,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2022, pp. 14126--14135.
+
+\bibitem{gupta2022modular}
+Anshul Gupta, Samy Tafasca, and Jean-Marc Odobez,
+\newblock ``A modular multimodal architecture for gaze target prediction:
+  Application to privacy-sensitive settings,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2022, pp. 5041--5050.
+
+\bibitem{tonini2022multimodal}
+Francesco Tonini, Cigdem Beyan, and Elisa Ricci,
+\newblock ``Multimodal across domains gaze target detection,''
+\newblock in {\em Proc. Int. Conf. Multimodal Interaction}, 2022, pp. 420--431.
+
+\bibitem{tonini2023object}
+Francesco Tonini, Nicola Dall'Asen, Cigdem Beyan, and Elisa Ricci,
+\newblock ``Object-aware gaze target detection,''
+\newblock in {\em Proc. IEEE/CVF Int. Conf. Computer Vision}, 2023, pp.
+  21860--21869.
+
+\bibitem{wang2022gatector}
+Binglu Wang, Tao Hu, Baoshan Li, Xiaojuan Chen, and Zhijie Zhang,
+\newblock ``Gatector: A unified framework for gaze object prediction,''
+\newblock in {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, 2022, pp. 19588--19597.
+
+\bibitem{song2024vitgaze}
+Yuehao Song, Xinggang Wang, Jingfeng Yao, Wenyu Liu, Jinglin Zhang, and
+  Xiangmin Xu,
+\newblock ``{ViTGaze}: Gaze following with interaction features in vision
+  transformers,''
+\newblock {\em Visual Intelligence}, vol. 2, no. 1, pp. 31, 2024.
+
+\bibitem{ryan2025gaze}
+Fiona Ryan, Ajay Bati, Sangmin Lee, Daniel Bolya, Judy Hoffman, and James~M.
+  Rehg,
+\newblock ``Gaze-{LLE}: Gaze target estimation via large-scale learned
+  encoders,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2025, pp. 28874--28884.
+
+\bibitem{kellnhofer2019gaze360}
+Petr Kellnhofer, Adria Recasens, Simon Stent, Wojciech Matusik, and Antonio
+  Torralba,
+\newblock ``{Gaze360}: Physically unconstrained gaze estimation in the wild,''
+\newblock in {\em Proc. IEEE/CVF Int. Conf. Computer Vision}, 2019, pp.
+  6912--6921.
+
+\bibitem{lin2017feature}
+Tsung-Yi Lin, Piotr Doll{\'a}r, Ross Girshick, Kaiming He, Bharath Hariharan,
+  and Serge Belongie,
+\newblock ``Feature pyramid networks for object detection,''
+\newblock in {\em Proc. IEEE Conf. Computer Vision and Pattern Recognition},
+  2017, pp. 2117--2125.
+
+\bibitem{caron2021emerging}
+Mathilde Caron, Hugo Touvron, Ishan Misra, Herv{\'e} J{\'e}gou, Julien Mairal,
+  Piotr Bojanowski, and Armand Joulin,
+\newblock ``Emerging properties in self-supervised vision transformers,''
+\newblock in {\em Proc. IEEE/CVF Int. Conf. Computer Vision}, 2021, pp.
+  9650--9660.
+
+\bibitem{simeoni2021localizing}
+Oriane Sim{\'e}oni, Gilles Puy, Huy~V. Vo, Simon Roburin, Spyros Gidaris,
+  Andrei Bursuc, Patrick P{\'e}rez, Renaud Marlet, and Jean Ponce,
+\newblock ``Localizing objects with self-supervised transformers and no
+  labels,''
+\newblock in {\em Proc. British Machine Vision Conf.}, 2021.
+
+\bibitem{oquab2023dinov2}
+Maxime Oquab, Timoth{\'e}e Darcet, Th{\'e}o Moutakanni, Huy Vo, Marc
+  Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel Haziza, Francisco Massa,
+  Alaaeldin El-Nouby, et~al.,
+\newblock ``{DINOv2}: Learning robust visual features without supervision,''
+\newblock {\em Transactions on Machine Learning Research}, 2024.
+
+\bibitem{simeoni2025dinov3}
+Oriane Sim{\'e}oni, Huy~V. Vo, Maximilian Seitzer, Federico Baldassarre, Maxime
+  Oquab, et~al.,
+\newblock ``{DINOv3},''
+\newblock {\em arXiv preprint arXiv:2508.10104}, 2025.
+
+\bibitem{mi2026objectaware}
+Jiajie Mi, Xinyu Liu, Mengke Song, and Chenglizhao Chen,
+\newblock ``Multi-scale object-aware gaze estimation via geometric reasoning,''
+\newblock in {\em Proc. European Conf. Computer Vision}, 2026.
+
+\bibitem{chong2018connecting}
+Eunji Chong, Nataniel Ruiz, Yongxin Wang, Yun Zhang, Agata Rozga, and James~M.
+  Rehg,
+\newblock ``Connecting gaze, scene, and attention: Generalized attention
+  estimation via joint modeling of gaze and scene saliency,''
+\newblock in {\em Proc. European Conf. Computer Vision}, 2018, pp. 383--398.
+
+\bibitem{lian2018believe}
+Dongze Lian, Zehao Yu, and Shenghua Gao,
+\newblock ``Believe it or not, we know what you are looking at!,''
+\newblock in {\em Proc. Asian Conf. Computer Vision}, 2018, pp. 35--50.
+
+\bibitem{jin2022depth}
+Tianlei Jin, Qizhi Yu, Shiqiang Zhu, Zheyuan Lin, Jie Ren, Yuanhai Zhou, and
+  Wei Song,
+\newblock ``Depth-aware gaze-following via auxiliary networks for robotics,''
+\newblock {\em Engineering Applications of Artificial Intelligence}, vol. 113,
+  pp. 104924, 2022.
+
+\bibitem{miao2023patch}
+Qiaomu Miao, Minh Hoai, and Dimitris Samaras,
+\newblock ``Patch-level gaze distribution prediction for gaze following,''
+\newblock in {\em Proc. IEEE/CVF Winter Conf. Applications of Computer Vision},
+  2023, pp. 880--889.
+
+\bibitem{tafasca2023childplay}
+Samy Tafasca, Anshul Gupta, and Jean-Marc Odobez,
+\newblock ``Childplay: A new benchmark for understanding children's gaze
+  behaviour,''
+\newblock in {\em Proc. IEEE/CVF Int. Conf. Computer Vision}, 2023, pp.
+  20935--20946.
+
+\bibitem{tafasca2024sharingan}
+Samy Tafasca, Anshul Gupta, and Jean-Marc Odobez,
+\newblock ``Sharingan: A transformer architecture for multi-person gaze
+  following,''
+\newblock in {\em Proc. IEEE/CVF Conf. Computer Vision and Pattern
+  Recognition}, 2024, pp. 2008--2017.
+
+\bibitem{dai2025gazetarget360}
+Zhuangzhuang Dai, Vincent~Gbouna Zakka, Luis~J. Manso, and Chen Li,
+\newblock ``{GazeTarget360}: Towards gaze target estimation in 360-degree for
+  robot perception,''
+\newblock in {\em Proc. IEEE/RSJ Int. Conf. Intelligent Robots and Systems},
+  2025, pp. 18291--18296.
+
+\end{thebibliography}
