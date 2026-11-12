@@ -11,7 +11,9 @@
 
 ### 1.1 单帧底座（复用，不改）
 - `gazelle/model.py` 的 `GazeLLE`（GazeSpot）：冻结 DINOv3 + GGSF + SASA + decoder，输出 heatmap + inout。
-- 用现有 GazeSpot VAT checkpoint 跑前向，**不重训 backbone**。checkpoint 路径/epoch 向用户确认。
+- 用现有 GazeSpot VAT checkpoint 跑前向，**不重训 backbone**。用户于 2026-11-12 确认两套 `epoch_7.pt`，并选择更快的 ViT-B；T2 主缓存及后续单帧/STAG 对照统一使用 ViT-B：
+  - ViT-L：`/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl_sasa_ggsf/2026-03-25_14-35-38/epoch_7.pt`。
+  - ViT-B：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`。
 
 ### 1.2 track 恢复
 VAT 原始数据按轨迹组织：`annotations/{split}/{video}/{clip}/` 下每人一个 CSV，文件内即逐帧轨迹。
@@ -58,6 +60,7 @@ cscwd/
 │   │   └── preprocess_vat_tracks.py
 │   ├── stag/                  # STAG 门控核心
 │   │   ├── __init__.py
+│   │   ├── cache.py           # T2 NPY 存储与离线 track 读取
 │   │   ├── gating.py          # 平滑 + 切换门控
 │   │   └── metrics.py         # 时序指标
 │   └── scripts/               # 入口脚本
@@ -86,6 +89,8 @@ cscwd/
 ### T2 单帧预测缓存（服务器）
 - 用 GazeSpot VAT checkpoint，沿新 track JSON 跑前向，逐 track 逐帧缓存 `heatmap`（64×64）与 `inout` 概率。
 - 缓存为 numpy/parquet，按 track 组织，可离线读取。
+- 实现为 float32 `heatmap.npy` / `inout.npy` / `argmax_xy.npy`，沿 `sequence → track → frame` 连续存储；服务器 `index.json` 保存每条 track 的 `[start, stop)`、原始帧记录和文件 SHA256。`stag.cache.load_cache` / `iter_cached_tracks` 只依赖 NumPy，离线按 track 取出预测。
+- 使用原模型 transform、GGSF + SASA，全部参数冻结、`eval` + `inference_mode`，不使用 autocast/TF32；模型仅接收当前 RGB 和真实头部框。argmax 坐标按原 `vat_l2` 的 `column/64, row/64` 定义。
 - **验收**：缓存覆盖 test 全部 track；单帧 argmax 点 + 单帧 heatmap 可由缓存完全重建（不重新前向）。
 
 ### T3 STAG 门控（后处理级，先跑通）
@@ -154,7 +159,12 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-12 · T1 本地实现完成**：新增 `code/data_prep/preprocess_vat_tracks.py`，从原生 `.txt/.csv` 人物文件恢复 `sequence → tracks → frames`；保存人物身份、当前帧真实框、注视标签和原始帧号。沿用旧脚本混合正负注视坐标的修正规则，框不作跨帧平滑。
 - **T1 产出与数字**：新增 `code/data_prep/test_preprocess_vat_tracks.py`；本地合成数据回归 **6 项通过**，覆盖人物身份/帧序/归一化、未来行变化不影响历史帧、图像帧与人物帧计数、同总数错配、逆序拒绝、CLI 双 split 输出及失败退出。命令：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/data_prep -p 'test_*.py' -v`。这些是本地测试，未生成 VAT 实验数字。
 - **T1 服务器产出**：完整 JSON 写入数据集下 `cscwd_tracks/{train,test}_preprocessed_tracks.json`；小报告写 `results/t1_track_recovery.json`，含轨迹数、唯一图像帧数、人物帧数、逐帧人数核对、输入/输出 SHA256 与运行命令。核对全部通过后，脚本把实际数字及大文件路径/SHA256 追加至 `results/RESULT_PROVENANCE.md`。完整 track JSON 已加入 `.gitignore`。
-- **下一步**：用户手动运行下列 T1 命令，将小报告与 provenance 经 git 传回；以实际报告完成服务器验收。当前停在 T1，用户确认后再进 T2。
+- **2026-11-12 · T1 结果回传规则修正**：根目录 `*.json` 会忽略小报告；已在 `cscwd/.gitignore` 放行 `results/` 直属 JSON，完整 track JSON、缓存目录和大文件继续忽略。服务器本次可用 `git add -f cscwd/results/t1_track_recovery.json` 加入指定报告后回传。
+- **2026-11-12 · T1 服务器验收完成**：已拉取结果提交 `17699cc`，报告 `results/t1_track_recovery.json` 的 train/test 各项核对与总 `passed` 全为 `true`，脚本 SHA256 与本地一致。train：**1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test：**298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始人物 CSV 数、CSV 行数、旧 JSON 总数及逐帧人数均一致。原始帧号缺口 train 2 处、test 0 处。大文件路径与 SHA256 已记入 `results/RESULT_PROVENANCE.md`。用户授权验收通过后继续，进入 T2。
+- **2026-11-12 · T2 本地实现完成**：新增 `code/scripts/cache_single_frame.py`、`code/stag/__init__.py`、`code/stag/cache.py` 与 `code/scripts/test_cache_single_frame.py`；对 T1 全量 track JSON 按原顺序推理，保存原始 float32 预测、对应帧索引及 argmax。NPY 重新打开后按原始值流 SHA256 验证逐值一致，并重算 argmax 核对；完整覆盖并读回通过后才写出缓存索引、小报告和 provenance。
+- **T2 本地数字**：**9 项合成回归通过**，覆盖真实 tensor 推理下的冻结/eval 状态、仅当前帧输入、标签不参与预测、未来帧变化与 batch 边界下的历史输出一致性、跨轨迹 batch 与缺口映射、float32 无损恢复、错误 checkpoint/不完整缓存/有损精度拒绝、纯 NumPy 离线读取。命令：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_*.py' -v`。尚未运行服务器单帧前向，不填模型性能数字。
+- **2026-11-12 · T2 底座选择**：按用户速度优先的指示，主缓存切换为 ViT-B `train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；后续单帧 baseline 与 STAG 共用此缓存和 checkpoint。ViT-L 路径保留为已确认配置；未报告两者速度对比数字。
+- **下一步**：用户手动执行下列 T2 ViT-B 命令并回传 `results/t2_single_frame_cache.json` 与 provenance；核对 test 全部 **298 tracks / 31,978 人物帧**覆盖和精确读回，再进入 T3。
 
 ### T1 服务器手动运行
 
@@ -180,5 +190,36 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t1_track_recovery.json cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T1 VAT track recovery results"
+git push origin codex/coverage-aware-router
+```
+
+### T2 服务器手动运行（ViT-B 主缓存）
+
+本轮使用用户确认的 ViT-B GazeSpot VAT `epoch_7.pt`，GPU 0，batch size 8。原骨干工厂从仓库根目录的 `checkpoints/dinov3_vitb16_pretrain.pth` 加载冻结预训练骨干；脚本同时记录它与 VAT checkpoint 的 SHA256。缓存目录为新目录，一次完整运行生成一个缓存。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/cache_single_frame.py \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --track-json /newhome/fb/dataset/videoattentiontarget/cscwd_tracks/test_preprocessed_tracks.json \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
+  --model gazelle_dinov3_vitb16_inout \
+  --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test \
+  --batch-size 8 \
+  --num-workers 4 \
+  --device cuda:0 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.log 2>&1 &
+```
+
+日志最后输出 `T2 verification passed` 后回传小报告；完整 NPY 和缓存索引留服务器，文件路径/SHA256 自动追加进 provenance。
+
+```bash
+git add cscwd/results/t2_single_frame_cache.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record T2 ViT-B single-frame cache results"
 git push origin codex/coverage-aware-router
 ```

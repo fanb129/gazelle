@@ -17,7 +17,9 @@
 | 单帧 GazeSpot | ? | ? | ? | 待填 |
 | +STAG 时序门控 | ? | ? | ? | 待填 |
 
-- 单帧 checkpoint：`train_vat_vitl_sasa_ggsf/.../epoch_?.pt`（待填）。
+- 单帧主缓存 checkpoint（用户于 2026-11-12 确认，指定速度优先选 ViT-B）：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；模型 `gazelle_dinov3_vitb16_inout`，GGSF + SASA。后续单帧/STAG 对照统一此底座。
+- ViT-L checkpoint（用户同期确认的备用配置）：`/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl_sasa_ggsf/2026-03-25_14-35-38/epoch_7.pt`；模型 `gazelle_dinov3_vitl16_inout`。
+- T2 运行脚本：`cscwd/code/scripts/cache_single_frame.py`；服务器核对通过后自动追加实际覆盖、checkpoint/骨干/NPY 路径与 SHA256，回传小报告 `cscwd/results/t2_single_frame_cache.json`。
 - 评测脚本：`cscwd/code/scripts/eval_temporal.py`，在 track 级 JSON 上跑。
 - 结果文件：`cscwd/results/*.json`。
 
