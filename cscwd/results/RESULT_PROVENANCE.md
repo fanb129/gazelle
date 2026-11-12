@@ -30,9 +30,26 @@
 - 帧间抖动 Jitter↓ / 切换响应延迟↓ / 稳定占比↑：脚本 `cscwd/code/stag/metrics.py`。
 - 诚实校验：抖动同报真实注视点位移作参照。
 
+T4 真实结果摘要（源文件 `t4_temporal_comparison.json`，结果提交 `7f15cd7`）：
+
+| 指标 | 单帧 | 初始 STAG |
+|---|---:|---:|
+| Jitter mean↓ | 0.016647 | 0.012135 |
+| 相同帧对 GT 位移 mean | 0.005922 | 0.005922 |
+| 稳定占比↑ | 77.34% | 86.67% |
+| 准确且稳定占比↑ | 52.75% | 58.15% |
+| 全部可评估事件响应率↑ | 59.21% | 58.52% |
+| 可评估 gaze_shift 响应率↑ | 58.23% | 55.06% |
+
+- Jitter 降低 27.10%，准确且稳定占比提高 5.40 个百分点，均从上述源文件真实值计算。
+- 共同响应的 337 个事件：STAG−单帧延迟均值为 +0.13353115727002968 帧；其中共同响应的 87 个 gaze_shift 为 +0.27586206896551724 帧。gaze_shift 单帧独有响应 5 个、STAG 独有响应 0 个。
+- 当前结果支持稳定性改善，切换响应未改善；门控相对普通 EMA 的额外价值由后续 T5 比较。
+
 ## 消融（单帧 / 纯EMA / 规则门控 / 可学习门控）
 
-（待填）
+- T5 首轮入口：`cscwd/code/scripts/run_ema_ablation.py`；固定 EMA 为 `sigmoid(-2)`、`0.25/0.5/0.75`，与单帧及当前 STAG 共六种方法，全部报告。
+- 小结果：`cscwd/results/t5_ema_ablation.json`、`cscwd/results/t5_ema_ablation.md`；沿用 T4 协议，分别保存 EMA−单帧、EMA−STAG 的同事件配对延迟。
+- 完整 EMA 缓存和逐轨迹/事件明细留服务器 `cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/`；实际运行后由脚本追加真实数字、路径与 SHA256。
 
 ## 待填
 

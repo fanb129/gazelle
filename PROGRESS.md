@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | T1–T3 服务器流程验收通过；T3 初始规则定位未改善；T4 本地完成，15 项新增测试与 10 项回归通过 |
+| CSCWD | `cscwd/` | T1–T4 服务器验收完成；T5 固定 EMA 对照本地完成，13 项合成测试通过，下一步服务器跑六种方法 |
 
 ## 当前优先级（2026-11-12）
 **CSCWD 投稿是第一优先，方向已定：单帧→视频时序，贡献定位"切换感知 + 时序稳定"（STAG）。**
@@ -18,8 +18,12 @@ T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot V
 
 T3 真实结果已拉取（`eb28855`）并完成运行与口径验收：单帧 **AUC 0.940182 / L2 0.098995 / AP 0.886801**；初始 STAG **AUC 0.936860 / L2 0.099197 / AP 0.886801**。固定权重 `[-2,20,2,10]` 的初始规则定位未改善；来源见 `cscwd/results/t3_stag_comparison.json`。两侧覆盖相同 31,978 人物帧/20,655 画内定位帧，来源与实现 SHA256、轨迹对齐和读回核对通过。
 
-T4 本地时序指标与统一评测入口已实现：`cscwd/code/stag/metrics.py` 同帧对报告预测/GT 位移、稳定及准确稳定占比、三类切换代理事件响应率/延迟/删失计数；`cscwd/code/scripts/eval_temporal.py` 只读 T2/T3 缓存并重现两侧标准三指标。响应半径 0.10、GT 跳变阈值 0.15、稳定位移阈值 0.02、连续 3 帧、最长 30 帧窗口，完整定义与命令见 `cscwd/implementation_plan.md`。当前保持 T3 权重，下一步服务器产出真实时序数字。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
-T4 本地验证：**15 项新增合成测试、10 项标准/T3 回归通过**；Python 3.10 语法、CLI 和服务器命令/结果忽略规则检查通过。真实时序数字等待服务器运行。
+T4 真实结果已拉取（`7f15cd7`）并验收通过：同源缓存/代码 SHA256、标准指标重现和样本对齐核对通过。Jitter mean **0.016647→0.012135（−27.10%）**，同帧对 GT 位移 mean **0.005922**；准确且稳定占比 **52.75%→58.15%（+5.40 个百分点）**。但画内落点切换响应率 **58.23%→55.06%**，共同响应的 87 个切换事件平均慢 **0.276 帧**，另损失 5 个单帧可响应事件。当前结论：**稳定性改善，定位略降，切换响应未改善**，门控相对普通 EMA 的价值尚待 T5 对照。来源：`cscwd/results/t4_temporal_comparison.json`。
+
+T4 代码与协议已实现并通过 15 项新增合成测试、10 项标准/T3 回归；固定阈值和完整服务器命令见 `cscwd/implementation_plan.md`。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
+
+T5 固定 EMA 对照本地已实现：`cscwd/code/stag/ema.py` 与 `cscwd/code/scripts/run_ema_ablation.py`，覆盖 `α=sigmoid(-2)`、`0.25/0.5/0.75` 四个 EMA，以及单帧/现有 STAG，共六种方法。继承 T4 协议，核验来源链并重现参考指标，全部配置输出标准/时序指标及分别相对单帧、STAG 的配对事件响应。完整缓存与明细留服务器，JSON/Markdown 汇总和 provenance 经 git 回传。可学习门控继续后置。
+T5 本地验证：**13 项合成测试通过**（核心 9、完整来源链/CLI 集成 4），包含偏置匹配 EMA 与去门控 STAG 逐值一致、六种方法全报、参考指标重现、缓存不变和配对事件核对；Python 3.10 语法、CLI/命令及结果忽略规则检查通过。真实 EMA 对照数字等待服务器运行。
 
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
@@ -33,5 +37,5 @@ T4 本地验证：**15 项新增合成测试、10 项标准/T3 回归通过**；
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. 用户手动运行 T4 统一标准与时序评测，回传 `cscwd/results/t4_temporal_comparison.json` 与 `cscwd/results/RESULT_PROVENANCE.md`。逐轨迹/事件明细留服务器数据集下 `cscwd_cache/gazespot_vitb_epoch7/temporal_rule_v1_test/`，路径与 SHA256 自动记录。
-2. 拿到真实时序数字后进入 T5 消融，再推进 T6；当前不填尚未运行的时序比较数字。
+1. 用户手动执行实现计划中的 T5 nohup 命令，回传 `cscwd/results/t5_ema_ablation.json`、`cscwd/results/t5_ema_ablation.md` 与 `cscwd/results/RESULT_PROVENANCE.md`。完整 EMA 缓存/明细保存在服务器 `cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/`。
+2. 根据六种方法的真实精度—稳定性—响应折中判断门控额外价值，再开 T6 展示稳定收益、切换滞后与失败片段。当前不填尚未运行的 EMA 数字。

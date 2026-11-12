@@ -61,12 +61,14 @@ cscwd/
 │   ├── stag/                  # STAG 门控核心
 │   │   ├── __init__.py
 │   │   ├── cache.py           # T2 NPY 存储与离线 track 读取
+│   │   ├── ema.py             # T5 固定 α 因果对照
 │   │   ├── gating.py          # 平滑 + 切换门控
 │   │   └── metrics.py         # 时序指标
 │   └── scripts/               # 入口脚本
 │       ├── cache_single_frame.py   # T2 单帧预测缓存
 │       ├── run_stag.py             # T3 STAG 推理
 │       ├── eval_temporal.py        # T4 时序评测
+│       ├── run_ema_ablation.py     # T5 固定 EMA 批量对照
 │       └── visualize_temporal.py   # T6 可视化
 ├── latex/                     # 论文（main.tex + refs.bib + fig/）
 ├── results/                   # 关键小结果（JSON/MD），git 传回
@@ -129,9 +131,15 @@ cscwd/
 | 规则门控 STAG | ✓ | ✓(规则) | 切换感知贡献 |
 | 可学习门控 STAG | ✓ | ✓(可学习) | 学习门控是否更优 |
 
+- T4 回传后的首轮 T5：先比较单帧、固定 α EMA、当前规则 STAG。固定 EMA 包含 `α=sigmoid(-2)`（去掉三个门控信号，与当前偏置一致），再预先固定 `α=0.25/0.5/0.75`，全部报告，不从 test 挑选最好一行作为结论。
+- 对照仍用当前 ViT-B checkpoint、同一 T2 缓存和 T4 协议，比较精度—稳定性—响应的折中，尤其看相近平滑程度下门控是否比普通 EMA 更快响应。若后续选择参数，使用按源视频划分的 train/validation；test 用于最终报告。
+- 可学习门控后置：先确认规则门控相对普通 EMA 的额外收益，再决定学习化；当前不直接铺开 MLP。
+- 实现入口 `code/scripts/run_ema_ablation.py` 先核验 T2/T3 缓存和 T4 来源链，原样继承 T4 阈值与协议，重现单帧/STAG 标准和时序汇总后运行四个固定 EMA。新预测缓存、alpha/reset 和逐轨迹/事件明细留服务器，JSON/Markdown 小报告完整列出六种方法；配对延迟分别比较 EMA−单帧、EMA−STAG，独有响应字段为 `reference_only / candidate_only`。
+
 ### T6 定性可视化
 - 拥挤多人协同画面（VAT crowd 子集）"谁在看谁/什么"时序可视化。
 - 切换场景：一人从看 A 转到看 B，单帧抖动/滞后 vs STAG 平滑且快速跟上。
+- 根据 T4 实际结果，同时展示稳定收益段、切换滞后段与失败段；并列 RGB/真实框、GT 轨迹、单帧/STAG 轨迹、热图与 alpha。检查旧峰残留、热图融合和门控响应，定性图的结论以实际片段为准。
 
 ## 4. 数据、路径与 git 工作流
 
@@ -185,7 +193,13 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-12 · T4 本地实现**：`code/stag/metrics.py` 新增固定协议的 jitter/同 mask GT 位移、稳定/准确稳定占比、切换代理事件响应与删失计数；新增 `code/scripts/eval_temporal.py`，核验两侧完整缓存 SHA256 与 T2→T3 来源链，在同轨迹上重算标准三指标并核对 T3 报告，输出两侧时序汇总、共同响应事件延迟差和服务器逐轨迹/事件明细。
 - **T4 本地验证完成**：**15 项 T4 合成测试通过**（时序指标 11、CLI/缓存集成 4），包括同 mask GT 位移、窗口分母、准确稳定、缺口/跨人物隔离、代理事件延迟/未响应/短窗、共同响应事件延迟差、无事件 `null` 和来源/明细 SHA256；**10 项回归通过**（标准指标 6、T3 运行入口 4）。Python 3.10 语法、CLI help、服务器命令语法和结果忽略规则检查通过。
 - **T4 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*metrics.py' -v`（11 项新增 + 6 项标准回归）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_eval_temporal.py -v`（4 项新增）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_stag.py -v`（4 项 T3 回归）。本地只使用临时合成数据。
-- **下一步**：用户手动运行下列 T4 命令，回传 `results/t4_temporal_comparison.json` 与 provenance。完整明细留服务器；拿到真实时序数字后进入 T5 消融。
+- **2026-11-12 · T4 服务器结果验收完成**：已拉取 `7f15cd7`，报告来源链、代码 SHA256、全量 298 tracks/31,978 人物帧、T3 标准指标重现、帧对/窗口/代理事件对齐和计数关系全部核对通过。时序统计包含 **20,225 对画内相邻帧 / 19,796 个稳定窗口 / 688 个代理事件**，其中 581 个事件可评估、107 个窗口不足 3 帧。逐轨迹/事件明细仍在服务器，路径/SHA256 见报告。
+- **T4 真实结果**：单帧→STAG 的 Jitter mean **0.016646765511375713→0.012135128302046163**（降低 **27.10%**），同帧对 GT 位移 mean **0.0059218882811410915**；稳定占比 **77.3439%→86.6741%**，准确且稳定占比 **52.7531%→58.1532%**（增加 **5.40 个百分点**）。全部事件响应率 **59.2083%→58.5198%**；共同响应的 337 个事件平均延迟差（STAG−单帧）为 **+0.13353115727002968 帧**。
+- **T4 切换分型与判断**：`gaze_shift` 共 199 个代理事件、158 个可评估，响应率 **58.2278%→55.0633%**；共同响应的 87 个事件 STAG 平均慢 **0.27586206896551724 帧**，单帧独有响应 5 个、STAG 独有响应 0 个。`leave_frame` 结果一致，符合画内概率不变的实现。当前结论为**有稳定性收益，定位略降，切换响应未改善**；尚无普通 EMA 对照，不能将稳定收益归因为门控。两侧全部已响应事件集合不同，不用各自条件均值近似相同来宣称响应加快。
+- **2026-11-12 · T5 固定 EMA 对照本地实现**：新增 `code/stag/ema.py`、`code/scripts/run_ema_ablation.py` 和配套合成测试。EMA 严格因果、每条 track 独立初始化、缺口从当前帧重置，画内概率保持原值。四个系数为 `sigmoid(-2)` 与预先固定的 `0.25/0.5/0.75`；六种方法全报，不做 test 选优或训练。入口核验 T2/T3/T4 来源链并重现 T4 参考结果，复用原标准/时序指标函数，保存各 EMA 缓存及诊断数据，并输出每个 EMA 相对单帧和 STAG 的同事件响应比较。
+- **T5 本地验证完成**：**13 项合成测试通过**（EMA 核心 9、完整 T2→T3→T4→T5 集成 4），覆盖手算递推、prefix 因果性、缺口/跨人重置、输入不变、`α=0/1`、偏置匹配 EMA 与零门控项 STAG 逐值一致、六种方法全报、T4 参考指标重现、完整缓存/诊断/明细 SHA256、配对响应计数与方向、源缓存不变、来源篡改拒绝和无 Torch 离线运行。Python 3.10 语法、CLI help、服务器命令语法及结果忽略规则检查通过；未改旧模型或评测协议，未填真实 EMA 数字。
+- **T5 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_ema.py -v`（9 项）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_ema_ablation.py -v`（4 项）。
+- **下一步**：用户手动运行下列 T5 命令，回传 `results/t5_ema_ablation.json`、`results/t5_ema_ablation.md` 和 provenance；以真实对照结果判断门控额外价值，再进入 T6。可学习门控继续后置。
 
 ### T1 服务器手动运行
 
@@ -302,5 +316,36 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t4_temporal_comparison.json cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T4 paired temporal evaluation results"
+git push origin codex/coverage-aware-router
+```
+
+### T5 服务器手动运行（四个固定 EMA + 单帧/STAG 共六种方法）
+
+CPU 后处理与评测，按模板标明 GPU 0；不重新前向模型。`sigmoid(-2)` 由已核验 STAG 报告中的偏置计算，另三个系数显式传入。T4 的所有指标阈值从源报告原样继承，命令不重新设置阈值。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/run_ema_ablation.py \
+  --single-frame-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test \
+  --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --stag-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test \
+  --stag-report /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json \
+  --temporal-report /home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json \
+  --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test \
+  --ema-alphas 0.25 0.5 0.75 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json \
+  --summary /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.md \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.log 2>&1 &
+```
+
+日志最后输出 `T5 ablation completed: 6 methods` 后回传三个小结果；四套完整缓存和 `ablation_details.json` 留服务器 `--output-dir`，路径与 SHA256 自动写入 provenance。
+
+```bash
+git add cscwd/results/t5_ema_ablation.json cscwd/results/t5_ema_ablation.md cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record T5 fixed EMA ablation results"
 git push origin codex/coverage-aware-router
 ```
