@@ -80,3 +80,20 @@
 - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test/alpha.npy`；SHA256：`fe820064a7b37ba8c72ef24a78c60c367a5669aca1d2be2268df22973468c509`。
 - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test/signals.npy`；SHA256：`5c2f2fdd5c3873b64455d1cd7194c5927fd7e6a8a1ed84ff06b2cb8dcae00ce7`。
 - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
+
+## T4 标准与时序指标（服务器运行）
+
+- UTC：`2026-11-12T14:39:32.455983+00:00`；git commit：`833270a4bda8434da0cad09dc0b9bc8f9b3a729c`。
+- checkpoint：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；SHA256：`058793f58a1ad3f6e08a721d776a2a0412a2f0ebc5917b11dd0f78b29672f9ea`。
+- STAG 权重：`[-2.0, 20.0, 2.0, 10.0]`；评测协议和阈值完整保存在小报告。
+- 命令：`/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/eval_temporal.py --single-frame-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json --stag-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test --stag-report /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json --details-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/temporal_rule_v1_test --shift-threshold 0.15 --response-radius 0.10 --stable-threshold 0.02 --hold-frames 3 --max-response-frames 30 --report /home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`。
+- 小报告：`/home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json`。
+- 逐轨迹/逐事件明细（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/temporal_rule_v1_test/temporal_details.json`；SHA256：`49e3b7e24b3e51fb4ef141ea6968f64b16f968cc2f4df5dac147faa9bafde95f`。
+- single_frame 来源报告：`/home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json`；SHA256：`5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022`；缓存 index SHA256：`57b161c434a0760322c1707a2e57269b0977f3bd58b3f7814cfd7618c2f175f6`。
+- stag 来源报告：`/home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json`；SHA256：`84ab4a3f6cf56589222e167f2d7125eeea734dbc5aa26ce875d93b1daa1cc10c`；缓存 index SHA256：`7d6f8f0e6ae17001dfd64631615fcf1cf555b7f55f6c6d90455b69de5b48fe9c`。
+- single_frame：AUC `0.9401816577151993` / L2 `0.09899483221303321` / AP `0.8868010398787617`。
+- single_frame：Jitter mean `0.016646765511375713`，同帧对 GT 位移 mean `0.0059218882811410915`；稳定占比 `0.7734390786017378`，准确且稳定占比 `0.5275308143059204`。
+- single_frame：切换代理事件 `688`，响应率 `0.5920826161790017`，已响应起始延迟 mean `2.991279069767442` 帧，未响应 `237`，短窗口 `107`。
+- stag：AUC `0.9368598071467544` / L2 `0.09919693983541644` / AP `0.8868010398787617`。
+- stag：Jitter mean `0.012135128302046163`，同帧对 GT 位移 mean `0.0059218882811410915`；稳定占比 `0.8667407557082238`，准确且稳定占比 `0.5815316225500101`。
+- stag：切换代理事件 `688`，响应率 `0.5851979345955249`，已响应起始延迟 mean `2.9911764705882353` 帧，未响应 `241`，短窗口 `107`。
