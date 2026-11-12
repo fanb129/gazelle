@@ -170,3 +170,79 @@ T5 本地验收与解读（2026-11-13，结果提交 `3de06cd`，来源 `t5_ema_
   - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/argmax_xy.npy`；SHA256：`98c140d2089f71f95b9c380ddc4c7fa50d2e9a9ead0953fe56fbcea4b9f5683c`。
   - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/alpha.npy`；SHA256：`ac7dc624af5913ee9cdd2b9f8056af92cbd760ad4a11f8a1a4e9434faa5539d5`。
   - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
+
+## T6 时序案例诊断（服务器运行）
+
+- UTC：`2026-11-12T17:47:23.334761+00:00`；git commit：`0fafc8fd59263150b1046837991daa43563bf55f`。
+- T5 报告：`/home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json`；SHA256：`552f97dbd99c6078a514d745e70ea152b2ca705f28a0bb089e6bdae8d378edac`。
+- checkpoint：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；SHA256：`058793f58a1ad3f6e08a721d776a2a0412a2f0ebc5917b11dd0f78b29672f9ea`。
+- 命令：`/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/visualize_temporal.py --data-path /newhome/fb/dataset/videoattentiontarget --ablation-report /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics --preview-dir /home/fb/src/paper/gazelleV1/cscwd/results/t6_previews --cases-per-group 2 --preview-cases 5 --context-before 10 --context-after 20 --min-heads 4 --snapshots 5 --dpi 140 --report /home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`。
+- 小结果：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.json`；摘要：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.md`；预览：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews`。
+- 完整候选清单：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/selection_manifest.json`；SHA256：`87ac4516f3d03c26af4eaeab90d75760dee568a174ed6875850acd395ae1bfde`。
+- stag_over_ema：候选 7，完整输出 2。
+- single_frame_only：候选 5，完整输出 5。
+- stag_lag：候选 11，完整输出 2。
+- stable_gain：候选 726，完整输出 2。
+- crowded：候选 16，完整输出 2。
+- 案例 `stag_over_ema_96f0fc50a3877070`：test/CBS This Morning/2487_2818/s01 / 原帧号 2517。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_96f0fc50a3877070/case_data.json`；SHA256：`db2628701265dbcd96ec24746635d43dd5db07a59e9cfc9a98f104a685974665`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_96f0fc50a3877070/frames.png`；SHA256：`80c116ab319c09fc8802058e133e2f0b3fca614d0e7193a62cdaff5c63ee0f9b`。
+  - preview_frames：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stag_over_ema_96f0fc50a3877070_frames.png`；SHA256：`6ab1a5b7c958093f719cfeba92d3bd606d09d15b97176d4e014fbd297e86abaf`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_96f0fc50a3877070/timeline.png`；SHA256：`b8056c698fc84ded410987a308c62e1d1bdec512a10e2b7a16d39e2ffe6ead41`。
+  - preview_timeline：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stag_over_ema_96f0fc50a3877070_timeline.png`；SHA256：`4c956027632b43a32a034433b40c8895ea678311899e366244be2d57d858dfa8`。
+- 案例 `stag_over_ema_1c421f5b19eb9de7`：test/CBS This Morning/3446_3567/s00 / 原帧号 3551。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_1c421f5b19eb9de7/case_data.json`；SHA256：`1543654e48e2320dcd38a3099834aadf55bf068de4306de9ac377176b295987f`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_1c421f5b19eb9de7/frames.png`；SHA256：`3b44b5f297515dadd7436b90f5e62624c957df88777f18f1e66b50200700dffb`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_over_ema_1c421f5b19eb9de7/timeline.png`；SHA256：`211e02b0204f868b7c5d0d80097f315f5f057f7ec276a4380c249e3d51c038f6`。
+- 案例 `single_frame_only_a2f1575f30b3f20b`：test/Downton Abby/13066_13217/s02 / 原帧号 13190。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_a2f1575f30b3f20b/case_data.json`；SHA256：`ad90f2e51eb4ae914d1d8087c73db7ef957680db3c981e8ab15fb4bbfa12a6e5`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_a2f1575f30b3f20b/frames.png`；SHA256：`8dc1f3181cb7e4681e2395d6334a5334166e0a02ab8cd34852f7e6f98c8839ab`。
+  - preview_frames：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/single_frame_only_a2f1575f30b3f20b_frames.png`；SHA256：`95b5a94d3215ad4e31944b568210328f1a8064914d7de10d72407f6c5d10969d`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_a2f1575f30b3f20b/timeline.png`；SHA256：`b949db63917540123fccb9b4561112e599e8cd7aded2d119fe71c76dbeb30a8e`。
+  - preview_timeline：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/single_frame_only_a2f1575f30b3f20b_timeline.png`；SHA256：`080bf824d96709ad9bb7a13092d4fada5cb44bae42d94b85d241a3800c691ac1`。
+- 案例 `single_frame_only_9bd1cc7f8ed30e35`：test/Hell's Kitchen/104235_104266/s01 / 原帧号 104254。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_9bd1cc7f8ed30e35/case_data.json`；SHA256：`6c54d0a6dff4f4a50a361d269e9ea6815f79022a6abf102aa645bfb44f13a891`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_9bd1cc7f8ed30e35/frames.png`；SHA256：`0cfc7204d7569fac9ea528526ed2c0fa56bcb95830ab8120ef328963c16150a0`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_9bd1cc7f8ed30e35/timeline.png`；SHA256：`c68891f122801531279ca9cbe2c9c23862ff723178a6d8cc9127b537d74af926`。
+- 案例 `single_frame_only_679c8fbd8c09f1d7`：test/It's Always Sunny in Philadelphia/46470_46710/s01 / 原帧号 46655。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_679c8fbd8c09f1d7/case_data.json`；SHA256：`da2a1ce637c0be9c1dc685841c190bfe16f36e7622bacac18d273d986981abdc`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_679c8fbd8c09f1d7/frames.png`；SHA256：`d1195a9451ff0b0e41c3eae8ff6ee5d4e6fa33e943eaeaa05f3a447f70228093`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_679c8fbd8c09f1d7/timeline.png`；SHA256：`3345487288d8cc0ce0989305a5453ec5102ef4b7591893f1e374041cf29b6845`。
+- 案例 `single_frame_only_4b76dfb4660a5d91`：test/It's Always Sunny in Philadelphia/46470_46710/s01 / 原帧号 46696。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_4b76dfb4660a5d91/case_data.json`；SHA256：`c8ee7c9685e4ed2d4bf925a55e2203de67914e8204a1c35621586a0a3d63fc55`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_4b76dfb4660a5d91/frames.png`；SHA256：`83c690ba387985e77986bd0e12d0424d640fdc0b6e8f4f30829582bb059dabfa`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_4b76dfb4660a5d91/timeline.png`；SHA256：`6a228b3c1e4f76588bfe3860c7d0fbe4aed630a0dc07bd85d42e5b45e89234d0`。
+- 案例 `single_frame_only_5377cd78e01d64ff`：test/It's Always Sunny in Philadelphia/46470_46710/s02 / 原帧号 46704。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_5377cd78e01d64ff/case_data.json`；SHA256：`18fdb4c1137c944d3f1e3d57b09af7df0b65ffe92d58d05db810ebcd9ffe2ba6`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_5377cd78e01d64ff/frames.png`；SHA256：`1d39824fb95081a7e565e947b62573cabbb3ed6398ee3977c04d1f3e6c116dce`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/single_frame_only_5377cd78e01d64ff/timeline.png`；SHA256：`4cef427b5ac803e8c8ade5f0c7c33a7492733d00a2f568d296bc23a28dee0763`。
+- 案例 `stag_lag_bbc34ab341e623ee`：test/CBS This Morning/12137_12258/s03 / 原帧号 12144。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_bbc34ab341e623ee/case_data.json`；SHA256：`76093001eb07384fc8d5ece0e438ddf4d135223199baa1e417403ee78bbf8efb`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_bbc34ab341e623ee/frames.png`；SHA256：`d6b0d8fdc575ecd3f1d0b2d1de899674d745ed2ee066513348758611af3024bc`。
+  - preview_frames：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stag_lag_bbc34ab341e623ee_frames.png`；SHA256：`86b4b0a3f900200a573bdd0898cf4ec8d1a254ef4ef7b4a5f823acbfb8f3adfd`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_bbc34ab341e623ee/timeline.png`；SHA256：`66e5c3aefe21714e183b7028cf02b904dcb6adf91692c3820359fc31aac10783`。
+  - preview_timeline：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stag_lag_bbc34ab341e623ee_timeline.png`；SHA256：`be873df10afcc2f413eae7d5dcdef95695db7b29ed70b4bf515f25f438915e6b`。
+- 案例 `stag_lag_1346752560acc288`：test/CBS This Morning/12407_12648/s03 / 原帧号 12474。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_1346752560acc288/case_data.json`；SHA256：`305c2816a24e43c142e26ca41c32e249577c72548dab23c9ddb0214b583c42ca`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_1346752560acc288/frames.png`；SHA256：`ac7c933ad7b5c00b6837ec2152ee74309bbaca5c33bb173e319794a3fdf62b02`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stag_lag_1346752560acc288/timeline.png`；SHA256：`4c6a6d071767d303944dd66709dd58f0a6eb968ff849cd58c0b3efcb9ca1484d`。
+- 案例 `stable_gain_84f76562c98320b6`：test/CBS This Morning/11118_11359/s00 / 原帧号 11128。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_84f76562c98320b6/case_data.json`；SHA256：`b9f688f41f925010492f68d24641d3f8255ce60b0dc063207f3e9d98191d7c4d`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_84f76562c98320b6/frames.png`；SHA256：`d2aead2f5ed5db44b777e2b44b92582bf08b7b1887964e2eef6e094dbbdc6cfa`。
+  - preview_frames：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stable_gain_84f76562c98320b6_frames.png`；SHA256：`d108bac5c9af076ea7996b39af785e34bf3df4654ad8c4dec1a4479cb0ecbf04`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_84f76562c98320b6/timeline.png`；SHA256：`ddaacb9a7338ffd430423a84c6966bfe5c2681eeb0ada95a94dc575042d40038`。
+  - preview_timeline：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/stable_gain_84f76562c98320b6_timeline.png`；SHA256：`a2890de742fee3206c74dcfdb801737826217f54a1fd381704a23a54ba20e44b`。
+- 案例 `stable_gain_3204f959c5946bb9`：test/CBS This Morning/11118_11359/s00 / 原帧号 11184。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_3204f959c5946bb9/case_data.json`；SHA256：`7f1eefd46b450d3ee88104cf1309036093455777f61d45457c476dbfd2a76fcc`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_3204f959c5946bb9/frames.png`；SHA256：`171bc0140774a1896f7a1d79bf9dc20452d0e04a18016d06f5d00d8e2278087d`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/stable_gain_3204f959c5946bb9/timeline.png`；SHA256：`9d2fa07421aa97fd4d271acd13d8b5f1181a6b6c71593b1c277dbc5ee74766c8`。
+- 案例 `crowded_7e45e09419c673db`：test/CBS This Morning/11118_11359/s00 / 原帧号 11121。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_7e45e09419c673db/case_data.json`；SHA256：`8cf98dbd4a00ecda71f4b62f0aebcdbf4444ade58334e1ffe62b39eb3a971b4e`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_7e45e09419c673db/frames.png`；SHA256：`fcbcdec38aa0c107d2632b1d05c22cb77ed04213b28879fadb86d7f4807024e8`。
+  - preview_frames：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/crowded_7e45e09419c673db_frames.png`；SHA256：`bd95edecc37cc0332cd054254d69a3d3e28a49c97ccea4fb90191ea6516a9f76`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_7e45e09419c673db/timeline.png`；SHA256：`e7e1a1eb60e8101037a269ca05e2f9dcabc60abfd164a05bc101468e3e6da2d0`。
+  - preview_timeline：`/home/fb/src/paper/gazelleV1/cscwd/results/t6_previews/crowded_7e45e09419c673db_timeline.png`；SHA256：`bf3fe19bd3e274e02e01b449f5a09f80999a376e604d7726c7a5bf299b9ed4fe`。
+- 案例 `crowded_ba4dcbbdf191947c`：test/CBS This Morning/12137_12258/s00 / 原帧号 12137。
+  - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/case_data.json`；SHA256：`7961de3a9fc15d7c2008229317c84603defe4dbb2f567acac2363f7d893f6f47`。
+  - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/frames.png`；SHA256：`09025117839c129a8f6fdb541d4694794c5215d2b3225461cffff9d4a5ef2e50`。
+  - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/timeline.png`；SHA256：`1d54bb0c0e5cce5f2e9ef48f62c246acc6d15b7571dba36294415127b87ca46f`。
