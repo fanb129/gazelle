@@ -1,0 +1,30 @@
+# 大文件与中间产物：不进 git，留服务器
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.parquet
+*.pkl
+*.h5
+*.hdf5
+*_preprocessed_tracks.json
+
+# 缓存与中间目录
+code/cache/
+results/cache/
+__pycache__/
+*.pyc
+.DS_Store
+
+# latex 编译产物
+latex/*.aux
+latex/*.log
+latex/*.out
+latex/*.bbl
+latex/*.blg
+latex/*.fls
+latex/*.fdb_latexmk
+latex/*.synctex.gz
+latex/*.xdv
+latex/*.pdf
