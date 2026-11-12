@@ -69,7 +69,7 @@ def iter_cached_tracks(index, arrays):
         yield track, {name: values[selection] for name, values in arrays.items()}
 
 
-def write_prediction_cache(sequences, predictions, cache_dir, metadata):
+def write_prediction_cache(sequences, predictions, cache_dir, metadata, task="T2"):
     """Write streamed batches and verify exact recovery from reopened NPY files.
 
     predictions yields (heatmap[B,64,64], inout[B]) in sequence/track/frame order.
@@ -130,7 +130,7 @@ def write_prediction_cache(sequences, predictions, cache_dir, metadata):
                     "values_sha256": disk_digests[name].hexdigest()}
              for name, filename in ARRAY_FILES.items()}
     index = {
-        "schema_version": 1, "task": "T2", "metadata": metadata,
+        "schema_version": 1, "task": task, "metadata": metadata,
         "person_frames": expected_frames, "track_count": len(tracks),
         "layout": "contiguous_sequence_track_native_frame_order",
         "argmax_convention": "xy; x=column/64, y=row/64; first_flat_index_on_ties",

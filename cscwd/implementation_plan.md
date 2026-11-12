@@ -96,6 +96,9 @@ cscwd/
 ### T3 STAG 门控（后处理级，先跑通）
 - 纯 numpy 实现 §1.3 公式，输入 T2 缓存，输出平滑后 heatmap / 点。
 - 第一版手调 `w`（建议初始：w1、w3 为大正数触发快速响应，w2 中等，w0 为负偏向平滑）。
+- 首轮固定权重 `[w0,w1,w2,w3]=[-2,20,2,10]`，不在 test 上搜索参数。头部中心与热图 argmax 均用归一化坐标计算位移；每条 track 独立初始化，原始帧号不连续时从当前帧重置。
+- 仅平滑热图，`inout` 概率保持单帧原值（用于门控，也用于 AP），所以本版不改变 AP。门控只接收预测热图/概率、真实头部框及帧号；真实注视点和画内外标签仅在共用标准指标函数中参与评测。
+- `stag/metrics.py` 在 T3 提供标准三指标以满足验收；两侧调用同一个 `evaluate_predictions`，AUC/L2 仅统计画内人物帧，AP 覆盖全部人物帧，逐人物帧汇总。T4 再加入时序指标与独立评测入口。
 - **验收**：在 track 上跑通；单帧 vs STAG 的 L2/AUC/AP 有完整对比数字。
 - **备注**：若手调门控有正增益，再考虑可学习门控（轻量 MLP，在 track 上拟合），作为消融。
 
@@ -164,7 +167,11 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-12 · T2 本地实现完成**：新增 `code/scripts/cache_single_frame.py`、`code/stag/__init__.py`、`code/stag/cache.py` 与 `code/scripts/test_cache_single_frame.py`；对 T1 全量 track JSON 按原顺序推理，保存原始 float32 预测、对应帧索引及 argmax。NPY 重新打开后按原始值流 SHA256 验证逐值一致，并重算 argmax 核对；完整覆盖并读回通过后才写出缓存索引、小报告和 provenance。
 - **T2 本地数字**：**9 项合成回归通过**，覆盖真实 tensor 推理下的冻结/eval 状态、仅当前帧输入、标签不参与预测、未来帧变化与 batch 边界下的历史输出一致性、跨轨迹 batch 与缺口映射、float32 无损恢复、错误 checkpoint/不完整缓存/有损精度拒绝、纯 NumPy 离线读取。命令：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_*.py' -v`。尚未运行服务器单帧前向，不填模型性能数字。
 - **2026-11-12 · T2 底座选择**：按用户速度优先的指示，主缓存切换为 ViT-B `train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；后续单帧 baseline 与 STAG 共用此缓存和 checkpoint。ViT-L 路径保留为已确认配置；未报告两者速度对比数字。
-- **下一步**：用户手动执行下列 T2 ViT-B 命令并回传 `results/t2_single_frame_cache.json` 与 provenance；核对 test 全部 **298 tracks / 31,978 人物帧**覆盖和精确读回，再进入 T3。
+- **2026-11-12 · T2 服务器验收完成**：已拉取结果提交 `24cf720`。`results/t2_single_frame_cache.json` 确认模型为指定 ViT-B GazeSpot VAT `epoch_7.pt`；覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**，原始 float32 heatmap、inout、argmax 全部精确读回，argmax 从缓存热图重建通过。输入 JSON SHA256 与 T1 一致，脚本/缓存实现 SHA256 与 T2 提交 `8e239ba` 一致。报告记录 NVIDIA GeForce RTX 3090，整项缓存作业耗时 **731.430930521 秒**（包含模型加载、推理、写盘与校验）。缓存路径和各 NPY SHA256 已写入 provenance。
+- **2026-11-12 · T3 本地实现**：新增 `code/stag/gating.py`、`code/stag/metrics.py`、`code/scripts/run_stag.py` 及配套合成测试。门控纯 NumPy、严格因果；首轮固定 `[-2,20,2,10]`，只平滑热图并保持画内概率。入口核验 T2 源缓存 SHA256，逐 track 生成 STAG heatmap/argmax，并保存 `alpha/signals/reset` 诊断数组；单帧与 STAG 在同一轨迹记录、同一标准指标函数中评测，输出两侧 AUC/L2/AP 及差值。共用缓存写入器增加可选 `task` 标记，默认仍为 T2。
+- **T3 本地验证完成**：**19 项 T3 合成测试通过**（门控 9、标准指标 6、CLI/缓存集成 4），覆盖手算公式、严格因果 prefix、预测状态翻转、原始帧号缺口及跨人物重置、旧 VAT 指标函数逐例对齐、读回/来源哈希与完整双侧报告；共用写入器调整后 **9 项 T2 缓存回归通过**。Python 3.10 语法、CLI help、nohup 命令语法与结果忽略规则检查通过。测试仅使用临时合成数据，模型标准指标等待服务器运行。
+- **T3 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*.py' -v`（15 项）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_stag.py -v`（4 项）；T2 回归：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_cache_single_frame.py -v`（9 项）。
+- **下一步**：用户手动运行下列 T3 命令，将 `results/t3_stag_comparison.json` 与 provenance 回传；本次只实现 T3，真实标准指标对比由服务器产出后回写，随后进入 T4 时序指标。
 
 ### T1 服务器手动运行
 
@@ -221,5 +228,32 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t2_single_frame_cache.json cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T2 ViT-B single-frame cache results"
+git push origin codex/coverage-aware-router
+```
+
+### T3 服务器手动运行（初始规则门控 + 同口径标准指标）
+
+本步骤只读 T2 缓存，使用 CPU 做纯 NumPy 门控和标准指标计算；按模板标明 GPU 0。权重顺序为 `bias / d_head / trans / d_heat`，首轮固定 `-2 / 20 / 2 / 10`。输出为新目录，完整 NPY 和索引留服务器。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/run_stag.py \
+  --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test \
+  --cache-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test \
+  --weights -2 20 2 10 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.log 2>&1 &
+```
+
+日志最后输出 `T3 run completed` 后，回传小报告与自动追加的指标/大文件路径/SHA256。报告 `passed` 表示缓存与评测流程完成，指标变化见 `metrics.delta_stag_minus_single_frame`。
+
+```bash
+git add cscwd/results/t3_stag_comparison.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record T3 initial STAG comparison results"
 git push origin codex/coverage-aware-router
 ```

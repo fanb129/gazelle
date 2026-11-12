@@ -7,14 +7,16 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | T1 服务器验收通过；T2 单帧缓存本地实现完成，9 项合成测试通过，下一步服务器生成 ViT-B test 缓存 |
+| CSCWD | `cscwd/` | T1/T2 服务器验收通过；T3 本地实现完成，19 项合成测试及 9 项 T2 回归通过，下一步服务器运行 |
 
 ## 当前优先级（2026-11-12）
 **CSCWD 投稿是第一优先，方向已定：单帧→视频时序，贡献定位"切换感知 + 时序稳定"（STAG）。**
 文档齐备：`cscwd/paper_blueprint.md`（论文结构/baseline/指标）、`cscwd/implementation_plan.md`（实现规格+进展）、`cscwd/codex_prompt.md`（codex 提示词）、`cscwd/cscwd_2025_2026_related.md`（CSCWD 2025–2026 同方向论文扫描）。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
-T2 本地实现完成：新增 `cscwd/code/scripts/cache_single_frame.py` 和 `cscwd/code/stag/cache.py`，冻结 GazeSpot，将当前 RGB/真实框的原始 float32 heatmap、inout 和 argmax 按 track 顺序写成 NPY；缓存可完全离线读回。配套合成回归 **9 项通过**，尚未运行服务器单帧前向。用户已确认 ViT-B/ViT-L 两套 VAT `epoch_7.pt`，并指定速度优先，本轮主缓存选 ViT-B（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），后续单帧/STAG 对照统一此底座；完整命令见 `cscwd/implementation_plan.md`。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
+T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
+
+T3 本地实现完成：`cscwd/code/stag/gating.py` 纯 NumPy 因果 EMA，固定初始权重 `[-2,20,2,10]`，按 track 初始化并在原始帧号缺口重置；画内概率沿用单帧。`cscwd/code/scripts/run_stag.py` 核验 T2 源缓存、输出平滑预测和门控诊断，用同一个标准指标函数重算单帧/STAG 的 AUC/L2/AP。**19 项 T3 合成测试及 9 项 T2 缓存回归通过**；Python 3.10 语法及命令/结果忽略规则检查通过。完整服务器命令见 `cscwd/implementation_plan.md`。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
 
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
@@ -28,5 +30,5 @@ T2 本地实现完成：新增 `cscwd/code/scripts/cache_single_frame.py` 和 `c
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. 用户手动在服务器运行 T2 ViT-B test 缓存；回传 `cscwd/results/t2_single_frame_cache.json` 和 `cscwd/results/RESULT_PROVENANCE.md`。完整缓存留服务器数据集下 `cscwd_cache/gazespot_vitb_epoch7/test/`，路径与 SHA256 由脚本写入 provenance。
-2. 验收 test 全部 298 tracks / 31,978 人物帧的缓存与无损读回后进入 T3，再依次推进 T4–T6，走通单帧 vs STAG 对比后动笔 latex。
+1. 用户手动运行 T3 初始规则门控；回传 `cscwd/results/t3_stag_comparison.json` 与 `cscwd/results/RESULT_PROVENANCE.md`。平滑缓存和诊断数组留服务器数据集下 `cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test/`，路径与 SHA256 自动记录。
+2. 拿到同口径标准指标对比后进入 T4 时序指标，再依次推进 T5–T6；当前不填尚未运行的模型对比数字。
