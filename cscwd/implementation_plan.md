@@ -62,6 +62,8 @@ cscwd/
 │   │   ├── __init__.py
 │   │   ├── cache.py           # T2 NPY 存储与离线 track 读取
 │   │   ├── ema.py             # T5 固定 α 因果对照
+│   │   ├── case_selection.py  # T6 确定性案例选择
+│   │   ├── plotting.py        # T6 原始热图/轨迹/门控诊断绘图
 │   │   ├── gating.py          # 平滑 + 切换门控
 │   │   └── metrics.py         # 时序指标
 │   └── scripts/               # 入口脚本
@@ -138,8 +140,14 @@ cscwd/
 
 ### T6 定性可视化
 - 拥挤多人协同画面（VAT crowd 子集）"谁在看谁/什么"时序可视化。
-- 切换场景：一人从看 A 转到看 B，单帧抖动/滞后 vs STAG 平滑且快速跟上。
+- 切换场景：一人从看 A 转到看 B，并列 GT、单帧、STAG 和固定 EMA 的预测响应，按实际输出呈现切换速度与滞后。
 - 根据 T4 实际结果，同时展示稳定收益段、切换滞后段与失败段；并列 RGB/真实框、GT 轨迹、单帧/STAG 轨迹、热图与 alpha。检查旧峰残留、热图融合和门控响应，定性图的结论以实际片段为准。
+- T5 后的选样计划：① STAG 能响应、强 EMA 不能响应；② 单帧能响应、STAG 未响应或滞后；③ STAG 准确且稳定、单帧抖动。失败组将全部 5 个单帧独有 gaze_shift 事件列入候选清单，逐事件记录来源与结果；代表片段使用确定性排序选取。另补充真实标注头数 `≥4` 的拥挤场景，不用检测框。
+- 主要并列方法为单帧、STAG、EMA `0.25/0.5`；六种方法的完整折中仍以 T5 表为准。导出轨迹、逐帧定位误差、热图、原始预测 inout、STAG alpha 和三个门控信号，逐轨迹/事件明细从服务器已生成的 `ablation_details.json` 读取。
+- T6 用于解释已测到的响应补偿、精度代价与失败机制；完成诊断后再决定一项具体门控改动。当前不立即扩展 MLP 或在 test 上调权重，后续参数选择转到按源视频划分的 train/validation。
+- 实现类别为 `stag_over_ema / single_frame_only / stag_lag / stable_gain / crowded`。前两类分别与 T5 的 STAG 相对 EMA `0.25` 独有响应数、单帧相对 STAG 独有响应数核对；`single_frame_only` 全部渲染，其他组按 track_id/原帧号取前 2 例。稳定收益取符合 T4 半径/连续帧阈值且 GT 稳定、STAG 准确稳定、单帧抖动的首个连续命中 episode 窗口；拥挤候选按每 clip 最早满足真实标注人数 ≥4 的帧选择。无候选组保留 0，不替换或放宽条件。
+- 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
+- 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
 
 ## 4. 数据、路径与 git 工作流
 
@@ -199,7 +207,14 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-12 · T5 固定 EMA 对照本地实现**：新增 `code/stag/ema.py`、`code/scripts/run_ema_ablation.py` 和配套合成测试。EMA 严格因果、每条 track 独立初始化、缺口从当前帧重置，画内概率保持原值。四个系数为 `sigmoid(-2)` 与预先固定的 `0.25/0.5/0.75`；六种方法全报，不做 test 选优或训练。入口核验 T2/T3/T4 来源链并重现 T4 参考结果，复用原标准/时序指标函数，保存各 EMA 缓存及诊断数据，并输出每个 EMA 相对单帧和 STAG 的同事件响应比较。
 - **T5 本地验证完成**：**13 项合成测试通过**（EMA 核心 9、完整 T2→T3→T4→T5 集成 4），覆盖手算递推、prefix 因果性、缺口/跨人重置、输入不变、`α=0/1`、偏置匹配 EMA 与零门控项 STAG 逐值一致、六种方法全报、T4 参考指标重现、完整缓存/诊断/明细 SHA256、配对响应计数与方向、源缓存不变、来源篡改拒绝和无 Torch 离线运行。Python 3.10 语法、CLI help、服务器命令语法及结果忽略规则检查通过；未改旧模型或评测协议，未填真实 EMA 数字。
 - **T5 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_ema.py -v`（9 项）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_ema_ablation.py -v`（4 项）。
-- **下一步**：用户手动运行下列 T5 命令，回传 `results/t5_ema_ablation.json`、`results/t5_ema_ablation.md` 和 provenance；以真实对照结果判断门控额外价值，再进入 T6。可学习门控继续后置。
+- **2026-11-13 · T5 服务器结果验收完成**：已拉取结果提交 `3de06cd`，检查六种预先声明方法、T2/T3/T4 来源报告 SHA256、实现 SHA256、T4 协议与参考指标重现、全量覆盖、画内概率文件一致、事件计数和直接配对分区关系均通过；Markdown 与 JSON 完全一致。六种方法均覆盖 **298 tracks / 31,978 人物帧 / 20,655 画内定位帧**，使用同一 **20,225 帧对 / 19,796 窗口 / 158 个可评估 gaze_shift**。完整 EMA 缓存、alpha/reset 及明细仍留服务器，路径/SHA256 见报告和 provenance。
+- **T5 真实对照结果**：STAG 的准确稳定占比为 **58.1532%**，六种配置中最高。与 Jitter 接近的 EMA `0.5`（**0.012135 vs 0.011699**）相比，STAG 准确稳定占比高 **2.4348 个百分点**、L2 更低（**0.099197 vs 0.099635**），AUC 更低（**0.936860 vs 0.939690**），gaze_shift 响应率相同（**55.0633%**）；直接共同响应的 **84 个事件**上 STAG 平均快 **0.15476190476190477 帧**，双方各有 3 个独有响应。
+- **T5 强平滑对照**：EMA `0.25` 与 STAG 的原始稳定占比接近（**86.6640% vs 86.6741%**）；STAG 准确稳定占比高 **0.8436 个百分点**、gaze_shift 响应率高 **4.4304 个百分点**，直接共同响应的 **80 个事件**平均快 **0.5625 帧**，新增 7 个响应，但 Jitter 与 AUC 不及该 EMA。相对偏置匹配 EMA，STAG 在 **73 个共同切换事件**平均快 **1.4931506849315068 帧**，新增 14 个响应，同时平滑更弱。
+- **T5 判断**：当前 STAG 有部分自适应折中收益，未被一个固定 EMA 在上述主要指标上全面支配，但也没有全面优于普通 EMA。EMA `0.75` 的实测 **AUC 0.940120 / L2 0.098941 / Jitter 0.014229 / gaze_shift 响应率 56.9620%**，是强简单对照；仍保留为预先固定的实测配置，不据此选定 test 最优模型。STAG 相对单帧的切换缺口仍存在（87 个共同事件慢 **0.27586206896551724 帧**、少响应 5 个），不把“优于强 EMA”写成“优于单帧”。
+- **2026-11-13 · T6 本地实现完成**：新增 `code/stag/case_selection.py`、`code/stag/plotting.py`、`code/scripts/visualize_temporal.py` 及三个配套测试文件。入口核验 T5 全部源报告、六种方法缓存和逐事件明细 SHA256，按已声明的五类规则选样，保留全部单帧独有切换失败案例；四方法展示使用冻结缓存，输出候选 manifest、逐帧数据、原始热图/真实框图、门控时间线及小预览。
+- **T6 本地数字与验证**：**15 项合成测试通过**（选样 8、绘图 4、完整来源链/真实 CLI 集成 3），覆盖固定排序/全失败保留/缺口/拥挤计数、事件前后快照、GT 画外 `null`、计分窗口、缓存不变、图片/manifest/源文件 SHA256、预览配额和无 Torch 离线执行。已用临时合成 RGB 检查完整图及小预览，图例、色标、原帧号、事件状态/延迟与窗口标注清楚。Python 3.10 语法、CLI help、服务器命令与结果忽略规则检查通过。真实 VAT 案例尚由服务器产出。
+- **T6 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_case_selection.py -v`（8 项）；`MPLCONFIGDIR=/private/tmp/gazelle-t6-mpl /private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_plotting.py -v`（4 项）；`MPLCONFIGDIR=/private/tmp/gazelle-t6-mpl /private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_visualize_temporal.py -v`（3 项）。合成视觉检查图留 `/private/tmp/gazelle-t6-render/`，不作真实实验材料。
+- **下一步（2026-11-13）**：用户手动执行下列 T6 命令，回传 `results/t6_visualization.json/.md`、`results/t6_previews/` 和 provenance；完整图、候选清单及逐帧数据留服务器。拿到真实案例后检查旧峰残留、错误峰写入及门控触发时机，再决定一项具体机制改动；当前保持固定权重，参数选择/拟合转到 train/validation。
 
 ### T1 服务器手动运行
 
@@ -347,5 +362,40 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t5_ema_ablation.json cscwd/results/t5_ema_ablation.md cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T5 fixed EMA ablation results"
+git push origin codex/coverage-aware-router
+```
+
+### T6 服务器手动运行（确定性选样与案例图）
+
+CPU 绘图，按模板标明 GPU 0；只读已有六种方法缓存，不重新前向或平滑。所有缓存/明细路径从已回传的 T5 报告读取。完整输出目录和预览目录均为新目录。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/visualize_temporal.py \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --ablation-report /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json \
+  --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics \
+  --preview-dir /home/fb/src/paper/gazelleV1/cscwd/results/t6_previews \
+  --cases-per-group 2 \
+  --preview-cases 5 \
+  --context-before 10 \
+  --context-after 20 \
+  --min-heads 4 \
+  --snapshots 5 \
+  --dpi 140 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.json \
+  --summary /home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.md \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t6_visualization.log 2>&1 &
+```
+
+日志最后输出 `T6 visualization completed` 后回传小报告和低分辨率 PNG。完整 `selection_manifest.json`、`cases/*/case_data.json` 与全分辨率图留服务器，实际路径/SHA256 自动追加到 provenance。
+
+```bash
+git add cscwd/results/t6_visualization.json cscwd/results/t6_visualization.md cscwd/results/t6_previews cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record T6 temporal diagnostic cases and previews"
 git push origin codex/coverage-aware-router
 ```

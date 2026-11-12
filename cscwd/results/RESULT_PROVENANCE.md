@@ -51,6 +51,21 @@ T4 真实结果摘要（源文件 `t4_temporal_comparison.json`，结果提交 `
 - 小结果：`cscwd/results/t5_ema_ablation.json`、`cscwd/results/t5_ema_ablation.md`；沿用 T4 协议，分别保存 EMA−单帧、EMA−STAG 的同事件配对延迟。
 - 完整 EMA 缓存和逐轨迹/事件明细留服务器 `cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/`；实际运行后由脚本追加真实数字、路径与 SHA256。
 
+T5 本地验收与解读（2026-11-13，结果提交 `3de06cd`，来源 `t5_ema_ablation.json/.md`）：
+
+- 六种配置、完整来源/实现 SHA256、协议/参考结果重现、覆盖与计数、Markdown/JSON 一致性检查通过。
+- STAG vs EMA `0.5`：准确稳定占比 **58.1532% vs 55.7183%**，L2 **0.099197 vs 0.099635**，AUC **0.936860 vs 0.939690**，Jitter **0.012135 vs 0.011699**；gaze_shift 响应率均 **55.0633%**。EMA−STAG 的直接配对延迟均值 **+0.15476190476190477 帧**（84 个共同事件），双方各有 3 个独有响应。
+- STAG vs EMA `0.25`：准确稳定占比高 **0.8436 个百分点**、gaze_shift 响应率高 **4.4304 个百分点**；EMA−STAG 的直接配对延迟均值 **+0.5625 帧**（80 个共同事件），STAG 独有响应 7 个，EMA 独有响应 0 个。EMA 的 Jitter/AUC 更好。
+- 偏置匹配 EMA−STAG 的直接配对延迟均值 **+1.4931506849315068 帧**（73 个共同事件），STAG 独有响应 14 个；两侧平滑强度不同。
+- EMA `0.75` 实测 AUC **0.9401198060239975**、L2 **0.09894134421564804**、Jitter **0.01422873674966188**、gaze_shift 响应率 **0.569620253164557**；保留为已跑配置，不选作 test 最优模型。
+- 结论：STAG 有部分门控折中收益，尚未全面优于普通 EMA，也未优于单帧切换响应。下一步 T6 定位成功与失败机制，再决定模型改动。
+
+## T6 案例诊断运行约定
+
+- 入口：`cscwd/code/scripts/visualize_temporal.py`，只读 T5 六种方法缓存及已存事件明细，确定性选择五类案例，全部单帧独有切换失败均保留。
+- 小结果：`cscwd/results/t6_visualization.json/.md` 与 `cscwd/results/t6_previews/`；完整候选清单、逐帧 JSON 和全分辨率图留服务器 `cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/`，实际路径/SHA256 由脚本成功运行后追加。
+- 原始热图固定 `[0,1]` 色标，GT 仅作标记/选样依据；所有预测仍为原缓存。真实图像和案例结果由服务器运行产出。
+
 ## 待填
 
 ## T1 track 恢复（服务器运行）
