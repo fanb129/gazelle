@@ -114,3 +114,44 @@ T4 真实结果摘要（源文件 `t4_temporal_comparison.json`，结果提交 `
 - stag：AUC `0.9368598071467544` / L2 `0.09919693983541644` / AP `0.8868010398787617`。
 - stag：Jitter mean `0.012135128302046163`，同帧对 GT 位移 mean `0.0059218882811410915`；稳定占比 `0.8667407557082238`，准确且稳定占比 `0.5815316225500101`。
 - stag：切换代理事件 `688`，响应率 `0.5851979345955249`，已响应起始延迟 mean `2.9911764705882353` 帧，未响应 `241`，短窗口 `107`。
+
+## T5 固定 EMA 对照（服务器运行）
+
+- UTC：`2026-11-12T15:10:50.325679+00:00`；git commit：`76b7c0b7d4c2ec3794dff186fcbd0041ce7349df`。
+- checkpoint：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；SHA256：`058793f58a1ad3f6e08a721d776a2a0412a2f0ebc5917b11dd0f78b29672f9ea`。
+- 命令：`/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/run_ema_ablation.py --single-frame-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json --stag-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test --stag-report /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json --temporal-report /home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test --ema-alphas 0.25 0.5 0.75 --report /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`。
+- 小结果：`/home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.json`；Markdown：`/home/fb/src/paper/gazelleV1/cscwd/results/t5_ema_ablation.md`。
+- 逐轨迹/事件明细：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ablation_details.json`；SHA256：`9a64353d1b784febd6c06511e69b76e1aae25cb372089bae6713bcc0720c2ad2`。
+- 来源 single_frame：`/home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json`；SHA256：`5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022`。
+- 来源 stag：`/home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json`；SHA256：`84ab4a3f6cf56589222e167f2d7125eeea734dbc5aa26ce875d93b1daa1cc10c`。
+- 来源 temporal：`/home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json`；SHA256：`3431b84beef1e0040519cafae0cf03c9d2008f863f7ffba455b22793d4e53315`。
+- single_frame：AUC `0.9401816577151993` / L2 `0.09899483221303321` / AP `0.8868010398787617` / Jitter `0.016646765511375713` / 准确稳定占比 `0.5275308143059204` / gaze_shift 响应率 `0.5822784810126582`。
+- stag：AUC `0.9368598071467544` / L2 `0.09919693983541644` / AP `0.8868010398787617` / Jitter `0.012135128302046163` / 准确稳定占比 `0.5815316225500101` / gaze_shift 响应率 `0.5506329113924051`。
+- ema_bias_matched：AUC `0.9327503218436328` / L2 `0.11058682202016828` / AP `0.8868010398787617` / Jitter `0.007274233812445743` / 准确稳定占比 `0.5808244089715094` / gaze_shift 响应率 `0.4620253164556962`。
+- ema_bias_matched 缓存：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched`；index SHA256：`1b94af0c942b8ca405af6c3da820b51cd4df87750cc8139bc33d431e23c10422`；α=`0.11920292202211753`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched/heatmap.npy`；SHA256：`f0780b5e5d608e74d2708b57f6b5e45cc5edea63d3e3e6ef3c8b4611700a8d4c`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched/inout.npy`；SHA256：`234dbab7f8310e9f330b3d1ea21a2066de576d1277f69a34e5df2b6a9335fcbd`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched/argmax_xy.npy`；SHA256：`a80017a039c141b8c6ec19e9d07010aa250ba1b5a6210a3d12d825ee8abc1c24`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched/alpha.npy`；SHA256：`6a8284783983c17e86439b9e824de8cb5de4170246349b9491442f4354aa2c1e`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_bias_matched/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
+- ema_alpha_0p25：AUC `0.9376132785477839` / L2 `0.10259948881789266` / AP `0.8868010398787617` / Jitter `0.009248240715306048` / 准确稳定占比 `0.5730955748636088` / gaze_shift 响应率 `0.5063291139240507`。
+- ema_alpha_0p25 缓存：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25`；index SHA256：`93a9c82f5dd9ff17fa347614a21f7c54964cfb2e5f1164622bd75b439b3f52fd`；α=`0.25`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25/heatmap.npy`；SHA256：`1f2d1f5fa3b5b8d7bc8b99b2a67679151c32493f310888c0b76fea21c796f32e`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25/inout.npy`；SHA256：`234dbab7f8310e9f330b3d1ea21a2066de576d1277f69a34e5df2b6a9335fcbd`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25/argmax_xy.npy`；SHA256：`11e64716b625813f8b23fb25fa564903aa5dedac2d88973fbf3d71d1ca1250b7`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25/alpha.npy`；SHA256：`2c8fb7040739d9dbc5e45eafd77dfed1f8d6fc0223b69af47d5ba84b7c69d4e6`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p25/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
+- ema_alpha_0p5：AUC `0.9396895318318765` / L2 `0.09963527150651678` / AP `0.8868010398787617` / Jitter `0.011698977406574896` / 准确稳定占比 `0.5571832693473429` / gaze_shift 响应率 `0.5506329113924051`。
+- ema_alpha_0p5 缓存：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5`；index SHA256：`8b3d28198843ecece72700cb03c41dc1ecb731a85eaa1b9c2de1e84103a6560f`；α=`0.5`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5/heatmap.npy`；SHA256：`9bc7b6e143e489b34b5f3b01f4a8ec291fafe10a8040df5b9cc7b05bb8fdb593`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5/inout.npy`；SHA256：`234dbab7f8310e9f330b3d1ea21a2066de576d1277f69a34e5df2b6a9335fcbd`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5/argmax_xy.npy`；SHA256：`961582403e06b065c3460cb82b6b2529d5c3c60fb0b36839bf149ebaf1220050`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5/alpha.npy`；SHA256：`1c2ae3d90c5bfabc2573f51fc2a5520c8388f800a43f471376150b8181808c98`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p5/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
+- ema_alpha_0p75：AUC `0.9401198060239975` / L2 `0.09894134421564804` / AP `0.8868010398787617` / Jitter `0.01422873674966188` / 准确稳定占比 `0.5425338452212568` / gaze_shift 响应率 `0.569620253164557`。
+- ema_alpha_0p75 缓存：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75`；index SHA256：`c9abfbc07e171a8ec964bd67dab9f681a256ae7ab84080797eececf6cc041a91`；α=`0.75`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/heatmap.npy`；SHA256：`911d77da6915653d0c49d7bd147976975e9e07ed73aabbff75dc6008b0ddbb81`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/inout.npy`；SHA256：`234dbab7f8310e9f330b3d1ea21a2066de576d1277f69a34e5df2b6a9335fcbd`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/argmax_xy.npy`；SHA256：`98c140d2089f71f95b9c380ddc4c7fa50d2e9a9ead0953fe56fbcea4b9f5683c`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/alpha.npy`；SHA256：`ac7dc624af5913ee9cdd2b9f8056af92cbd760ad4a11f8a1a4e9434faa5539d5`。
+  - 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t5_fixed_ema_test/ema_alpha_0p75/reset.npy`；SHA256：`3e96b3883517d0dff7b24ae40e90163a405c3c8847f19aafdfe73b034123be0d`。
