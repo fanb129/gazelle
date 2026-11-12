@@ -14,13 +14,14 @@
 
 | 配置 | AUC↑ | L2↓ | In/Out AP↑ | 来源 |
 |---|---:|---:|---:|---|
-| 单帧 GazeSpot | ? | ? | ? | 待填 |
-| +STAG 时序门控 | ? | ? | ? | 待填 |
+| 单帧 GazeSpot ViT-B | 0.940182 | 0.098995 | 0.886801 | `t3_stag_comparison.json`，T3 同口径重算 |
+| +STAG 初始规则门控 | 0.936860 | 0.099197 | 0.886801 | `t3_stag_comparison.json`，固定 `[-2,20,2,10]` |
 
 - 单帧主缓存 checkpoint（用户于 2026-11-12 确认，指定速度优先选 ViT-B）：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；模型 `gazelle_dinov3_vitb16_inout`，GGSF + SASA。后续单帧/STAG 对照统一此底座。
 - ViT-L checkpoint（用户同期确认的备用配置）：`/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl_sasa_ggsf/2026-03-25_14-35-38/epoch_7.pt`；模型 `gazelle_dinov3_vitl16_inout`。
 - T2 运行脚本：`cscwd/code/scripts/cache_single_frame.py`；服务器核对通过后自动追加实际覆盖、checkpoint/骨干/NPY 路径与 SHA256，回传小报告 `cscwd/results/t2_single_frame_cache.json`。
 - T3 运行脚本：`cscwd/code/scripts/run_stag.py`；固定初始权重 `[-2,20,2,10]`，同一 T2 缓存上的单帧/STAG 共用标准指标函数。运行成功后追加真实对比数字及平滑/诊断 NPY 路径与 SHA256，回传 `cscwd/results/t3_stag_comparison.json`。
+- T4 运行脚本：`cscwd/code/scripts/eval_temporal.py`；协议与固定阈值见实现计划。两侧标准指标重现 T3 后写出时序汇总；回传 `cscwd/results/t4_temporal_comparison.json`。逐轨迹/事件明细留服务器，路径/SHA256 自动追加。
 - 评测脚本：`cscwd/code/scripts/eval_temporal.py`，在 track 级 JSON 上跑。
 - 结果文件：`cscwd/results/*.json`。
 

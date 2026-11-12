@@ -111,6 +111,16 @@ cscwd/
 - **诚实红线**：抖动降低必须同报**真实注视点位移**作参照（证明不是预测僵死变钝，而是跟上真实轨迹）。
 - **口径对齐**：单帧 baseline 与 STAG 必须在**同一个 track 级评测脚本**上重跑，旧拍平数字只作参照、不进时序对比表。
 
+#### T4 时序指标的实现定义（本项目定义，首轮固定）
+
+- 坐标均为归一化 `(x,y)`；相邻仅指同 track 的原始 `frame_index` 差为 1，不跨人物或缺口。阈值在两侧完全相同，不调整 T3 权重。
+- **Jitter**：在连续且两帧真实画内的帧对上，统计预测点位移的 mean/median/p90/p95；同时在**完全相同帧对**上报告真实注视点位移分布。按人物帧对汇总，不等权平均 track。
+- **稳定占比**：连续 **3 帧**、全部真实画内的窗口，以结束帧为计数单位；若窗口内每个相邻预测点位移均 `≤0.02` 则计为稳定。同口径报告 GT 稳定占比。另报**准确且稳定占比**，要求稳定窗口内每帧预测为画内且到当帧 GT 距离 `≤0.10`。
+- **切换代理事件**：连续帧真实 inout 翻转，或两帧均真实画内且 GT 位移 `>0.15`；分别记为 `enter_frame / leave_frame / gaze_shift`。这是由标签定义的代理事件，不另造人工切换标注。
+- **切换响应**：从事件帧 `t`（含 `t`）起，寻找第一段连续 **3 帧**预测状态正确且画内定位误差 `≤0.10` 的区间；其起始帧减 `t` 为延迟，可为 0。记录的是成功区间的起始延迟，确认该区间需观察完整 3 帧。
+- **观察窗口**：最多 **30 帧**（含事件帧），在下一 GT 代理事件、原始帧号缺口或 track 结束前截断。窗口不足 3 帧记为 `insufficient_followup`；足长但未响应记为 `censored`。按事件类型同报总数、可评估数、响应率、已响应条件延迟分布、未响应数和短窗口数；另在两侧共同响应的同一事件集合上报告延迟差，保留各侧独有响应数。
+- `stag/metrics.py` 的 `evaluate_temporal` 只计分已保存预测，标签不进入门控；`scripts/eval_temporal.py` 共用标准/时序评测函数重跑两侧。小 JSON 保存汇总与完整协议，逐 track/事件明细留服务器 JSON 并记录路径/SHA256；无样本统计写 `null`。
+
 ### T5 消融
 | 变体 | 平滑 | 门控 | 回答 |
 |---|---|---|---|
@@ -171,7 +181,11 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-12 · T3 本地实现**：新增 `code/stag/gating.py`、`code/stag/metrics.py`、`code/scripts/run_stag.py` 及配套合成测试。门控纯 NumPy、严格因果；首轮固定 `[-2,20,2,10]`，只平滑热图并保持画内概率。入口核验 T2 源缓存 SHA256，逐 track 生成 STAG heatmap/argmax，并保存 `alpha/signals/reset` 诊断数组；单帧与 STAG 在同一轨迹记录、同一标准指标函数中评测，输出两侧 AUC/L2/AP 及差值。共用缓存写入器增加可选 `task` 标记，默认仍为 T2。
 - **T3 本地验证完成**：**19 项 T3 合成测试通过**（门控 9、标准指标 6、CLI/缓存集成 4），覆盖手算公式、严格因果 prefix、预测状态翻转、原始帧号缺口及跨人物重置、旧 VAT 指标函数逐例对齐、读回/来源哈希与完整双侧报告；共用写入器调整后 **9 项 T2 缓存回归通过**。Python 3.10 语法、CLI help、nohup 命令语法与结果忽略规则检查通过。测试仅使用临时合成数据，模型标准指标等待服务器运行。
 - **T3 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*.py' -v`（15 项）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_stag.py -v`（4 项）；T2 回归：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_cache_single_frame.py -v`（9 项）。
-- **下一步**：用户手动运行下列 T3 命令，将 `results/t3_stag_comparison.json` 与 provenance 回传；本次只实现 T3，真实标准指标对比由服务器产出后回写，随后进入 T4 时序指标。
+- **2026-11-12 · T3 服务器验收完成**：已拉取结果提交 `eb28855`，T2 来源报告/index/输入/检查点 SHA256、T3 实现 SHA256、全量覆盖与逐帧对齐通过；两侧均为 **31,978 人物帧 / 20,655 画内定位帧**。单帧 **AUC 0.9401816577151993 / L2 0.09899483221303321 / AP 0.8868010398787617**；初始 STAG **AUC 0.9368598071467544 / L2 0.09919693983541644 / AP 0.8868010398787617**。差值（STAG−单帧）为 **AUC −0.0033218505684449173 / L2 +0.0002021076223832352 / AP 0**。初始规则定位未改善，继续 T4 量化时序行为，保持当前权重。
+- **2026-11-12 · T4 本地实现**：`code/stag/metrics.py` 新增固定协议的 jitter/同 mask GT 位移、稳定/准确稳定占比、切换代理事件响应与删失计数；新增 `code/scripts/eval_temporal.py`，核验两侧完整缓存 SHA256 与 T2→T3 来源链，在同轨迹上重算标准三指标并核对 T3 报告，输出两侧时序汇总、共同响应事件延迟差和服务器逐轨迹/事件明细。
+- **T4 本地验证完成**：**15 项 T4 合成测试通过**（时序指标 11、CLI/缓存集成 4），包括同 mask GT 位移、窗口分母、准确稳定、缺口/跨人物隔离、代理事件延迟/未响应/短窗、共同响应事件延迟差、无事件 `null` 和来源/明细 SHA256；**10 项回归通过**（标准指标 6、T3 运行入口 4）。Python 3.10 语法、CLI help、服务器命令语法和结果忽略规则检查通过。
+- **T4 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*metrics.py' -v`（11 项新增 + 6 项标准回归）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_eval_temporal.py -v`（4 项新增）；`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_run_stag.py -v`（4 项 T3 回归）。本地只使用临时合成数据。
+- **下一步**：用户手动运行下列 T4 命令，回传 `results/t4_temporal_comparison.json` 与 provenance。完整明细留服务器；拿到真实时序数字后进入 T5 消融。
 
 ### T1 服务器手动运行
 
@@ -255,5 +269,38 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t3_stag_comparison.json cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T3 initial STAG comparison results"
+git push origin codex/coverage-aware-router
+```
+
+### T4 服务器手动运行（统一标准与时序评测）
+
+只读已有 T2/T3 缓存，CPU 评测，按模板标明 GPU 0；原始 RGB、模型和 STAG 门控无需重跑。所有阈值在下列命令中显式固定。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/eval_temporal.py \
+  --single-frame-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test \
+  --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --stag-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test \
+  --stag-report /home/fb/src/paper/gazelleV1/cscwd/results/t3_stag_comparison.json \
+  --details-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/temporal_rule_v1_test \
+  --shift-threshold 0.15 \
+  --response-radius 0.10 \
+  --stable-threshold 0.02 \
+  --hold-frames 3 \
+  --max-response-frames 30 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t4_temporal_comparison.log 2>&1 &
+```
+
+日志最后输出 `T4 evaluation completed` 后回传小报告；逐轨迹/事件明细 `temporal_details.json` 留在服务器 `--details-dir`，路径与 SHA256 自动追加到 provenance。
+
+```bash
+git add cscwd/results/t4_temporal_comparison.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record T4 paired temporal evaluation results"
 git push origin codex/coverage-aware-router
 ```

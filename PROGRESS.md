@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | T1/T2 服务器验收通过；T3 本地实现完成，19 项合成测试及 9 项 T2 回归通过，下一步服务器运行 |
+| CSCWD | `cscwd/` | T1–T3 服务器流程验收通过；T3 初始规则定位未改善；T4 本地完成，15 项新增测试与 10 项回归通过 |
 
 ## 当前优先级（2026-11-12）
 **CSCWD 投稿是第一优先，方向已定：单帧→视频时序，贡献定位"切换感知 + 时序稳定"（STAG）。**
@@ -16,7 +16,10 @@ T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,0
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
 
-T3 本地实现完成：`cscwd/code/stag/gating.py` 纯 NumPy 因果 EMA，固定初始权重 `[-2,20,2,10]`，按 track 初始化并在原始帧号缺口重置；画内概率沿用单帧。`cscwd/code/scripts/run_stag.py` 核验 T2 源缓存、输出平滑预测和门控诊断，用同一个标准指标函数重算单帧/STAG 的 AUC/L2/AP。**19 项 T3 合成测试及 9 项 T2 缓存回归通过**；Python 3.10 语法及命令/结果忽略规则检查通过。完整服务器命令见 `cscwd/implementation_plan.md`。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
+T3 真实结果已拉取（`eb28855`）并完成运行与口径验收：单帧 **AUC 0.940182 / L2 0.098995 / AP 0.886801**；初始 STAG **AUC 0.936860 / L2 0.099197 / AP 0.886801**。固定权重 `[-2,20,2,10]` 的初始规则定位未改善；来源见 `cscwd/results/t3_stag_comparison.json`。两侧覆盖相同 31,978 人物帧/20,655 画内定位帧，来源与实现 SHA256、轨迹对齐和读回核对通过。
+
+T4 本地时序指标与统一评测入口已实现：`cscwd/code/stag/metrics.py` 同帧对报告预测/GT 位移、稳定及准确稳定占比、三类切换代理事件响应率/延迟/删失计数；`cscwd/code/scripts/eval_temporal.py` 只读 T2/T3 缓存并重现两侧标准三指标。响应半径 0.10、GT 跳变阈值 0.15、稳定位移阈值 0.02、连续 3 帧、最长 30 帧窗口，完整定义与命令见 `cscwd/implementation_plan.md`。当前保持 T3 权重，下一步服务器产出真实时序数字。服务器仓库：`/home/fb/src/paper/gazelleV1`。CSCWD 2027 截稿 2026-11-30（AoE），6 页双栏 single-blind。
+T4 本地验证：**15 项新增合成测试、10 项标准/T3 回归通过**；Python 3.10 语法、CLI 和服务器命令/结果忽略规则检查通过。真实时序数字等待服务器运行。
 
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
@@ -30,5 +33,5 @@ T3 本地实现完成：`cscwd/code/stag/gating.py` 纯 NumPy 因果 EMA，固�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. 用户手动运行 T3 初始规则门控；回传 `cscwd/results/t3_stag_comparison.json` 与 `cscwd/results/RESULT_PROVENANCE.md`。平滑缓存和诊断数组留服务器数据集下 `cscwd_cache/gazespot_vitb_epoch7/stag_rule_v1_test/`，路径与 SHA256 自动记录。
-2. 拿到同口径标准指标对比后进入 T4 时序指标，再依次推进 T5–T6；当前不填尚未运行的模型对比数字。
+1. 用户手动运行 T4 统一标准与时序评测，回传 `cscwd/results/t4_temporal_comparison.json` 与 `cscwd/results/RESULT_PROVENANCE.md`。逐轨迹/事件明细留服务器数据集下 `cscwd_cache/gazespot_vitb_epoch7/temporal_rule_v1_test/`，路径与 SHA256 自动记录。
+2. 拿到真实时序数字后进入 T5 消融，再推进 T6；当前不填尚未运行的时序比较数字。
