@@ -78,6 +78,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-B / 2026-11-18 / 官方 train/test 协议与入口完成**：按用户指定只使用官方 train/test，132,563 人物帧完整训练、每轮完整评测31,978人物帧；用户确认AUC优先、并列L2更低/AP更高选择一轮整套指标，不使用旧precision门槛。新增官方数据/评测/选模模块、test特征缓存、训练/比较/顺序入口及测试，代码全部位于 `cscwd/code/`；旧源码和validation报告保留。**36项本地合成检查通过**（数据5、特征6、协议5、训练6、比较8、后台6），产出 `cscwd/results/r4_official_local_checks.json/.md`，没有新增真实VAT指标。完整train特征和train/test原预测复用，需补test特征；两模型seed0各五轮，从头初始化。下一步由用户在服务器按实现计划§11.1单条命令（物理GPU1）运行并回传 `r4_official_*`。
 
+**R4-B / 2026-11-18 / 服务器数据与缓存只读确认**：已SSH检查，官方train/test的轨迹与原图均在，train **1,033 tracks / 132,563人物帧 / 58,507图像**、test **298 / 31,978 / 13,127**，全部图像路径存在且分区不交叉。R1只逻辑拆分官方train，完整train特征与train/test原预测均保留；新test视觉特征目录和完成报告尚不存在，需由§11.1入口先生成。服务器仍为 `f1d41e4`、未pull新脚本。产出 `cscwd/results/r4_official_server_preflight.json/.md`，10项既有数据检查通过；未启动服务器作业。下一步先pull，再手动运行GPU1单条入口。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 

@@ -422,3 +422,9 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 本地记录 `cscwd/results/r4_official_local_checks.json/.md`，JSON SHA256 `7d898ed7ed905578964b9a482fd3043f65dfecdefd4631c090ba7c140e295972`，Markdown SHA256 `10939cd9af1bc3bc861333753fd1e837d33c7946e4d23247c13dda0f3c4dd525`。36项CPU合成检查通过（数据5、特征6、协议5、训练6、比较8、后台6）；12文件Python3.10语法、shell/命令块、8项既有小报告来源兼容核对通过。
 - 合成数据实际走通两模型五轮、每轮完整test、test无反传、AUC整轮选择、checkpoint重载、全部候选/来源/诊断核对与比较CLI；后台临时替身验证GPU1继承、缓存复用与四阶段失败停止。不保存合成指标为VAT性能结果。
 - 当前没有新增真实VAT/CUDA运行或服务器大文件；完整服务器作业由用户按实现计划§11.1手动启动，物理GPU1。后续真实大文件路径及SHA由脚本记录，小报告使用独立 `r4_official_*` 名称。论文与报告明确test参与epoch选择，旧validation结果不更名为test。
+
+## 官方 train/test 服务器只读检查（2026-11-18）
+
+- 实际SSH连接 `fb@3090.lab`，服务器仓库 `/home/fb/src/paper/gazelleV1`，检查时提交 `f1d41e4`。仅查询文件、JSON/index SHA、NPY header/大小与全部RGB路径，没有运行模型或缓存作业。记录 `cscwd/results/r4_official_server_preflight.json/.md`，JSON SHA256 `10fd4e044d59c2e7b3eacda39dc533f747072e28ceeca15fb222917d93267444`，Markdown SHA256 `537a252fe8e71137e1d230147cb5bab904277603db9ca3d99446b3253452b3dd`。
+- 完整官方train为1,033tracks/132,563人物帧/58,507图像，test为298/31,978/13,127，全部71,634图像路径存在且分区不交叉。R1清单仅逻辑拆分train，完整train特征与train/test原预测均存在，索引/文件头等10项检查通过；没有重算大型NPY的完整SHA。
+- 新test视觉特征 `r4_official_test_native_last_fp16/` 的目录/index/NPY及 `r4_official_test_features.json` 均不存在，需由新wrapper首先缓存；test原预测不能替代它。服务器尚未pull `run_official_round.sh`，下一步由用户先pull再按§11.1手动运行GPU1唯一入口。

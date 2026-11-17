@@ -1,0 +1,231 @@
+{
+  "task": "R4_official_server_readonly_preflight",
+  "inspection_date": "2026-11-18",
+  "host": "fb@3090.lab",
+  "repository": "/home/fb/src/paper/gazelleV1",
+  "dataset": "/newhome/fb/dataset/videoattentiontarget",
+  "server_git_commit": "f1d41e4661b77319d4b596b9a49f270cd008aeaf",
+  "server_git_branch": "codex/coverage-aware-router",
+  "official_splits": {
+    "train": {
+      "annotations_path": "/newhome/fb/dataset/videoattentiontarget/annotations/train",
+      "annotations_exist": true,
+      "annotation_video_directories": 40,
+      "track_json_path": "/newhome/fb/dataset/videoattentiontarget/cscwd_tracks/train_preprocessed_tracks.json",
+      "track_json_exists": true,
+      "tracks": 1033,
+      "person_frames": 132563,
+      "unique_images": 58507,
+      "RGB_paths_checked": 58507,
+      "missing_RGB_count": 0,
+      "missing_RGB_paths": [],
+      "RGB_example": "/newhome/fb/dataset/videoattentiontarget/images/A Play With Words/14595_14746/00014595.jpg",
+      "track_prefixes": [
+        "train"
+      ]
+    },
+    "test": {
+      "annotations_path": "/newhome/fb/dataset/videoattentiontarget/annotations/test",
+      "annotations_exist": true,
+      "annotation_video_directories": 10,
+      "track_json_path": "/newhome/fb/dataset/videoattentiontarget/cscwd_tracks/test_preprocessed_tracks.json",
+      "track_json_exists": true,
+      "tracks": 298,
+      "person_frames": 31978,
+      "unique_images": 13127,
+      "RGB_paths_checked": 13127,
+      "missing_RGB_count": 0,
+      "missing_RGB_paths": [],
+      "RGB_example": "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/11118_11359/00011121.jpg",
+      "track_prefixes": [
+        "test"
+      ]
+    }
+  },
+  "prediction_caches": {
+    "train": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions",
+      "report_path": "/home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json",
+      "report_sha256": "dbbb121a36b883b46d242b44e86047ed59096275e173128bb6f5c02406a72c6a",
+      "passed": true,
+      "index_sha256": "aadb2646d5b99ac57191025f88155e767fc203999b71ee05ea60edce72da7770",
+      "index_matches_report": true,
+      "arrays": {
+        "heatmap": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/heatmap.npy",
+          "exists": true,
+          "shape": [
+            132563,
+            64,
+            64
+          ],
+          "dtype": "float32",
+          "size_bytes": 2171912320,
+          "payload_plus_header_matches_size": true
+        },
+        "inout": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/inout.npy",
+          "exists": true,
+          "shape": [
+            132563
+          ],
+          "dtype": "float32",
+          "size_bytes": 530380,
+          "payload_plus_header_matches_size": true
+        },
+        "argmax_xy": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/argmax_xy.npy",
+          "exists": true,
+          "shape": [
+            132563,
+            2
+          ],
+          "dtype": "float32",
+          "size_bytes": 1060632,
+          "payload_plus_header_matches_size": true
+        }
+      }
+    },
+    "test": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test",
+      "report_path": "/home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json",
+      "report_sha256": "5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022",
+      "passed": true,
+      "index_sha256": "57b161c434a0760322c1707a2e57269b0977f3bd58b3f7814cfd7618c2f175f6",
+      "index_matches_report": true,
+      "arrays": {
+        "heatmap": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test/heatmap.npy",
+          "exists": true,
+          "shape": [
+            31978,
+            64,
+            64
+          ],
+          "dtype": "float32",
+          "size_bytes": 523927680,
+          "payload_plus_header_matches_size": true
+        },
+        "inout": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test/inout.npy",
+          "exists": true,
+          "shape": [
+            31978
+          ],
+          "dtype": "float32",
+          "size_bytes": 128040,
+          "payload_plus_header_matches_size": true
+        },
+        "argmax_xy": {
+          "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/test/argmax_xy.npy",
+          "exists": true,
+          "shape": [
+            31978,
+            2
+          ],
+          "dtype": "float32",
+          "size_bytes": 255952,
+          "payload_plus_header_matches_size": true
+        }
+      }
+    }
+  },
+  "train_features": {
+    "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16",
+    "report_path": "/home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_cache.json",
+    "report_sha256": "cfbd01019bc0ff976cdcea4598211656e76101863495d1b55b8cf810e7205437",
+    "passed": true,
+    "images": 58507,
+    "shape": [
+      58507,
+      768,
+      32,
+      32
+    ],
+    "dtype": "float16",
+    "size_bytes": 92023554176,
+    "contract": {
+      "layer_index": 11,
+      "channels": 768,
+      "grid": [
+        32,
+        32
+      ],
+      "storage_dtype": "float16",
+      "source_dtype": "torch.float32",
+      "layout": "NCHW",
+      "spatial_pooling": "none",
+      "image_unit": "unique_current_RGB",
+      "learned_projection_cached": false
+    },
+    "index_sha256": "f817826cc271b7b257600d2f6db2fac3659f3b74111a7cabb0d84fab359feeb1",
+    "index_matches_report": true,
+    "image_paths_match_train_predictions": true,
+    "prediction_index_matches": true,
+    "payload_plus_header_matches_size": true
+  },
+  "test_features": {
+    "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r4_official_test_native_last_fp16",
+    "directory_exists": false,
+    "index_exists": false,
+    "scene_features_exists": false,
+    "report_path": "/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_test_features.json",
+    "report_exists": false,
+    "needs_cache": true,
+    "expected_shape": [
+      13127,
+      768,
+      32,
+      32
+    ],
+    "expected_dtype": "float16",
+    "estimated_payload_bytes": 20646985728,
+    "available_bytes_on_cache_filesystem": 2639559282688
+  },
+  "checks": {
+    "train_RGB_paths_present": true,
+    "train_official_annotation_and_track_json_exist": true,
+    "train_prediction_index_and_headers": true,
+    "test_RGB_paths_present": true,
+    "test_official_annotation_and_track_json_exist": true,
+    "test_prediction_index_and_headers": true,
+    "full_train_feature_index_and_headers": true,
+    "R1_only_subdivides_official_train": true,
+    "official_train_test_image_paths_disjoint": true,
+    "frozen_weight_files_present": true
+  },
+  "scope": "read_only; JSON/index hashes, NPY headers/file sizes and RGB path existence; no full large-array hashing, training or feature extraction",
+  "R1_split": {
+    "official_input_split": "train",
+    "partitions": {
+      "train": {
+        "tracks": 827,
+        "person_frames": 98362,
+        "unique_image_frames": 44839
+      },
+      "validation": {
+        "tracks": 206,
+        "person_frames": 34201,
+        "unique_image_frames": 13668
+      }
+    },
+    "manifest_path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1/split_manifest.json",
+    "interpretation": "Logical subset of official train only; full train prediction and feature caches remain available; official test is separate."
+  },
+  "weight_files": {
+    "VAT_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt",
+      "exists": true,
+      "size_bytes": 15261416
+    },
+    "backbone_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "exists": true,
+      "size_bytes": 342860279
+    }
+  },
+  "server_new_wrapper_exists": false,
+  "existing_data_checks_passed": true,
+  "test_feature_cache_ready": false,
+  "next_step": "User git pull --ff-only, then manually run implementation_plan.md section 11.1 on GPU1; wrapper first creates the missing test features and then trains both models."
+}
