@@ -2,10 +2,13 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
+> 当前版本：2026-11-17 修订。方案解释见 [temporal_joint_refinement.md](temporal_joint_refinement.md)。T1–T6 为已完成的先导阶段，当前执行入口为 §3.2 的 R1；R1–R6 均未执行。本次仅完成文档落地。
 
 ## 0. 目标（一句话）
 
-在冻结 DINOv3 单帧 gaze 估计（GazeSpot）之上，加一个**严格因果**的时序门控 STAG（Shift-aware Temporal Gating），利用 VAT 连续帧的 head 轨迹 + 历史预测，实现**时序稳定 + 注视切换感知**。
+在冻结 GazeSpot ViT-B VAT 单帧模型之上，训练一个**严格因果、联合输出 heatmap 与 In/Out 分数的轻量时序模块**，结合当前人物/场景视觉证据判断历史注视证据是否仍然有效，改善定位、状态判断、准确稳定性与切换响应之间的折中。
+
+当前规则 STAG（报告中的 `stag`）保留为先导基线；新方案暂用实现标识 `temporal_joint_refiner`，不预先承诺方法名称或性能增益。主研究问题是历史证据的保留、位置更新与释放，不将 EMA、因果推理、冻结骨干或视觉模板本身列为新贡献。
 
 ## 1. 技术方案
 
@@ -17,10 +20,10 @@
 
 ### 1.2 track 恢复
 VAT 原始数据按轨迹组织：`annotations/{split}/{video}/{clip}/` 下每人一个 CSV，文件内即逐帧轨迹。
-现有 `data_prep/preprocess_vat.py` 用 `merge_dfs` 拍平，丢了 person_id。重写以保留轨迹。
+旧 `data_prep/preprocess_vat.py` 用 `merge_dfs` 拍平，丢了 person_id。T1 已用 `code/data_prep/preprocess_vat_tracks.py` 恢复轨迹。
 T1 保留原始 CSV 帧序，头部框使用当前帧原始真实框并裁至图像边界；旧脚本的 11 帧居中框平滑不带入因果时序协议。
 
-### 1.3 STAG 时序门控（平滑 + 切换）
+### 1.3 已完成的规则 STAG（先导基线）
 对每个 track 做因果时序融合。公式（只用 ≤ t 的信息）：
 
 ```
@@ -49,7 +52,29 @@ T1 保留原始 CSV 帧序，头部框使用当前帧原始真实框并裁至图
 ```
 
 - 严格因果：一切输入只依赖 ≤ t。
-- 第一版 `w` 手调或简单拟合（在 track 上网格/最小二乘），跑通拿数字；之后可选升级为可学习门控（见 T3 备注）。
+- 已跑第一版使用预先固定的 `[-2,20,2,10]`，只修改 heatmap，In/Out 分数原样保留。四参数校准在 R4 中作为对照，不再作为主方法的唯一推进路线。
+
+### 1.4 当前主方案：视觉证据驱动的因果联合修正（待实现）
+
+- **输入**：当前 RGB、当前真实头框、原始单帧 heatmap/In/Out，以及同人物的过去预测和冻结视觉特征；不使用未来 RGB、未来特征或未来预测。
+- **表征**：由冻结场景空间特征获得人物区域表示、当前候选区域证据，以及历史预测注视区域的视觉表示；历史区域由模型预测产生。头框中心位移不当作头朝向，In/Out 概率不当作定位可信度。
+- **普通基线先行**：先实现同输入的普通因果 GRU 联合头，建立可训练主路径。新增的可学习投影、时序层和两个修正头放在 `cscwd/code/stag/`；原模型及其 decoder 保持冻结。
+- **任务机制**：在普通联合头基础上，利用历史目标区域与当前场景的视觉对应、当前人物证据及预测分布，学习历史有效性，控制历史的保留、更新或释放。视觉对应支持移动目标的位置更新；不能仅用旧坐标直接平均来替代这一判断。
+- **输出**：每个人每帧的修正 heatmap 与修正 In/Out 连续分数。新状态分支具有改变 AP 的能力；实际是否提高由 R4/R5 结果确定。定位评测继续以 GT 画内掩码为准，不按预测状态删去定位样本。
+- **训练**：仅训练新增模块。主损失为当前帧画内 heatmap 监督与全部有效人物帧的 In/Out 分类监督；首版沿用底座热图 MSE 与状态 BCE，不为新增机制预设无标注依据的目标身份/真实切换监督。训练和推理的历史状态均来自模型；不以 GT 热图或状态填充历史。连续片段从空状态开始，截断反传只截断梯度，缺口/跨人物重置。
+- **证据边界**：VAT 原始点位移事件仍称 `GT_proxy`，不是目标身份切换真值。普通门控、目标模板与时序记忆已有先例；新增机制的价值通过同输入普通因果头、自适应滤波和机制消融来检验。
+
+### 1.5 指标目标与选模原则
+
+| 指标 | 新方案目标 | 评价要求 |
+|---|---|---|
+| AUC ↑ / L2 ↓ | 提高或保持定位质量 | 共同 GT 画内样本；不靠预测 In/Out 过滤困难帧 |
+| In/Out AP ↑ | 改善画内外分数排序 | 全部有效人物帧；调整判定阈值本身不改变 AP |
+| Jitter ↓ / 准确稳定占比 ↑ | 减少错误跳变、持续正确跟随 | 同报 GT 位移及运动片段误差，不能以固定预测获得假稳定 |
+| 分型响应率 ↑ / 延迟 ↓ | 减少历史额外引入的滞后和失响应 | 分别报告 `enter_frame / leave_frame / gaze_shift`；配对延迟与删失计数一起报告 |
+| 状态错误翻转率 ↓ | 减少虚假的画内外翻转 | R1 固定定义，只在连续且 GT 状态保持的帧对上计分，并同报状态错误率/转换响应 |
+
+R1 固定新增状态指标、候选预算和 validation 选模规则；不填未跑的增益目标数字。R4 按预先固定的定位/状态精度容忍度筛选配置，再比较准确稳定性和分型响应的 Pareto 折中。全部候选及选择依据保留，不在已查看的 test 结果上选参数。
 
 ## 2. 项目结构（本次代码/论文全在 cscwd/ 下，不与旧代码混）
 
@@ -58,7 +83,7 @@ cscwd/
 ├── code/                      # 本次时序方向代码（全部新代码放这里）
 │   ├── data_prep/             # T1 track 恢复
 │   │   └── preprocess_vat_tracks.py
-│   ├── stag/                  # STAG 门控核心
+│   ├── stag/                  # 已有基线/指标；R 阶段在这里新增联合时序模块
 │   │   ├── __init__.py
 │   │   ├── cache.py           # T2 NPY 存储与离线 track 读取
 │   │   ├── ema.py             # T5 固定 α 因果对照
@@ -75,29 +100,34 @@ cscwd/
 ├── latex/                     # 论文（main.tex + refs.bib + fig/）
 ├── results/                   # 关键小结果（JSON/MD），git 传回
 │   └── RESULT_PROVENANCE.md   # 每个数字→来源运行
-└── *.md                       # 方案/蓝图/规格/文献
+├── temporal_joint_refinement.md # 当前方案、动机、训练与证据边界
+└── *.md                       # 蓝图/规格/文献
 ```
 
-- 复用旧代码只 `import` 根目录 `gazelle`（只读，不改）；任何**新文件**都落在 `cscwd/code/`。
+- 复用旧代码只 `import` 根目录 `gazelle`（只读，不改）；任何**新代码文件**都落在 `cscwd/code/`。方案与计划 Markdown 放 `cscwd/`。
 - 大文件（heatmap 缓存 `.npy`、checkpoint `.pt`）**不进 git**，留服务器；`cscwd/.gitignore` 已忽略。
 
-## 3. 实现任务清单（按依赖顺序，逐项勾选）
+## 3. 实现任务清单
 
-### T1 track 恢复
+### 3.1 T1–T6：已完成的先导阶段
+
+以下保留当时的实现规格，完成情况与真实结果见 §6。涉及“后续/可选”的旧描述按 §3.2 的新计划执行；不重新从 T1 开始，也不把旧规则 STAG 当成已训练的新方案。
+
+#### T1 track 恢复
 - 新增 `cscwd/code/data_prep/preprocess_vat_tracks.py`（不改旧脚本），产出 `train_preprocessed_tracks.json` / `test_preprocessed_tracks.json`。
 - 结构：`sequence → tracks → frames`，每个 track 内按帧序，每帧含 `path / bbox_norm / gazex_norm / gazey_norm / inout / person_id`。
 - person_id 来自"每人一个 CSV"这一原生组织（CSV 内顺序即帧序，无需额外匹配）。
 - track 另含 `track_id`（`split/video/clip/person_id`）和 `source_csv`；frame 另含原图文件名中的 `frame_index`，保留缺口，不插帧。`gazex_norm / gazey_norm` 沿用单元素列表格式。
 - **验收**：脚本能在服务器数据上跑通；track 数与 person CSV 数一致；帧数与原拍平 JSON 一致（总数核对）。
 
-### T2 单帧预测缓存（服务器）
+#### T2 单帧预测缓存（服务器）
 - 用 GazeSpot VAT checkpoint，沿新 track JSON 跑前向，逐 track 逐帧缓存 `heatmap`（64×64）与 `inout` 概率。
 - 缓存为 numpy/parquet，按 track 组织，可离线读取。
 - 实现为 float32 `heatmap.npy` / `inout.npy` / `argmax_xy.npy`，沿 `sequence → track → frame` 连续存储；服务器 `index.json` 保存每条 track 的 `[start, stop)`、原始帧记录和文件 SHA256。`stag.cache.load_cache` / `iter_cached_tracks` 只依赖 NumPy，离线按 track 取出预测。
 - 使用原模型 transform、GGSF + SASA，全部参数冻结、`eval` + `inference_mode`，不使用 autocast/TF32；模型仅接收当前 RGB 和真实头部框。argmax 坐标按原 `vat_l2` 的 `column/64, row/64` 定义。
 - **验收**：缓存覆盖 test 全部 track；单帧 argmax 点 + 单帧 heatmap 可由缓存完全重建（不重新前向）。
 
-### T3 STAG 门控（后处理级，先跑通）
+#### T3 STAG 门控（后处理级，先跑通）
 - 纯 numpy 实现 §1.3 公式，输入 T2 缓存，输出平滑后 heatmap / 点。
 - 第一版手调 `w`（建议初始：w1、w3 为大正数触发快速响应，w2 中等，w0 为负偏向平滑）。
 - 首轮固定权重 `[w0,w1,w2,w3]=[-2,20,2,10]`，不在 test 上搜索参数。头部中心与热图 argmax 均用归一化坐标计算位移；每条 track 独立初始化，原始帧号不连续时从当前帧重置。
@@ -106,7 +136,7 @@ cscwd/
 - **验收**：在 track 上跑通；单帧 vs STAG 的 L2/AUC/AP 有完整对比数字。
 - **备注**：若手调门控有正增益，再考虑可学习门控（轻量 MLP，在 track 上拟合），作为消融。
 
-### T4 评测脚本 + 时序指标
+#### T4 评测脚本 + 时序指标
 - 标准三件套：AUC↑ / 归一化 L2↓ / In-Out AP↑（VAT test，真实框，纯 RGB）。
 - 新增时序指标（**贡献，须诚实定义**）：
   - 帧间抖动 Jitter↓：相邻帧同 track 预测点位移均值/分布。
@@ -115,7 +145,7 @@ cscwd/
 - **诚实红线**：抖动降低必须同报**真实注视点位移**作参照（证明不是预测僵死变钝，而是跟上真实轨迹）。
 - **口径对齐**：单帧 baseline 与 STAG 必须在**同一个 track 级评测脚本**上重跑，旧拍平数字只作参照、不进时序对比表。
 
-#### T4 时序指标的实现定义（本项目定义，首轮固定）
+##### T4 时序指标的实现定义（本项目定义，首轮固定）
 
 - 坐标均为归一化 `(x,y)`；相邻仅指同 track 的原始 `frame_index` 差为 1，不跨人物或缺口。阈值在两侧完全相同，不调整 T3 权重。
 - **Jitter**：在连续且两帧真实画内的帧对上，统计预测点位移的 mean/median/p90/p95；同时在**完全相同帧对**上报告真实注视点位移分布。按人物帧对汇总，不等权平均 track。
@@ -125,7 +155,7 @@ cscwd/
 - **观察窗口**：最多 **30 帧**（含事件帧），在下一 GT 代理事件、原始帧号缺口或 track 结束前截断。窗口不足 3 帧记为 `insufficient_followup`；足长但未响应记为 `censored`。按事件类型同报总数、可评估数、响应率、已响应条件延迟分布、未响应数和短窗口数；另在两侧共同响应的同一事件集合上报告延迟差，保留各侧独有响应数。
 - `stag/metrics.py` 的 `evaluate_temporal` 只计分已保存预测，标签不进入门控；`scripts/eval_temporal.py` 共用标准/时序评测函数重跑两侧。小 JSON 保存汇总与完整协议，逐 track/事件明细留服务器 JSON 并记录路径/SHA256；无样本统计写 `null`。
 
-### T5 消融
+#### T5 消融
 | 变体 | 平滑 | 门控 | 回答 |
 |---|---|---|---|
 | 单帧底座 | ✗ | ✗ | baseline |
@@ -138,7 +168,7 @@ cscwd/
 - 可学习门控后置：先确认规则门控相对普通 EMA 的额外收益，再决定学习化；当前不直接铺开 MLP。
 - 实现入口 `code/scripts/run_ema_ablation.py` 先核验 T2/T3 缓存和 T4 来源链，原样继承 T4 阈值与协议，重现单帧/STAG 标准和时序汇总后运行四个固定 EMA。新预测缓存、alpha/reset 和逐轨迹/事件明细留服务器，JSON/Markdown 小报告完整列出六种方法；配对延迟分别比较 EMA−单帧、EMA−STAG，独有响应字段为 `reference_only / candidate_only`。
 
-### T6 定性可视化
+#### T6 定性可视化
 - 拥挤多人协同画面（VAT crowd 子集）"谁在看谁/什么"时序可视化。
 - 切换场景：一人从看 A 转到看 B，并列 GT、单帧、STAG 和固定 EMA 的预测响应，按实际输出呈现切换速度与滞后。
 - 根据 T4 实际结果，同时展示稳定收益段、切换滞后段与失败段；并列 RGB/真实框、GT 轨迹、单帧/STAG 轨迹、热图与 alpha。检查旧峰残留、热图融合和门控响应，定性图的结论以实际片段为准。
@@ -148,6 +178,67 @@ cscwd/
 - 实现类别为 `stag_over_ema / single_frame_only / stag_lag / stable_gain / crowded`。前两类分别与 T5 的 STAG 相对 EMA `0.25` 独有响应数、单帧相对 STAG 独有响应数核对；`single_frame_only` 全部渲染，其他组按 track_id/原帧号取前 2 例。稳定收益取符合 T4 半径/连续帧阈值且 GT 稳定、STAG 准确稳定、单帧抖动的首个连续命中 episode 窗口；拥挤候选按每 clip 最早满足真实标注人数 ≥4 的帧选择。无候选组保留 0，不替换或放宽条件。
 - 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
 - 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
+
+### 3.2 R1–R6：当前执行计划（全部待开始）
+
+每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。以下文件名为规划产物，不表示脚本或报告已存在。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令；不提前执行尚未实现的入口。
+
+#### R1 数据分组、单帧诊断与评测协议
+
+- **依赖**：复用 T1 轨迹和已确定的 ViT-B checkpoint；不依赖新的时序模型。
+- **工作**：以 VAT 原始 train 为开发数据，按标注 `video` 字段及其可追溯源视频身份分组，固定 seed、组清单与划分比例；同源 clip、人物、相邻窗口不跨 train/validation。记录分组字段实际含义及源视频对应关系，不将 track 数当独立视频数。
+- **预测准备**：复用已有 T2 缓存脚本生成 train 单帧预测，使用无增强、冻结/eval 的当前帧前向；缓存只生成一次，再按已固定清单取 train/validation。旧 `t5_calibration_train_cache` 只有实际文件和来源核对后才可复用，当前不标记为已运行。
+- **诊断**：在训练组中按固定抽样规则查看稳定段和代理事件，记录“同目标运动 / 相机变化或切镜 / 可辨识的换目标 / 模型误跳 / 无法判定”及原始帧号。主依据为 RGB、GT 与单帧预测；不从已看过的 test 片段选择新信号。人工诊断不自动成为全量真实切换标签，也不用于填充模型历史。
+- **协议**：保留 T4 定义；增加连续 GT 状态相同帧对上的预测状态翻转率、全帧状态错误率，以及独立于定位条件的画内外状态转换响应。阈值、分母、短窗/删失处理和版本在训练前固定；原有 joint 响应另列，不改写 T4 旧列。
+- **选模计划**：根据开发组分布固定候选范围、精度容忍度和 Pareto 比较规则，写成配置；同时说明按源视频汇总/配对及后续不确定性估计的单位。validation 用于新增模块选模；冻结 VAT 底座此前已在 VAT train 训练，不能称整个流水线未见过这些数据。
+- **规划产出**：`results/r1_split_and_diagnosis.json/.md`（划分参数、组名、计数、诊断摘要、协议与选择规则）；完整清单/逐帧诊断留服务器并记路径、SHA256。主路径代码放 `code/data_prep/` 和 `code/scripts/`。
+- **验收**：source-video 组交集为空；全量 train 缓存计数对齐 T1 的 **1,033 tracks / 132,563 人物帧**；抽样可复现且来源可追溯；新增指标定义和选模配置已固定。R1 完成后才进入 R2。
+
+#### R2 冻结视觉缓存与普通因果联合头
+
+- **依赖**：R1 清单、预测缓存和指标协议。
+- **缓存**：在当前帧原模型前向中提取冻结空间特征，通过独立 wrapper/import 接入，不修改 `gazelle`。先用少量 train 图像确认特征层、空间网格、dtype、存储量与读取形状，再将契约写入配置和缓存 index。场景特征按唯一图像保存，track/person 记录引用图像索引，避免为每人重复存全部 DINO 层；全部可学习投影在新模块内完成，不缓存随训练变化的表示。
+- **兼容**：原始 heatmap/In/Out 仍保留 float32；与相同设置下 T2 路径核对。新增视觉缓存不等同于旧预测缓存，单独记录 checkpoint、transform、输入和代码 SHA256；所有新方法共享相同视觉输入、缓存精度与初始化来源。
+- **普通模型**：先实现最小因果 GRU 联合头，接收当前人物区域/场景表示、原始预测及过去状态，输出 heatmap 和 In/Out 连续分数。保持底座与原 decoder 冻结，采用当前帧 heatmap MSE（仅 GT 画内）和状态 BCE（全部有效帧）。损失权重、hidden size、序列长度与优化参数完整保存为配置，由 R4 在 R1 预算内选定。
+- **历史**：以模型预测构造区域与状态，初始为空；训练片段按时间顺序展开，截断反传时只 detach 状态。跨人/缺口重置；validation 按完整连续 track 从空状态递推，不以 GT 或未来帧 warm start。
+- **规划产出**：`results/r2_feature_cache.json/.md`（特征契约、覆盖与冻结前向核对）；联合头本地实现/合成检查记录；普通联合头的首次训练配置。缓存 NPY 与完整 index 留服务器，尚不生成新 test 性能结论。
+- **验收**：train/validation 可按清单读取；prefix 在未来帧变化时保持不变；历史不含 GT；两个输出及损失掩码正确；可学习参数仅属于新模块，缓存特征与底座无梯度；在服务器完成最小训练/验证主路径并回传实际日志摘要。此 smoke run 不选最终配置。
+
+#### R3 历史有效性机制
+
+- **依赖**：R2 普通联合头及同源缓存；以 R1 诊断中的可辨识现象确定首个最小机制。
+- **工作**：由过去模型预测热图加权读取历史目标视觉表示，与当前空间特征建立对应；当前头框区域表示提供人物证据。结合对应质量、当前预测分布及人物变化，估计历史是否仍有效，并控制记忆更新/释放；历史目标的位置更新与采用新目标的判断分别保留诊断量。
+- **输出**：仍为 heatmap 与 In/Out 分数；两个分支都能利用当前证据与选择性历史。保存历史有效性、对应位置和更新强度，供后续解释。推理不使用 GT 点、状态、目标 ID 或事件标签；原始 heatmap 不是自动校准的概率分布，区域读出使用显式定义的非负归一化权重。
+- **监督**：首版使用 R2 相同的当前帧主损失；不把“保留/更新/释放”直接包装成已有三分类真值。若 R1 支持新增辅助监督，先在配置中写清标签构造与仅依赖当前/过去标签的规则，再纳入 R4 对照。
+- **公平性**：普通因果头与新机制共享可得输入和训练数据，记录参数/计算差异。去掉“选择性历史”时仍保留视觉输入，避免把增加输入量的收益归因于门控。
+- **规划产出**：`results/r3_mechanism_design.md`（首版结构、字段、训练配置和与普通头的差异），本地因果/梯度/轨迹状态检查记录；机制图与代码只描述已实现结构。
+- **验收**：保留/位置更新/释放路径能在合成序列上分别触发并可解释；两个分支输出有效；符合 R2 的冻结、prefix 与重置要求；结构和候选配置固定后进入 R4。此项不以合成检查证明真实切换识别能力。
+
+#### R4 新模块训练、validation 对照与消融
+
+- **依赖**：R1–R3 产物。所有训练仅使用开发 train 组标签，validation 用于配置选择；只优化新增模块。
+- **对照**：同一冻结 ViT-B 单帧底座、全部 T5 固定 EMA、原规则 STAG、开发集校准的四参数门控、One Euro 坐标滤波、速度自适应热图 EMA、普通因果 GRU 联合头和新机制。坐标滤波只提供坐标/状态类结果，原始热图 AUC 原样注明，不能声称坐标滤波改善了热图；分数保持原值的对照明确 AP 不变。
+- **消融**：普通当前帧修正头（去历史，同样训练两个输出）、heatmap-only、state-only、joint；在同输入联合头中分别去掉视觉对应、选择性历史。分开回答“多了训练/输入”“用了历史”“历史有效性机制”和“联合状态输出”的贡献，避免只与未训练的单帧底座比较。
+- **训练记录**：保存 split/缓存/代码 SHA256、完整参数、seed、各损失、validation 每项指标、checkpoint 与选模依据。关键结论按预先固定的多个训练 seed 检查重复性；seed 数和候选预算先写入 R1/R4 配置，不根据结果追加到某一方法。完整日志/checkpoint 留服务器。
+- **比较**：按 R1 的精度容忍度与选择规则保留折中配置，比较相近 AUC/L2/AP 或相近稳定性下的响应。分型响应率、共同响应事件的配对延迟、两侧独有响应数同时报告；使用源视频为单位的配对汇总/重采样，不能把相邻帧当独立样本夸大证据。
+- **规划产出**：`results/r4_validation_comparison.json/.md`，含全部已跑候选/消融、实际 seed 和选定配置；`results/r4_selection_manifest.json`，固定代码版本、特征契约、checkpoint SHA256、阈值及选模规则。完整超参搜索明细留服务器并记录来源。
+- **验收**：普通联合头和强简单对照齐全；热图与状态两条路径的效应可分辨；选定配置及结论都来自 validation。若主要收益只落在 AP/状态响应，则按这一实际结果收缩贡献；不预写所有指标同时提升。
+
+#### R5 冻结配置后的统一 test 报告
+
+- **依赖**：R4 selection manifest 已固定。按同一特征契约生成 test 视觉缓存，不能为了 test 调整网格、阈值或模块结构。
+- **工作**：统一评测冻结配置及所需对照，报告 AUC/L2/AP、Jitter/同 mask GT 位移、准确稳定占比、三类 joint 响应，以及独立状态错误翻转/转换响应。保持旧 T4 协议的列可直接追溯，新增协议另标版本。
+- **统计与案例**：使用 R1/R4 已固定的组级配对规则；确定性选择收益/失败案例，展示原始预测、普通联合头、新机制与强滤波对照。区分目标运动、换目标和状态变化，无法判定的片段保留该标签。
+- **规划产出**：`results/r5_test_comparison.json/.md`、小预览与 provenance。checkpoint、预测/特征 NPY、完整候选/逐帧明细只记服务器路径与 SHA256，不覆盖 T1–T6 报告。
+- **验收**：test 配置与 R4 manifest 一致；覆盖与分母对齐；连续分数 AP 不依赖分类阈值；两输出和分型行为均有完整结果。已有 test 曾用于 T1–T6 探索的事实写入实验说明，不称从未查看过的全新测试集。报告后不再围绕 test 调参。
+
+#### R6 论文落稿与协作证据
+
+- **依赖**：R5 的真实结论。按 `paper_blueprint.md` 写入 `cscwd/latex/`，方法与贡献只对应已实现、已跑通的结果。
+- **工作**：写清当前/过去信息边界、冻结条件、联合训练、强对照、代理事件与评测口径；One Euro、Chong/PDP/MTGS、ARGaze/EyeTAG 等先行方法用于说明差异，不宣称首次使用时序、门控或目标模板。
+- **协作证据**：先核实 VideoCoAtt/VSGaze 等资源是否提供可用标注与同条件人物轨迹，再决定一个有标注的共同关注/交流事件验证；实际运行时单独建立协议和 provenance。仅有 VAT 时，标题与主结论聚焦逐人在线注视目标估计，把协作写为应用动机，不声称已证明协作收益。
+- **规划产出**：论文源稿、引用和实际图表；`results/r6_paper_evidence.md` 逐条连接贡献、真实运行与图表。存在下游实验时另存其小报告；未跑的实验不进入结果表。
+- **验收**：每个数字和结论可追溯到真实结果；文献报告值与本项目实测分表；主配置统一 ViT-B；摘要按既有约定不放具体数值。
 
 ## 4. 数据、路径与 git 工作流
 
@@ -184,7 +275,7 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 
 > 每完成一个任务，在此记：任务号 / 完成内容 / 产出的文件与数字 / 下一步。不要写"风险清单"，只写推进状态。
 
-- 已确认：venue 扫描完成（`cscwd_2025_2026_related.md`）——CSCWD 2025/2026 无 gaze following / shared attention 论文，motivation 需自证，锚点 B1/B3/C2。
+- venue 扫描完成（`cscwd_2025_2026_related.md`）：既有标题/摘要检索范围内未发现直接同题论文，B1/B3/C2 为场景锚点；这不是全领域创新性的证据，方法先行工作按当前方案文档定位。
 - **2026-11-12 · T1 本地实现完成**：新增 `code/data_prep/preprocess_vat_tracks.py`，从原生 `.txt/.csv` 人物文件恢复 `sequence → tracks → frames`；保存人物身份、当前帧真实框、注视标签和原始帧号。沿用旧脚本混合正负注视坐标的修正规则，框不作跨帧平滑。
 - **T1 产出与数字**：新增 `code/data_prep/test_preprocess_vat_tracks.py`；本地合成数据回归 **6 项通过**，覆盖人物身份/帧序/归一化、未来行变化不影响历史帧、图像帧与人物帧计数、同总数错配、逆序拒绝、CLI 双 split 输出及失败退出。命令：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/data_prep -p 'test_*.py' -v`。这些是本地测试，未生成 VAT 实验数字。
 - **T1 服务器产出**：完整 JSON 写入数据集下 `cscwd_tracks/{train,test}_preprocessed_tracks.json`；小报告写 `results/t1_track_recovery.json`，含轨迹数、唯一图像帧数、人物帧数、逐帧人数核对、输入/输出 SHA256 与运行命令。核对全部通过后，脚本把实际数字及大文件路径/SHA256 追加至 `results/RESULT_PROVENANCE.md`。完整 track JSON 已加入 `.gitignore`。
@@ -214,7 +305,17 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-13 · T6 本地实现完成**：新增 `code/stag/case_selection.py`、`code/stag/plotting.py`、`code/scripts/visualize_temporal.py` 及三个配套测试文件。入口核验 T5 全部源报告、六种方法缓存和逐事件明细 SHA256，按已声明的五类规则选样，保留全部单帧独有切换失败案例；四方法展示使用冻结缓存，输出候选 manifest、逐帧数据、原始热图/真实框图、门控时间线及小预览。
 - **T6 本地数字与验证**：**15 项合成测试通过**（选样 8、绘图 4、完整来源链/真实 CLI 集成 3），覆盖固定排序/全失败保留/缺口/拥挤计数、事件前后快照、GT 画外 `null`、计分窗口、缓存不变、图片/manifest/源文件 SHA256、预览配额和无 Torch 离线执行。已用临时合成 RGB 检查完整图及小预览，图例、色标、原帧号、事件状态/延迟与窗口标注清楚。Python 3.10 语法、CLI help、服务器命令与结果忽略规则检查通过。真实 VAT 案例尚由服务器产出。
 - **T6 测试命令**：`/private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_case_selection.py -v`（8 项）；`MPLCONFIGDIR=/private/tmp/gazelle-t6-mpl /private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_plotting.py -v`（4 项）；`MPLCONFIGDIR=/private/tmp/gazelle-t6-mpl /private/tmp/gazelle-t1-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_visualize_temporal.py -v`（3 项）。合成视觉检查图留 `/private/tmp/gazelle-t6-render/`，不作真实实验材料。
-- **下一步（2026-11-13）**：用户手动执行下列 T6 命令，回传 `results/t6_visualization.json/.md`、`results/t6_previews/` 和 provenance；完整图、候选清单及逐帧数据留服务器。拿到真实案例后检查旧峰残留、错误峰写入及门控触发时机，再决定一项具体机制改动；当前保持固定权重，参数选择/拟合转到 train/validation。
+- **2026-11-13 · T6 服务器与本地预览验收完成**：用户已同步结果提交 `9e0fdd0`。来源 T5 报告/明细/六种 cache index、T6 实现 SHA256、全量覆盖和选择计数一致；已核验本地 **10 张预览 PNG** 的 SHA256/大小。五类候选数为 **7/5/11/726/16**（门控收益/单帧独有响应/STAG 滞后/稳定收益 episode/拥挤 clip），完整输出 **13 例**，5 个单帧独有切换失败全部保留。已实际查看五类各一例的帧图与时间线；其余完整图和逐帧 JSON 保留服务器，未声称已逐帧检查全部 13 例。
+- **T6 真实观察**：CBS `2487_2818/s01` 的 `2517` 事件中单帧和 STAG 延迟均为 **0**，两个 EMA 在 **3 帧**计分窗口内未形成成功区间，显示门控可避免固定平滑的首帧拖延。CBS `12137_12258/s03` 的 `12144` 事件中单帧 **+8 帧**、STAG **+12 帧**、EMA `0.25` **+13 帧**、EMA `0.5` **+12 帧**，显示初版仍有额外历史惯性。Downton `13066_13217/s02` 的 `13190` 事件中单帧 **+6 帧**，STAG 有短暂低误差段但未连续成功 3 帧而记为 `censored`；该标签不表示从未预测到正确位置。
+- **T6 机制判断**：所看切换/滞后片段中 `d_head` 很小、预测 inout 不翻转，alpha 主要受 `d_heat` 驱动。大跳变触发本身不区分可信纠正与噪声回跳，短暂正确观测也会被历史混合延后或缩短；这一现象支持先校准历史权重和响应强度。旧/新热图峰幅值竞争与全部失败例是否同因，仍需源缓存/逐帧数值核验，当前不写成已证实的总体结论。
+- **旧下一步（2026-11-13 记录，已由 R 阶段替代）**：曾计划复用 `cache_single_frame.py` 生成 train 缓存，并在视频分组 train/validation 上校准四参数门控。该 train 缓存尚未回传验收，四参数校准转为 R4 对照；保留此记录及原命令作为历史。
+- **2026-11-17 · R0 方案与计划落地完成**：新增 `temporal_joint_refinement.md`，将主问题确定为“当前视觉证据下的历史有效性判断”，新增模块联合修正 heatmap 与 In/Out；完整 ViT-B GazeSpot 和原 decoder 冻结。原规则 STAG 与 T1–T6 结果保留为先导基线；AP 旧版不变、新版可学习，实际收益留待训练/评测。
+- **R0 产出与数字**：同步本文档 §0/§1/§3.2、`paper_blueprint.md`、`README.md`、`codex_prompt.md`、`datasets_and_metrics.md` 与根 `PROGRESS.md`，补充文献入口；写入 R1–R6 的依赖、输出和验收。本次只更新文档，没有新增模型结果、训练运行或服务器作业，已有结果文件不变。
+- **当前下一步（R1，未开始）**：固定 source-video 分组、开发集单帧缓存与诊断协议、状态指标和 validation 选模规则；R1 结果回传验收后再做 R2。R1–R6 的代码、特征缓存、新模块和训练结果均未标为完成。
+
+## 7. 先导阶段服务器命令存档
+
+T1–T6 的命令对应已完成运行，供复现使用。末尾 train 缓存命令是旧方案尚未验收的准备命令；当前按 R1 重新明确报告命名、划分来源与执行入口，不将本节视为新阶段立即运行的指令。
 
 ### T1 服务器手动运行
 
@@ -397,5 +498,35 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 ```bash
 git add cscwd/results/t6_visualization.json cscwd/results/t6_visualization.md cscwd/results/t6_previews cscwd/results/RESULT_PROVENANCE.md
 git commit -m "Record T6 temporal diagnostic cases and previews"
+git push origin codex/coverage-aware-router
+```
+
+### 旧 T5 校准准备命令：train 冻结预测缓存（未执行验收，非当前默认入口）
+
+复用已经在 test 跑通的 T2 脚本，仅对训练轨迹做无增强、冻结模型的前向，不训练 backbone 或 decoder。train 的轨迹/人物帧计数以 T1 真实报告为验收参照。先生成完整 train 缓存，再做视频组划分，避免重复前向。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/cache_single_frame.py \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --track-json /newhome/fb/dataset/videoattentiontarget/cscwd_tracks/train_preprocessed_tracks.json \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
+  --model gazelle_dinov3_vitb16_inout \
+  --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/train \
+  --batch-size 8 \
+  --num-workers 4 \
+  --device cuda:0 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/t5_calibration_train_cache.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/t5_calibration_train_cache.log 2>&1 &
+```
+
+输出 `T2 verification passed` 后回传小报告（复用脚本的成功标记仍为 T2），大文件路径/SHA256 自动记录。
+
+```bash
+git add cscwd/results/t5_calibration_train_cache.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record frozen train cache for temporal gate calibration"
 git push origin codex/coverage-aware-router
 ```

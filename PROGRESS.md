@@ -7,11 +7,11 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | T1–T5 服务器验收完成；T6 本地实现完成，15 项合成测试及视觉检查通过，下一步服务器出案例 |
+| CSCWD | `cscwd/` | T1–T6 先导阶段完成；因果 heatmap/In/Out 联合修正方案与 R1–R6 计划已落文档，下一步 R1 |
 
-## 当前优先级（2026-11-13）
-**CSCWD 投稿是第一优先，方向已定：单帧→视频时序，贡献定位"切换感知 + 时序稳定"（STAG）。**
-文档齐备：`cscwd/paper_blueprint.md`（论文结构/baseline/指标）、`cscwd/implementation_plan.md`（实现规格+进展）、`cscwd/codex_prompt.md`（codex 提示词）、`cscwd/cscwd_2025_2026_related.md`（CSCWD 2025–2026 同方向论文扫描）。
+## 当前优先级（2026-11-17）
+**CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
+方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。论文蓝图、文档入口与新会话提示词同步更新。原规则 STAG 保留为先导基线；新模块尚未实现/训练，R1–R6 均未执行。以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
@@ -26,7 +26,15 @@ T5 真实结果已拉取（`3de06cd`）并验收通过：六种方法全报，�
 
 T5 当前判断：门控能补偿强平滑的一部分定位/响应损失，但当前 STAG 未全面优于普通 EMA，且仍未超过单帧的切换响应。EMA `0.75` 实测 AUC **0.940120**、L2 **0.098941**，保留为强简单对照，不作 test 最优参数选择。完整六行结果与配对统计见 `cscwd/results/t5_ema_ablation.json/.md`。T5 代码已通过 13 项合成测试，完整缓存和事件明细留服务器。
 
-T6 本地实现完成：`cscwd/code/scripts/visualize_temporal.py` 核验 T5 来源和六套缓存，确定性选取门控收益、单帧独有响应失败、STAG 滞后、准确稳定收益与真实标注人数 ≥4 的拥挤案例，全部失响应案例完整输出。`case_selection.py/plotting.py` 输出 RGB/真实框/原始热图、原帧号轨迹、误差、alpha/inout/三门控信号和事件计分窗口。**15 项合成测试及合成图视觉检查通过**。完整图/候选与逐帧数据留服务器，JSON/MD 和最多 5 例的小 PNG 预览经 git 回传；真实 VAT 案例等待服务器运行。
+T6 真实结果已在本地同步（`9e0fdd0`）并验收：T5 来源、六套缓存 index、实现 SHA256、案例计数及 10 张本地 PNG 的 SHA256/大小核对通过。候选数为门控收益 **7**、单帧独有失响应 **5**、STAG 滞后 **11**、稳定收益 episode **726**、拥挤 clip **16**；完整输出 **13 例**，其中全部 5 个失响应案例保留。本地已查看五类各一例的帧图/时间线，完整逐帧 JSON 和其余大图仍在服务器。
+
+T6 可见结论：CBS `2517` 例单帧/STAG 立即响应，EMA `0.25/0.5` 在 3 帧计分窗口内未响应；CBS `12144` 例单帧延迟 **8 帧**、STAG **12 帧**、EMA `0.25` **13 帧**、EMA `0.5` **12 帧**。Downton `13190` 例单帧延迟 **6 帧**后满足连续 3 帧条件，STAG 有短暂低误差段但未满足该条件，并非整段从未接近正确点。所看切换/滞后例中头部位移很小、预测 inout 稳定，alpha 主要随热图位移变化；当前观测符合历史惯性与短暂正确段被缩短，不能把这一成因直接推广到全部 5 个失败例。
+
+T1–T6 的数据、缓存、初版门控、统一评测、固定 EMA 对照和定性输出已走通。当前门控有稳定性/相对强 EMA 的折中收益，但未达到优于单帧切换响应的目标。2026-11-17 已将后续主路线更新为“视觉证据驱动的历史保留/更新/释放 + 定位/状态联合修正”；原四参数校准进入对照，不再作为唯一下一步。旧 train 预测缓存命令尚未执行验收；T2 test 缓存只有预测，不等同于新方案所需的视觉特征缓存。
+
+**R0 / 2026-11-17 / 方案落地**：新增 `cscwd/temporal_joint_refinement.md`；同步实现计划、论文蓝图、README、提示词、文献与指标约束。计划覆盖 source-video 分组、开发集诊断、冻结特征缓存、普通联合时序头、历史有效性机制、训练/验证强对照、冻结配置 test 与论文证据。本次仅修改文档，没有新增实验数字或服务器运行，已有结果文件保持原样。
+
+指标目标：争取 AUC/L2/AP 与准确稳定性、分型响应的更好折中；不预写全部提升。旧规则 AP 与 `leave_frame` 响应不变；新 In/Out 分支可学习分数排序，同时独立评估状态错误翻转与进出响应。当前和过去 RGB/真实框为唯一观察，底座与原 decoder 全冻结；真实注视点/画内外标签只用于当前帧训练监督与离线计分，历史由模型预测产生。
 
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
@@ -40,5 +48,6 @@ T6 本地实现完成：`cscwd/code/scripts/visualize_temporal.py` 核验 T5 来
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. 用户手动执行实现计划中的 T6 nohup 命令，回传 `cscwd/results/t6_visualization.json/.md`、`cscwd/results/t6_previews/` 和 provenance。完整输出留服务器 `cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/`，路径与 SHA256 自动记录。
-2. 结合真实成功/失败片段判断旧峰残留、错误峰写入和门控触发，再决定一项机制改动；后续参数选择或拟合转到按源视频划分的 train/validation，当前保持权重。
+1. **R1（待开始）**：固定 VAT train 的 source-video 分组及新增模块 train/validation 清单，准备开发集单帧预测与诊断抽样，固定状态指标、候选预算和 validation 选模规则。实际缓存计数对齐 T1 的 **1,033 tracks / 132,563 人物帧**。R1 实现后再提供完整服务器命令，由用户手动运行并回传。
+2. R1 验收后依次进入 **R2 冻结视觉缓存与普通联合头 → R3 历史有效性机制 → R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**，每次只推进一个任务。
+3. 所有新模型选择在开发组完成。冻结 VAT checkpoint 此前已见过 VAT train，validation 留出仅针对新增模块；已查看的 test 为先导分析，不能再用于调参。仅有 VAT 逐人结果时，不声称已验证共同关注或协作收益。
