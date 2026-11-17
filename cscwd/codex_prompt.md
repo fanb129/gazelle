@@ -18,6 +18,7 @@
 - ~/src/gazelle/cscwd/results/r1_manual_review.md、r1_local_verification.json（已验收开发划分、状态指标与人工诊断）
 - ~/src/gazelle/cscwd/results/r2_local_review.md、r2_local_review.json（已验收冻结缓存、普通联合头 smoke 与真实指标折中）
 - ~/src/gazelle/cscwd/results/r3_mechanism_design.md、r3_local_checks.json（R3 已实现机制与本地检查）
+- ~/src/gazelle/cscwd/results/r4_local_checks.md（R4 首轮代码就绪，31 项新增检查通过）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
@@ -48,7 +49,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-当前入口为精简 R4 训练脚本实现。按 r4_compact_v2 复用R2特征和R1分组，普通GRU/新机制各单配置、seed0、五个epoch，从新模块随机初始化，同预算逐epoch验证并选checkpoint，真实作业由用户手动执行。validity读门消融、状态校准或无历史头按计划在有信号后补；首轮不展开全搜索/全消融。原R1选择规则保留存档，新版取消逐类响应硬门槛但完整报告折中。§9已完成，无需重跑；原机器报告保持原样。
+当前入口为用户手动运行精简 R4 首轮（implementation_plan.md §10.1）。训练/验证/比较脚本已本地实现，31 项新增检查通过；不重复搭建入口，不默认真实作业已运行。按 r4_compact_v2 复用R2特征和R1分组，普通GRU/新机制各单配置、seed0、五个epoch，从新模块随机初始化，同预算逐epoch验证并选checkpoint，真实作业由用户手动执行。validity读门消融、状态校准或无历史头按计划在有信号后补；首轮不展开全搜索/全消融。原R1选择规则保留存档，新版取消逐类响应硬门槛但完整报告折中。§9已完成，无需重跑；原机器报告保持原样。
 
 ---
 

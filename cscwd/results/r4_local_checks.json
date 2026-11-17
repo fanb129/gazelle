@@ -1,0 +1,78 @@
+{
+  "task": "R4_first_round_local_checks",
+  "date": "2026-11-17",
+  "base_commit": "292c567",
+  "status": "local_ready_awaiting_manual_server_run",
+  "passed": true,
+  "plan_version": "r4_compact_v2",
+  "new_python_files": 8,
+  "python_3_10_syntax": true,
+  "server_command_blocks": 5,
+  "shell_syntax": true,
+  "R2_R3_sources_unchanged": true,
+  "plan_sha256": "13e8dccba14c6ade7825b55f505c1fee8c295239f50e3a785479108cf4a65bb4",
+  "source_sha256": {
+    "cscwd/code/stag/compact_protocol.py": "c9ba31216ed322299f37c365faf3bbef163935c00da553f62b80ccf0b270c30f",
+    "cscwd/code/stag/compact_validation.py": "f520f6c102a8eeb0886b76ff4a44540b43704ec8dbc3d7cf9ba97a98575e13b0",
+    "cscwd/code/stag/test_compact_protocol.py": "f265f1d1240545255bd7f7c9d0cb7b691539b7f80871f400d6c6e6f8197ae17a",
+    "cscwd/code/scripts/train_compact_joint.py": "b4e53ece5e5e80ccdbb96d9cf8c63f7b40c3da94a7dc021ca3711987e3dc7703",
+    "cscwd/code/scripts/test_train_compact_joint.py": "9d0e9093cd0d0f7e89f7443fb05b173e43a9c7e6a9c5882a3a9d64d2a3b50ec9",
+    "cscwd/code/scripts/compare_compact_joint.py": "18aba91b98e1c5ab4b164ba3644aa5e72a417a2a8107703553aec05ae8495615",
+    "cscwd/code/scripts/test_compare_compact_joint.py": "c822c822644e62dafb82725520417ad5152c7579b98503a95b5bbc4ba49dc61b",
+    "cscwd/code/scripts/test_compact_validation.py": "a6b2c4c10eebcda97dfc8f4b7a8c2b0ce4769a67be33e5ecfb85eb6879174bc9",
+    "cscwd/code/scripts/run_compact_round.sh": "8eb62f04525a8b6019a2a578ef82a143b0930ada5e6cf4fa3eb00cff5c976cf5"
+  },
+  "test_runs": [
+    {
+      "label": "r4_protocol",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_compact_protocol.py -v",
+      "tests": 11,
+      "elapsed_seconds": 0.002,
+      "passed": true
+    },
+    {
+      "label": "r4_validation",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_compact_validation.py -v",
+      "tests": 5,
+      "elapsed_seconds": 2.559,
+      "passed": true
+    },
+    {
+      "label": "r4_training",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_train_compact_joint.py -v",
+      "tests": 6,
+      "elapsed_seconds": 8.455,
+      "passed": true
+    },
+    {
+      "label": "r4_comparison",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_compare_compact_joint.py -v",
+      "tests": 9,
+      "elapsed_seconds": 6.762,
+      "passed": true
+    }
+  ],
+  "total_new_tests": 31,
+  "environment": {
+    "python": "/private/tmp/gazelle-r2-venv/bin/python",
+    "python_version": "3.13",
+    "torch": "2.6.0",
+    "device": "CPU",
+    "data": "temporary_synthetic_only"
+  },
+  "validated": [
+    "ordinary_GRU_and_history_model_each_complete_5_synthetic_epochs",
+    "same_seed_shared_initialization_and_fixed_budget",
+    "selected_checkpoint_follows_validation_ranking_not_last_epoch",
+    "no_eligible_checkpoint_preserves_single_frame_reference",
+    "validation_matches_existing_metrics_and_complete_track_history",
+    "history_diagnostics_from_same_forward_and_valid_source_indices",
+    "checkpoint_reloads_same_validation_predictions",
+    "source_budget_code_initializer_and_artifact_identity",
+    "original_frame_event_pairing_independent_of_compact_global_offsets",
+    "training_and_comparison_CLI_JSON_MD_manifest_and_provenance"
+  ],
+  "server_jobs_run": false,
+  "VAT_performance_results": null,
+  "next": "User manually runs implementation_plan section 10.1; return first-round JSON/MD, development selection snapshot and provenance via git for review."
+}

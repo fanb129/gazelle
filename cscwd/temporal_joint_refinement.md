@@ -2,7 +2,7 @@
 
 > 更新：2026-11-17。本文记录方向复盘后的研究方案；任务顺序和验收以 [implementation_plan.md](implementation_plan.md) 为准。
 > 状态：T1–T6 与 R1/R2 已验收；R3 历史视觉对应/有效性模型和诊断本地完成，24 项新增检查和18项回归通过，真实新机制训练尚未运行。现有规则方法继续使用 `stag` 标识，新方法暂称 `temporal_joint_refiner`。
-> R3 结构见 `results/r3_mechanism_design.md`；下一步实现 `r4_compact_v2` 训练入口。R1/R2 原命令保留于 §8/§9，无需重跑。
+> R3 结构见 `results/r3_mechanism_design.md`；`r4_compact_v2` 首轮入口已本地完成，下一步按实现计划 §10 手动运行并回传。R1/R2 原命令保留于 §8/§9，无需重跑。
 
 ## 1. 最终目标与 motivation
 
