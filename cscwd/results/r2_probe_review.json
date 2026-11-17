@@ -1,0 +1,121 @@
+{
+  "task": "R2_probe_local_review",
+  "review_date": "2026-11-17",
+  "source_result_commit": "139a2c7",
+  "source_report": {
+    "path": "cscwd/results/r2_feature_probe.json",
+    "sha256": "fc451694487f2038ad659d04a8a77361f6ea4ab1cfa37ca4e3c0560768098c53"
+  },
+  "decision": "accepted_for_full_feature_cache",
+  "passed": true,
+  "check_count": 37,
+  "checks": {
+    "source:r1_report_sha256": true,
+    "source:r1_review_sha256": true,
+    "source:split_manifest_sha256": true,
+    "source:prediction_index_sha256": true,
+    "source:prediction_cache_dir": true,
+    "source:checkpoint_sha256": true,
+    "source:backbone_checkpoint_sha256": true,
+    "code:cscwd/code/scripts/cache_frozen_features.py": true,
+    "code:cscwd/code/stag/feature_cache.py": true,
+    "code:cscwd/code/scripts/cache_single_frame.py": true,
+    "code:gazelle/backbone.py": true,
+    "code:gazelle/model.py": true,
+    "probe_passed": true,
+    "probe_mode": true,
+    "server_checks_all_passed": true,
+    "coverage_matches_R1": true,
+    "native_grid": true,
+    "FP16_storage": true,
+    "FP32_source": true,
+    "no_learned_projection_cached": true,
+    "heatmap_within_declared_tolerance": true,
+    "inout_within_declared_tolerance": true,
+    "argmax_unchanged": true,
+    "quantization_finite": true,
+    "unique_sampled_images": true,
+    "image_order_matches_probe": true,
+    "people_count_matches": true,
+    "all_people_development_train": true,
+    "no_validation_programs": true,
+    "person_frame_refs_unique": true,
+    "image_and_track_paths_match": true,
+    "all_R1_case_anchors_present": true,
+    "sample_bbox_area_matches": true,
+    "sample_center_coverage_matches": true,
+    "estimated_storage_matches": true,
+    "metadata_reserve_matches": true,
+    "disk_sufficient_at_probe": true
+  },
+  "accepted_contract": {
+    "layer_index": 11,
+    "channels": 768,
+    "grid": [
+      32,
+      32
+    ],
+    "storage_dtype": "float16",
+    "source_dtype": "torch.float32",
+    "layout": "NCHW",
+    "spatial_pooling": "none",
+    "image_unit": "unique_current_RGB",
+    "learned_projection_cached": false
+  },
+  "observed": {
+    "sampled_images": 32,
+    "sampled_people": 69,
+    "base_prediction_comparison": {
+      "absolute_tolerance": 1e-05,
+      "heatmap_max_abs_error": 9.834766387939453e-07,
+      "inout_max_abs_error": 4.172325134277344e-07,
+      "argmax_changed_people": 0,
+      "retained_prediction_policy": "original_R1_FP32_arrays_unchanged"
+    },
+    "fp16_quantization": {
+      "max_abs_error": 0.001953125,
+      "rmse": 8.295787608211457e-05,
+      "relative_l2": 0.00020418368920662578,
+      "interpretation": "lossy_feature_storage; not_lossless_FP32_features"
+    },
+    "head_grid_coverage": {
+      "minimum_bbox_area_in_patch_units": 2.5044444444444407,
+      "heads_with_no_patch_center_inside": 0,
+      "pooling_policy": "fractional_bbox_patch_overlap; no_coarse_grid_pooling"
+    },
+    "storage": {
+      "total_unique_images": 58507,
+      "estimated_feature_bytes": 92023554048,
+      "required_bytes_with_metadata_reserve": 92090662912,
+      "available_bytes": 2731964395520,
+      "target_parent": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7"
+    },
+    "coverage": {
+      "tracks": 1033,
+      "person_frames": 132563,
+      "unique_image_frames": 58507
+    },
+    "runtime": {
+      "torch": "2.6.0+cu124",
+      "numpy": "2.2.6",
+      "device": "cuda:0",
+      "batch_size": 8,
+      "device_name": "NVIDIA GeForce RTX 3090",
+      "num_workers": 4,
+      "transform": "Compose(\n    ToTensor()\n    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])\n    Resize(size=(512, 512), interpolation=bilinear, max_size=None, antialias=True)\n)",
+      "precision": "float32_forward; FP16_feature_storage; no_autocast; tf32_disabled"
+    }
+  },
+  "derived": {
+    "feature_GiB": 85.70361328125,
+    "available_TiB": 2.4847071431577206,
+    "quantization_relative_l2_percent": 0.020418368920662577
+  },
+  "next": "Run implementation_plan section 9.3 with the unchanged probe/source contract; after successful cache completion run section 9.4 smoke training.",
+  "scope": "metadata/source/code/selection/arithmetic review; server-reported feature values and model outputs not recomputed locally",
+  "limitations": [
+    "probe covers 32 images, not full-cache execution",
+    "FP16 is lossy; no downstream accuracy guarantee",
+    "full-cache and joint-head training have not run"
+  ]
+}

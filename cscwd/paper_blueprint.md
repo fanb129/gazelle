@@ -103,4 +103,4 @@ One Euro 只改坐标时，原始 heatmap AUC 原样保留并注明，不能包�
 
 ## 7. 当前下一步
 
-R1 已验收。R2 本地代码就绪，先按 `implementation_plan.md` §9.2 在服务器探测特征契约，再缓存和固定 smoke train。当前不填写新模块的真实性能。
+R1 已验收，R2 特征 probe 已验收。当前按 `implementation_plan.md` §9.3 生成全量冻结特征，成功后按 §9.4 固定 smoke train。当前不填写新模块的真实性能。
