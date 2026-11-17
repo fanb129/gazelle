@@ -7,11 +7,11 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | R2 特征 probe 已回传并验收；下一步 §9.3 全量缓存，成功后 §9.4 固定 smoke train |
+| CSCWD | `cscwd/` | R2 全量特征缓存与联合头 smoke 已验收；当前配置未达到最终选模条件，下一步 R3 历史有效性机制 |
 
 ## 当前优先级（2026-11-17）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
-方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。原规则 STAG 保留为先导基线。R1 真实结果及 12 例人工诊断已验收，提交 `f3e38d2` 已推送。R2 本地实现完成，真实特征 probe（`139a2c7`）已拉取并验收；下一步全量特征缓存与 VAT 新模块 smoke 训练。R3–R6 未开始。以下 T1–T6 数字保留为真实先导结果。
+方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。原规则 STAG 保留为先导基线。R1 真实结果及 12 例人工诊断已验收；R2 全量冻结特征和一个 epoch 联合头 smoke（结果 `85d9050`）已回传并验收。当前配置未达到最终选模条件；下一步 R3，R3–R6 未开始。以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
@@ -54,6 +54,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R2 / 2026-11-17 / 特征 probe 验收完成**：已拉取 `139a2c7`，32 张开发 train 图像 / 69 人物帧实测末层特征为 **768×32×32**，按原生网格 FP16 存储。FP32 原预测 heatmap/In/Out 最大误差分别 **9.83476639e-7 / 4.17232513e-7**，argmax 变化 **0**；FP16 特征 relative L2 误差 **0.02042%**。58,507 张图像的特征估算 **85.7036 GiB**，probe 时可用空间 **2.4847 TiB**。来源/代码 SHA256、开发 train 抽样、覆盖和存储算式核对通过，记录在 `cscwd/results/r2_probe_review.json/.md`。下一步按 §9.3 缓存，再按 §9.4 训练新增联合头；全量缓存及真实训练尚未运行。
 
+**R2 / 2026-11-17 / 全量缓存与 smoke 验收完成**：拉取 `85d9050`；58,507 张唯一图像的原生 FP16 特征缓存完成，文件 **92,023,554,176 bytes**。固定一个 epoch 实际训练 **98,362 帧 / 821 chunks / 347,522 个新增参数**，验证 **34,201 帧**，两个头均更新。来源/代码、覆盖、loss 与指标分母核对通过，产出 `cscwd/results/r2_local_review.json/.md`，大文件路径/SHA256 已记 provenance。
+
+**R2 / 真实结果与下一步**：validation 单帧→smoke 为 **AUC 0.954206→0.954325 / L2 0.079605→0.079602 / AP 0.960923→0.960799**，基本持平；状态错误 **11.13%→10.53%**，准确稳定占比 **60.19%→59.46%**。state-only enter **179/189→175/189**、leave **93/169→97/169**，joint gaze_shift **135/221→135/221**。当前配置因 enter 响应下降未达到 R4 选模门槛；R2 工程验收完成，下一步 R3 历史目标对应与有效性控制，普通 GRU 保留对照。R3 尚未启动。
+
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
 ## 已知阻塞
@@ -66,6 +70,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **R2（probe 已验收，执行 §9.3）**：服务器先 `git pull --ff-only`，再按实现计划 §9.3 的完整 GPU 0 命令生成全量原生 FP16 特征。看到 `R2 feature cache completed` 且报告 `passed=true` 后，按 §9.4 运行固定一个 epoch 的联合头 smoke train；无需重跑 probe。
-2. cache/smoke 成功后回传 `r2_feature_cache.json/.md`、`r2_joint_smoke.json/.md` 与 provenance，再验收 R2。之后才进入 **R3 历史有效性机制 → R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**。当前未开始 R3。
+1. **R3（下一任务，尚未开始）**：共用已验收的 R2 特征契约和 R1 分组，实现历史目标视觉对应与历史有效性控制，完成本地因果/重置/梯度检查后再提供服务器命令。无需重跑 R2 缓存或 smoke。
+2. R3 完成后进入 **R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**。R4 保留普通 GRU、无历史联合头和全局单调状态校准对照；当前不以单个 epoch 的状态折中认定方法有效。
 3. 所有新模型选择在开发组完成。冻结 VAT checkpoint 此前已见过 VAT train，validation 留出仅针对新增模块；已查看的 test 为先导分析，不能再用于调参。仅有 VAT 逐人结果时，不声称已验证共同关注或协作收益。

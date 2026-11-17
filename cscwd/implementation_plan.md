@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-17。T1–T6 与 R1 已验收；R2 代码与合成检查完成，真实特征 probe（`139a2c7`）已回传并验收，当前执行 §9.3 全量缓存，成功后 §9.4 smoke train。全量缓存与真实训练尚未运行，R3–R6 未开始。方案见 `temporal_joint_refinement.md`。
+> 当前版本：2026-11-17。T1–T6 与 R1/R2 已验收；R2 全量缓存与固定一个 epoch 联合头 smoke 结果（`85d9050`）已回传。当前配置未满足最终选模条件，下一步 R3 历史有效性机制；R3–R6 未开始。方案见 `temporal_joint_refinement.md`。
 
 ## 0. 目标（一句话）
 
@@ -179,9 +179,9 @@ cscwd/
 - 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
 - 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
 
-### 3.2 R1–R6：当前执行计划（R1 已验收，R2 本地完成待服务器，R3–R6 待开始）
+### 3.2 R1–R6：当前执行计划（R1/R2 已验收，下一步 R3）
 
-每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1 已验收；R2 代码与真实 probe 已完成，等待全量缓存及 smoke 训练，R3–R6 的文件名仍为规划产物。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
+每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1/R2 已验收，下一步 R3；R3–R6 的文件名仍为规划产物。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
 
 #### R1 数据分组、单帧诊断与评测协议
 
@@ -196,7 +196,7 @@ cscwd/
 - **已实现配置**：默认 validation 按视频组取 `0.2`，seed `20261117`，复用只读 `gazelle.data_splits.grouped_holdout_split` 的稳定 SHA256 划分；默认组是 annotation video 目录，报告注明不是已核实的独立录制 ID，可用显式映射合并同源目录。机器报告检查组/人物/图像隔离，回传后再确认分组语义。
 - **诊断抽样**：四类 `gaze_shift_proxy / state_transition / prediction_jump / stable_reference`，每类最多 3 例、每类每 clip 最多 1 例，按 seed+case identity 的 SHA256 排序，不按收益大小排序。上下文前 10/后 20 帧仅供离线观察，裁至同人物连续帧；图含最多 5 个快照和当前头部放大图。标签初始为空、`review_status=unreviewed`，不自动将代理事件填成真实换目标。
 - **状态协议**：`state_temporal_v1` 用 `score>0.5` 分类；错误翻转只计 GT 状态保持的连续帧对；状态转换窗口只在下一 GT 状态转换、gap、track 结束或 30 帧上限截断，不因画内 GT 点跳变截断；连续正确 3 帧的起始延迟计分，与 T4 joint 协议分列。
-- **选模配置**：`code/stag/development_protocol.py` 固定首轮预算与规则并随结果导出 `selection_config.json`。训练筛选 seed 为 0，确认 seed 为 `0/1/2`；每个可训练变体最多 4 组学习率/状态损失权重组合。精度容忍度为 AUC/AP 绝对下降至多 `0.002`、L2 增加至多 `0.002`，且可评估的 joint gaze_shift/state 响应率不低于单帧；合格配置先按准确稳定占比排序，完整折中全报，无合格项保留单帧参考。以上是预声明的配置值，不是实测收益。新增训练尚未执行。
+- **选模配置**：`code/stag/development_protocol.py` 固定首轮预算与规则并随结果导出 `selection_config.json`。训练筛选 seed 为 0，确认 seed 为 `0/1/2`；每个可训练变体最多 4 组学习率/状态损失权重组合。精度容忍度为 AUC/AP 绝对下降至多 `0.002`、L2 增加至多 `0.002`，且可评估的 joint gaze_shift/state 响应率不低于单帧；合格配置先按准确稳定占比排序，完整折中全报，无合格项保留单帧参考。以上是预声明的配置值，不是实测收益。R2 固定 smoke 已完成，R4 候选筛选尚未执行。
 - **状态区分**：脚本顶层 `passed` 仅表示来源/覆盖/分组与导出机器检查；`stage_status=awaiting_local_review`。真实结果回传后查看全部选中训练案例，另记人工诊断及分组语义，再验收 R1，不据机器成功直接进入 R2。
 - **2026-11-17 验收**：结果提交 `d6adba4`，来源/覆盖/协议/计数与 12 张预览核对通过；全部选中案例已记录人工判断，保留无法判定项。接受 40 个 annotation-video/program 组的 32/8 划分，完整统计与边界见 `results/r1_manual_review.md`。原机器报告不回写，人工记录将 R1 标为已验收；下一步 R2。
 
@@ -214,7 +214,8 @@ cscwd/
 - **普通模型**：`code/stag/temporal_model.py` 的 `CausalJointRefiner` 读取当前场景、头框分数面积池化、raw heatmap 加权区域、当前/历史预测摘要，进入 GRUCell，两个零初始化残差头分别修正 heatmap/In/Out logits。它没有 R3 的显式跨帧对应或选择性释放模块。小头框使用 bbox 与 patch 单元交叠面积，不要求框内必须有 patch 中心。
 - **连续数据**：`code/stag/temporal_data.py` 保持固定 batch slots，同一连续人物段跨 chunk 沿用状态；新人物或原帧缺口重置，段内末尾 padding 由 valid mask 排除。训练只在 chunk 间 detach，不把 chunk 起点当轨迹起点；验证同样贯通完整连续段。GT 高斯目标只读调用旧 `gazelle.utils.get_heatmap`，只进入损失。
 - **首轮 smoke**：`code/scripts/train_temporal_joint.py`，预声明 `seed=0 / epochs=1 / lr=0.0001 / lambda_state=0.1 / hidden=128 / clip_frames=16 / batch_size=8`，AdamW、weight decay `0.01`、gradient clip `1.0`。仅训练新增模块；保存 last checkpoint 与全量 validation 预测，记录原全局人物帧到紧凑验证缓存的映射。此固定配置来自 R1 预算，不做早停或最优 checkpoint 选择。
-- **真实产出状态**：`results/r2_feature_probe.json/.md` 已回传并验收，实测 layer 11 / 768×32×32 / FP16，核对见 `results/r2_probe_review.json/.md`。下一步按 §9.3/§9.4 生成 `r2_feature_cache.json/.md` 和 `r2_joint_smoke.json/.md`。完整 NPY/checkpoint/逐事件明细留服务器，实际来源和 SHA256 由成功运行追加 provenance。
+- **真实产出状态**：probe、`results/r2_feature_cache.json/.md` 和 `r2_joint_smoke.json/.md` 均已回传；R2 验收见 `results/r2_local_review.json/.md`。契约为 layer 11 / 768×32×32 / FP16，完整缓存、last checkpoint 与验证明细留服务器，路径/SHA256 已记录 provenance。
+- **2026-11-17 验收**：结果 `85d9050`，全量 58,507 图像特征缓存及 98,362 训练帧 / 34,201 验证帧的固定一个 epoch 完成，347,522 个新增参数、两个输出头均更新，来源/覆盖/损失/指标算式核对通过。标准指标基本持平，state enter 179/189→175/189 低于 R4 响应下限，因此该配置不作为最终模型；R2 最小训练/验证链路验收完成，可以进入 R3。
 
 #### R3 历史有效性机制
 
@@ -337,7 +338,9 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **R2 本地产出与数字**：**31 项新增合成测试通过**（特征探测/缓存 7、模型/损失 10、连续加载 8、来源/训练 CLI 集成 6）；模型测试覆盖未来扰动不影响历史、跨 chunk 等价、reset、极小框池化、GT/padding 掩码和两个分支的梯度更新；集成实际跑通临时合成训练、checkpoint 重载与完整验证缓存。只报告测试数量，不把合成指标当 VAT 性能。环境 `/private/tmp/gazelle-r2-venv` 使用 Torch 2.6.0/torchvision 0.21.0，真实训练留服务器。
 - **R2 本地验证命令**：同解释器 `-m unittest discover -s cscwd/code/stag -p test_feature_cache.py -v`（7）、`-p test_temporal_model.py -v`（10）、`-p test_temporal_data.py -v`（8）；`-m unittest discover -s cscwd/code/scripts -p test_train_temporal_joint.py -v`（6）。CLI 子进程的本机 OpenMP 共享内存限制通过沙箱外合成检查处理，未向生产脚本加入环境绕过。
 - **2026-11-17 · R2 特征 probe 验收完成**：拉取结果提交 `139a2c7`，新增 `results/r2_probe_review.json/.md`。32 张开发 train 图像 / 69 人物帧实测 layer 11、**768×32×32**；原 FP32 heatmap/In/Out 最大误差 **9.83476639e-7 / 4.17232513e-7**，argmax 变化 **0**。FP16 特征 relative L2 误差 **0.02042%**；抽样最小框面积折合 **2.504444 个 patch 面积**，无 patch 中心命中的框 **0**。58,507 张唯一图像预计占 **85.7036 GiB**，probe 时可用 **2.4847 TiB**。来源/实现/抽样/覆盖与算式核对通过，接受现有特征契约。
-- **当前下一步（R2 全量缓存与 smoke）**：用户执行 §9.3；缓存完成且报告通过后执行 §9.4，无需重跑 probe。回传 cache/smoke 小报告后再整体验收 R2，当前不进入 R3。
+- **2026-11-17 · R2 全量缓存与 smoke 验收完成**：拉取 `85d9050`，新增 `results/r2_local_review.json/.md`。特征文件 `[58507,768,32,32]` / FP16 / **92,023,554,176 bytes**，完整读回通过。固定一个 epoch 训练 **98,362 帧**（画内 **67,161**）、**821 chunks / 347,522 个新增参数**，验证 **34,201 帧**（定位 **21,758**）。来源/代码、覆盖、loss 与指标分母核对通过，底座和缓存保持冻结，两个头均更新。
+- **R2 真实数字**：validation **AUC 0.954206→0.954325 / L2 0.079605→0.079602 / AP 0.960923→0.960799**；准确稳定 **60.19%→59.46%**，状态错误 **11.13%→10.53%**；state enter **179/189→175/189**、leave **93/169→97/169**，joint gaze_shift **135/221→135/221**。平均 MSE/BCE/total **0.003275220 / 0.301476298 / 0.033422850**，单个 epoch 不用于宣称收敛。缓存与 smoke 完整作业分别 **3,121.087 / 899.374 秒**。
+- **当前下一步（R3）**：R2 工程验收完成，普通 GRU 配置因 state enter 响应下降未满足 R4 最终选模门槛。下一任务按 §3.2 实现历史目标视觉对应与有效性控制，共用已有特征契约及划分；普通 GRU、无历史联合头和全局单调状态校准纳入 R4 对照。当前 R3 尚未开始，无需重跑 R2。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -632,9 +635,9 @@ git push origin codex/coverage-aware-router
 
 本地拉取后核对 SHA256、覆盖/分组、各项指标和图，再另记 `results/r1_manual_review.md`：逐例记录人工 labels/notes、无法判定项及分组语义的接受或映射调整。保留原机器报告和未审阅模板的来源；不回写成伪造的自动真值。人工诊断与分组核对完成后，才把 R1 写为验收完成。
 
-## 9. R2 服务器手动运行（当前入口：§9.3 全量缓存）
+## 9. R2 服务器手动运行（已完成，命令存档）
 
-R2 代码提交 `01c18f5`，probe 结果提交 `139a2c7` 已回传并验收，记录见 `results/r2_probe_review.md`。**现在执行 §9.3，成功后执行 §9.4；§9.2 保留为复现命令，无需重跑。** 各步都不读取 test 图像或 test 预测；R1 验证组只在固定划分内参与特征缓存和后续验证。
+R2 代码提交 `01c18f5`，probe 结果 `139a2c7`、全量缓存及 smoke 结果 `85d9050` 已回传并验收，记录见 `results/r2_local_review.md`。**§9.2–§9.5 均已完成，保留复现命令，无需重跑。下一任务为 R3 本地实现。** 各步都不读取 test 图像或 test 预测；R1 验证组只在固定划分内参与特征缓存和后续验证。
 
 ### 9.1 固定实现与输出
 
@@ -679,7 +682,7 @@ git commit -m "Record R2 frozen feature probe"
 git push origin codex/coverage-aware-router
 ```
 
-### 9.3 GPU 0：按已核对的契约生成全量唯一图像特征（现在执行）
+### 9.3 GPU 0：按已核对的契约生成全量唯一图像特征（已完成）
 
 使用与 probe 同一实现、权重、transform/runtime 和 source SHA256。完整原始 train/validation 共用这份冻结特征，再由 R1 manifest 取相应人物轨迹；不重新划分数据，不缓存可学习投影。
 
@@ -709,7 +712,7 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 
 成功标记：`R2 feature cache completed`。完整 `scene_features.npy/index.json` 留服务器；cache report 含实际 contract、文件 SHA256 与 FP16 值读回验证。该成功标记出现后，才执行下一步 smoke train。
 
-### 9.4 GPU 0：普通因果联合头的固定 smoke train（缓存成功后执行）
+### 9.4 GPU 0：普通因果联合头的固定 smoke train（已完成）
 
 这一条开始训练**新增模块**，不加载可训练 backbone。按 R1 已定的源组划分，训练状态跨 chunk 保留且仅 detach 梯度；验证完整连续轨迹。固定一个 epoch，不做模型/超参选择。
 
@@ -738,7 +741,7 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 
 成功标记：`R2 joint smoke completed`。最后 checkpoint 为上述输出目录的 `last.pt`，验证预测为 `validation_epoch_001/` 的 float32 heatmap/inout/argmax 及 index；逐事件明细和训练配置/history 同目录保存。它们不进 git，小报告/provenance 保存路径与 SHA256。
 
-### 9.5 cache + smoke 结果回传
+### 9.5 cache + smoke 结果回传（已完成并验收）
 
 ```bash
 git add cscwd/results/r2_feature_cache.json cscwd/results/r2_feature_cache.md \

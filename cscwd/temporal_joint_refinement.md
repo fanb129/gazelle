@@ -1,8 +1,8 @@
 # 因果视频注视联合修正方案
 
 > 更新：2026-11-17。本文记录方向复盘后的研究方案；任务顺序和验收以 [implementation_plan.md](implementation_plan.md) 为准。
-> 状态：T1–T6 与 R1 已验收；R2 普通联合头及数据/缓存/训练链路本地完成，真实特征 probe 已验收；全量缓存和新头训练尚未运行，R3 机制尚未实现。现有规则方法继续使用 `stag` 标识，新方法暂称 `temporal_joint_refiner`。
-> probe 记录见 `results/r2_probe_review.md`；当前执行 `implementation_plan.md` §9.3 全量特征缓存，成功后执行 §9.4 smoke train。R1 原命令保留于 §8。
+> 状态：T1–T6 与 R1/R2 已验收；R2 全量冻结特征和普通联合头固定一个 epoch smoke 完成，当前配置未满足最终选模条件，R3 机制尚未实现。现有规则方法继续使用 `stag` 标识，新方法暂称 `temporal_joint_refiner`。
+> 真实 smoke 与验收见 `results/r2_local_review.md`；下一步按 `implementation_plan.md` §3.2 实现 R3。R1/R2 原命令保留于 §8/§9，无需重跑。
 
 ## 1. 最终目标与 motivation
 
@@ -135,7 +135,7 @@ R1 在训练组片段中检查噪声误跳、同目标运动、相机变化和�
 
 ### 对照与消融
 
-以下为计划配置，除 T1–T6 已有方法外均尚未运行：
+以下为正式比较的计划配置。T1–T6 已有结果，普通 GRU 已跑固定一个 epoch 的 R2 smoke；R4 的完整候选筛选及机制消融尚未运行：
 
 - 原始单帧、T5 全部固定 EMA、原规则 STAG，以及只在训练/验证上校准的三信号门控。
 - One Euro 坐标滤波与速度自适应热图 EMA。坐标滤波和热图融合的输出不同，分别说明 AUC/AP 的来源和不变项，不把不同信息条件的结果混为同一种实现。

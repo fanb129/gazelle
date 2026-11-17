@@ -1,0 +1,392 @@
+{
+  "task": "R2_local_review",
+  "review_date": "2026-11-17",
+  "source_result_commit": "85d9050",
+  "decision": "accepted_for_R3_implementation",
+  "pipeline_accepted": true,
+  "passed": true,
+  "source_reports": {
+    "r2_feature_cache": {
+      "path": "cscwd/results/r2_feature_cache.json",
+      "sha256": "cfbd01019bc0ff976cdcea4598211656e76101863495d1b55b8cf810e7205437"
+    },
+    "r2_joint_smoke": {
+      "path": "cscwd/results/r2_joint_smoke.json",
+      "sha256": "6ddc825b88fe73c1d42db261177937232c55487ac5551d6ac2dab28fdc15a611"
+    }
+  },
+  "check_count": 151,
+  "checks": {
+    "cache:passed": true,
+    "cache:code:cscwd/code/scripts/cache_frozen_features.py": true,
+    "cache:code:cscwd/code/stag/feature_cache.py": true,
+    "cache:code:cscwd/code/scripts/cache_single_frame.py": true,
+    "cache:code:gazelle/backbone.py": true,
+    "cache:code:gazelle/model.py": true,
+    "cache:reported_run_commit": true,
+    "cache:runtime_positive": true,
+    "smoke:passed": true,
+    "smoke:code:cscwd/code/scripts/train_temporal_joint.py": true,
+    "smoke:code:gazelle/utils.py": true,
+    "smoke:code:cscwd/code/stag/temporal_model.py": true,
+    "smoke:code:cscwd/code/stag/temporal_data.py": true,
+    "smoke:code:cscwd/code/stag/feature_cache.py": true,
+    "smoke:code:cscwd/code/stag/metrics.py": true,
+    "smoke:code:cscwd/code/stag/state_metrics.py": true,
+    "smoke:reported_run_commit": true,
+    "smoke:runtime_positive": true,
+    "cache:mode": true,
+    "cache:probe_sha256": true,
+    "cache:probe_bytes": true,
+    "cache:sources_match_probe": true,
+    "cache:runtime_matches_probe": true,
+    "cache:contracts": true,
+    "cache:coverage": true,
+    "cache:images": true,
+    "cache:array_shape": true,
+    "cache:FP16": true,
+    "cache:payload_matches_probe": true,
+    "cache:NPY_header_size": true,
+    "cache:server:all_unique_images_cached": true,
+    "cache:server:fp16_exact_readback": true,
+    "cache:inner_passed": true,
+    "smoke:source_sha:feature_report": true,
+    "smoke:source_bytes:feature_report": true,
+    "smoke:source_sha:r1_report": true,
+    "smoke:source_bytes:r1_report": true,
+    "smoke:source_sha:r1_review": true,
+    "smoke:source_bytes:r1_review": true,
+    "smoke:source:r1_report_sha256": true,
+    "smoke:source:r1_review_sha256": true,
+    "smoke:source:split_manifest_sha256": true,
+    "smoke:source:prediction_index_sha256": true,
+    "R1:review_source": true,
+    "R1:baseline_unchanged": true,
+    "R1:group_disjoint": true,
+    "smoke:fixed_configuration": true,
+    "smoke:parameter_count": true,
+    "smoke:one_epoch": true,
+    "training:valid_count": true,
+    "training:inframe_count": true,
+    "training:chunks_capacity": true,
+    "training:heatmap_loss": true,
+    "training:state_loss": true,
+    "training:total_loss": true,
+    "validation:valid_count": true,
+    "validation:localization_count": true,
+    "smoke:server:train_frames_match_manifest": true,
+    "smoke:server:validation_frames_match_manifest": true,
+    "smoke:server:heatmap_head_updated": true,
+    "smoke:server:state_head_updated": true,
+    "smoke:server:only_new_module_parameters": true,
+    "smoke:server:frozen_features_read_only": true,
+    "smoke:server:prediction_arrays_read_only": true,
+    "validation:cache_passed": true,
+    "validation:array:heatmap": true,
+    "validation:array:inout": true,
+    "validation:array:argmax_xy": true,
+    "baseline:stability:stable_ratio": true,
+    "baseline:stability:ground_truth_stable_ratio": true,
+    "baseline:stability:accurate_stable_ratio": true,
+    "baseline:state_error:total": true,
+    "baseline:state_error:out_of_frame": true,
+    "baseline:state_error:in_frame": true,
+    "baseline:state_error:group_sums": true,
+    "baseline:stable_state_flips:total": true,
+    "baseline:stable_state_flips:out_of_frame": true,
+    "baseline:stable_state_flips:in_frame": true,
+    "baseline:stable_state_flips:group_sums": true,
+    "baseline:temporal:all:event_counts": true,
+    "baseline:temporal:all:response_ratio": true,
+    "baseline:temporal:all:delay_count": true,
+    "baseline:temporal:enter_frame:event_counts": true,
+    "baseline:temporal:enter_frame:response_ratio": true,
+    "baseline:temporal:enter_frame:delay_count": true,
+    "baseline:temporal:leave_frame:event_counts": true,
+    "baseline:temporal:leave_frame:response_ratio": true,
+    "baseline:temporal:leave_frame:delay_count": true,
+    "baseline:temporal:gaze_shift:event_counts": true,
+    "baseline:temporal:gaze_shift:response_ratio": true,
+    "baseline:temporal:gaze_shift:delay_count": true,
+    "baseline:temporal:sum_events": true,
+    "baseline:state:all:event_counts": true,
+    "baseline:state:all:response_ratio": true,
+    "baseline:state:all:delay_count": true,
+    "baseline:state:enter_frame:event_counts": true,
+    "baseline:state:enter_frame:response_ratio": true,
+    "baseline:state:enter_frame:delay_count": true,
+    "baseline:state:leave_frame:event_counts": true,
+    "baseline:state:leave_frame:response_ratio": true,
+    "baseline:state:leave_frame:delay_count": true,
+    "baseline:state:sum_events": true,
+    "smoke:stability:stable_ratio": true,
+    "smoke:stability:ground_truth_stable_ratio": true,
+    "smoke:stability:accurate_stable_ratio": true,
+    "smoke:state_error:total": true,
+    "smoke:state_error:out_of_frame": true,
+    "smoke:state_error:in_frame": true,
+    "smoke:state_error:group_sums": true,
+    "smoke:stable_state_flips:total": true,
+    "smoke:stable_state_flips:out_of_frame": true,
+    "smoke:stable_state_flips:in_frame": true,
+    "smoke:stable_state_flips:group_sums": true,
+    "smoke:temporal:all:event_counts": true,
+    "smoke:temporal:all:response_ratio": true,
+    "smoke:temporal:all:delay_count": true,
+    "smoke:temporal:enter_frame:event_counts": true,
+    "smoke:temporal:enter_frame:response_ratio": true,
+    "smoke:temporal:enter_frame:delay_count": true,
+    "smoke:temporal:leave_frame:event_counts": true,
+    "smoke:temporal:leave_frame:response_ratio": true,
+    "smoke:temporal:leave_frame:delay_count": true,
+    "smoke:temporal:gaze_shift:event_counts": true,
+    "smoke:temporal:gaze_shift:response_ratio": true,
+    "smoke:temporal:gaze_shift:delay_count": true,
+    "smoke:temporal:sum_events": true,
+    "smoke:state:all:event_counts": true,
+    "smoke:state:all:response_ratio": true,
+    "smoke:state:all:delay_count": true,
+    "smoke:state:enter_frame:event_counts": true,
+    "smoke:state:enter_frame:response_ratio": true,
+    "smoke:state:enter_frame:delay_count": true,
+    "smoke:state:leave_frame:event_counts": true,
+    "smoke:state:leave_frame:response_ratio": true,
+    "smoke:state:leave_frame:delay_count": true,
+    "smoke:state:sum_events": true,
+    "comparison:temporal:all:GT_denominators": true,
+    "comparison:temporal:enter_frame:GT_denominators": true,
+    "comparison:temporal:leave_frame:GT_denominators": true,
+    "comparison:temporal:gaze_shift:GT_denominators": true,
+    "comparison:state:all:GT_denominators": true,
+    "comparison:state:enter_frame:GT_denominators": true,
+    "comparison:state:leave_frame:GT_denominators": true,
+    "comparison:GT_jitter": true,
+    "comparison:stability_denominators": true,
+    "provenance:cache_report": true,
+    "provenance:smoke_report": true,
+    "provenance:scene_features": true,
+    "provenance:checkpoint": true,
+    "provenance:feature_index": true,
+    "provenance:validation_index": true
+  },
+  "feature_contract": {
+    "layer_index": 11,
+    "channels": 768,
+    "grid": [
+      32,
+      32
+    ],
+    "storage_dtype": "float16",
+    "source_dtype": "torch.float32",
+    "layout": "NCHW",
+    "spatial_pooling": "none",
+    "image_unit": "unique_current_RGB",
+    "learned_projection_cached": false
+  },
+  "training": {
+    "parameter_count": 347522,
+    "epoch": 1,
+    "heatmap_sum": 219.96706703834934,
+    "state_sum": 29653.811606990173,
+    "valid_frames": 98362,
+    "inframe_frames": 67161,
+    "chunks": 821,
+    "heatmap_loss": 0.003275220247440469,
+    "state_loss": 0.3014762978283298,
+    "total_loss": 0.03342285003027345
+  },
+  "validation_comparison": {
+    "AUC": {
+      "baseline": 0.9542055630729601,
+      "smoke": 0.9543254321198485,
+      "delta": 0.00011986904688843225,
+      "delta_unit": "absolute"
+    },
+    "L2": {
+      "baseline": 0.07960456904362263,
+      "smoke": 0.07960169608613302,
+      "delta": -2.8729574896163568e-06,
+      "delta_unit": "absolute"
+    },
+    "In/Out AP": {
+      "baseline": 0.9609226821493625,
+      "smoke": 0.9607991920922045,
+      "delta": -0.00012349005715794892,
+      "delta_unit": "absolute"
+    },
+    "Jitter mean": {
+      "baseline": 0.014554664754237905,
+      "smoke": 0.014595220010662472,
+      "delta": 4.0555256424566755e-05,
+      "delta_unit": "absolute"
+    },
+    "Accurate stable ratio": {
+      "baseline": 0.6018742013346585,
+      "smoke": 0.5945856405887643,
+      "delta": -0.7288560745894235,
+      "delta_unit": "percentage_points"
+    },
+    "State error": {
+      "baseline": 0.11125405689892108,
+      "smoke": 0.10528931902575948,
+      "delta": -0.5964737873161596,
+      "delta_unit": "percentage_points"
+    },
+    "Out-of-frame error": {
+      "baseline": 0.25733344048862816,
+      "smoke": 0.2255083179297597,
+      "delta": -3.1825122558868464,
+      "delta_unit": "percentage_points"
+    },
+    "In-frame error": {
+      "baseline": 0.027713944296350768,
+      "smoke": 0.036538284768820664,
+      "delta": 0.8824340472469896,
+      "delta_unit": "percentage_points"
+    },
+    "Stable-state flip rate": {
+      "baseline": 0.017669105836159202,
+      "smoke": 0.01820453328573978,
+      "delta": 0.053542744958057914,
+      "delta_unit": "percentage_points"
+    },
+    "Joint enter response": {
+      "baseline": 0.7764705882352941,
+      "smoke": 0.7470588235294118,
+      "delta": -2.941176470588236,
+      "delta_unit": "percentage_points"
+    },
+    "Joint leave response": {
+      "baseline": 0.5502958579881657,
+      "smoke": 0.5739644970414202,
+      "delta": 2.3668639053254448,
+      "delta_unit": "percentage_points"
+    },
+    "Joint gaze-shift response": {
+      "baseline": 0.6108597285067874,
+      "smoke": 0.6108597285067874,
+      "delta": 0.0,
+      "delta_unit": "percentage_points"
+    },
+    "State enter response": {
+      "baseline": 0.9470899470899471,
+      "smoke": 0.9259259259259259,
+      "delta": -2.1164021164021163,
+      "delta_unit": "percentage_points"
+    },
+    "State leave response": {
+      "baseline": 0.5502958579881657,
+      "smoke": 0.5739644970414202,
+      "delta": 2.3668639053254448,
+      "delta_unit": "percentage_points"
+    }
+  },
+  "R4_selection_check": {
+    "eligible": false,
+    "gates": {
+      "auc_tolerance": true,
+      "l2_tolerance": true,
+      "ap_tolerance": true,
+      "joint_gaze_shift_response_floor": true,
+      "state_all_response_floor": true,
+      "state_enter_frame_response_floor": false,
+      "state_leave_frame_response_floor": true
+    },
+    "failed_conditions": [
+      "state_enter_frame_response_floor"
+    ],
+    "selected": false
+  },
+  "server_artifacts": {
+    "feature_cache": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16",
+      "index_sha256": "f817826cc271b7b257600d2f6db2fac3659f3b74111a7cabb0d84fab359feeb1",
+      "images": 58507,
+      "contract": {
+        "layer_index": 11,
+        "channels": 768,
+        "grid": [
+          32,
+          32
+        ],
+        "storage_dtype": "float16",
+        "source_dtype": "torch.float32",
+        "layout": "NCHW",
+        "spatial_pooling": "none",
+        "image_unit": "unique_current_RGB",
+        "learned_projection_cached": false
+      },
+      "files": {
+        "scene_features": {
+          "path": "scene_features.npy",
+          "shape": [
+            58507,
+            768,
+            32,
+            32
+          ],
+          "dtype": "float16",
+          "sha256": "82145bc436614802c7e4500dbdf39fdddb02ae442c091c5f63ada587df288c9c",
+          "values_sha256": "ecdc096750df8214df5cea3197d2e84ce09a8a34958b5332e83d1dd6198cb828",
+          "size_bytes": 92023554176
+        }
+      },
+      "checks": {
+        "all_unique_images_cached": true,
+        "fp16_exact_readback": true
+      },
+      "passed": true
+    },
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_r2_gru_smoke_v1/last.pt",
+      "sha256": "aae319c7ef652af053305df6b96cdcc365cc29d4caae0ef74e89f505535c63c6",
+      "size_bytes": 1394702
+    },
+    "validation_cache": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_r2_gru_smoke_v1/validation_epoch_001",
+      "files": {
+        "heatmap": {
+          "path": "heatmap.npy",
+          "shape": [
+            34201,
+            64,
+            64
+          ],
+          "dtype": "float32",
+          "sha256": "095ad584a7f0d5ceb8d0532d22c26daf5f7f88d715cdd1aec76bbadd88c4e7e0"
+        },
+        "inout": {
+          "path": "inout.npy",
+          "shape": [
+            34201
+          ],
+          "dtype": "float32",
+          "sha256": "4863362303e6941b42e9ad292b1f9a3cd0e951ec50411093729c7fc1dfcc783b"
+        },
+        "argmax_xy": {
+          "path": "argmax_xy.npy",
+          "shape": [
+            34201,
+            2
+          ],
+          "dtype": "float32",
+          "sha256": "f900677398f151df93a95b438f352f7f8e9ea1d21ec88bb9049c83c31eb4c329"
+        }
+      },
+      "index_sha256": "460eadfbfbc753044e0ef65a8da8ee72e6fefc9fb4c1008dd0181c3a0734ecac",
+      "passed": true
+    },
+    "validation_details": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_r2_gru_smoke_v1/validation_epoch_001/validation_details.json",
+      "sha256": "4a565e55d92ca18546df0522fe1f10901fd7031c864f673f6ae8f325a31c0a95",
+      "size_bytes": 817224
+    }
+  },
+  "runtime_seconds": {
+    "cache_complete_job": 3121.0865401909996,
+    "smoke_complete_job": 899.3743331780024
+  },
+  "scope": "Returned reports, local source hashes, source chain, count/loss/metric arithmetic and implementation review; full server arrays/checkpoint were not downloaded or recomputed locally.",
+  "interpretation": "R2 frozen-cache and minimum training/validation path completed. One fixed epoch has mixed validation tradeoffs, not final effectiveness evidence. Single epoch average loss does not establish convergence; aggregate response delays are not paired-event effects.",
+  "next": "Implement R3 history validity/correspondence using the accepted shared feature contract; retain ordinary GRU as R4 control, add preplanned monotonic state calibration and no-history controls before attributing gains."
+}

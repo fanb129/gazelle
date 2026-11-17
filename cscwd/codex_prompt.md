@@ -15,12 +15,13 @@
 - ~/src/gazelle/cscwd/literature_review.md、datasets_and_metrics.md（文献与指标约束）
 - ~/src/gazelle/cscwd/results/t5_ema_ablation.md、t6_visualization.md（已跑先导结果）
 - ~/src/gazelle/cscwd/results/r1_manual_review.md、r1_local_verification.json（已验收开发划分、状态指标与人工诊断）
+- ~/src/gazelle/cscwd/results/r2_local_review.md、r2_local_review.json（已验收冻结缓存、普通联合头 smoke 与真实指标折中）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
-当前状态：T1–T6 和 R1 已验收；R2 普通联合头、连续轨迹加载、特征探测/缓存和训练入口已本地实现并通过合成检查。真实 probe 结果 139a2c7 已回传并验收，契约为末层 768×32×32、FP16；记录见 results/r2_probe_review.json/.md。全量缓存和 VAT 新头训练尚未运行。原规则 STAG 保留为基线，不把原始预测缓存说成已经具备视觉特征。
+当前状态：T1–T6 和 R1/R2 已验收。R2 全量特征缓存与普通联合头固定一个 epoch smoke 结果 85d9050 已回传，契约为末层 768×32×32、FP16，58,507 张图像。实际训练/验证 98,362/34,201 帧，347,522 个新增参数，两个头更新。标准指标基本持平，状态错误 11.13%→10.53%，准确稳定 60.19%→59.46%，state enter 179/189→175/189，leave 93/169→97/169；该配置未达到最终选模条件。记录见 results/r2_local_review.json/.md。原规则 STAG 和普通 GRU 保留为对照，R3 尚未开始。
 
-目标：按 implementation_plan.md §3.2 从首个未完成的 R 任务继续，当前为 R2；不重新从 T1 或 R1 开始。R2 冻结特征与普通联合头 → R3 历史有效性机制 → R4 训练/验证强对照 → R5 冻结配置 test → R6 论文证据。任务是“推进 idea”，不是“审计问题”。
+目标：按 implementation_plan.md §3.2 从首个未完成的 R 任务继续，当前为 R3；不重做 T1–T6、R1 或 R2。R3 历史有效性机制 → R4 训练/验证强对照 → R5 冻结配置 test → R6 论文证据。任务是“推进 idea”，不是“审计问题”。
 
 主方案：复用既定 ViT-B VAT checkpoint，冻结完整 GazeSpot 和原 decoder，仅训练新增因果模块，以当前人物/场景证据控制历史保留、位置更新与释放，联合输出修正 heatmap 和 In/Out 连续分数。四参数校准、自适应滤波和普通因果头保留为对照；不把门控、记忆、模板或因果本身宣称为新贡献。
 
@@ -43,7 +44,7 @@
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现、服务器真实结果回传与验收完成后，再进入下一个 R 任务；不一次铺开多个半成品。
 
-当前入口为 R2 全量特征缓存（implementation_plan.md §9.3），probe 已验收，无需重跑。用户手动执行 §9.3，缓存成功且报告通过后执行 §9.4 固定一个 epoch smoke train；本地不运行真实作业。cache/smoke 结果回传后整体验收 R2，不跳到 R3。保持 R1 manifest、既有源码与 probe/source 契约；原 R1 机器报告不改，人工验收文件是其完成记录。
+当前入口为 R3 本地实现（implementation_plan.md §3.2）。复用 R2 特征和 R1 分组，新增历史目标视觉对应及有效性控制；先完成本地因果/重置/梯度检查，再给出服务器手动运行命令。普通 GRU、无历史联合头与单调状态校准在 R4 共同预算内比较，不从 R2 单个 epoch 推断新机制有效或无效。§9 已完成，无需重跑；原机器报告保持原样。
 
 ---
 

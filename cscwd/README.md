@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-17）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：T1–T6 与 R1 验收完成；R2 真实特征 probe 已回传并验收，当前执行 §9.3 全量缓存，成功后 §9.4 smoke train；原规则 STAG 保留为基线，R3 尚未开始。
+> 状态：T1–T6 与 R1/R2 验收完成；R2 全量缓存和一个 epoch 联合头 smoke 已回传，当前配置未满足最终选模条件。下一步 R3 历史有效性机制，尚未开始；原规则 STAG 保留为基线。
 
 ## 目录结构
 
@@ -30,12 +30,13 @@ cscwd/
 | [datasets_and_metrics.md](datasets_and_metrics.md) | 数据集标注、指标定义、比较约束 |
 | [results/r1_manual_review.md](results/r1_manual_review.md) | R1 分组验收、开发基线与全部 12 例人工诊断 |
 | [results/r2_probe_review.md](results/r2_probe_review.md) | R2 实测特征契约、精度与存储验收 |
+| [results/r2_local_review.md](results/r2_local_review.md) | R2 全量缓存、真实 smoke 结果与验收结论 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**全量特征缓存 → 固定联合头 smoke train → R2 验收 → R3–R6**。R2 probe 已验收，无需重跑；完整命令见 `implementation_plan.md` §9.3/§9.4。cache/smoke 小报告回传并验收后才进入 R3；T1–T6 与 R1 不重做。
+当前执行顺序：**R3 本地实现与检查 → R4 正式训练/validation 强对照 → R5 冻结配置 test → R6 论文证据**。R2 已验收，无需重跑；§9 命令保留复现。普通 GRU 的一个 epoch 证明训练链路完成，当前未显示综合指标改善，不作为最终选模结果。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

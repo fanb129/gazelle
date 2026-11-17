@@ -334,3 +334,11 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Report: `/home/fb/src/paper/gazelleV1/cscwd/results/r2_joint_smoke.json`; SHA256: `6ddc825b88fe73c1d42db261177937232c55487ac5551d6ac2dab28fdc15a611`.
 - Server checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r2_gru_smoke_v1/last.pt`; SHA256: `aae319c7ef652af053305df6b96cdcc365cc29d4caae0ef74e89f505535c63c6`.
 - Validation cache: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r2_gru_smoke_v1/validation_epoch_001`; index SHA256: `460eadfbfbc753044e0ef65a8da8ee72e6fefc9fb4c1008dd0181c3a0734ecac`.
+
+## R2 全量缓存与 smoke 本地验收（2026-11-17）
+
+- 结果提交 `85d9050` 已拉取，R2 最小冻结缓存/训练/验证主路径验收通过；本地记录 `cscwd/results/r2_local_review.json/.md`，JSON SHA256 `e172a980bf319abcc506bbfb9b6a224c71013bf47598fb284738aa2dc738344b`。原服务器报告保留。
+- 回传来源和源码 SHA256、probe 契约、R1 baseline、覆盖与 loss/指标算式等 151 项一致性核对通过。完整 NPY/checkpoint/逐事件文件留服务器，路径与 SHA256 见上述两条运行记录及原报告；本地没有重算全量预测或配对延迟。
+- 缓存 58,507 张唯一图像，`[58507,768,32,32]` FP16，文件 92,023,554,176 bytes。固定一个 epoch 训练 98,362 帧（画内 67,161）、821 chunks，347,522 个新增参数，验证 34,201 帧，两个头均更新。平均 MSE/BCE/total 为 0.003275220 / 0.301476298 / 0.033422850。
+- validation 单帧→smoke：AUC 0.954205563→0.954325432，L2 0.079604569→0.079601696，AP 0.960922682→0.960799192；准确稳定 60.1874%→59.4586%，状态错误 11.1254%→10.5289%，state enter 179/189→175/189、leave 93/169→97/169，joint gaze_shift 135/221→135/221。
+- R2 工程验收完成；当前配置未满足 R1/R4 的 state enter 响应下限，不选为最终模型。下一步 R3 本地实现历史目标视觉对应与有效性控制；R4 按共同预算比较普通 GRU、无历史修正头和单调状态校准，本次未启动新训练。
