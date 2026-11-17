@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-17 修订。方案解释见 [temporal_joint_refinement.md](temporal_joint_refinement.md)。T1–T6 为已完成的先导阶段，当前执行入口为 §3.2 的 R1；R1–R6 均未执行。本次仅完成文档落地。
+> 当前版本：2026-11-17。方案解释见 [temporal_joint_refinement.md](temporal_joint_refinement.md)。T1–T6 为已完成的先导阶段；R1 本地实现与合成检查完成，服务器命令见 §8，真实结果待回传。R2–R6 尚未开始。
 
 ## 0. 目标（一句话）
 
@@ -61,7 +61,7 @@ T1 保留原始 CSV 帧序，头部框使用当前帧原始真实框并裁至图
 - **普通基线先行**：先实现同输入的普通因果 GRU 联合头，建立可训练主路径。新增的可学习投影、时序层和两个修正头放在 `cscwd/code/stag/`；原模型及其 decoder 保持冻结。
 - **任务机制**：在普通联合头基础上，利用历史目标区域与当前场景的视觉对应、当前人物证据及预测分布，学习历史有效性，控制历史的保留、更新或释放。视觉对应支持移动目标的位置更新；不能仅用旧坐标直接平均来替代这一判断。
 - **输出**：每个人每帧的修正 heatmap 与修正 In/Out 连续分数。新状态分支具有改变 AP 的能力；实际是否提高由 R4/R5 结果确定。定位评测继续以 GT 画内掩码为准，不按预测状态删去定位样本。
-- **训练**：仅训练新增模块。主损失为当前帧画内 heatmap 监督与全部有效人物帧的 In/Out 分类监督；首版沿用底座热图 MSE 与状态 BCE，不为新增机制预设无标注依据的目标身份/真实切换监督。训练和推理的历史状态均来自模型；不以 GT 热图或状态填充历史。连续片段从空状态开始，截断反传只截断梯度，缺口/跨人物重置。
+- **训练**：仅训练新增模块。主损失为当前帧画内 heatmap 监督与全部有效人物帧的 In/Out 分类监督；首版选用热图 MSE 与状态 BCE，不为新增机制预设无标注依据的目标身份/真实切换监督。训练和推理的历史状态均来自模型；不以 GT 热图或状态填充历史。连续片段从空状态开始，截断反传只截断梯度，缺口/跨人物重置。
 - **证据边界**：VAT 原始点位移事件仍称 `GT_proxy`，不是目标身份切换真值。普通门控、目标模板与时序记忆已有先例；新增机制的价值通过同输入普通因果头、自适应滤波和机制消融来检验。
 
 ### 1.5 指标目标与选模原则
@@ -179,9 +179,9 @@ cscwd/
 - 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
 - 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
 
-### 3.2 R1–R6：当前执行计划（全部待开始）
+### 3.2 R1–R6：当前执行计划（R1 待服务器结果，其余待开始）
 
-每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。以下文件名为规划产物，不表示脚本或报告已存在。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令；不提前执行尚未实现的入口。
+每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1 代码已实现、真实报告尚未生成；R2–R6 的文件名仍为规划产物。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
 
 #### R1 数据分组、单帧诊断与评测协议
 
@@ -193,6 +193,11 @@ cscwd/
 - **选模计划**：根据开发组分布固定候选范围、精度容忍度和 Pareto 比较规则，写成配置；同时说明按源视频汇总/配对及后续不确定性估计的单位。validation 用于新增模块选模；冻结 VAT 底座此前已在 VAT train 训练，不能称整个流水线未见过这些数据。
 - **规划产出**：`results/r1_split_and_diagnosis.json/.md`（划分参数、组名、计数、诊断摘要、协议与选择规则）；完整清单/逐帧诊断留服务器并记路径、SHA256。主路径代码放 `code/data_prep/` 和 `code/scripts/`。
 - **验收**：source-video 组交集为空；全量 train 缓存计数对齐 T1 的 **1,033 tracks / 132,563 人物帧**；抽样可复现且来源可追溯；新增指标定义和选模配置已固定。R1 完成后才进入 R2。
+- **已实现配置**：默认 validation 按视频组取 `0.2`，seed `20261117`，复用只读 `gazelle.data_splits.grouped_holdout_split` 的稳定 SHA256 划分；默认组是 annotation video 目录，报告注明不是已核实的独立录制 ID，可用显式映射合并同源目录。机器报告检查组/人物/图像隔离，回传后再确认分组语义。
+- **诊断抽样**：四类 `gaze_shift_proxy / state_transition / prediction_jump / stable_reference`，每类最多 3 例、每类每 clip 最多 1 例，按 seed+case identity 的 SHA256 排序，不按收益大小排序。上下文前 10/后 20 帧仅供离线观察，裁至同人物连续帧；图含最多 5 个快照和当前头部放大图。标签初始为空、`review_status=unreviewed`，不自动将代理事件填成真实换目标。
+- **状态协议**：`state_temporal_v1` 用 `score>0.5` 分类；错误翻转只计 GT 状态保持的连续帧对；状态转换窗口只在下一 GT 状态转换、gap、track 结束或 30 帧上限截断，不因画内 GT 点跳变截断；连续正确 3 帧的起始延迟计分，与 T4 joint 协议分列。
+- **选模配置**：`code/stag/development_protocol.py` 固定首轮预算与规则并随结果导出 `selection_config.json`。训练筛选 seed 为 0，确认 seed 为 `0/1/2`；每个可训练变体最多 4 组学习率/状态损失权重组合。精度容忍度为 AUC/AP 绝对下降至多 `0.002`、L2 增加至多 `0.002`，且可评估的 joint gaze_shift/state 响应率不低于单帧；合格配置先按准确稳定占比排序，完整折中全报，无合格项保留单帧参考。以上是预声明的配置值，不是实测收益。新增训练尚未执行。
+- **状态区分**：脚本顶层 `passed` 仅表示来源/覆盖/分组与导出机器检查；`stage_status=awaiting_local_review`。真实结果回传后查看全部选中训练案例，另记人工诊断及分组语义，再验收 R1，不据机器成功直接进入 R2。
 
 #### R2 冻结视觉缓存与普通因果联合头
 
@@ -311,7 +316,11 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **旧下一步（2026-11-13 记录，已由 R 阶段替代）**：曾计划复用 `cache_single_frame.py` 生成 train 缓存，并在视频分组 train/validation 上校准四参数门控。该 train 缓存尚未回传验收，四参数校准转为 R4 对照；保留此记录及原命令作为历史。
 - **2026-11-17 · R0 方案与计划落地完成**：新增 `temporal_joint_refinement.md`，将主问题确定为“当前视觉证据下的历史有效性判断”，新增模块联合修正 heatmap 与 In/Out；完整 ViT-B GazeSpot 和原 decoder 冻结。原规则 STAG 与 T1–T6 结果保留为先导基线；AP 旧版不变、新版可学习，实际收益留待训练/评测。
 - **R0 产出与数字**：同步本文档 §0/§1/§3.2、`paper_blueprint.md`、`README.md`、`codex_prompt.md`、`datasets_and_metrics.md` 与根 `PROGRESS.md`，补充文献入口；写入 R1–R6 的依赖、输出和验收。本次只更新文档，没有新增模型结果、训练运行或服务器作业，已有结果文件不变。
-- **当前下一步（R1，未开始）**：固定 source-video 分组、开发集单帧缓存与诊断协议、状态指标和 validation 选模规则；R1 结果回传验收后再做 R2。R1–R6 的代码、特征缓存、新模块和训练结果均未标为完成。
+- **R0 时的下一步（已落实为下述 R1 本地实现）**：固定 source-video 分组、开发集单帧缓存与诊断协议、状态指标和 validation 选模规则；真实结果回传后再做 R1 验收。
+- **2026-11-17 · R1 本地实现完成**：新增 `code/data_prep/development_split.py`，复用原只读分组 helper；新增 `code/stag/state_metrics.py`、`development_diagnostics.py`、`development_protocol.py` 与入口 `code/scripts/prepare_development.py`。入口验证 T1 train JSON/覆盖、缓存文件 SHA256、既定 ViT-B checkpoint/backbone/protocol，输出开发分组、标准/joint/state 基线指标、选模配置和训练组诊断图；不训练模型、不读取 test 预测或指标。T2 小报告仅用于校验共享底座身份。
+- **R1 产出与本地数字**：**35 项新增合成测试通过**（分组 10、状态指标 11、诊断 8、CLI/来源链集成 6），**17 项原标准/时序指标回归通过**。已实际查看合成 RGB/头部诊断图。测试覆盖标签不影响分组、跨人/缺口隔离、状态响应独立于定位、global slices 分区计分、人工标签未完成、缓存只读、来源不符拒绝及 JSON 空统计。原 `gazelle` 与 T4 指标实现未改；没有新增真实 VAT 数字。
+- **R1 本地命令**：`/private/tmp/gazelle-r1-venv/bin/python -m unittest discover -s cscwd/code/data_prep -p test_development_split.py -v`；同解释器执行 `-m unittest discover -s cscwd/code/stag -p test_state_metrics.py -v`（11）、`-p test_development_diagnostics.py -v`（8）、`-m unittest discover -s cscwd/code/scripts -p test_prepare_development.py -v`（6）。原指标回归使用 `-m unittest discover -s cscwd/code/stag -p 'test_*metrics.py' -v`，其中另含已计入新增的 11 项状态测试，不重复计为新增。
+- **当前下一步（R1 服务器准备）**：按 §8 顺序生成 train 原始预测与 R1 准备报告，回传小 JSON/MD、全部选中小预览及 provenance。缓存与完整 split/case 数据留服务器。回传后确认分组和逐例人工诊断，再完成 R1 验收；R2 尚未开始。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -530,3 +539,78 @@ git add cscwd/results/t5_calibration_train_cache.json cscwd/results/RESULT_PROVE
 git commit -m "Record frozen train cache for temporal gate calibration"
 git push origin codex/coverage-aware-router
 ```
+
+## 8. R1 服务器手动运行（当前入口）
+
+两步顺序执行：第一步日志出现 `T2 verification passed` 且 `r1_train_single_frame_cache.json` 中 `passed=true` 后，再执行第二步。两步都只做冻结前向或离线准备，不训练时序模块。输出使用 R1 新目录，不覆盖 T1–T6 或旧准备缓存。
+
+### 8.1 GPU 0：生成 train 原始单帧预测
+
+沿用已跑通的 T2 脚本，因此成功标记和报告 `task` 仍为 T2，报告文件名标识 R1 用途。输入覆盖以 T1 实际 train 结果为准。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git switch codex/coverage-aware-router
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/cache_single_frame.py \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --track-json /newhome/fb/dataset/videoattentiontarget/cscwd_tracks/train_preprocessed_tracks.json \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt \
+  --model gazelle_dinov3_vitb16_inout \
+  --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions \
+  --batch-size 8 \
+  --num-workers 4 \
+  --device cuda:0 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.log 2>&1 &
+```
+
+### 8.2 CPU：分组、基线指标与训练组诊断
+
+按模板标明 GPU 0，脚本实际不导入模型、不使用 GPU。默认无显式 source-video map，按 annotation video 目录整组划分；小报告列出组名与映射语义，回传后确认。读取 T2 test 小报告只为核对 checkpoint/backbone/protocol 身份，不读取其 test 预测或性能。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/prepare_development.py \
+  --data-path /newhome/fb/dataset/videoattentiontarget \
+  --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions \
+  --cache-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json \
+  --recovery-report /home/fb/src/paper/gazelleV1/cscwd/results/t1_track_recovery.json \
+  --reference-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1 \
+  --preview-dir /home/fb/src/paper/gazelleV1/cscwd/results/r1_previews \
+  --validation-fraction 0.2 \
+  --seed 20261117 \
+  --cases-per-category 3 \
+  --preview-cases 12 \
+  --context-before 10 \
+  --context-after 20 \
+  --snapshots 5 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json \
+  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.md \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.log 2>&1 &
+```
+
+成功标记：`R1 preparation completed; stage=awaiting_local_review`。报告 `passed=true` 仅表示机器准备通过，不能替代人工诊断或 R1 整体验收。
+
+服务器保留 `split_manifest.json`、`selection_config.json`、`diagnosis_manifest.json`、`baseline_details.json`、`cases/*/case_data.json` 和完整图；路径、SHA256 与预声明配置写入小报告/provenance。小预览默认覆盖全部选中例，少于配额时按实际数量输出。
+
+### 8.3 关键结果回传
+
+第二步成功后，在服务器提交：
+
+```bash
+git add cscwd/results/r1_train_single_frame_cache.json \
+  cscwd/results/r1_split_and_diagnosis.json \
+  cscwd/results/r1_split_and_diagnosis.md \
+  cscwd/results/r1_previews \
+  cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record R1 development split and diagnostic preparation"
+git push origin codex/coverage-aware-router
+```
+
+本地拉取后核对 SHA256、覆盖/分组、各项指标和图，再另记 `results/r1_manual_review.md`：逐例记录人工 labels/notes、无法判定项及分组语义的接受或映射调整。保留原机器报告和未审阅模板的来源；不回写成伪造的自动真值。人工诊断与分组核对完成后，才把 R1 写为验收完成。
