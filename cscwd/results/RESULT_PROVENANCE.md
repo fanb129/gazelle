@@ -405,3 +405,12 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_validation_comparison.md`; SHA256: `731adc47cde8054199de710ae3781a36f812a50d7e52b1272b27020db88ccb31`.
 - Development selection snapshot: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_selection_manifest.json`; SHA256: `b6dfb1f820461c91c235e07dbf07a4459b1d472f171204f4d7fd9fc5ed45b7b3`.
 - Test configuration frozen: `false`; awaiting development review.
+
+## R4 第一轮真实结果本地验收（2026-11-18）
+
+- 已拉取结果提交 `f1d41e4`，对应运行源码 `7459abc`、预定计划 `r4_compact_v2`。产出 `cscwd/results/r4_local_review.json/.md`，JSON SHA256 `52a5e26ee820d6cc720db8c0cea6d11f728cc8d64ec6c240f89689821ab00a05`，Markdown SHA256 `aa581f743fa3ff145b0f62021606f69150384a77b64ea9e8b3c8c65391d4adfa`。
+- 本地235项来源/源码/预算/覆盖/损失与比例算式/选模/Pareto/manifest一致性核对通过。原服务器报告保留；完整NPY/PT/index/逐事件数据留服务器，本地未重算其大文件SHA或全量逐帧指标。
+- 普通GRU与新机制均完成五轮，均按训练前固定规则选择epoch 1，selected与epoch_001的checkpoint SHA相同；总体validation首选仍为单帧。实际checkpoint、每轮预测和诊断路径/SHA见上述服务器运行条目与原报告。
+- 同一validation单帧→新机制：AUC 0.954205563→0.954289944、L2 0.079604569→0.079562421、AP 0.960922682→0.960808102；准确稳定60.1874%→59.4964%，状态错误11.1254%→10.5114%。新机制仅比普通GRU多8个准确稳定窗口、少6帧状态错误，当前保留状态纠偏折中结论。
+- R4分区来自official train的开发validation，原GazeSpot底座曾见过official train；不能将本轮数字与ViT-L旧VAT test 0.944/0.092/0.912直接比较。当前各模型开发表统一使用epoch 1整套指标，正式test主表留待冻结配置后的R5实测。
+- 下一步复用epoch-1缓存分解定位/状态贡献并汇总门控诊断，按既定条件补train拟合的严格单调状态校准，再决定训练调整。首轮不需重跑，test配置继续未冻结；本次未启动服务器作业或新增模型评测。
