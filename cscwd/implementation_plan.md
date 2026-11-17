@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-17。方案解释见 [temporal_joint_refinement.md](temporal_joint_refinement.md)。T1–T6 为已完成的先导阶段；R1 本地实现与合成检查完成，服务器命令见 §8，真实结果待回传。R2–R6 尚未开始。
+> 当前版本：2026-11-17。方案解释见 [temporal_joint_refinement.md](temporal_joint_refinement.md)。T1–T6 与 R1 已验收；R1 来源/分组与 12 例人工诊断见 `results/r1_local_verification.json`、`results/r1_manual_review.json/.md`。当前下一步 R2，R2–R6 尚未开始；§8 为已完成的 R1 运行记录。
 
 ## 0. 目标（一句话）
 
@@ -179,9 +179,9 @@ cscwd/
 - 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
 - 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
 
-### 3.2 R1–R6：当前执行计划（R1 待服务器结果，其余待开始）
+### 3.2 R1–R6：当前执行计划（R1 已验收，R2–R6 待开始）
 
-每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1 代码已实现、真实报告尚未生成；R2–R6 的文件名仍为规划产物。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
+每次只推进当前一个任务：本地实现与合成检查 → 用户在服务器手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1 真实结果与人工审核已完成；R2–R6 的文件名仍为规划产物。需要服务器运行的入口在相应任务实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
 
 #### R1 数据分组、单帧诊断与评测协议
 
@@ -198,6 +198,7 @@ cscwd/
 - **状态协议**：`state_temporal_v1` 用 `score>0.5` 分类；错误翻转只计 GT 状态保持的连续帧对；状态转换窗口只在下一 GT 状态转换、gap、track 结束或 30 帧上限截断，不因画内 GT 点跳变截断；连续正确 3 帧的起始延迟计分，与 T4 joint 协议分列。
 - **选模配置**：`code/stag/development_protocol.py` 固定首轮预算与规则并随结果导出 `selection_config.json`。训练筛选 seed 为 0，确认 seed 为 `0/1/2`；每个可训练变体最多 4 组学习率/状态损失权重组合。精度容忍度为 AUC/AP 绝对下降至多 `0.002`、L2 增加至多 `0.002`，且可评估的 joint gaze_shift/state 响应率不低于单帧；合格配置先按准确稳定占比排序，完整折中全报，无合格项保留单帧参考。以上是预声明的配置值，不是实测收益。新增训练尚未执行。
 - **状态区分**：脚本顶层 `passed` 仅表示来源/覆盖/分组与导出机器检查；`stage_status=awaiting_local_review`。真实结果回传后查看全部选中训练案例，另记人工诊断及分组语义，再验收 R1，不据机器成功直接进入 R2。
+- **2026-11-17 验收**：结果提交 `d6adba4`，来源/覆盖/协议/计数与 12 张预览核对通过；全部选中案例已记录人工判断，保留无法判定项。接受 40 个 annotation-video/program 组的 32/8 划分，完整统计与边界见 `results/r1_manual_review.md`。原机器报告不回写，人工记录将 R1 标为已验收；下一步 R2。
 
 #### R2 冻结视觉缓存与普通因果联合头
 
@@ -223,6 +224,7 @@ cscwd/
 
 - **依赖**：R1–R3 产物。所有训练仅使用开发 train 组标签，validation 用于配置选择；只优化新增模块。
 - **对照**：同一冻结 ViT-B 单帧底座、全部 T5 固定 EMA、原规则 STAG、开发集校准的四参数门控、One Euro 坐标滤波、速度自适应热图 EMA、普通因果 GRU 联合头和新机制。坐标滤波只提供坐标/状态类结果，原始热图 AUC 原样注明，不能声称坐标滤波改善了热图；分数保持原值的对照明确 AP 不变。
+- **R1 后补充的计划对照（未运行）**：仅用开发 train 标签拟合一项全局严格单调的状态分数校准，固定在校准后分数上使用既定分类阈值。该对照保持 AP 排序，用于区分画外阈值偏置与真正的时序/视觉收益；与原始状态分数都报告。R4 实现前将拟合方式写入新版本实验配置，不修改 R1 已存档的 selection manifest、预算、阈值或结果。
 - **消融**：普通当前帧修正头（去历史，同样训练两个输出）、heatmap-only、state-only、joint；在同输入联合头中分别去掉视觉对应、选择性历史。分开回答“多了训练/输入”“用了历史”“历史有效性机制”和“联合状态输出”的贡献，避免只与未训练的单帧底座比较。
 - **训练记录**：保存 split/缓存/代码 SHA256、完整参数、seed、各损失、validation 每项指标、checkpoint 与选模依据。关键结论按预先固定的多个训练 seed 检查重复性；seed 数和候选预算先写入 R1/R4 配置，不根据结果追加到某一方法。完整日志/checkpoint 留服务器。
 - **比较**：按 R1 的精度容忍度与选择规则保留折中配置，比较相近 AUC/L2/AP 或相近稳定性下的响应。分型响应率、共同响应事件的配对延迟、两侧独有响应数同时报告；使用源视频为单位的配对汇总/重采样，不能把相邻帧当独立样本夸大证据。
@@ -320,7 +322,10 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-17 · R1 本地实现完成**：新增 `code/data_prep/development_split.py`，复用原只读分组 helper；新增 `code/stag/state_metrics.py`、`development_diagnostics.py`、`development_protocol.py` 与入口 `code/scripts/prepare_development.py`。入口验证 T1 train JSON/覆盖、缓存文件 SHA256、既定 ViT-B checkpoint/backbone/protocol，输出开发分组、标准/joint/state 基线指标、选模配置和训练组诊断图；不训练模型、不读取 test 预测或指标。T2 小报告仅用于校验共享底座身份。
 - **R1 产出与本地数字**：**35 项新增合成测试通过**（分组 10、状态指标 11、诊断 8、CLI/来源链集成 6），**17 项原标准/时序指标回归通过**。已实际查看合成 RGB/头部诊断图。测试覆盖标签不影响分组、跨人/缺口隔离、状态响应独立于定位、global slices 分区计分、人工标签未完成、缓存只读、来源不符拒绝及 JSON 空统计。原 `gazelle` 与 T4 指标实现未改；没有新增真实 VAT 数字。
 - **R1 本地命令**：`/private/tmp/gazelle-r1-venv/bin/python -m unittest discover -s cscwd/code/data_prep -p test_development_split.py -v`；同解释器执行 `-m unittest discover -s cscwd/code/stag -p test_state_metrics.py -v`（11）、`-p test_development_diagnostics.py -v`（8）、`-m unittest discover -s cscwd/code/scripts -p test_prepare_development.py -v`（6）。原指标回归使用 `-m unittest discover -s cscwd/code/stag -p 'test_*metrics.py' -v`，其中另含已计入新增的 11 项状态测试，不重复计为新增。
-- **当前下一步（R1 服务器准备）**：按 §8 顺序生成 train 原始预测与 R1 准备报告，回传小 JSON/MD、全部选中小预览及 provenance。缓存与完整 split/case 数据留服务器。回传后确认分组和逐例人工诊断，再完成 R1 验收；R2 尚未开始。
+- **R1 本地实现时的下一步（已完成下述回传验收）**：按 §8 生成 train 原始预测与 R1 准备报告，回传小 JSON/MD、全部选中小预览及 provenance，再确认分组和逐例人工诊断。
+- **2026-11-17 · R1 结果拉取与验收完成**：快进拉取 `d6adba4`，本地原有 provenance 补充已恢复。新增 `results/r1_local_verification.json`，记录来源小报告/9 个代码文件/12 张 PNG 的 SHA256、协议、组划分和计数关系的本地核对；服务器 NPY/index/manifest/逐事件数据未在本地重算。总覆盖 **1,033 tracks / 132,563 人物帧 / 58,507 图像帧**，train/validation 为 **32/8 组、827/206 tracks、98,362/34,201 人物帧**；稳定 seed 重建验证组一致。
+- **R1 真实数字与诊断**：validation 单帧 **AUC 0.954206 / L2 0.079605 / AP 0.960923**；准确稳定 **60.19%**，joint gaze_shift **135/221（61.09%）**。状态画外/画内错误 **25.73%/2.77%**，独立进入/离开响应 **179/189（94.71%） / 93/169（55.03%）**；state 与 joint enter 的可评估分母不同。新增 `results/r1_manual_review.json/.md`，全部 12 例已看快照，保留无法判定标签；固定抽样不当作真实事件全量标注。原机器报告不修改。
+- **当前下一步（R2，未开始）**：按 R1 manifest 确定冻结视觉特征契约，先核对小头部区域在特征网格中的覆盖，再实现普通因果联合头与最小训练/验证。R1 可接受，无需重跑；本次审核不提前实现或训练 R2。R4 已补记单调状态校准强对照，尚未运行。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -540,7 +545,7 @@ git commit -m "Record frozen train cache for temporal gate calibration"
 git push origin codex/coverage-aware-router
 ```
 
-## 8. R1 服务器手动运行（当前入口）
+## 8. R1 服务器手动运行（已完成，保留复现命令）
 
 两步顺序执行：第一步日志出现 `T2 verification passed` 且 `r1_train_single_frame_cache.json` 中 `passed=true` 后，再执行第二步。两步都只做冻结前向或离线准备，不训练时序模块。输出使用 R1 新目录，不覆盖 T1–T6 或旧准备缓存。
 

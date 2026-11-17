@@ -1,0 +1,373 @@
+{
+  "task": "R1_manual_review",
+  "review_date": "2026-11-17",
+  "source_result_commit": "d6adba4",
+  "source_report": {
+    "path": "cscwd/results/r1_split_and_diagnosis.json",
+    "sha256": "2d3a2acb2116a33bf4608bb80af90f8edc0d90529dc2aca869605cf7a27debe5"
+  },
+  "status": "accepted_for_R2_preparation",
+  "cases_reviewed": 12,
+  "review_scope": "all_12_returned_contact_sheets; five_snapshots_per_case; no_full_contiguous_video_or_server_case_data_review",
+  "grouping_decision": {
+    "accepted": true,
+    "definition": "conservative_annotation_video_program_group_holdout",
+    "train_groups": [
+      "A Play With Words",
+      "All in the Family",
+      "Arrested Development",
+      "Band of Brothers",
+      "Before Sunrise",
+      "Big Bang Theory",
+      "Breaking Bad",
+      "Cheers",
+      "Conan",
+      "Coveted",
+      "Crazy Rich Asian",
+      "Driving Miss Daisy",
+      "Friends",
+      "Give Me One Reason",
+      "Gone with the Wind",
+      "Hearing",
+      "Interview with Bill Gates",
+      "Jersey Shore",
+      "Keeping Up With the Kardashians",
+      "Modern Family",
+      "My Dinner with Andre",
+      "Orange is the New Black",
+      "Project Runway",
+      "Secret",
+      "Seinfeld",
+      "Silicon Valley",
+      "Sound of Music",
+      "Star Wars",
+      "Suits",
+      "Tartuffe",
+      "The View",
+      "Three Idiots"
+    ],
+    "validation_groups": [
+      "BTS at Jimmy Fallon",
+      "Grey's Anatomy",
+      "How I Met Your Mother",
+      "Interview at the Oscars",
+      "Sherlock",
+      "The Ellen Show",
+      "UFC Octagon Interview",
+      "Veep"
+    ],
+    "reason": "Distinct program/film/interview directory groups; keep this predeclared split. No visible naming alias requires a merge.",
+    "boundary": "not_verified_independent_recording_ids; frozen_base_previously_trained_on_official_VAT_train"
+  },
+  "labels_nonexclusive_counts": {
+    "prediction_error": 7,
+    "unresolvable": 8,
+    "attention_target_change": 2
+  },
+  "cases": [
+    {
+      "case_id": "gaze_shift_proxy_86e2404b163a12da",
+      "category": "gaze_shift_proxy",
+      "track_id": "train/Breaking Bad/32799_33231/s01",
+      "anchor_frame_index": 33185,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error",
+        "unresolvable"
+      ],
+      "notes": "构图基本固定；GT 从右侧人物头部附近移向胸部/桌面，末帧到左侧人物脸部，原始预测多数停在桌面。末帧可见查询人物转头；锚点前后变化较小，不能确认锚点是真实换对象。",
+      "reviewer": "event_visual_agent",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        33175,
+        33184,
+        33185,
+        33186,
+        33205
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/gaze_shift_proxy_86e2404b163a12da.png",
+        "sha256": "bdf10413374889fe3ff190a1606bdf3c6abd3b50f9b1a53eed2f0dc73397fb65"
+      }
+    },
+    {
+      "case_id": "gaze_shift_proxy_ad7d0f44fb05f33e",
+      "category": "gaze_shift_proxy",
+      "track_id": "train/Conan/5634_5815/s02",
+      "anchor_frame_index": 5694,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "unresolvable"
+      ],
+      "notes": "GT 在左侧人物区域间移动，原始预测也改变；查询人物持续朝左，末帧稍抬头。五快照不足以区分锚点换对象、目标移动与标注落点变化。",
+      "reviewer": "event_visual_agent",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        5684,
+        5693,
+        5694,
+        5695,
+        5714
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/gaze_shift_proxy_ad7d0f44fb05f33e.png",
+        "sha256": "e4c527440e14918b577d265541a6fcc11e681e58b17141228a5c500067afddc2"
+      }
+    },
+    {
+      "case_id": "gaze_shift_proxy_cc69d20ac0a17390",
+      "category": "gaze_shift_proxy",
+      "track_id": "train/All in the Family/16958_17383/s00",
+      "anchor_frame_index": 16984,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error",
+        "unresolvable"
+      ],
+      "notes": "GT 从中央人物手部区域移至脸部，原始预测持续落在右侧人物脸部。锚点附近查询人物头朝向接近；可确认相对 GT 的区域不符，不能确认真实切换原因。",
+      "reviewer": "event_visual_agent",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        16974,
+        16983,
+        16984,
+        16985,
+        17004
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/gaze_shift_proxy_cc69d20ac0a17390.png",
+        "sha256": "750e1db90069979cb319957c46c31da6b021a044c05d397f109fb56e46b882a4"
+      }
+    },
+    {
+      "case_id": "state_transition_1a55a51014a2d4c5",
+      "category": "state_transition",
+      "track_id": "train/Arrested Development/16513_16634/s00",
+      "anchor_frame_index": 16607,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "unresolvable"
+      ],
+      "notes": "GT 从 out 变为 in，但五个快照的状态分数均在 0.5 以上。查询人物部分脸部被前景肩部遮挡，锚点姿态连续，GT 画内点位于前景人物肩部/脸部附近；无法核验确切进入边界。",
+      "reviewer": "event_visual_agent",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        16597,
+        16606,
+        16607,
+        16608,
+        16627
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/state_transition_1a55a51014a2d4c5.png",
+        "sha256": "4476321b9e09cafa041b8a476156eab44fe49267c318c5998c7ed4e4386b5e6b"
+      }
+    },
+    {
+      "case_id": "state_transition_4a3687abe413658e",
+      "category": "state_transition",
+      "track_id": "train/Three Idiots/68352_68568/s03",
+      "anchor_frame_index": 68451,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "unresolvable"
+      ],
+      "notes": "68450 GT=in、68451 GT=out、68452 GT=in，人物头部外观基本连续，分数分别约 0.988/0.989/0.996。无法从快照确认单帧 out 是否对应真实画外注视，不将它作为释放历史的可靠监督。",
+      "reviewer": "event_visual_agent_and_root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        68441,
+        68450,
+        68451,
+        68452,
+        68471
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/state_transition_4a3687abe413658e.png",
+        "sha256": "c6bfd370f146495938167f3076dd601c3e42b9c7117f4957dc5965efad927fdc"
+      }
+    },
+    {
+      "case_id": "state_transition_9c4a0e403ec68088",
+      "category": "state_transition",
+      "track_id": "train/My Dinner with Andre/16927_17047/s00",
+      "anchor_frame_index": 16995,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "attention_target_change",
+        "unresolvable"
+      ],
+      "notes": "上下文中查询人物从面向桌面逐渐转向右侧同伴，GT 与预测后段到同伴脸部，支持上下文级注意区域改变。16994 out 到 16995 in 的具体边界仍无法核验；不能据此指定真实切换起始帧。",
+      "reviewer": "event_visual_agent_and_root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        16985,
+        16994,
+        16995,
+        16996,
+        17015
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/state_transition_9c4a0e403ec68088.png",
+        "sha256": "9c401839c9e59ba77a2e9cd44d87b81c94201789fdabe675b34d822ea95c40c4"
+      }
+    },
+    {
+      "case_id": "prediction_jump_172a63ed65192eb1",
+      "category": "prediction_jump",
+      "track_id": "train/My Dinner with Andre/21842_21963/s01",
+      "anchor_frame_index": 21940,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error"
+      ],
+      "notes": "查询人物及画面基本稳定，GT 在前景同伴脸部；21940 原始预测突跳至右侧伸出的手附近，前后所示快照又在脸部附近，状态分数仍为画内。标记的是相对现有 GT 的预测误跳。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        21930,
+        21939,
+        21940,
+        21941,
+        21960
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/prediction_jump_172a63ed65192eb1.png",
+        "sha256": "e3e90cbae13bf94ccaaae2f3875c87b97d31f955a0f24c0ea567138dfff85467"
+      }
+    },
+    {
+      "case_id": "prediction_jump_d6a0329da386a97b",
+      "category": "prediction_jump",
+      "track_id": "train/My Dinner with Andre/8679_8800/s01",
+      "anchor_frame_index": 8700,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error"
+      ],
+      "notes": "GT 保持在左前景人物脸部附近，原始预测在托盘/下方区域和该人物头部间变化；8700 跳到头部，8701 又回到下方。状态分数接近 0.98，并不能表示定位正确，也不能把每次大跳都认作应接受的新目标。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        8690,
+        8699,
+        8700,
+        8701,
+        8720
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/prediction_jump_d6a0329da386a97b.png",
+        "sha256": "440bdd897ba19da39678488dfde5b74109d4583e3be83131a65ea0c84aafcc56"
+      }
+    },
+    {
+      "case_id": "prediction_jump_e09f32f09431c9a4",
+      "category": "prediction_jump",
+      "track_id": "train/The View/11328_11449/s05",
+      "anchor_frame_index": 11377,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error"
+      ],
+      "notes": "查询人物为右侧粉色服装女性，GT 在锚点邻近快照保持同一区域，原始预测却在左侧人物与右侧人物头部间跳变；头部外观也有变化。高画内分数不区分这些定位候选，不能只按位移大小开放历史。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        11367,
+        11376,
+        11377,
+        11378,
+        11397
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/prediction_jump_e09f32f09431c9a4.png",
+        "sha256": "5d229071becc43e5f23ddd863442b913762bd92e1b8456b60342f7bcb5a67478"
+      }
+    },
+    {
+      "case_id": "stable_reference_f7dc273e7cb77301",
+      "category": "stable_reference",
+      "track_id": "train/Gone with the Wind/245418_245635/s00",
+      "anchor_frame_index": 245613,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "unresolvable"
+      ],
+      "notes": "锚点附近数个快照的 GT 与预测均在对面女性脸部；末快照 GT 为 out，人物姿态也有变化。stable_reference 只保证锚点结束的短窗口，不能把整个展示上下文当稳定段；真实画外转移对象不可辨识。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        245603,
+        245612,
+        245613,
+        245614,
+        245633
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/stable_reference_f7dc273e7cb77301.png",
+        "sha256": "9942c88002a713bac4becf053566d8c7a54a65c2a03a346acd37f86b49a9c494"
+      }
+    },
+    {
+      "case_id": "stable_reference_002728e621e28b64",
+      "category": "stable_reference",
+      "track_id": "train/All in the Family/17782_18382/s02",
+      "anchor_frame_index": 18296,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "attention_target_change",
+        "prediction_error"
+      ],
+      "notes": "上下文早期 GT 位于右侧人物头部，随后查询人物朝左、GT 到左侧人物脸部；支持上下文级对象改变，确切起始帧未定。18295 预测在饮料/手部区域，随后回到脸部。锚点短窗口稳定不等于整个上下文稳定或所有预测正确。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        18286,
+        18295,
+        18296,
+        18297,
+        18316
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/stable_reference_002728e621e28b64.png",
+        "sha256": "b64cdb991bde6e2aaba617f96fef60564ffa8006d9deef25956099e4649a3d0b"
+      }
+    },
+    {
+      "case_id": "stable_reference_2beabfdb309a8d1f",
+      "category": "stable_reference",
+      "track_id": "train/Suits/5664_5695/s03",
+      "anchor_frame_index": 5666,
+      "review_status": "reviewed_snapshot_context",
+      "labels": [
+        "prediction_error",
+        "unresolvable"
+      ],
+      "notes": "查询头部在背景中很小且放大后模糊；所示 GT 位于该人物邻近区域，原始预测持续落在更右侧人物头部。可记录相对 GT 的持续误定位，不能据低分辨率脸部独立判断真实注视对象。稳定预测本身不能消除这种持续错误。",
+      "reviewer": "root",
+      "label_scope": "displayed_snapshot_context; not_precise_anchor_event_ground_truth",
+      "snapshot_frame_indices": [
+        5664,
+        5665,
+        5666,
+        5667,
+        5686
+      ],
+      "preview": {
+        "path": "cscwd/results/r1_previews/stable_reference_2beabfdb309a8d1f.png",
+        "sha256": "d5b8d7ef64488167a4815f8ca51997a12ba6a5288e52c3bf72db13778960a398"
+      }
+    }
+  ],
+  "findings": [
+    "Relative-to-GT prediction jumps and persistent localization errors are visible even at high in-frame scores.",
+    "Proxy gaze/state transitions are not complete target-change or historical-validity ground truth.",
+    "The stable_reference condition applies to the anchor-ending short window, not its entire display context.",
+    "No selected contact sheet provides clear evidence for camera_change or same_target_motion; this is not a prevalence estimate.",
+    "High AP coexists with substantial out-of-frame threshold errors and slow or missing leave responses."
+  ],
+  "next_step": "R2 frozen visual feature contract and ordinary causal joint head; no R2 implementation or training in this review",
+  "planned_control": "Add a train-fitted global strictly monotone state-score calibration control in R4. It preserves AP ranking and isolates threshold bias from temporal benefits; not implemented or run.",
+  "training_use": "diagnostic_notes_only; do_not_use_as_automatic_switch_or_memory_release_labels",
+  "original_machine_report_preserved": true
+}

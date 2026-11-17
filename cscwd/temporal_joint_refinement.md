@@ -2,7 +2,7 @@
 
 > 更新：2026-11-17。本文记录方向复盘后的研究方案；任务顺序和验收以 [implementation_plan.md](implementation_plan.md) 为准。
 > 状态：T1–T6 先导实验已完成；本文的新模块尚未实现、训练或评测。现有规则方法继续使用报告中的 `stag` 标识，新方法暂称 `temporal_joint_refiner`，论文方法名在机制和结果确定后再定。
-> R1 数据/协议准备的本地实现已完成，服务器运行和人工诊断待完成；命令与验收入口见 `implementation_plan.md` §8。这一步不训练新模块。
+> R1 数据/协议准备已通过真实结果与人工诊断验收，见 `results/r1_manual_review.md`。下一步 R2，尚未实现或训练新模块；R1 原运行命令保留于 `implementation_plan.md` §8。
 
 ## 1. 最终目标与 motivation
 

@@ -14,12 +14,13 @@
 - ~/src/gazelle/cscwd/cscwd_2025_2026_related.md（venue 扫描结论，motivation 锚点）
 - ~/src/gazelle/cscwd/literature_review.md、datasets_and_metrics.md（文献与指标约束）
 - ~/src/gazelle/cscwd/results/t5_ema_ablation.md、t6_visualization.md（已跑先导结果）
+- ~/src/gazelle/cscwd/results/r1_manual_review.md、r1_local_verification.json（已验收开发划分、状态指标与人工诊断）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
-当前状态：T1–T6 先导阶段已经完成。原规则 STAG 仅修正热图、In/Out 原值不变，已有稳定性收益与切换代价。新方案尚未实现/训练，不把已有缓存说成已具备视觉特征。
+当前状态：T1–T6 先导阶段和 R1 开发准备已验收。原规则 STAG 仅修正热图、In/Out 原值不变，已有稳定性收益与切换代价。R1 数据划分、原始预测和诊断已完成；新时序模块尚未实现/训练，不把原始预测缓存说成已具备视觉特征。
 
-目标：按 implementation_plan.md §3.2 从首个未完成的 R 任务继续，当前为 R1；不重新从 T1 开始。R1 分组/诊断 → R2 冻结特征与普通联合头 → R3 历史有效性机制 → R4 训练/验证强对照 → R5 冻结配置 test → R6 论文证据。任务是“推进 idea”，不是“审计问题”。
+目标：按 implementation_plan.md §3.2 从首个未完成的 R 任务继续，当前为 R2；不重新从 T1 或 R1 开始。R2 冻结特征与普通联合头 → R3 历史有效性机制 → R4 训练/验证强对照 → R5 冻结配置 test → R6 论文证据。任务是“推进 idea”，不是“审计问题”。
 
 主方案：复用既定 ViT-B VAT checkpoint，冻结完整 GazeSpot 和原 decoder，仅训练新增因果模块，以当前人物/场景证据控制历史保留、位置更新与释放，联合输出修正 heatmap 和 In/Out 连续分数。四参数校准、自适应滤波和普通因果头保留为对照；不把门控、记忆、模板或因果本身宣称为新贡献。
 
@@ -42,7 +43,7 @@
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现、服务器真实结果回传与验收完成后，再进入下一个 R 任务；不一次铺开多个半成品。
 
-当前入口为 R1：本地代码及合成检查已完成，完整服务器命令在 implementation_plan.md §8。等待用户手动运行并回传 R1 小报告/预览，核对来源、组隔离与真实指标，查看全部选中训练案例后另记人工诊断，再完成 R1 验收。不要重写已有准备代码、自动执行旧 T5 train cache 命令或跳到 R2/模型训练。
+当前入口为 R2。R1 结果已从 d6adba4 拉取并验收，source-video/program 组按已定 manifest 保持不变，全部 12 例快照已记录人工诊断。继续实施时先探测冻结空间特征层/grid/dtype/存储和小头部覆盖，再建立普通因果联合头与最小训练/验证主路径；按 R2 规格逐项交付服务器命令，不跳到 R3，也不重新跑 R1。原 R1 机器报告保留 awaiting_local_review，后续人工验收记录才是当前完成状态。
 
 ---
 

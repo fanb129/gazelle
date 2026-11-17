@@ -184,7 +184,7 @@ AUC不是画内外准确率，也不评价概率是否校准。不能因为AUC�
 - `enter_frame / gaze_shift` 的 joint 成功还要求当前定位正确，所以即使 In/Out 不变，也可随 heatmap 改变。
 - 新联合模块输出新的连续状态分数，具有改变 AP 和状态转换响应的能力；尚无新方案实测收益。改变分类阈值不改变 AP；统一的严格单调分数变换保持排序，也不改变 AP。
 
-### R1 已实现、等待真实结果的扩展
+### R1 已实现并完成真实结果验收的扩展
 
 | 指标 | R1 需要固定的定义 | 必须同时解释的量 |
 |---|---|---|
@@ -196,6 +196,8 @@ AUC不是画内外准确率，也不评价概率是否校准。不能因为AUC�
 AUC/L2 继续只用共同 GT 画内样本，不能按预测 In/Out 丢弃困难帧来提高定位指标。Jitter 和准确稳定占比沿用 T4 版本；新增状态指标不回写旧结果。
 
 实现入口：`code/stag/state_metrics.py` 的 `state_temporal_v1`。阈值 `score>0.5`，连续正确 3 帧，最多观察 30 帧；独立状态响应仅在下一 GT 状态事件/gap/track 结束前截断，不被 gaze 点位移截断。R1 新入口同时导出原 joint 指标和独立 state 指标；全画外分区的定位/AP 记 `null` 并记录原因。选模预算和容忍度见 `code/stag/development_protocol.py`，均为预声明配置，不是已跑增益。
+
+R1 实际统计见 `results/r1_split_and_diagnosis.json`，本地验收与逐例判断见 `results/r1_manual_review.md`。validation 的 state-only enter 为 179/189，joint enter 为 132/170，窗口和分母不同，不能直接以两者差解释纯定位损失；leave 均为 93/169。单帧 out 等短状态段按固定随访规则处理，不因人工难以判断就修改指标或删除样本。
 
 按源视频选择 train/validation，报告候选预算、精度容忍度及匹配/选模规则。普通因果头与新机制共享冻结视觉输入；额外加入同样训练的当前帧修正头。One Euro 只改坐标时，原热图 AUC 和原状态 AP 的来源注明为未修改，不能将坐标改善称为热图改善。
 

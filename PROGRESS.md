@@ -7,11 +7,11 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | T1–T6 完成；R1 本地实现完成，35 项新增合成测试和 17 项原指标回归通过，等待服务器结果 |
+| CSCWD | `cscwd/` | T1–T6 与 R1 验收完成；40 组开发划分及 12 例人工诊断已记录，下一步 R2 |
 
 ## 当前优先级（2026-11-17）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
-方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。原规则 STAG 保留为先导基线。R1 数据/协议准备的本地代码已完成，等待用户在服务器手动运行和回传；新时序模块尚未实现/训练，R2–R6 尚未开始。以下 T1–T6 数字保留为真实先导结果。
+方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。原规则 STAG 保留为先导基线。R1 真实结果已拉取并完成来源、分组及 12 张训练组诊断图审核；新时序模块尚未实现/训练，R2–R6 尚未开始。以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
@@ -40,6 +40,14 @@ T1–T6 的数据、缓存、初版门控、统一评测、固定 EMA 对照和�
 
 **R1 / 产出与本地数字**：35 项新增合成检查通过（分组 10、状态指标 11、诊断 8、入口集成 6），另有 17 项旧标准/时序指标回归通过；已查看合成图。旧 `gazelle` 和 T4 指标实现均未修改，未产生真实 VAT 训练/评测数字。本地环境为 `/private/tmp/gazelle-r1-venv`，GPU 前向及真实诊断都由用户在服务器执行；两条完整 nohup 命令与回传文件见 `implementation_plan.md` §8。
 
+**R1 / 2026-11-17 / 真实结果验收完成**：已拉取结果提交 `d6adba4`，保留并恢复本地原有 provenance 补充。来源小报告/代码 SHA256、既定模型与输入、计数/响应分母、种子分组和全部 12 张 PNG 的 SHA256/大小核对通过，记录于 `cscwd/results/r1_local_verification.json`。完整 NPY、index、manifest 和逐事件明细留服务器，本地不声称重新计算了全量预测指标。
+
+R1 开发划分为 **32/8 个保守 annotation-video/program 组**：train **827 tracks / 98,362 人物帧 / 44,839 图像帧**；validation **206 tracks / 34,201 人物帧 / 13,668 图像帧**，总计对齐 T1。接受既定 seed 的分组，不将节目/影片名称等同于已核实的独立录制 ID。validation 单帧 **AUC 0.954206 / L2 0.079605 / AP 0.960923**、准确稳定占比 **60.19%**，是开发分区基线，不是新方法增益。
+
+R1 状态结果：validation 画外错误率 **25.73%**、画内错误率 **2.77%**；state-only enter **179/189（94.71%）**、leave **93/169（55.03%）**；joint gaze_shift **135/221（61.09%）**。state-only 与 joint enter 的窗口和分母不同，不能直接把响应率差全归于定位条件。高 AP 与画外阈值错误可以同时存在。
+
+R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：查看全部 12 张回传图，每例 5 个快照；标签可重叠，预测误差 7 例、上下文注意区域改变 2 例、真实变化/边界无法判定 8 例。Three Idiots 单帧 in→out→in 不直接当真实释放监督；stable_reference 只保证锚点短窗口。此固定抽样不用于估计全数据类别频率，也未证明视觉对应机制有效。R4 将补充仅在开发 train 拟合的全局单调状态校准对照，区分阈值偏置与时序收益；尚未运行，不回写原 R1 配置或结果。
+
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
 ## 已知阻塞
@@ -52,6 +60,6 @@ T1–T6 的数据、缓存、初版门控、统一评测、固定 EMA 对照和�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **R1（等待服务器结果）**：按实现计划 §8 先生成 `r1_train_predictions`，成功后运行 `prepare_development.py`。回传 `r1_train_single_frame_cache.json`、`r1_split_and_diagnosis.json/.md`、`r1_previews/` 与 provenance；真实覆盖对齐 T1 的 **1,033 tracks / 132,563 人物帧**。本地核对组名/来源并查看全部选中训练案例，另记 `r1_manual_review.md`，随后完成 R1 验收。
-2. R1 验收后依次进入 **R2 冻结视觉缓存与普通联合头 → R3 历史有效性机制 → R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**，每次只推进一个任务。
+1. **R2（待开始）**：按 R1 既定 manifest 探测冻结视觉特征层、空间网格、dtype 和存储；关注小头部区域的覆盖，再实现普通因果 GRU 的 heatmap/In/Out 联合头并完成最小训练/验证主路径。沿用 ViT-B 及全部冻结底座条件，代码仍只放 `cscwd/code/`。
+2. R2 验收后依次进入 **R3 历史有效性机制 → R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**，每次只推进一个任务。本次完成 R1 审核，没有启动 R2 或服务器新作业。
 3. 所有新模型选择在开发组完成。冻结 VAT checkpoint 此前已见过 VAT train，validation 留出仅针对新增模块；已查看的 test 为先导分析，不能再用于调参。仅有 VAT 逐人结果时，不声称已验证共同关注或协作收益。

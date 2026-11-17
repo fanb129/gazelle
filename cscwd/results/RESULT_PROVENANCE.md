@@ -66,6 +66,14 @@ T5 本地验收与解读（2026-11-13，结果提交 `3de06cd`，来源 `t5_ema_
 - 小结果：`cscwd/results/t6_visualization.json/.md` 与 `cscwd/results/t6_previews/`；完整候选清单、逐帧 JSON 和全分辨率图留服务器 `cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/`，实际路径/SHA256 由脚本成功运行后追加。
 - 原始热图固定 `[0,1]` 色标，GT 仅作标记/选样依据；所有预测仍为原缓存。真实图像和案例结果由服务器运行产出。
 
+T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
+
+- 已核验 `t6_visualization.json` 来源/实现 SHA256、候选与选择计数，以及全部 10 张本地预览 PNG 的 SHA256/大小。完整输出 13 例，五类候选数 7/5/11/726/16；已实际查看五类各一例的帧图/时间线，其余完整图与逐帧 JSON 仍在服务器。
+- `stag_over_ema_96f0fc50a3877070`：CBS `2517`，单帧/STAG 延迟 0，EMA `0.25/0.5` 在 3 帧窗口内 censored。
+- `stag_lag_bbc34ab341e623ee`：CBS `12144`，单帧 +8 帧、STAG +12 帧、EMA `0.25` +13 帧、EMA `0.5` +12 帧。
+- `single_frame_only_a2f1575f30b3f20b`：Downton `13190`，单帧 +6 帧，STAG 未形成连续 3 帧成功而 censored；预览中仍有短暂低误差段。
+- 后续先缓存 train 的冻结预测并按 video 组划分 train/validation，校准已有门控参数；不把上述测试案例直接用来选权重。新缓存小报告为 `t5_calibration_train_cache.json`，实际数字由服务器运行后追加。
+
 ## 待填
 
 ## T1 track 恢复（服务器运行）
@@ -274,3 +282,16 @@ T5 本地验收与解读（2026-11-13，结果提交 `3de06cd`，来源 `t5_ema_
 - cache_report：`/home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json`；SHA256：`dbbb121a36b883b46d242b44e86047ed59096275e173128bb6f5c02406a72c6a`。
 - recovery_report：`/home/fb/src/paper/gazelleV1/cscwd/results/t1_track_recovery.json`；SHA256：`2ae463a901f9c0da5337f976bf86af86676479a0fb7faf6942bf21444355aac0`。
 - checkpoint_reference_report：`/home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json`；SHA256：`5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022`。
+
+## R1 本地验收与人工诊断（2026-11-17）
+
+- 结果提交：`d6adba41b3f9e89dc138400e3f15fb576bbf3289`；服务器实现：`909a81e0afe55e6ed535ef74fc6ac10caa601b82`。
+- 来源小报告、9 个实现文件、12 张本地 PNG 的 SHA256/大小、标准/joint/state 协议、分组种子与计数关系的本地核对通过。服务器 NPY/index/完整 manifest/逐事件数据留原路径，本地未重新计算全量预测指标。
+- 覆盖：1,033 tracks / 132,563 人物帧 / 58,507 图像帧。按 annotation-video/program 保守分组：train 32 组、827 tracks、98,362 人物帧；validation 8 组、206 tracks、34,201 人物帧。该留出仅约束新增模块，冻结 VAT 底座此前已见过官方 train。
+- validation 单帧：AUC `0.9542055630729601` / L2 `0.07960456904362263` / AP `0.9609226821493625`，不是新方法增益。
+- validation 画外/画内错误率：`0.25733344048862816` / `0.027713944296350768`；state-only enter `179/189`、leave `93/169`；joint gaze_shift `135/221`。state-only 与 joint enter 的可评估分母不同。
+- 已查看全部 12 张回传快照图，人工标签可重叠：prediction_error 7、attention_target_change 2、unresolvable 8；属于诊断观察，不作为全量事件标签或模型历史输入。原机器报告和空人工模板保持原样，后续验收由下列记录给出。
+- 本地验收产物：`cscwd/results/r1_local_verification.json`；SHA256：`3d5ec952f1feebd4ddfef87bc62c10c0ed33a598e7d8838118e6c6a70a0544d1`。
+- 本地验收产物：`cscwd/results/r1_manual_review.json`；SHA256：`d831059ac1233051d44b9f69f286a01692d316bd50586ebdcdcfc701020d1285`。
+- 本地验收产物：`cscwd/results/r1_manual_review.md`；SHA256：`83727ef5c883a4ccc16dab7eada4d8762ac4869b78db84cb631b9ef63a1ec8e3`。
+- R1 验收通过，下一步 R2 冻结视觉特征契约与普通因果联合头；本次未启动 R2。R4 补记 train 拟合的全局单调状态校准对照，尚未运行，不回写原 R1 selection manifest。
