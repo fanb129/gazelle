@@ -1,0 +1,97 @@
+{
+  "task": "R4_official_train_test_local_checks",
+  "date": "2026-11-18",
+  "protocol_version": "r4_official_train_test_v1",
+  "based_on_commit": "9ddb165625a5fec4285d9b07d4401f0c066635ed",
+  "passed": true,
+  "scope": "local_CPU_synthetic_and_source_report_checks; no_real_VAT_training_or_test_run",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_official_train_test_plan.md",
+    "sha256": "b33216abf59f95d3500ec7efc5b8cd99eb1b2581377cd0b19489ca7c68785a99"
+  },
+  "source_sha256": {
+    "cscwd/code/scripts/cache_official_test_features.py": "1a83af130deecf410dac8413cb812b520d4dc5f23d642afd66e2616be50f9252",
+    "cscwd/code/scripts/compare_official_joint.py": "24e6c7481fd3b7d917a92ed83a3fe53cad9321d110120f13d1b1a70e9f564383",
+    "cscwd/code/scripts/run_official_round.sh": "e8a89272ab8d966bb48bf727457490bd1ab8d085c971a1bad2176f85b214b383",
+    "cscwd/code/scripts/test_cache_official_test_features.py": "6793e4efd7fdee1f884a48d73f4ec6cecc724a537018ad3a30f505480fc7041e",
+    "cscwd/code/scripts/test_compare_official_joint.py": "042600fa56cdde7308477d476542defe5d67cc6f50abb32ded0c714f6d9107ed",
+    "cscwd/code/scripts/test_official_data.py": "c41071a648ef164d49e74026be2aa5fe8a10b02b1fd4483115ab0d773bfd0a9a",
+    "cscwd/code/scripts/test_run_official_round.py": "3cc3a5b5e65512b0fac51401d6c433a9b74723c2e16f780f5f878b1f7d5082d5",
+    "cscwd/code/scripts/test_train_official_joint.py": "057d1c243dfd1d4ba3d16c01dc0662d8194288c147e6f9a03513fce8ec38d750",
+    "cscwd/code/scripts/train_official_joint.py": "dd79baa2eefec6baf8a357ccf3b6d0d3bd9bb78ac8836bf3a3752b0ba659e179",
+    "cscwd/code/stag/official_data.py": "ceaf50a1ec358752770058ae894af999f863a0255d40708e6711276dadf62146",
+    "cscwd/code/stag/official_evaluation.py": "be69232f78b4e5c12af72e1aa3d57c57c59c210be2569b30fd5d34356984acc5",
+    "cscwd/code/stag/official_protocol.py": "c51e66a4786107703a0abaf3f0bfabf7335f12ba1037dfc41c7bafb90cd5804a",
+    "cscwd/code/stag/test_official_protocol.py": "6a0feeb8525c2fed51229c96f93d5d1ee57e5d41463650a2e3c04c1167018a5d"
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_*official*.py' -v",
+      "count": 31,
+      "seconds": 22.977,
+      "exit_code": 0
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_official_protocol.py -v",
+      "count": 5,
+      "seconds": 0.0,
+      "exit_code": 0
+    }
+  ],
+  "test_count": 36,
+  "test_groups": {
+    "official_data": 5,
+    "test_feature_cache": 6,
+    "selection_protocol": 5,
+    "training": 6,
+    "comparison": 8,
+    "background_wrapper": 6
+  },
+  "verified_behaviors": [
+    "All official train and test tracks loaded without a development split or review manifest.",
+    "Test native features and retained FP32 predictions share model, checkpoint, transform and source contracts.",
+    "Both refiner models run all five synthetic epochs with the same shared initialization.",
+    "Each epoch performs complete no-grad test evaluation; changing test labels does not change training parameters.",
+    "Whole-checkpoint selection prioritizes AUC, then L2, AP and earlier epoch; old precision and stability gates are not used.",
+    "Selected and last checkpoints reload; stored predictions and same-forward history diagnostics are verified.",
+    "Comparison recomputes candidates and selections, verifies artifact hashes and reports explicit test selection.",
+    "Wrapper inherits GPU1, handles spaced paths, caches or reuses test features and stops on each failed stage."
+  ],
+  "static_checks": {
+    "python_3_10_AST_files": 12,
+    "shell_script_syntax": true,
+    "section_11_bash_blocks": 2,
+    "section_11_single_GPU1_launch": true,
+    "old_source_files_changed": false
+  },
+  "existing_source_compatibility_checks": {
+    "prediction_model_same": true,
+    "checkpoint_same": true,
+    "backbone_same": true,
+    "prediction_protocol_same": true,
+    "full_train_prediction_feature_index_link": true,
+    "full_train_coverage": true,
+    "full_test_coverage": true,
+    "native_feature_contract": true
+  },
+  "existing_sources": {
+    "cscwd/results/r1_train_single_frame_cache.json": "dbbb121a36b883b46d242b44e86047ed59096275e173128bb6f5c02406a72c6a",
+    "cscwd/results/t2_single_frame_cache.json": "5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022",
+    "cscwd/results/r2_feature_cache.json": "cfbd01019bc0ff976cdcea4598211656e76101863495d1b55b8cf810e7205437"
+  },
+  "real_run_status": "not_run; user_manually_runs_implementation_plan_section_11_1_on_server_GPU1",
+  "reporting_protocol": {
+    "train_split": "full_official_train",
+    "evaluation_split": "full_official_test",
+    "test_used_for_checkpoint_selection": true,
+    "has_validation_split": false,
+    "selection": "AUC_desc_L2_asc_AP_desc_earlier_epoch"
+  },
+  "next_step": "Server pull and one manual GPU1 background command; return r4_official_* reports and provenance."
+}

@@ -414,3 +414,11 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 同一validation单帧→新机制：AUC 0.954205563→0.954289944、L2 0.079604569→0.079562421、AP 0.960922682→0.960808102；准确稳定60.1874%→59.4964%，状态错误11.1254%→10.5114%。新机制仅比普通GRU多8个准确稳定窗口、少6帧状态错误，当前保留状态纠偏折中结论。
 - R4分区来自official train的开发validation，原GazeSpot底座曾见过official train；不能将本轮数字与ViT-L旧VAT test 0.944/0.092/0.912直接比较。当前各模型开发表统一使用epoch 1整套指标，正式test主表留待冻结配置后的R5实测。
 - 下一步复用epoch-1缓存分解定位/状态贡献并汇总门控诊断，按既定条件补train拟合的严格单调状态校准，再决定训练调整。首轮不需重跑，test配置继续未冻结；本次未启动服务器作业或新增模型评测。
+
+## 官方 train/test 新协议与本地入口（2026-11-18）
+
+- 用户明确指定取消后续validation，只用官方train/test，每epoch完整test并选最佳一轮；用户确认AUC优先，并列L2更低、AP更高，再取较早epoch。新计划 `cscwd/r4_official_train_test_plan.md`，协议 `r4_official_train_test_v1`，SHA256 `b33216abf59f95d3500ec7efc5b8cd99eb1b2581377cd0b19489ca7c68785a99`。旧 `r4_compact_v2` 与validation机器报告保持原样。
+- 新增官方数据/评测/选模模块、test特征缓存、训练/比较/顺序入口及测试，13个新代码文件全部位于 `cscwd/code/`。原 `gazelle` 及已验收模型/训练/指标源码未修改；新运行复用完整train特征与train/test原预测，新增参数从头初始化。
+- 本地记录 `cscwd/results/r4_official_local_checks.json/.md`，JSON SHA256 `7d898ed7ed905578964b9a482fd3043f65dfecdefd4631c090ba7c140e295972`，Markdown SHA256 `10939cd9af1bc3bc861333753fd1e837d33c7946e4d23247c13dda0f3c4dd525`。36项CPU合成检查通过（数据5、特征6、协议5、训练6、比较8、后台6）；12文件Python3.10语法、shell/命令块、8项既有小报告来源兼容核对通过。
+- 合成数据实际走通两模型五轮、每轮完整test、test无反传、AUC整轮选择、checkpoint重载、全部候选/来源/诊断核对与比较CLI；后台临时替身验证GPU1继承、缓存复用与四阶段失败停止。不保存合成指标为VAT性能结果。
+- 当前没有新增真实VAT/CUDA运行或服务器大文件；完整服务器作业由用户按实现计划§11.1手动启动，物理GPU1。后续真实大文件路径及SHA由脚本记录，小报告使用独立 `r4_official_*` 名称。论文与报告明确test参与epoch选择，旧validation结果不更名为test。

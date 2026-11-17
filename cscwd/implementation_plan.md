@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-18。T1–T6 与 R1/R2 已验收；R3 实现与精简 R4 首轮真实训练/比较已完成。两模型均按既定规则选 epoch 1，整体 validation 仍首选单帧。下一步先做状态/定位贡献及门控诊断，再决定针对性调整；R5 尚未启动。
+> 当前版本：2026-11-18。用户已将后续协议改为官方 train/test 两份数据：完整 train 训练、每 epoch 完整 test、按 AUC 优先选整轮最佳结果。当前协议 `r4_official_train_test_v1`，运行入口见 §11；旧 `r4_compact_v2` validation 结果保留存档。
 
 ## 0. 目标（一句话）
 
@@ -54,7 +54,7 @@ T1 保留原始 CSV 帧序，头部框使用当前帧原始真实框并裁至图
 - 严格因果：一切输入只依赖 ≤ t。
 - 已跑第一版使用预先固定的 `[-2,20,2,10]`，只修改 heatmap，In/Out 分数原样保留。四参数校准在 R4 中作为对照，不再作为主方法的唯一推进路线。
 
-### 1.4 当前主方案：视觉证据驱动的因果联合修正（待实现）
+### 1.4 当前主方案：视觉证据驱动的因果联合修正（已实现）
 
 - **输入**：当前 RGB、当前真实头框、原始单帧 heatmap/In/Out，以及同人物的过去预测和冻结视觉特征；不使用未来 RGB、未来特征或未来预测。
 - **表征**：由冻结场景空间特征获得人物区域表示、当前候选区域证据，以及历史预测注视区域的视觉表示；历史区域由模型预测产生。头框中心位移不当作头朝向，In/Out 概率不当作定位可信度。
@@ -74,7 +74,7 @@ T1 保留原始 CSV 帧序，头部框使用当前帧原始真实框并裁至图
 | 分型响应率 ↑ / 延迟 ↓ | 减少历史额外引入的滞后和失响应 | 分别报告 `enter_frame / leave_frame / gaze_shift`；配对延迟与删失计数一起报告 |
 | 状态错误翻转率 ↓ | 减少虚假的画内外翻转 | R1 固定定义，只在连续且 GT 状态保持的帧对上计分，并同报状态错误率/转换响应 |
 
-R1 固定新增状态指标、候选预算和 validation 选模规则；不填未跑的增益目标数字。R4 按预先固定的定位/状态精度容忍度筛选配置，再比较准确稳定性和分型响应的 Pareto 折中。全部候选及选择依据保留，不在已查看的 test 结果上选参数。
+R1 固定的状态指标继续复用。用户于 2026-11-18 指定后续只用官方 train/test，逐 epoch 完整 test 并按 AUC 优先选择整轮结果，协议见 [r4_official_train_test_plan.md](r4_official_train_test_plan.md)。AUC 并列时依次选 L2 更低、AP 更高、较早 epoch；取消旧 precision eligibility 选择门槛，全部时序/状态指标仍完整报告。报告明确 test 参与 checkpoint 选择，旧 validation 结果保留原标签。
 
 ## 2. 项目结构（本次代码/论文全在 cscwd/ 下，不与旧代码混）
 
@@ -179,9 +179,9 @@ cscwd/
 - 上下文默认前 10/后 20 帧，裁至同一 track 的连续原帧号片段。默认 5 个快照优先保留事件帧及前/后 1 帧，再取上下文端点；离线图展示事件后帧仅用于诊断，预测仍为原始因果缓存。事件 status/延迟与实际计分窗口一并标出，GT 画外时不画落点、不计算定位误差。
 - 每例保存四方法 RGB/真实框/原始热图图、6 面板时间线和逐帧 JSON。热图统一原始 `[0,1]` 色标，显示透明度 `0.38`；不混入 GT、不修改预测。完整图默认 140 dpi 留服务器，小预览 70 dpi；预览默认覆盖各可用类别的首例，最多 5 例（每例两图），写 `results/t6_previews/` 随小报告回传。完整候选清单与全部失响应案例不受预览配额截断。
 
-### 3.2 R1–R6：当前执行计划（R4 首轮已验收，继续开发诊断）
+### 3.2 R1–R6：当前执行计划（R4 官方 train/test 逐轮选模）
 
-每次只推进当前一个任务：本地实现与合成检查 → 需要真实作业时由用户手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1/R2 已验收；R3 为本地结构/诊断实现与检查，已完成，不追加服务器 smoke。R4 首轮真实报告已回传验收，当前继续开发诊断；R5/R6 仍为规划产物。需要服务器运行的入口实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
+每次只推进当前一个任务：本地实现与合成检查 → 需要真实作业时由用户手动运行 → 小结果经 git 回传 → 完成验收并更新本文档/`PROGRESS.md` → 下一任务。R1/R2 已验收；R3 为本地结构/诊断实现与检查，已完成，不追加服务器 smoke。旧 R4 validation 首轮报告已验收；后续按用户指定的官方 train/test 协议重训两模型。R5 的 test 汇总并入新 R4 逐轮报告，R6 等待真实结果。需要服务器运行的入口实现完成后，给出 GPU、Python、全部参数、日志和输出路径齐全的 nohup 命令。
 
 #### R1 数据分组、单帧诊断与评测协议
 
@@ -229,9 +229,9 @@ cscwd/
 - **2026-11-17 本地完成**：`code/stag/history_model.py` 新增 `HistoryValidityRefiner`，在冻结空间匹配过去预测区域模板，连续 validity 同时控制旧 hidden、对应视觉/空间证据与旧状态分数，refresh 控制模板写入；当前证据完整保留。继承 R2 的三返回值 step，另提供带诊断接口；`history_diagnostics.py` 按原全局人物帧索引写控制量/对应坐标。设计见 `results/r3_mechanism_design.md`。
 - **实际本地数字**：R3 **372,677** 参数，普通 GRU **347,522**；共享初始化一致，native **768×32×32** 两步前向通过。模型 16、集成 8 项新增检查及 R2 模型/数据 18 项回归通过。保留 `history_mode="always_keep"` 供 R4 关闭 validity 读门的重训消融，refresh/GRU 门仍在。本次没有真实 R3 训练或性能结果。
 
-#### R4 精简训练、validation 比较与关键消融
+#### R4 原精简 validation 实验（已完成，历史协议）
 
-- **当前版本**：`r4_compact_v2`，完整规则见 [r4_compact_plan.md](r4_compact_plan.md)。用户已授权先快速确认收益，再补最少证据；本节替代 R1 完整版后续预算，原 `development_protocol.py`、R1 selection manifest 和 R1/R2 报告/验收保持原样。
+- **原版本**：`r4_compact_v2`，完整规则见 [r4_compact_plan.md](r4_compact_plan.md)。用户已授权先快速确认收益，再补最少证据；本节替代 R1 完整版后续预算，原 `development_protocol.py`、R1 selection manifest 和 R1/R2 报告/验收保持原样。
 - **第一轮**：复用同一冻结 ViT-B、R1 分组与 R2 特征；普通 GRU 和 R3 新机制各从新模块随机初始化训练 1 组配置、seed 0。共用计划参数 `epochs=5 / lr=0.0001 / lambda_state=0.1 / hidden=128 / clip_frames=16 / batch_size=8`，AdamW、weight decay `0.01`、gradient clip `1.0`；每个 epoch 完整验证，不早停。首轮已按上述预算完整运行并于 2026-11-18 验收；旧 GRU 的一个 epoch smoke 保留为历史记录。
 - **选模**：AUC/AP 至多下降 `0.002`、L2 至多增加 `0.002` 的 precision eligibility 保留；取消所有分型响应均不下降的硬门槛，完整报告取舍。eligible epochs 按准确稳定占比、joint gaze_shift 响应率、AP 降序，再 L2 升序、AUC 降序、较早 epoch、model_id 字典序选 checkpoint。无 eligible epoch 则保留单帧参考；所有 epoch 和包含单帧的 Pareto 集全报，不只展示胜出行。
 - **有信号后**：先补一项关键消融——关闭历史有效性控制，保留视觉输入与历史目标对应，按同一预算重新训练。主要收益若在状态阈值错误或进出响应，补仅用 train 拟合的全局严格单调状态校准；若主张历史本身有效，补同输入、同预算的无历史联合头。对照拟合/结构在运行前写配置。
@@ -242,16 +242,21 @@ cscwd/
 - **本地入口（2026-11-17）**：`train_compact_joint.py` 完成单模型五轮与 checkpoint 选择，`compare_compact_joint.py` 对两模型和原始单帧生成完整候选/Pareto/配对响应与开发快照；`run_compact_round.sh` 顺序运行全部首轮作业。31 项新增检查通过，首轮复现命令见 §10；真实结果见下述验收记录。
 
 - **首轮真实结果（2026-11-18）**：拉取 `f1d41e4`，本地235项一致性核对通过，记录 `results/r4_local_review.json/.md`。两模型均选 epoch 1；整体首选仍为单帧。新机制准确稳定 **59.4964%**、状态错误 **10.5114%**，对应单帧 **60.1874% / 11.1254%**；只比普通 GRU 多8个准确稳定窗口、少6帧状态错误。保留状态纠偏折中结论，尚不宣称核心机制有效或超过 ViT-L。
-- **当前工作**：复用 epoch-1 预测缓存，把原始/修正坐标与原始/修正 In/Out 交叉计分，分解准确稳定变化；该项是离线诊断，不充当重新训练的单输出消融。汇总已有 validity/refresh 控制量，按既定条件补 train 拟合的严格单调状态校准，再决定训练调整。首轮不需重跑，暂不直接 R5。
-- **论文选模口径**：当前两个模型都使用 epoch 1 的整套 validation 指标；正式主表使用配置冻结后的 R5 test 结果。不得按指标混用 epoch，不把本轮 validation 与 ViT-L 旧 test 数字直接比较；原 GazeSpot 底座见过 official train，当前留出只针对新增模块。
+- **当时后续安排（已由 R4-B 新协议替代）**：复用 epoch-1 预测缓存，把原始/修正坐标与原始/修正 In/Out 交叉计分，分解准确稳定变化；该项是离线诊断，不充当重新训练的单输出消融。汇总已有 validity/refresh 控制量，按既定条件补 train 拟合的严格单调状态校准，再决定训练调整。首轮不需重跑，暂不直接 R5。
+- **当时论文选模口径（后续已由 R4-B 替代）**：两个模型都使用 epoch 1 的整套 validation 指标；原计划正式主表使用配置冻结后的 R5 test 结果。不得按指标混用 epoch，不把本轮 validation 与 ViT-L 旧 test 数字直接比较；原 GazeSpot 底座见过 official train，当前留出只针对新增模块。
 
-#### R5 冻结配置后的统一 test 报告
+#### R4-B 官方 train/test 逐 epoch 训练与选模（当前）
 
-- **依赖**：R4 selection manifest 已固定。按同一特征契约生成 test 视觉缓存，不能为了 test 调整网格、阈值或模块结构。
-- **工作**：统一评测冻结配置及所需对照，报告 AUC/L2/AP、Jitter/同 mask GT 位移、准确稳定占比、三类 joint 响应，以及独立状态错误翻转/转换响应。保持旧 T4 协议的列可直接追溯，新增协议另标版本。
-- **统计与案例**：使用 R1/R4 已固定的组级配对规则；确定性选择收益/失败案例，展示原始预测、普通联合头、新机制与强滤波对照。区分目标运动、换目标和状态变化，无法判定的片段保留该标签。
-- **规划产出**：`results/r5_test_comparison.json/.md`、小预览与 provenance。checkpoint、预测/特征 NPY、完整候选/逐帧明细只记服务器路径与 SHA256，不覆盖 T1–T6 报告。
-- **验收**：test 配置与 R4 manifest 一致；覆盖与分母对齐；连续分数 AP 不依赖分类阈值；两输出和分型行为均有完整结果。已有 test 曾用于 T1–T6 探索的事实写入实验说明，不称从未查看过的全新测试集。报告后不再围绕 test 调参。
+- **协议**：`r4_official_train_test_v1`，详见 [r4_official_train_test_plan.md](r4_official_train_test_plan.md)。用户取消新增模块 validation；完整官方 train **1,033 tracks / 132,563 人物帧** 训练，每 epoch 完整官方 test **298 tracks / 31,978 人物帧** 评测，test 不参与 loss/梯度或历史状态构造。
+- **预算**：普通 GRU 与新机制各 seed 0、五个 epoch，从新增参数随机初始化开始；沿用既定 lr/loss/hidden/TBPTT/batch/精度，不续训旧 validation checkpoint。train 原预测与 58,507 张图像特征复用，test 原预测复用，补 13,127 张图像的同合同特征。
+- **选择**：test AUC 降序，完全并列时 L2 升序、AP 降序、较早 epoch、model_id。每轮保留全部标准/joint/state 指标、预测、诊断和 checkpoint，选择一轮整套结果为 `selected.pt`，最终轮为 `last.pt`；旧 precision eligibility 不应用于新协议。
+- **产出**：`results/r4_official_test_features.json/.md`、`r4_official_ordinary_gru.json/.md`、`r4_official_history_validity.json/.md`、`r4_official_comparison.json/.md`、`r4_official_selection.json`。大文件留服务器新目录，旧结果不覆盖。唯一服务器启动入口见 §11，物理 GPU 1。
+- **解释**：论文明确按 test 指标选择 epoch；不将其称为未参与选择的独立 test 估计。旧 validation 数据与新 full-train 运行分表记录，不改写既有结论。
+
+#### R5 官方 test 结果汇总（并入新 R4）
+
+- 使用新 R4 的全部逐轮 test 报告及 AUC 规则选中的 checkpoint，汇总同一官方 test 上单帧、普通 GRU、新机制的标准/时序/状态指标及配对事件。
+- 回传后核对来源、数据覆盖、各轮损失与选模，再决定最少机制对照与论文范围。新协议没有额外“首次 test”作业；未来对照使用相同 train/test、预算和 AUC 选择规则。
 
 #### R6 论文落稿与协作证据
 
@@ -276,13 +281,11 @@ cscwd/
 4. 关键小结果（JSON/MD）写进 `cscwd/results/` → 服务器 commit → push。
 5. 本地 `git pull` 拿到结果；大文件不传，只在 `RESULT_PROVENANCE.md` 记路径 + SHA。
 
-### 后续训练的逐 epoch 验证与选模
+### 后续训练的逐 epoch test 与选模
 
-用户于 2026-11-18 明确要求后续训练统一采用：每完成一个 epoch，立即在完整开发 validation 上评测一次，记录该轮全部标准/时序/状态指标及对应 checkpoint；保留全部 epoch 历史，训练结束后选择最佳一轮的整套结果。最佳 checkpoint 统一保存为 `selected.pt`，`last.pt` 保存最后一轮。
+用户于 2026-11-18 最终指定：只保留官方 train/test。每个 epoch 在完整 train 训练后，立即评测完整 test，保存该轮全部标准/时序/状态指标与 checkpoint，逐轮更新 history。按 test AUC 更高、L2 更低、AP 更高、较早 epoch 的顺序选最佳一轮，整套指标取自同一 checkpoint。`selected.pt` 保存最佳轮，`last.pt` 保存最后轮。
 
-当前 `train_compact_joint.py` 已实现这一流程：逐轮更新 `training_history.json`，保存 `epoch_XXX.pt` 和验证预测，最终小 JSON/Markdown 汇总全部轮次及选择结果。此约定同样适用于之后新增或修改的训练入口。
-
-“最佳一组”使用同一个 epoch 的全部指标。当前排序沿用训练前固定的 `r4_compact_v2`：先满足 AUC/AP/L2 精度容忍度，再按准确稳定占比、joint gaze_shift 响应、AP、L2、AUC、较早 epoch 排序。后续若调整主指标，在新训练前记录新的选择规则；已完成运行按原规则保留。validation 用于逐轮选择，冻结配置后的 test 用于论文正式主表。
+当前入口为 `train_official_joint.py`，协议 `r4_official_train_test_v1`；原 `train_compact_joint.py` 与 `r4_compact_v2` 仅保留复现旧 validation 实验。test 参与 checkpoint 选择的事实写入小报告、来源记录与论文设置。
 
 ### nohup 命令模板（codex 给出时套用）
 ```
@@ -362,7 +365,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-17 · R4 启动说明简化**：按用户指定将 §10.1 设为唯一后台启动入口，训练使用物理 GPU 1；删除重复的分步训练/比较命令，保留本轮产物与回传清单。修改本文档和 `PROGRESS.md`，训练代码与预算不变，无新增实验数字；下一步由用户在服务器执行 §10.1。
 - **2026-11-18 · R4 首轮真实结果验收**：结果提交 `f1d41e4`，本地235项来源/算式/选模/Pareto核对通过；产出 `results/r4_local_review.json/.md`。普通 GRU与新机制各五轮，均选epoch 1，完整十个候选保留。单帧→新机制：AUC **0.954206→0.954290**、L2 **0.079605→0.079562**、AP **0.960923→0.960808**、准确稳定 **60.1874%→59.4964%**、状态错误 **11.1254%→10.5114%**；gaze_shift仍135/221，总体首选单帧。
 - **2026-11-18 · R4 分区与后续训练约定确认**：读取指定 PDF 第6页表2，ViT-B的VAT主表为 **0.940 / 0.099 / 0.887**，与已跑官方test单帧 **0.940182 / 0.098995 / 0.886801** 舍入一致；当前 **0.954206 / 0.079605 / 0.960923** 来自official train内的开发validation，原GazeSpot底座曾使用official train训练。确认当前入口已逐epoch完整验证、记录全部历史并选出整轮最佳结果，将此流程写为后续所有训练入口的约定。更新本文档与 `PROGRESS.md`，未新增实验运行；下一步仍为已有缓存贡献诊断。
-- **当前下一步（R4 开发诊断）**：复用已有缓存分解定位/状态对准确稳定的贡献，汇总 validity/refresh；按条件补 train 拟合的状态校准，依据诊断决定一次针对性训练调整。首轮不需重跑，暂不进入 R5；当前 epoch 1 仅为各模型预定规则选中的开发 checkpoint。
+- **2026-11-18 · R4 官方 train/test 协议切换**：按用户明确要求取消后续 validation，新增 `r4_official_train_test_plan.md`（`r4_official_train_test_v1`）：完整 train 训练、每 epoch 完整 test，并按用户确认的 AUC 优先、L2 更低、AP 更高选一整轮。旧 validation 报告保留，新的两模型从头训练；新增官方数据/评测/选模模块、test缓存、训练/比较/后台入口及测试；36项本地合成检查通过（数据5、特征6、协议5、训练6、比较8、后台6），记录 `results/r4_official_local_checks.json/.md`。旧源码和报告保持，完整服务器命令见§11。
+- **当前下一步（官方 train/test）**：用户按 §11 在物理 GPU 1 手动补 test 特征并重训两模型，回传 `r4_official_*` 小报告；新协议的真实结果尚未运行。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -659,7 +663,7 @@ git push origin codex/coverage-aware-router
 
 ## 9. R2 服务器手动运行（已完成，命令存档）
 
-R2 代码提交 `01c18f5`，probe 结果 `139a2c7`、全量缓存及 smoke 结果 `85d9050` 已回传并验收，记录见 `results/r2_local_review.md`。**§9.2–§9.5 均已完成，保留复现命令，无需重跑。R3 已本地完成，当前入口为 §10 的精简 R4 首轮真实运行。** 各步都不读取 test 图像或 test 预测；R1 验证组只在固定划分内参与特征缓存和后续验证。
+R2 代码提交 `01c18f5`，probe 结果 `139a2c7`、全量缓存及 smoke 结果 `85d9050` 已回传并验收，记录见 `results/r2_local_review.md`。**§9.2–§9.5 均已完成，保留复现命令，无需重跑。R3 与原 R4 validation 首轮已完成；当前入口为 §11 的官方 train/test 新运行。** 各步都不读取 test 图像或 test 预测；R1 验证组只在固定划分内参与特征缓存和后续验证。
 
 ### 9.1 固定实现与输出
 
@@ -823,3 +827,53 @@ git add cscwd/results/r4_ordinary_gru.json cscwd/results/r4_ordinary_gru.md \
 git commit -m "Record R4 compact first-round development results"
 git push origin codex/coverage-aware-router
 ```
+
+## 11. 官方 train/test 新协议服务器运行（当前唯一入口）
+
+协议为 `r4_official_train_test_v1`，完整设置见 `r4_official_train_test_plan.md`。本轮使用完整官方 train，不再使用 validation；普通 GRU 和新机制各从头训练五个 epoch，每轮完整 test，以 **AUC 更高 → L2 更低 → AP 更高 → 较早 epoch** 选整轮结果。新协议的真实作业尚未运行。
+
+### 11.1 一条后台命令完成本轮（物理 GPU 1）
+
+`run_official_round.sh` 的六个位置参数依次为 Python、仓库、train 特征缓存、test 特征缓存、实验根目录、结果目录。它依次完成 test 特征缓存 → 普通 GRU → 新机制 → CPU 比较，任一步失败即停止；已有完成的 test 特征报告时复用，并在训练入口核对缓存及来源。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup bash cscwd/code/scripts/run_official_round.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r4_official_test_native_last_fp16 \
+  /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_v1 \
+  /home/fb/src/paper/gazelleV1/cscwd/results \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_round.log 2>&1 &
+```
+
+这就是本轮唯一需要启动的后台命令。外层 `CUDA_VISIBLE_DEVICES=1` 选择物理 GPU 1，脚本内 `--device cuda:0` 对应该进程唯一可见的卡。固定参数由入口统一传入：
+
+- test 特征：`--data-path /newhome/fb/dataset/videoattentiontarget`，ViT-B `experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`，`--batch-size 8 --num-workers 4 --device cuda:0`；首批 FP32 预测/argmax 一致性核对后写全量原生 FP16 特征。
+- 两项训练均为 `--epochs 5 --learning-rate 0.0001 --lambda-state 0.1 --hidden-dim 128 --clip-frames 16 --batch-size 8 --seed 0 --weight-decay 0.01 --gradient-clip-norm 1.0 --temperature 0.1 --device cuda:0`；完整 train 每轮 132,563 人物帧，完整 test 每轮 31,978 人物帧。
+- 输入小报告固定为 `r1_train_single_frame_cache.json`、`t2_single_frame_cache.json`、`r2_feature_cache.json` 与本轮 `r4_official_test_features.json`；全部路径基于上述结果目录。新 plan 路径为仓库内 `cscwd/r4_official_train_test_plan.md`。完整参数展开见 `run_official_round.sh`。
+
+外层日志成功标记为 `R4 official train/test round completed.`。阶段日志都位于 `/home/fb/src/paper/gazelleV1/cscwd/results/`：`r4_official_test_features.log`、`r4_official_ordinary_gru.log`、`r4_official_history_validity.log`、`r4_official_comparison.log`。每个 epoch 日志输出 train loss 与 test AUC/L2/AP，`training_history.json` 同步写入全部标准/joint/state 指标。
+
+### 本轮产物与回传
+
+- 小结果：`r4_official_test_features.json/.md`、`r4_official_ordinary_gru.json/.md`、`r4_official_history_validity.json/.md`、`r4_official_comparison.json/.md`、`r4_official_selection.json` 和 provenance。
+- test 特征：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r4_official_test_native_last_fp16/`。仅作预计容量：13,127×768×32×32×2 = 20,646,985,728 bytes，加 NPY header 和索引；实际值由脚本报告。
+- checkpoint/逐轮预测/诊断：`/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_v1/{ordinary_gru,history_validity}/`，每种模型保存 `epoch_001.pt`–`epoch_005.pt`、`selected.pt`、`last.pt`、`test_epoch_001/`–`test_epoch_005/` 与训练 history。全部大文件留服务器，实际路径/SHA256 写回 provenance。
+- 比较报告包含单帧与十个训练候选、每模型最佳 epoch、同一 epoch 的完整指标和配对响应。selection manifest 明确 `selection_split=test`、`test_selected=true`；论文按此协议如实描述。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git add cscwd/results/r4_official_test_features.json cscwd/results/r4_official_test_features.md \
+  cscwd/results/r4_official_ordinary_gru.json cscwd/results/r4_official_ordinary_gru.md \
+  cscwd/results/r4_official_history_validity.json cscwd/results/r4_official_history_validity.md \
+  cscwd/results/r4_official_comparison.json cscwd/results/r4_official_comparison.md \
+  cscwd/results/r4_official_selection.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record official train/test epoch-selected temporal results"
+git push origin codex/coverage-aware-router
+```
+
+回传后本地核对训练/测试覆盖、来源、全部 epoch、AUC 选模及真实指标折中，再决定最少机制实验和论文结果。旧 `r4_*` validation 报告不覆盖，不改名为 test。

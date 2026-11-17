@@ -1,7 +1,7 @@
 # CSCWD 2027 · 论文蓝图（因果联合时序修正）
 
 > 更新：2026-11-17。当前方案见 [temporal_joint_refinement.md](temporal_joint_refinement.md)，执行与验收以 [implementation_plan.md](implementation_plan.md) 的 R1–R6 为准。
-> 状态：T1–T6 和 R1/R2 已验收；R3 历史有效性机制与诊断本地完成，真实训练/效果待精简 R4。R2 的固定 smoke 保留开发观察。以下贡献按最终真实结果收敛。
+> 状态：T1–T6、R1/R2 与原 R4 validation 首轮已验收。当前按用户指定的 `r4_official_train_test_v1`：完整 train 训练，每 epoch 完整 test，AUC 优先选择一轮；新结果等待服务器手动运行。以下贡献按真实结果收敛。
 
 ## 1. 工作标题与任务范围
 
@@ -50,13 +50,13 @@ R3 已实现冻结空间预测区域模板、当前网格 cosine 对应、连续
 
 仅训练新增投影、时序模块和两个修正头。首版 heatmap MSE 仅用于 GT 画内帧，状态 BCE 用于全部有效人物帧。训练与推理都使用模型产生的历史，从空状态开始；不使用 GT 历史或未来帧。完整 track 验证，跨人物和帧号缺口重置。
 
-按源视频组划分 VAT train，为新增模块保留 validation；现有冻结 VAT checkpoint 此前已见过 VAT train，所有对照共享该底座条件。test 已用于先导分析，后续选模只使用开发数据，冻结配置后统一报告。
+使用官方 train/test 两份数据，完整 train 训练新增模块，每个 epoch 在完整 test 上评测并按 AUC 更高、L2 更低、AP 更高、较早 epoch 选一轮。论文明确 test 参与 checkpoint 选择，报告同一 checkpoint 的整套指标。所有对照共享冻结 GazeSpot ViT-B、输入和数据条件；原 validation 实验单独作为开发记录。
 
 ## 5. Experiments 的组织
 
 ### 5.1 主证据：同底座、同输入、同协议
 
-普通因果头和新机制共享冻结特征与训练条件；额外记录参数量、训练配置和时序增量耗时。R4 执行 [r4_compact_plan.md](r4_compact_plan.md) 的 `r4_compact_v2`：先各训练一组配置、seed 0、五个 epoch，再根据验证信号补关键对照。主张历史本身带来收益时，补同预算当前帧修正头。
+普通因果头和新机制共享冻结特征与训练条件；额外记录参数量、训练配置和时序增量耗时。R4 执行 [r4_official_train_test_plan.md](r4_official_train_test_plan.md) 的 `r4_official_train_test_v1`：先各训练一组配置、seed 0、五个 epoch，逐轮完整 test 并按 AUC 选模，再根据结果补关键对照。主张历史本身带来收益时，补同预算当前帧修正头。
 
 已跑先导结果如下，均来自 [T5 报告](results/t5_ema_ablation.md)，不是新方案结果：
 
@@ -66,7 +66,7 @@ R3 已实现冻结空间预测区域模板、当前网格 cosine 对应、连续
 | 规则 STAG | 0.936860 | 0.099197 | 0.886801 | 0.012135 | 0.581532 | 0.550633 |
 | 固定 EMA 0.75 | 0.940120 | 0.098941 | 0.886801 | 0.014229 | 0.542534 | 0.569620 |
 
-六种先导方法均保留在 T5 完整表；此处展示 EMA 0.75 不表示按 test 选定最优配置。旧规则只修正 heatmap，所以 AP 与 `leave_frame` 响应不变；`enter_frame` 同时要求定位正确，可随热图变化。新方案结果待 R5 实际回传后另列。
+六种先导方法均保留在 T5 完整表；此处展示 EMA 0.75 不表示按 test 选定最优配置。旧规则只修正 heatmap，所以 AP 与 `leave_frame` 响应不变；`enter_frame` 同时要求定位正确，可随热图变化。新方案官方 test 结果待 `r4_official_*` 实际回传后另列。
 
 ### 5.2 精简对照与核心证据
 
@@ -75,7 +75,7 @@ R3 已实现冻结空间预测区域模板、当前网格 cosine 对应、连续
 - 主要收益在状态阈值错误或进出响应时，补 train 拟合的严格单调状态校准；主张历史本身有效时补无历史当前帧修正头。
 - 全部滤波器、门控网格、单输出/双输出矩阵、多项消融、多 seed 与 bootstrap 延后。论文只对实际完成的实验作贡献解释。
 
-R4 的 precision eligibility 保留 AUC/AP 至多下降 `0.002`、L2 至多增加 `0.002`；取消逐类响应不得下降的硬门槛，完整报告每个 epoch、选模依据和包含单帧的 Pareto 集。eligible epochs 优先准确稳定占比，再 joint gaze_shift 响应、AP、L2、AUC 与较早 epoch。单帧或普通 GRU 未被超过的结果同样保留。所有选模在 validation 进行。
+新 R4 不应用旧 precision eligibility；按 test AUC 优先、L2 更低、AP 更高、较早 epoch 选模，保留所有 epoch 与标准/joint/state 指标。单帧或普通 GRU 未被超过的结果同样保留，所用数据、训练预算和 test 参与选择的事实写入实验设置。
 
 ### 5.3 指标与分析
 
@@ -99,7 +99,7 @@ R4 的 precision eligibility 保留 AUC/AP 至多下降 `0.002`、L2 至多增�
 
 保留六页双栏篇幅预算：标题摘要 0.4、Introduction 1.0、Related Work 0.6、Method 1.2、Experiments 2.0、Conclusion 0.3、参考文献 0.5 页。这是写作预算，不是实测结果。
 
-先固定实验协议并完成开发集证据，再写已实现的 Method/Setup；R5 后按实际结果收敛贡献与 Introduction，最后核对引用、表格与来源。**摘要不放具体数值**。
+先固定实验协议，再写已实现的 Method/Setup；官方 train/test 结果回传后按实测收敛贡献与 Introduction，最后核对引用、表格与来源。**摘要不放具体数值**。
 
 ## 7. 当前下一步
 

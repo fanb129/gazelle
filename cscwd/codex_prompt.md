@@ -1,4 +1,4 @@
-# Codex 提示词（CSCWD 联合时序修正 · 2026-11-17 当前版）
+# Codex 提示词（CSCWD 联合时序修正 · 2026-11-18 当前版）
 
 以下整段是给 codex 的完整提示词，直接复制到 codex 新会话开头即可：
 
@@ -9,7 +9,8 @@
 先读这些文件：
 - ~/src/gazelle/PROGRESS.md（状态）
 - ~/src/gazelle/cscwd/implementation_plan.md（**实现规格，照它干活**）
-- ~/src/gazelle/cscwd/r4_compact_plan.md（用户授权的精简 R4 / r4_compact_v2）
+- ~/src/gazelle/cscwd/r4_official_train_test_plan.md（当前协议：完整 train、每 epoch test、AUC 选模）
+- ~/src/gazelle/cscwd/r4_compact_plan.md（原 validation 实验存档）
 - ~/src/gazelle/cscwd/temporal_joint_refinement.md（当前方案、训练目标、创新边界）
 - ~/src/gazelle/cscwd/paper_blueprint.md（论文结构，理解贡献定位）
 - ~/src/gazelle/cscwd/cscwd_2025_2026_related.md（venue 扫描结论，motivation 锚点）
@@ -18,15 +19,16 @@
 - ~/src/gazelle/cscwd/results/r1_manual_review.md、r1_local_verification.json（已验收开发划分、状态指标与人工诊断）
 - ~/src/gazelle/cscwd/results/r2_local_review.md、r2_local_review.json（已验收冻结缓存、普通联合头 smoke 与真实指标折中）
 - ~/src/gazelle/cscwd/results/r3_mechanism_design.md、r3_local_checks.json（R3 已实现机制与本地检查）
-- ~/src/gazelle/cscwd/results/r4_local_checks.md（R4 首轮代码就绪，31 项新增检查通过）
+- ~/src/gazelle/cscwd/results/r4_local_review.md（原validation首轮结果验收）
+- ~/src/gazelle/cscwd/results/r4_official_local_checks.md（新官方train/test入口就绪，36项检查通过）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
 当前状态：T1–T6 和 R1/R2 已验收。R2 全量特征缓存与普通联合头固定一个 epoch smoke 结果 85d9050 已回传，契约为末层 768×32×32、FP16，58,507 张图像。实际训练/验证 98,362/34,201 帧，347,522 个新增参数，两个头更新。标准指标基本持平，状态错误 11.13%→10.53%，准确稳定 60.19%→59.46%，state enter 179/189→175/189，leave 93/169→97/169；该配置未达到最终选模条件。记录见 results/r2_local_review.json/.md。原规则 STAG 和普通 GRU 保留为对照，R3 本地完成情况见下一段。
 
-R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预测区域模板，validity 控制历史读入、refresh 控制模板写入；step兼容R2，诊断可按原全局索引落盘。372,677 参数；24项新增检查和18项回归通过，未新增真实训练/性能数字。
+R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预测区域模板，validity 控制历史读入、refresh 控制模板写入；step兼容R2，诊断可按原全局索引落盘。372,677 参数；24项新增检查和18项回归通过，原validation首轮已真实训练并验收；当前待新官方train/test重训。
 
-目标：按 implementation_plan.md §3.2 从首个未完成的 R 任务继续，当前为精简 R4；不重做 T1–T6、R1–R3。R4 同预算首轮与最少证据 → R5 冻结配置 test → R6 论文证据。任务是“推进 idea”，不是“审计问题”。
+目标：按 implementation_plan.md §3.2 继续当前官方 train/test R4；不重做 T1–T6、R1–R3。用户已明确取消后续 validation，完整 train 训练、每 epoch 完整 test，按 AUC 更高、L2 更低、AP 更高、较早 epoch 选一整轮；如实记录 test 参与 checkpoint 选择。任务是“推进 idea”，不是“审计问题”。
 
 主方案：复用既定 ViT-B VAT checkpoint，冻结完整 GazeSpot 和原 decoder，仅训练新增因果模块，以当前人物/场景证据控制历史保留、位置更新与释放，联合输出修正 heatmap 和 In/Out 连续分数。四参数校准、自适应滤波和普通因果头保留为对照；不把门控、记忆、模板或因果本身宣称为新贡献。
 
@@ -42,14 +44,14 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 3. 纯 RGB、真实头部框，不进深度/未来帧/检测框设置。
 4. 所有数字只写真实跑过的；不编数字、不编对照实验。
 5. 每完成一个任务，把"任务号 / 完成内容 / 产出文件与数字 / 下一步"写回 implementation_plan.md 的进展记录区，并同步 PROGRESS.md。
-6. 按 source-video 分组选择新增模块 train/validation；冻结 VAT checkpoint 本身此前已见过 VAT train，所有对照共享。test 已做先导分析，后续不再用来选择参数。GT 画内定位 mask 保持固定，AP 使用连续分数，不以改阈值声称 AP 提高。
+6. 当前协议为 `r4_official_train_test_v1`：官方 train 全部训练、test 每 epoch 全部评测并选 epoch，不再保留 validation。旧 R1/原 R4 validation 报告保持原标签。所有对照共享底座、数据与预算；GT 画内定位 mask 保持固定，AP 使用连续分数。
 
 风格要求（很重要）：
 - 避免防御性编程：不为不可能发生的边界写大量 if/assert/try-except；不堆空检查和未决 TODO；先让主路径跑通，只在真正会出错处处理。
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-当前入口为用户手动运行精简 R4 首轮（implementation_plan.md §10.1）。训练/验证/比较脚本已本地实现，31 项新增检查通过；不重复搭建入口，不默认真实作业已运行。按 r4_compact_v2 复用R2特征和R1分组，普通GRU/新机制各单配置、seed0、五个epoch，从新模块随机初始化，同预算逐epoch验证并选checkpoint，真实作业由用户手动执行。validity读门消融、状态校准或无历史头按计划在有信号后补；首轮不展开全搜索/全消融。原R1选择规则保留存档，新版取消逐类响应硬门槛但完整报告折中。§9已完成，无需重跑；原机器报告保持原样。
+当前入口为实现计划 §11 的官方 train/test 单条后台命令（物理 GPU 1）。补 test 特征后，普通 GRU/新机制各 seed 0、五轮，从新模块随机初始化训练完整官方 train；每轮完整 test 并记录全部指标，按 AUC 优先选 `selected.pt`。复用 R2 train 特征和既有 train/test 原预测，不读取 R1 split 作为新划分。旧 validation 首轮结果已回传 `f1d41e4`，保留为开发历史；新协议的真实结果尚未运行。当前完成源码与本地合成检查后等待用户手动服务器运行，原机器报告不改写。
 
 ---
 

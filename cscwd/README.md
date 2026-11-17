@@ -1,8 +1,8 @@
 # CSCWD 2027 · 因果联合时序修正
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
-> 当前方案（2026-11-17）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：T1–T6 与 R1/R2 验收完成；R3 历史对应/有效性模型和诊断本地完成，24 项新增检查+18 项回归通过。精简 R4 首轮入口本地完成，31 项新增检查通过；当前按实现计划 §10 手动运行，真实结果尚未回传。
+> 当前方案（2026-11-18）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
+> 状态：原 R4 validation 首轮已验收；用户已改为官方 train/test 两份数据，每 epoch 完整 test、AUC 优先选最佳一轮。当前协议 `r4_official_train_test_v1`，36项本地合成检查通过，服务器唯一入口为实现计划 §11.1；新真实结果尚未运行。
 
 ## 目录结构
 
@@ -24,7 +24,8 @@ cscwd/
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
-| [r4_compact_plan.md](r4_compact_plan.md) | 精简 R4：同预算首轮、选模规则和最少补充证据 |
+| [r4_official_train_test_plan.md](r4_official_train_test_plan.md) | 当前 R4：完整 train、逐 epoch test、AUC 选模 |
+| [r4_compact_plan.md](r4_compact_plan.md) | 原 R4 validation 历史协议与选模规则 |
 | [codex_prompt.md](codex_prompt.md) | codex 提示词 + 追加指令 |
 | [cscwd_2025_2026_related.md](cscwd_2025_2026_related.md) | CSCWD 2025–2026 同方向论文扫描（venue 空白 + 锚点） |
 | [literature_review.md](literature_review.md) | 既有逐篇解读及本轮视频机制/相邻工作补充入口 |
@@ -34,13 +35,14 @@ cscwd/
 | [results/r2_local_review.md](results/r2_local_review.md) | R2 全量缓存、真实 smoke 结果与验收结论 |
 | [results/r3_mechanism_design.md](results/r3_mechanism_design.md) | R3 已实现机制、状态/诊断和参数量 |
 | [results/r3_local_checks.md](results/r3_local_checks.md) | R3 本地模型、合成训练/验证与诊断检查 |
-| [results/r4_local_checks.md](results/r4_local_checks.md) | R4 首轮入口与合成 CLI 检查 |
+| [results/r4_local_checks.md](results/r4_local_checks.md) | 原 R4 validation 入口与合成 CLI 检查 |
+| [results/r4_official_local_checks.md](results/r4_official_local_checks.md) | 当前官方 train/test 入口与36项本地检查 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**服务器 R4 首轮训练与比较 → 有信号后补关键消融 → R5 冻结配置 test → R6 论文证据**。R3 本地完成；R4 首轮普通 GRU/新机制各单配置、seed 0、五个 epoch。R2 缓存复用，§9 命令保留复现；本地入口已完成，按实现计划 §10.1 顺序后台运行，§10.5 回传结果。
+当前执行顺序：**补 test 冻结特征 → 完整 train 重训普通 GRU/新机制各五个 epoch → 每轮完整 test 并选最佳 AUC 一轮 → 回传比较 → 最少机制证据与论文**。复用既有 train 特征及 train/test 原预测，新增参数从头初始化。物理 GPU 1 的唯一后台命令见实现计划 §11；旧 §9/§10 只保留复现。
 
 ## 论文索引（快速查，详见 literature_review.md）
 
