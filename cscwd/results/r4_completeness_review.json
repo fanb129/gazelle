@@ -1,0 +1,70 @@
+{
+  "task": "R4_implementation_completeness_review",
+  "date": "2026-11-17",
+  "reviewed_commit": "bda1501",
+  "decision": "first_round_implementation_complete",
+  "passed": true,
+  "source_changes_required": false,
+  "total_reexecuted_tests": 31,
+  "test_runs": [
+    {
+      "label": "protocol",
+      "tests": 11,
+      "elapsed_seconds": 0.001,
+      "passed": true,
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_compact_protocol.py -v"
+    },
+    {
+      "label": "validation",
+      "tests": 5,
+      "elapsed_seconds": 2.449,
+      "passed": true,
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_compact_validation.py -v"
+    },
+    {
+      "label": "training",
+      "tests": 6,
+      "elapsed_seconds": 8.056,
+      "passed": true,
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_train_compact_joint.py -v"
+    },
+    {
+      "label": "comparison",
+      "tests": 9,
+      "elapsed_seconds": 6.976,
+      "passed": true,
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_compare_compact_joint.py -v"
+    }
+  ],
+  "source_integrity": "all_R4_source_hashes_match_r4_local_checks.json",
+  "static_checks": {
+    "python_3_10_syntax": true,
+    "server_command_blocks": 5,
+    "shell_syntax": true
+  },
+  "wrapper_simulation": {
+    "execution": "temporary_stub_executable; no_real_training",
+    "path_arguments_with_spaces": true,
+    "all_success_stage_order": [
+      "ordinary_gru",
+      "history_validity",
+      "comparison"
+    ],
+    "first_training_failure_stops": true,
+    "second_training_failure_stops": true,
+    "scenarios_passed": 3
+  },
+  "reviewed_paths": [
+    "fixed_budget_and_shared_initialization",
+    "causal_prediction_only_history_and_metadata_resets",
+    "complete_validation_and_same_forward_diagnostics",
+    "all_epochs_selected_last_and_no_eligible_checkpoint",
+    "source_and_artifact_identity",
+    "original_frame_event_pairing",
+    "sequential_wrapper_CLI_arguments_and_return_files"
+  ],
+  "independent_source_reviews": 2,
+  "findings": [],
+  "scope": "Read current source/plan/CLI and reran CPU synthetic tests plus wrapper stub scenarios. Real VAT/CUDA jobs remain user-run server work.",
+  "next": "Use implementation_plan section 10.1; return first-round small reports via section 10.5."
+}

@@ -66,6 +66,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4 / 2026-11-17 / 第一轮本地入口完成**：新增固定预算/选模协议、同次前向完整验证、`train_compact_joint.py`、`compare_compact_joint.py` 和 `run_compact_round.sh`。普通 GRU/新机制各从头五个 epoch，保存全部 epoch、selected/last checkpoint；比较报告含完整候选/Pareto、原始帧事件配对和开发选择快照。**31 项新增检查通过**（协议11、验证5、训练6、比较9），合成双模型完整 CLI 已跑通，源文件与检查记录见 `cscwd/results/r4_local_checks.json/.md`。完整服务器命令与回传清单在实现计划 §10，真实作业尚未运行。
 
+**R4 / 2026-11-17 / 中断后完整性复核**：重新核对实现提交 `bda1501` 的训练、验证、选模、比较、后台入口与 §10 命令，源码 SHA256 与原记录一致；31 项 CPU 合成检查重新通过，另以临时替身实际验证顺序运行、第一/第二训练失败停止和含空格参数传递三种场景。未发现缺文件或未接通流程，无需修改源码。记录为 `cscwd/results/r4_completeness_review.json/.md`；下一步仍是用户手动运行服务器首轮并回传。
+
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
 ## 已知阻塞

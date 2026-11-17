@@ -346,6 +346,7 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-17 · R4 精简计划落地**：用户授权压缩 R4，新增 `r4_compact_plan.md`，版本 **r4_compact_v2**。首轮新机制/普通 GRU 各单配置、seed 0、五个 epoch，同源缓存与从零初始化预算一致；保留精度容忍度，以准确稳定性优先选模并全报折中，取消逐类响应硬门槛。有改善后补 validity 读门消融；按主张选择状态校准或无历史头。原 R1 配置和 R2 验收记录保留原样。
 - **2026-11-17 · R3 本地实现完成**：新增历史视觉对应/有效性模型、逐帧诊断写入器与两套测试，产出 `results/r3_mechanism_design.md` 和 `r3_local_checks.json/.md`。原生特征输入下 **372,677 参数**，与普通 GRU 共享模块初始化一致；**24 项新增检查（16 模型、8 集成）+18 项 R2 回归通过**。合成完整训练、验证、checkpoint 重载和诊断文件读回已走通，未新增真实 VAT 性能数字。
 - **2026-11-17 · R4 第一轮本地入口完成**：新增 `compact_protocol.py`、`compact_validation.py`、`train_compact_joint.py`、`compare_compact_joint.py`、顺序 shell 入口及四套测试。31 项新增检查通过（协议11、验证5、训练6、比较9）；实际跑通双模型各五个 epoch 的合成训练、完整验证/同次诊断、checkpoint 选择与重载、全部候选/Pareto 和原始事件配对。产出 `results/r4_local_checks.json/.md`；真实 VAT 作业留服务器，尚未运行。
+- **2026-11-17 · R4 中断后完整性复核**：对 `bda1501` 重新读取全链路源码/命令并重跑31项CPU合成检查，全部通过；临时替身顺序执行/第一训练失败/第二训练失败三种后台入口场景通过，源码无需修改。产出 `results/r4_completeness_review.json/.md`。真实VAT/CUDA作业仍等待服务器运行。
 - **当前下一步（R4 服务器首轮）**：用户 pull 后按 §10.1 运行单条 nohup，顺序训练普通 GRU/新机制并比较，再按 §10.5 回传小报告。结果回传后判断改进方向和是否补最少消融，不据本地检查或 passed 标记认定新方法有效。
 
 ## 7. 先导阶段服务器命令存档
