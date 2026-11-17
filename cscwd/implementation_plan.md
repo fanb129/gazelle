@@ -347,7 +347,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-17 · R3 本地实现完成**：新增历史视觉对应/有效性模型、逐帧诊断写入器与两套测试，产出 `results/r3_mechanism_design.md` 和 `r3_local_checks.json/.md`。原生特征输入下 **372,677 参数**，与普通 GRU 共享模块初始化一致；**24 项新增检查（16 模型、8 集成）+18 项 R2 回归通过**。合成完整训练、验证、checkpoint 重载和诊断文件读回已走通，未新增真实 VAT 性能数字。
 - **2026-11-17 · R4 第一轮本地入口完成**：新增 `compact_protocol.py`、`compact_validation.py`、`train_compact_joint.py`、`compare_compact_joint.py`、顺序 shell 入口及四套测试。31 项新增检查通过（协议11、验证5、训练6、比较9）；实际跑通双模型各五个 epoch 的合成训练、完整验证/同次诊断、checkpoint 选择与重载、全部候选/Pareto 和原始事件配对。产出 `results/r4_local_checks.json/.md`；真实 VAT 作业留服务器，尚未运行。
 - **2026-11-17 · R4 中断后完整性复核**：对 `bda1501` 重新读取全链路源码/命令并重跑31项CPU合成检查，全部通过；临时替身顺序执行/第一训练失败/第二训练失败三种后台入口场景通过，源码无需修改。产出 `results/r4_completeness_review.json/.md`。真实VAT/CUDA作业仍等待服务器运行。
-- **当前下一步（R4 服务器首轮）**：用户 pull 后按 §10.1 运行单条 nohup，顺序训练普通 GRU/新机制并比较，再按 §10.5 回传小报告。结果回传后判断改进方向和是否补最少消融，不据本地检查或 passed 标记认定新方法有效。
+- **2026-11-17 · R4 启动说明简化**：按用户指定将 §10.1 设为唯一后台启动入口，训练使用物理 GPU 1；删除重复的分步训练/比较命令，保留本轮产物与回传清单。修改本文档和 `PROGRESS.md`，训练代码与预算不变，无新增实验数字；下一步由用户在服务器执行 §10.1。
+- **当前下一步（R4 服务器首轮）**：用户 pull 后按 §10.1 运行单条 nohup，顺序训练普通 GRU/新机制并比较，再按 §10 末尾清单回传小报告。结果回传后判断改进方向和是否补最少消融，不据本地检查或 passed 标记认定新方法有效。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -764,15 +765,15 @@ git push origin codex/coverage-aware-router
 
 实现计划为 `r4_compact_v2`。本轮只运行普通 GRU 和新机制，各从头训练五个 epoch；复用既有特征、原预测与 R1 分组，不需要重新缓存。全部真实作业由用户在服务器手动启动。本地合成检查记录见 `results/r4_local_checks.md`。
 
-### 10.1 推荐：一条后台命令顺序完成本轮
+### 10.1 唯一启动入口：GPU 1 顺序完成本轮
 
-`run_compact_round.sh` 的五个位置参数依次为 Python、仓库、特征缓存、实验根目录、结果目录。它顺序执行 GRU → 新机制 → CPU 比较，某一步失败即停止。日志分别写入下述三个任务日志，外层日志记录阶段。**10.1 与 10.2–10.4 选择一种运行方式。**
+`run_compact_round.sh` 的五个位置参数依次为 Python、仓库、特征缓存、实验根目录、结果目录。它顺序执行 GRU → 新机制 → CPU 比较，某一步失败即停止。日志分别写入下述三个任务日志，外层日志记录阶段。**本轮只需执行本节这一条后台命令**，两项训练及比较会自动依次完成。
 
 ```bash
 cd /home/fb/src/paper/gazelleV1
 git pull --ff-only
 
-CUDA_VISIBLE_DEVICES=0 setsid nohup bash cscwd/code/scripts/run_compact_round.sh \
+CUDA_VISIBLE_DEVICES=1 setsid nohup bash cscwd/code/scripts/run_compact_round.sh \
   /home/fb/anaconda3/envs/py310/bin/python \
   /home/fb/src/paper/gazelleV1 \
   /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
@@ -781,90 +782,17 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup bash cscwd/code/scripts/run_compact_round.sh
   > /home/fb/src/paper/gazelleV1/cscwd/results/r4_round.log 2>&1 &
 ```
 
+外层 `CUDA_VISIBLE_DEVICES=1` 指定物理 GPU 1；脚本内 `--device cuda:0` 是该进程中的可见设备编号，保持原值。固定训练参数由入口统一传入：`--epochs 5 --learning-rate 0.0001 --lambda-state 0.1 --hidden-dim 128 --clip-frames 16 --batch-size 8 --seed 0 --weight-decay 0.01 --gradient-clip-norm 1.0 --temperature 0.1`。
+
 外层成功标记为 `R4 compact first round completed.`。阶段日志为 `r4_ordinary_gru.log`、`r4_history_validity.log`、`r4_validation_comparison.log`。任务开始先核对冻结文件 SHA256，再进入训练；每个 epoch 都写完整 validation、checkpoint 和指标。
 
-### 10.2 分步命令：普通 GRU（GPU 0）
+新机制每个 epoch 的控制量和对应坐标保存在相应 validation 目录的 `history_diagnostics/`，与该帧预测来自同一次前向。
 
-```bash
-cd /home/fb/src/paper/gazelleV1
-CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/train_compact_joint.py \
-  --model-id ordinary_gru \
-  --feature-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
-  --feature-report /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_cache.json \
-  --r1-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json \
-  --r1-review /home/fb/src/paper/gazelleV1/cscwd/results/r1_manual_review.json \
-  --plan /home/fb/src/paper/gazelleV1/cscwd/r4_compact_plan.md \
-  --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_compact_v2/ordinary_gru \
-  --epochs 5 \
-  --learning-rate 0.0001 \
-  --lambda-state 0.1 \
-  --hidden-dim 128 \
-  --clip-frames 16 \
-  --batch-size 8 \
-  --seed 0 \
-  --weight-decay 0.01 \
-  --gradient-clip-norm 1.0 \
-  --temperature 0.1 \
-  --device cuda:0 \
-  --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_ordinary_gru.json \
-  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_ordinary_gru.md \
-  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
-  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_ordinary_gru.log 2>&1 &
-```
-
-等待日志出现 `R4 compact training completed; model: ordinary_gru`，且小报告 `passed=true` 后，再执行下一条。
-
-### 10.3 分步命令：新机制（GPU 0）
-
-```bash
-cd /home/fb/src/paper/gazelleV1
-CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/train_compact_joint.py \
-  --model-id history_validity \
-  --feature-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
-  --feature-report /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_cache.json \
-  --r1-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json \
-  --r1-review /home/fb/src/paper/gazelleV1/cscwd/results/r1_manual_review.json \
-  --plan /home/fb/src/paper/gazelleV1/cscwd/r4_compact_plan.md \
-  --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_compact_v2/history_validity \
-  --epochs 5 \
-  --learning-rate 0.0001 \
-  --lambda-state 0.1 \
-  --hidden-dim 128 \
-  --clip-frames 16 \
-  --batch-size 8 \
-  --seed 0 \
-  --weight-decay 0.01 \
-  --gradient-clip-norm 1.0 \
-  --temperature 0.1 \
-  --device cuda:0 \
-  --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_validity.json \
-  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_validity.md \
-  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
-  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_validity.log 2>&1 &
-```
-
-等待 `R4 compact training completed; model: history_validity`，且小报告 `passed=true` 后，再比较。新机制每个 epoch 的控制量和对应坐标保存在相应 validation 目录的 `history_diagnostics/`；它们与该帧预测来自同一次前向。
-
-### 10.4 分步命令：同源比较与开发选模快照（CPU）
-
-```bash
-cd /home/fb/src/paper/gazelleV1
-CUDA_VISIBLE_DEVICES="" setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/compare_compact_joint.py \
-  --run-report /home/fb/src/paper/gazelleV1/cscwd/results/r4_ordinary_gru.json /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_validity.json \
-  --r1-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json \
-  --plan /home/fb/src/paper/gazelleV1/cscwd/r4_compact_plan.md \
-  --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_validation_comparison.json \
-  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_validation_comparison.md \
-  --selection-manifest /home/fb/src/paper/gazelleV1/cscwd/results/r4_selection_manifest.json \
-  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
-  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_validation_comparison.log 2>&1 &
-```
-
-成功标记为 `R4 compact comparison completed`。报告包括单帧及全部十个训练候选、每模型选中 epoch、完整指标/Pareto、共同响应事件的配对延迟和两侧独有响应数。事件按人物轨迹和原始帧号对齐，不用紧凑缓存的 global offset 配对。若没有精度合格 epoch，记录未选中并保留单帧参考。
+比较日志的成功标记为 `R4 compact comparison completed`。报告包括单帧及全部十个训练候选、每模型选中 epoch、完整指标/Pareto、共同响应事件的配对延迟和两侧独有响应数。事件按人物轨迹和原始帧号对齐，不用紧凑缓存的 global offset 配对。若没有精度合格 epoch，记录未选中并保留单帧参考。
 
 `passed=true` 表示本轮执行、覆盖与来源检查完成；真实效果由指标比较决定。`r4_selection_manifest.json` 此时是开发选择快照，`test_configuration_frozen=false`，回传审核后决定是否补关键消融及进入 R5。
 
-### 10.5 本轮产物与回传
+### 本轮产物与回传
 
 - 小结果：`r4_ordinary_gru.json/.md`、`r4_history_validity.json/.md`、`r4_validation_comparison.json/.md`、`r4_selection_manifest.json` 和 provenance。
 - 大文件：`/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_compact_v2/ordinary_gru/` 和 `history_validity/` 内的五个 epoch checkpoint、`last.pt`、精度合格时的 `selected.pt`、完整验证预测、诊断和训练 history；全部留服务器，实际路径/SHA256 写入报告和 provenance。

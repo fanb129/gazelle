@@ -70,6 +70,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
+**R4 / 2026-11-17 / 启动说明简化**：实现计划 §10.1 为唯一后台启动入口，外层设 `CUDA_VISIBLE_DEVICES=1` 使用物理 GPU 1，自动依次完成两项训练和 CPU 比较；删除重复分步命令，回传清单保留于 §10 末尾。仅更新本文档与实现计划，无新增实验数字；下一步由用户在服务器启动。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -80,6 +82,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **精简 R4（本地就绪，等待服务器）**：服务器 pull 后执行实现计划 §10.1 的单条 nohup 命令，顺序完成普通 GRU、新机制各五个 epoch，再生成比较和开发选择快照；按 §10.5 回传小报告与 provenance。R2 特征缓存直接复用。
+1. **精简 R4（本地就绪，等待服务器）**：服务器 pull 后执行实现计划 §10.1 的单条 nohup 命令（物理 GPU 1），顺序完成普通 GRU、新机制各五个 epoch，再生成比较和开发选择快照；按 §10 末尾清单回传小报告与 provenance。R2 特征缓存直接复用。
 2. 有信号后按计划补最少机制证据，再进入 **R5 冻结配置 test → R6 论文与协作证据**。R4 报告版本化修订后的精度条件与完整折中，不按新版规则改写既有 R2 验收。
 3. 所有新模型选择在开发组完成。冻结 VAT checkpoint 此前已见过 VAT train，validation 留出仅针对新增模块；已查看的 test 为先导分析，不能再用于调参。仅有 VAT 逐人结果时，不声称已验证共同关注或协作收益。
