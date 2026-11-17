@@ -246,3 +246,31 @@ T5 本地验收与解读（2026-11-13，结果提交 `3de06cd`，来源 `t5_ema_
   - data：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/case_data.json`；SHA256：`7961de3a9fc15d7c2008229317c84603defe4dbb2f567acac2363f7d893f6f47`。
   - full_frames：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/frames.png`；SHA256：`09025117839c129a8f6fdb541d4694794c5215d2b3225461cffff9d4a5ef2e50`。
   - full_timeline：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/t6_diagnostics/cases/crowded_ba4dcbbdf191947c/timeline.png`；SHA256：`1d54bb0c0e5cce5f2e9ef48f62c246acc6d15b7571dba36294415127b87ca46f`。
+
+## T2 单帧预测缓存（服务器运行）
+
+- UTC：`2026-11-17T05:37:50.081389+00:00`；git commit：`909a81e0afe55e6ed535ef74fc6ac10caa601b82`。
+- 模型：`gazelle_dinov3_vitb16_inout`，GGSF + SASA，冻结推理；checkpoint：`/home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`；SHA256：`058793f58a1ad3f6e08a721d776a2a0412a2f0ebc5917b11dd0f78b29672f9ea`。
+- 骨干预训练：`/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`；SHA256：`73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`。
+- 输入 track JSON：`/newhome/fb/dataset/videoattentiontarget/cscwd_tracks/train_preprocessed_tracks.json`；SHA256：`96e2392c6b4470c6101525921b8e2ab5b03f326a26bb0fccf7b2650099a78fff`。
+- 命令：`/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/cache_single_frame.py --data-path /newhome/fb/dataset/videoattentiontarget --track-json /newhome/fb/dataset/videoattentiontarget/cscwd_tracks/train_preprocessed_tracks.json --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt --model gazelle_dinov3_vitb16_inout --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions --batch-size 8 --num-workers 4 --device cuda:0 --report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`。
+- 覆盖：1033 tracks / 58507 图像帧 / 132563 人物帧；float32 热图、画内概率和 argmax 坐标原样读回通过。
+- 小报告：`/home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json`；缓存目录（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions`。
+- 缓存 index.json SHA256：`aadb2646d5b99ac57191025f88155e767fc203999b71ee05ea60edce72da7770`。
+- 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/heatmap.npy`；SHA256：`a26d901918e5969cea32d3e1d22f6fcc84ebef47d44baff742a7672ef6d9b0a6`。
+- 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/inout.npy`；SHA256：`9910c4811b1ac24d4a7f444ded3e77c301f54817657e648d06fe12b2381ce533`。
+- 大文件：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/argmax_xy.npy`；SHA256：`56f7743df02018f7570911e2d3b59fef4fe749104911854bb88753956e33ce6c`。
+
+## R1 开发集分组与单帧诊断（服务器机器准备）
+
+- UTC：`2026-11-17T06:50:17.188790+00:00`；commit：`909a81e0afe55e6ed535ef74fc6ac10caa601b82`。
+- 命令：`/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/prepare_development.py --data-path /newhome/fb/dataset/videoattentiontarget --cache-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions --cache-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json --recovery-report /home/fb/src/paper/gazelleV1/cscwd/results/t1_track_recovery.json --reference-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1 --preview-dir /home/fb/src/paper/gazelleV1/cscwd/results/r1_previews --validation-fraction 0.2 --seed 20261117 --cases-per-category 3 --preview-cases 12 --context-before 10 --context-after 20 --snapshots 5 --report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`。
+- 小报告：`/home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json`。
+- 机器检查：`True`；阶段状态：`awaiting_local_review`；人工诊断未完成。
+- split_manifest（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1/split_manifest.json`；SHA256：`5bfe98c29f739c44b0fa55ec26bf2ea4a64979379fbd02d19abffb2c925bf28d`。
+- selection_config（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1/selection_config.json`；SHA256：`1508c885c4a0bec61a51653f656ebb88d817ba256c18da181efbc9b478ca9534`。
+- diagnosis_manifest（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1/diagnosis_manifest.json`；SHA256：`3cc82fd84ca5bb837889586db5644a8d79a3b4114d7c1c1ab5b03307a63cc074`。
+- details（服务器保留）：`/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r1_development_v1/baseline_details.json`；SHA256：`95d477eb2b9bf9e446fce23bb904f26a8f53e53bfcc52b8ea1175330d281e27c`。
+- cache_report：`/home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json`；SHA256：`dbbb121a36b883b46d242b44e86047ed59096275e173128bb6f5c02406a72c6a`。
+- recovery_report：`/home/fb/src/paper/gazelleV1/cscwd/results/t1_track_recovery.json`；SHA256：`2ae463a901f9c0da5337f976bf86af86676479a0fb7faf6942bf21444355aac0`。
+- checkpoint_reference_report：`/home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json`；SHA256：`5f2da6594925aec1443fdf38b1ac3881e11af65b5114b19c3c7f968e6fd15022`。
