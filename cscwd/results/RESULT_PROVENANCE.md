@@ -295,3 +295,10 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 本地验收产物：`cscwd/results/r1_manual_review.json`；SHA256：`d831059ac1233051d44b9f69f286a01692d316bd50586ebdcdcfc701020d1285`。
 - 本地验收产物：`cscwd/results/r1_manual_review.md`；SHA256：`83727ef5c883a4ccc16dab7eada4d8762ac4869b78db84cb631b9ef63a1ec8e3`。
 - R1 验收通过，下一步 R2 冻结视觉特征契约与普通因果联合头；本次未启动 R2。R4 补记 train 拟合的全局单调状态校准对照，尚未运行，不回写原 R1 selection manifest。
+
+## R2 本地实现与合成检查（2026-11-17）
+
+- R1 验收提交 `f3e38d2` 已推送；R2 本地新增唯一图像原生末层特征探测/FP16缓存、普通因果GRU联合头、固定slot连续轨迹加载及smoke训练/完整验证入口。旧 gazelle 包和已有R1预测/报告未修改。
+- 新增合成检查31项通过：特征7、模型10、数据8、来源/训练CLI6；另6项R1入口回归通过。合成指标不作为VAT性能。Python3.10语法、CLI help与服务器命令语法检查通过。
+- 本地检查记录：`cscwd/results/r2_local_checks.md`；SHA256：`6375e64ee0e35a876d85496dd5596a7b8e0a3d0992b54fa91db85be0f25d1072`。
+- 真实R2 probe/cache/VAT新模块训练尚未运行。先回传probe确认shape、量化、前向与存储契约，再缓存和固定一个epoch smoke；各真实数字与大文件路径/SHA256由服务器成功运行后追加。

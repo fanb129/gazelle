@@ -1,8 +1,8 @@
 # 因果视频注视联合修正方案
 
 > 更新：2026-11-17。本文记录方向复盘后的研究方案；任务顺序和验收以 [implementation_plan.md](implementation_plan.md) 为准。
-> 状态：T1–T6 先导实验已完成；本文的新模块尚未实现、训练或评测。现有规则方法继续使用报告中的 `stag` 标识，新方法暂称 `temporal_joint_refiner`，论文方法名在机制和结果确定后再定。
-> R1 数据/协议准备已通过真实结果与人工诊断验收，见 `results/r1_manual_review.md`。下一步 R2，尚未实现或训练新模块；R1 原运行命令保留于 `implementation_plan.md` §8。
+> 状态：T1–T6 与 R1 已验收；R2 普通联合头及数据/缓存/训练链路已本地实现，通过合成检查，尚未运行真实特征 probe 或新头训练；R3 机制尚未实现。现有规则方法继续使用 `stag` 标识，新方法暂称 `temporal_joint_refiner`。
+> R1 记录已推送 `f3e38d2`；当前先执行 `implementation_plan.md` §9.2 的 R2 probe，后续才缓存和 smoke train。R1 原命令保留于 §8。
 
 ## 1. 最终目标与 motivation
 

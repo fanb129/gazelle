@@ -1,7 +1,7 @@
 # CSCWD 2027 · 论文蓝图（因果联合时序修正）
 
 > 更新：2026-11-17。当前方案见 [temporal_joint_refinement.md](temporal_joint_refinement.md)，执行与验收以 [implementation_plan.md](implementation_plan.md) 的 R1–R6 为准。
-> 状态：T1–T6 先导结果已完成；新模块尚未实现/训练。以下新贡献为研究假设，正文按最终真实结果收敛。
+> 状态：T1–T6 和 R1 已完成；R2 普通联合头/缓存/训练链路已本地实现，真实训练未运行，R3 历史有效性机制未实现。以下新贡献为研究假设，正文按最终真实结果收敛。
 
 ## 1. 工作标题与任务范围
 
@@ -103,4 +103,4 @@ One Euro 只改坐标时，原始 heatmap AUC 原样保留并注明，不能包�
 
 ## 7. 当前下一步
 
-R1 的真实分组、开发基线和 12 例快照诊断已验收，见 `results/r1_manual_review.md`。下一步按 `implementation_plan.md` 进入 R2：冻结特征契约与普通因果联合头。新时序模型尚未实现/训练，当前不填写其结果。
+R1 已验收。R2 本地代码就绪，先按 `implementation_plan.md` §9.2 在服务器探测特征契约，再缓存和固定 smoke train。当前不填写新模块的真实性能。

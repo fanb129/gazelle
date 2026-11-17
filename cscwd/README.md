@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-17）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：T1–T6 与 R1 验收完成，R1 真实结果来自 `d6adba4`，12 例人工诊断见 `results/r1_manual_review.md`。原规则 STAG 保留为基线，下一步 R2；新时序模块尚未实现/训练。
+> 状态：T1–T6 与 R1 验收完成；R1 验收记录已推送 `f3e38d2`。R2 缓存/普通联合头/训练入口本地完成，等待特征 probe 和真实训练；原规则 STAG 保留为基线，R3 尚未开始。
 
 ## 目录结构
 
@@ -34,7 +34,7 @@ cscwd/
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**R2 特征缓存与普通联合头 → R3 历史有效性机制 → R4 训练/验证对照 → R5 冻结配置 test → R6 论文证据**。一次一个任务；T1–T6 与 R1 已完成。R1 两步服务器命令在 `implementation_plan.md` §8 保留供复现；本次审核没有启动 R2 或新服务器作业。
+当前执行顺序：**R2 probe → 全量特征缓存 → 固定联合头 smoke train → R2 验收 → R3–R6**。R2 完整命令见 `implementation_plan.md` §9，当前先执行 §9.2 的小规模 probe。没有真实 R2 结果前不进入 R3；T1–T6 与 R1 不重做。
 
 ## 论文索引（快速查，详见 literature_review.md）
 
