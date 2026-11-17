@@ -302,3 +302,10 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 新增合成检查31项通过：特征7、模型10、数据8、来源/训练CLI6；另6项R1入口回归通过。合成指标不作为VAT性能。Python3.10语法、CLI help与服务器命令语法检查通过。
 - 本地检查记录：`cscwd/results/r2_local_checks.md`；SHA256：`6375e64ee0e35a876d85496dd5596a7b8e0a3d0992b54fa91db85be0f25d1072`。
 - 真实R2 probe/cache/VAT新模块训练尚未运行。先回传probe确认shape、量化、前向与存储契约，再缓存和固定一个epoch smoke；各真实数字与大文件路径/SHA256由服务器成功运行后追加。
+
+## R2 frozen feature probe
+
+- UTC: `2026-11-17T09:21:54.065569+00:00`; commit: `01c18f5ecd586016729bc7ac45d653f7103c4554`.
+- Command: `/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/cache_frozen_features.py --mode probe --data-path /newhome/fb/dataset/videoattentiontarget --r1-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_split_and_diagnosis.json --r1-review /home/fb/src/paper/gazelleV1/cscwd/results/r1_manual_review.json --cache-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json --recovery-report /home/fb/src/paper/gazelleV1/cscwd/results/t1_track_recovery.json --reference-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json --checkpoint /home/fb/src/paper/gazelleV1/experiments/train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt --output-dir /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 --probe-images 32 --seed 20261117 --batch-size 8 --num-workers 4 --device cuda:0 --report /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_probe.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_probe.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`.
+- Report: `/home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_probe.json`; SHA256: `fc451694487f2038ad659d04a8a77361f6ea4ab1cfa37ca4e3c0560768098c53`.
+- Contract: `{"layer_index": 11, "channels": 768, "grid": [32, 32], "storage_dtype": "float16", "source_dtype": "torch.float32", "layout": "NCHW", "spatial_pooling": "none", "image_unit": "unique_current_RGB", "learned_projection_cached": false}`; original FP32 predictions retained.
