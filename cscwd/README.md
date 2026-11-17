@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-17）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：T1–T6 与 R1/R2 验收完成；R2 全量缓存和一个 epoch 联合头 smoke 已回传，当前配置未满足最终选模条件。下一步 R3 历史有效性机制，尚未开始；原规则 STAG 保留为基线。
+> 状态：T1–T6 与 R1/R2 验收完成；R3 历史对应/有效性模型和诊断本地完成，24 项新增检查+18 项回归通过。精简 R4 已落盘，下一步训练入口；新机制真实训练尚未运行。
 
 ## 目录结构
 
@@ -24,6 +24,7 @@ cscwd/
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
+| [r4_compact_plan.md](r4_compact_plan.md) | 精简 R4：同预算首轮、选模规则和最少补充证据 |
 | [codex_prompt.md](codex_prompt.md) | codex 提示词 + 追加指令 |
 | [cscwd_2025_2026_related.md](cscwd_2025_2026_related.md) | CSCWD 2025–2026 同方向论文扫描（venue 空白 + 锚点） |
 | [literature_review.md](literature_review.md) | 既有逐篇解读及本轮视频机制/相邻工作补充入口 |
@@ -31,12 +32,14 @@ cscwd/
 | [results/r1_manual_review.md](results/r1_manual_review.md) | R1 分组验收、开发基线与全部 12 例人工诊断 |
 | [results/r2_probe_review.md](results/r2_probe_review.md) | R2 实测特征契约、精度与存储验收 |
 | [results/r2_local_review.md](results/r2_local_review.md) | R2 全量缓存、真实 smoke 结果与验收结论 |
+| [results/r3_mechanism_design.md](results/r3_mechanism_design.md) | R3 已实现机制、状态/诊断和参数量 |
+| [results/r3_local_checks.md](results/r3_local_checks.md) | R3 本地模型、合成训练/验证与诊断检查 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**R3 本地实现与检查 → R4 正式训练/validation 强对照 → R5 冻结配置 test → R6 论文证据**。R2 已验收，无需重跑；§9 命令保留复现。普通 GRU 的一个 epoch 证明训练链路完成，当前未显示综合指标改善，不作为最终选模结果。
+当前执行顺序：**精简 R4 训练入口与首轮比较 → 有信号后补关键消融 → R5 冻结配置 test → R6 论文证据**。R3 本地完成；R4 首轮普通 GRU/新机制各单配置、seed 0、五个 epoch。R2 缓存复用，§9 命令保留复现；新训练入口在 R4 实现并提供手动命令。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

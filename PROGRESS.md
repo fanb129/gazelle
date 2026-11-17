@@ -7,11 +7,11 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | R2 全量特征缓存与联合头 smoke 已验收；当前配置未达到最终选模条件，下一步 R3 历史有效性机制 |
+| CSCWD | `cscwd/` | R3 模型/诊断本地完成，24 项新增检查+18 项回归通过；精简 R4 已落盘，下一步训练入口 |
 
 ## 当前优先级（2026-11-17）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
-方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。原规则 STAG 保留为先导基线。R1 真实结果及 12 例人工诊断已验收；R2 全量冻结特征和一个 epoch 联合头 smoke（结果 `85d9050`）已回传并验收。当前配置未达到最终选模条件；下一步 R3，R3–R6 未开始。以下 T1–T6 数字保留为真实先导结果。
+方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。R1/R2 已验收，R3 历史视觉对应/有效性模型与诊断本地完成。用户授权的精简 R4 已写入 `cscwd/r4_compact_plan.md`，版本 `r4_compact_v2`；下一步实现训练入口，真实 R3/R4 训练尚未运行。原规则 STAG 保留为先导基线，以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
@@ -58,6 +58,12 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R2 / 真实结果与下一步**：validation 单帧→smoke 为 **AUC 0.954206→0.954325 / L2 0.079605→0.079602 / AP 0.960923→0.960799**，基本持平；状态错误 **11.13%→10.53%**，准确稳定占比 **60.19%→59.46%**。state-only enter **179/189→175/189**、leave **93/169→97/169**，joint gaze_shift **135/221→135/221**。当前配置因 enter 响应下降未达到 R4 选模门槛；R2 工程验收完成，下一步 R3 历史目标对应与有效性控制，普通 GRU 保留对照。R3 尚未启动。
 
+**R4 / 2026-11-17 / 精简计划落地**：新增 `cscwd/r4_compact_plan.md`，版本 **r4_compact_v2**。首轮普通 GRU/新机制各单配置、seed 0、五个 epoch，从新模块随机初始化、同源缓存同预算；保留标准精度容忍度，以准确稳定占比优先选 checkpoint 并全报指标/Pareto，取消逐类响应不得下降的硬门槛。有信号后补 validity 读门消融，按主张补状态校准或无历史头；完整搜索、多滤波/单输出矩阵、多 seed/bootstrap 延后。原 R1/R2 记录保持原样。
+
+**R3 / 2026-11-17 / 本地实现完成**：新增 `history_model.py`、`history_diagnostics.py` 与模型/集成测试。以过去预测区域在冻结空间形成模板，在当前网格做视觉对应；validity 控制历史读入，refresh 控制模板写入，双输出残差联合修正。每帧诊断含有效性、刷新/写入强度、对应坐标和匹配摘要，并可按原全局索引落盘。实现说明与结果写入 `cscwd/results/r3_mechanism_design.md`、`r3_local_checks.json/.md`。
+
+**R3 / 实际本地数字与下一步**：R3 **372,677 参数**，普通 GRU **347,522**；同 seed 共享初始化一致，native **768×32×32** 两步前向通过。**24 项新增检查（模型16、集成8）及18项 R2回归通过**，合成完整训练/验证/重载与诊断读回完成。没有新增真实 VAT 性能数字。下一步实现精简 R4 训练/逐 epoch 选择入口并给服务器命令，R3 不追加真实 smoke 作业。
+
 结果回传规则已修正：`cscwd/.gitignore` 放行 `results/` 直属小 JSON，覆盖根目录的 `*.json`；完整 track JSON、NPY 和缓存目录继续忽略。
 
 ## 已知阻塞
@@ -70,6 +76,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **R3（下一任务，尚未开始）**：共用已验收的 R2 特征契约和 R1 分组，实现历史目标视觉对应与历史有效性控制，完成本地因果/重置/梯度检查后再提供服务器命令。无需重跑 R2 缓存或 smoke。
-2. R3 完成后进入 **R4 训练/验证与强对照 → R5 冻结配置 test → R6 论文与协作证据**。R4 保留普通 GRU、无历史联合头和全局单调状态校准对照；当前不以单个 epoch 的状态折中认定方法有效。
+1. **精简 R4（下一任务）**：按 `r4_compact_v2` 实现普通 GRU/新机制训练入口、逐 epoch 验证与诊断、checkpoint 选择及小报告；给出两条同预算五个 epoch 的完整服务器命令，由用户手动执行。R3 本地完成，R2 缓存直接复用。
+2. 有信号后按计划补最少机制证据，再进入 **R5 冻结配置 test → R6 论文与协作证据**。R4 报告版本化修订后的精度条件与完整折中，不按新版规则改写既有 R2 验收。
 3. 所有新模型选择在开发组完成。冻结 VAT checkpoint 此前已见过 VAT train，validation 留出仅针对新增模块；已查看的 test 为先导分析，不能再用于调参。仅有 VAT 逐人结果时，不声称已验证共同关注或协作收益。

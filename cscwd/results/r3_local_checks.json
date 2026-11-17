@@ -1,0 +1,125 @@
+{
+  "task": "R3_local_implementation_checks",
+  "date": "2026-11-17",
+  "base_commit": "58be651",
+  "status": "completed_local_R3",
+  "passed": true,
+  "plan_version": "r4_compact_v2",
+  "source_sha256": {
+    "cscwd/code/stag/history_model.py": "707ce81ce05c49ca105567de8bf00c30fc1db4edbd3a7b84ed857677a83cb991",
+    "cscwd/code/stag/history_diagnostics.py": "9b032c116209be0bd54bf6012bfb5edb4d2b045aafb26aabbf142841a06b9871",
+    "cscwd/code/stag/test_history_model.py": "c52082adb90c727533ad2d93f78985454affef8cfc806174b71349497276c986",
+    "cscwd/code/scripts/test_history_integration.py": "117c4c715514342d82b46591b7039e80e05f32df907509d7b32e07f28e264955"
+  },
+  "python_3_10_syntax_passed": true,
+  "R2_sources_unchanged": {
+    "cscwd/code/scripts/train_temporal_joint.py": true,
+    "gazelle/utils.py": true,
+    "cscwd/code/stag/temporal_model.py": true,
+    "cscwd/code/stag/temporal_data.py": true,
+    "cscwd/code/stag/feature_cache.py": true,
+    "cscwd/code/stag/metrics.py": true,
+    "cscwd/code/stag/state_metrics.py": true
+  },
+  "r4_plan_sha256": "13e8dccba14c6ade7825b55f505c1fee8c295239f50e3a785479108cf4a65bb4",
+  "environment": {
+    "python": "/private/tmp/gazelle-r2-venv/bin/python",
+    "python_version": "3.13",
+    "torch": "2.6.0",
+    "device": "CPU",
+    "data": "temporary_synthetic_only"
+  },
+  "models": {
+    "ordinary_GRU_parameters": 347522,
+    "history_validity_parameters": 372677,
+    "added_parameters": 25155,
+    "shared_seed_initialization_equal": true,
+    "feature_channels": 768,
+    "hidden_dim": 128,
+    "temperature": 0.1
+  },
+  "native_forward": {
+    "input_grid": [
+      768,
+      32,
+      32
+    ],
+    "input_dtype": "float16",
+    "module_dtype": "float32",
+    "batch_size": 2,
+    "steps": 2,
+    "passed": true
+  },
+  "tests": [
+    {
+      "label": "r3_model",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_history_model.py -v",
+      "tests": 16,
+      "elapsed_seconds": 0.721,
+      "passed": true
+    },
+    {
+      "label": "r3_integration",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_history_integration.py -v",
+      "tests": 8,
+      "elapsed_seconds": 2.826,
+      "passed": true
+    },
+    {
+      "label": "r2_model_regression",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_temporal_model.py -v",
+      "tests": 10,
+      "elapsed_seconds": 0.701,
+      "passed": true
+    },
+    {
+      "label": "r2_data_regression",
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p test_temporal_data.py -v",
+      "tests": 8,
+      "elapsed_seconds": 0.077,
+      "passed": true
+    }
+  ],
+  "total_new_tests": 24,
+  "total_regression_tests": 18,
+  "checked_behaviors": [
+    "predicted_region_descriptor_in_frozen_space",
+    "visual_correspondence_moves_on_current_grid",
+    "controlled_keep_refresh_release_paths",
+    "zero_validity_removes_all_previous_prediction_paths",
+    "prefix_causality",
+    "complete_state_TBPTT_equivalence",
+    "per_person_reset_and_isolation",
+    "GT_change_leaves_observations_state_and_resets_unchanged",
+    "two_updates_train_both_heads_gate_projection_GRU_and_correspondence_gain",
+    "complete_synthetic_epoch_and_validation_cache",
+    "checkpoint_and_predicted_memory_roundtrip",
+    "diagnostics_written_once_by_source_global_index_with_padding_excluded"
+  ],
+  "diagnostic_output": {
+    "controls_columns": [
+      "history_validity",
+      "refresh",
+      "write_strength",
+      "match_peak",
+      "match_entropy",
+      "agreement",
+      "person_change",
+      "history_available"
+    ],
+    "files": [
+      "controls.npy",
+      "correspondence_xy.npy",
+      "source_global_indices.npy",
+      "index.json"
+    ],
+    "execution": "temporary_synthetic_directory_readback; no_server_artifacts_created"
+  },
+  "ablation": {
+    "history_mode": "always_keep",
+    "meaning": "validity_read_gate_fixed_to_available; visual_correspondence_template_refresh_and_GRU_gates_retained"
+  },
+  "VAT_performance_results": null,
+  "server_jobs_run": false,
+  "next": "Implement R4 compact training/selection/report entry points; provide manual server commands for new mechanism and ordinary GRU at equal 5-epoch budget."
+}
