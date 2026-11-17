@@ -276,6 +276,14 @@ cscwd/
 4. 关键小结果（JSON/MD）写进 `cscwd/results/` → 服务器 commit → push。
 5. 本地 `git pull` 拿到结果；大文件不传，只在 `RESULT_PROVENANCE.md` 记路径 + SHA。
 
+### 后续训练的逐 epoch 验证与选模
+
+用户于 2026-11-18 明确要求后续训练统一采用：每完成一个 epoch，立即在完整开发 validation 上评测一次，记录该轮全部标准/时序/状态指标及对应 checkpoint；保留全部 epoch 历史，训练结束后选择最佳一轮的整套结果。最佳 checkpoint 统一保存为 `selected.pt`，`last.pt` 保存最后一轮。
+
+当前 `train_compact_joint.py` 已实现这一流程：逐轮更新 `training_history.json`，保存 `epoch_XXX.pt` 和验证预测，最终小 JSON/Markdown 汇总全部轮次及选择结果。此约定同样适用于之后新增或修改的训练入口。
+
+“最佳一组”使用同一个 epoch 的全部指标。当前排序沿用训练前固定的 `r4_compact_v2`：先满足 AUC/AP/L2 精度容忍度，再按准确稳定占比、joint gaze_shift 响应、AP、L2、AUC、较早 epoch 排序。后续若调整主指标，在新训练前记录新的选择规则；已完成运行按原规则保留。validation 用于逐轮选择，冻结配置后的 test 用于论文正式主表。
+
 ### nohup 命令模板（codex 给出时套用）
 ```
 CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/<script>.py --<args> > <run>.log 2>&1 &
@@ -353,6 +361,7 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-17 · R4 中断后完整性复核**：对 `bda1501` 重新读取全链路源码/命令并重跑31项CPU合成检查，全部通过；临时替身顺序执行/第一训练失败/第二训练失败三种后台入口场景通过，源码无需修改。产出 `results/r4_completeness_review.json/.md`。真实VAT/CUDA作业仍等待服务器运行。
 - **2026-11-17 · R4 启动说明简化**：按用户指定将 §10.1 设为唯一后台启动入口，训练使用物理 GPU 1；删除重复的分步训练/比较命令，保留本轮产物与回传清单。修改本文档和 `PROGRESS.md`，训练代码与预算不变，无新增实验数字；下一步由用户在服务器执行 §10.1。
 - **2026-11-18 · R4 首轮真实结果验收**：结果提交 `f1d41e4`，本地235项来源/算式/选模/Pareto核对通过；产出 `results/r4_local_review.json/.md`。普通 GRU与新机制各五轮，均选epoch 1，完整十个候选保留。单帧→新机制：AUC **0.954206→0.954290**、L2 **0.079605→0.079562**、AP **0.960923→0.960808**、准确稳定 **60.1874%→59.4964%**、状态错误 **11.1254%→10.5114%**；gaze_shift仍135/221，总体首选单帧。
+- **2026-11-18 · R4 分区与后续训练约定确认**：读取指定 PDF 第6页表2，ViT-B的VAT主表为 **0.940 / 0.099 / 0.887**，与已跑官方test单帧 **0.940182 / 0.098995 / 0.886801** 舍入一致；当前 **0.954206 / 0.079605 / 0.960923** 来自official train内的开发validation，原GazeSpot底座曾使用official train训练。确认当前入口已逐epoch完整验证、记录全部历史并选出整轮最佳结果，将此流程写为后续所有训练入口的约定。更新本文档与 `PROGRESS.md`，未新增实验运行；下一步仍为已有缓存贡献诊断。
 - **当前下一步（R4 开发诊断）**：复用已有缓存分解定位/状态对准确稳定的贡献，汇总 validity/refresh；按条件补 train 拟合的状态校准，依据诊断决定一次针对性训练调整。首轮不需重跑，暂不进入 R5；当前 epoch 1 仅为各模型预定规则选中的开发 checkpoint。
 
 ## 7. 先导阶段服务器命令存档

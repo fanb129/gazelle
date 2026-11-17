@@ -74,6 +74,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4 / 2026-11-18 / 第一轮真实结果验收**：已拉取 `f1d41e4`，来源/预算/覆盖/指标算式/选模与 Pareto 共 **235 项本地核对通过**，产出 `cscwd/results/r4_local_review.json/.md`，大文件仍留服务器。普通 GRU/新机制各 seed 0、五个 epoch，均按既定规则选 **epoch 1**。同一 validation 单帧→新机制：AUC **0.954206→0.954290**、L2 **0.079605→0.079562**、AP **0.960923→0.960808**；准确稳定 **60.1874%→59.4964%**，状态错误 **11.1254%→10.5114%**，joint gaze_shift **135/221→135/221**。新机制仅比 GRU 多8个准确稳定窗口、少6帧状态错误；总体仍选单帧。当前是状态纠偏折中，核心机制额外收益尚未建立；这些 validation 数字不能与 ViT-L test 直接比较。下一步复用 epoch-1 缓存分解状态/定位贡献并汇总门控诊断，按结果补状态校准或调整训练，暂不进入 R5。
 
+**R4 / 2026-11-18 / 分区与训练约定确认**：已读取用户指定 PDF 第6页表2，原 ViT-B VAT主表 **0.940 / 0.099 / 0.887** 与已跑官方test单帧结果舍入一致；当前更高数字来自official train内的开发validation，原底座曾见过official train。后续所有训练均每epoch完整验证、记录全部轮次及checkpoint，按训练前固定规则选择一轮整套最佳指标并保存 `selected.pt`。当前R4已实现，本次只将约定补入实现计划与状态文件，无新增实验；下一步仍为已有缓存贡献诊断。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
