@@ -540,3 +540,11 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - history_validity calibrated_test_scores: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/history_validity/test_inout_calibrated.npy`; SHA256: `ed6ff15f98ba2ef85bf0e61c18e1c8a1509cd549121f58d9a598381194492bce`.
 - history_validity details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/history_validity/test_details.json`; SHA256: `859d5b266d8f65fb5dbbebaeb6cc16656bb7b79c755e1ccabc6d172edd8e5522`.
 - history_validity frozen train scores: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/history_validity/train_scores`; index SHA256: `0684db5a63077d5751e88e65c5375fd88d8cd512d3227cc2550816d0ee03e19b`; inout SHA256: `9da40c02d2c5699f7524ccf642cfe549641ffc73b48812a778d2eb10013dc3da`.
+
+## R4-D2真实结果本地验收（2026-11-18）
+
+- 已pull结果提交 `75f305c`，作业源码 `639e8b4`。393项小报告来源/源码/覆盖/端点/比例/配对算式核对通过；未访问服务器或下载/重算NPY、PT、index与完整逐事件数据。
+- 验收记录 `cscwd/results/r4_state_calibration_local_review.json`；SHA256 `f861d111eaba366b5cf2737ea201749cb33550f43b2d08f48efd73cc6dc8273e`。
+- 验收记录 `cscwd/results/r4_state_calibration_local_review.md`；SHA256 `ceb1afd435d4d3dc504728fdc64932abed213e5c64fc4a538d50174b3056e2e2`。
+- train偏置单帧−0.423750、GRU+0.041511、新机制+0.090667；AUC/L2/AP保持。新机制准确稳定9,964→10,064、错帧6,181→6,055、错误翻转798→758；只补回相对原始单帧479窗口损失的20.88%，gaze_shift仍88/158。校准后比校准单帧/GRU少96/41个稳定窗口，尚无机制额外优势。
+- 下一步D3为状态时序训练监督：稳定段一致性与状态变化后的响应监督，保留逐帧MSE/BCE、冻结GazeSpot、GRU/新机制同预算；先固定细节再实现。不继续test阈值扫描。本次只验收及更新计划，没有新增模型训练、权重或服务器任务。
