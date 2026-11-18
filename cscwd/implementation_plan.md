@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-18。官方train/test首轮 `aa0ab55` 已取回并验收，两模型均按AUC优先规则选epoch 5；test特征已完成。新机制AUC/AP小幅改善但准确稳定/切换下降，尚未建立相对GRU的机制优势。下一步先做现有缓存的定位/状态贡献诊断；§11保留复现。
+> 当前版本：2026-11-18。官方train/test首轮 `aa0ab55` 已取回并验收，两模型均按AUC优先规则选epoch 5；test特征已完成。新机制AUC/AP小幅改善但准确稳定/切换下降，尚未建立相对GRU的机制优势。缓存贡献/门控诊断入口已本地完成，23项检查通过，当前由用户按§12.1运行CPU诊断；§11保留复现。
 
 ## 0. 目标（一句话）
 
@@ -371,7 +371,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-18 · R4 官方服务器数据与缓存只读确认**：已SSH核对官方train/test完整轨迹、全部71,634个RGB路径、既有预测/全train特征索引及NPY header，10项数据检查通过。train为1,033tracks/132,563帧，test为298/31,978帧；R1仅逻辑拆分train，官方test一直存在。新test特征目录与 `r4_official_test_features.json` 均不存在，服务器仍停在 `f1d41e4`，新wrapper尚未pull。产出 `results/r4_official_server_preflight.json/.md`，未运行缓存或训练；下一步先pull，再执行§11.1自动补特征并训练。
 - **2026-11-18 · R4 训练文件说明完成**：用户已启动本轮服务器作业；新增 `training_file_guide.md`，逐项说明实际读入的train/test index、原预测/视觉特征、标签、原GazeSpot与新增模块权重、逐轮预测/诊断/history、选择清单和日志/回传路径。同步状态和README，仅本地文档更新，无新增实验数字；下一步等待真实结果回传。
 - **2026-11-18 · 官方train/test首轮验收完成**：取回服务器提交 `aa0ab55` 并合并本地文档提交 `c966239`，283项来源/覆盖/损失/指标/选模核对通过，产出 `results/r4_official_local_review.json/.md`。test特征完成，两模型均完整五轮、选epoch 5；AUC首选为GRU **0.940541**，新机制 **0.940466**。单帧→新机制AP **0.886801→0.892778**、准确稳定 **52.7531%→50.3334%**、gaze_shift **92/158→88/158**，保留真实折中，机制额外收益尚未建立。
-- **当前下一步（缓存贡献诊断）**：复用已保存的预测与门控控制量分解定位/状态贡献，再选择一次针对性输出控制或训练目标调整；当前不重跑首轮，不改变已声明的epoch 5选择。
+- **2026-11-18 · R4-D1 缓存诊断入口完成**：新增交叉输出/门控统计模块、CPU入口与三套测试，计划 `r4_cache_diagnosis_plan.md`。23项本地合成检查通过（交叉11、门控8、入口4），包括手算窗口分解/失败组合、门值分布、source行与轨迹重排、两端重现、禁止Torch导入的完整CLI与缓存不变性；产出 `results/r4_cache_diagnosis_local_checks.json/.md`。未修改旧源码或训练协议，无新增真实VAT结果；完整服务器命令见§12.1。
+- **当前下一步（缓存贡献诊断）**：用户服务器pull后运行§12.1的单条CPU nohup，回传四组合与门控小报告，再选择一次针对性训练调整；原epoch 5选择保持。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -884,3 +885,51 @@ git push origin codex/coverage-aware-router
 ```
 
 回传后本地核对训练/测试覆盖、来源、全部 epoch、AUC 选模及真实指标折中，再决定最少机制实验和论文结果。旧 `r4_*` validation 报告不覆盖，不改名为 test。
+
+## 12. 已保存预测的贡献与门控诊断（当前入口）
+
+计划见 `r4_cache_diagnosis_plan.md`，版本 `r4_cache_diagnosis_v1`。复用§11已完成的原始与各模型选中epoch预测；当前两模型均epoch 5。只做CPU离线计分，不加载模型、不前向或训练，不读取视觉特征。原训练协议和checkpoint选择保持。
+
+### 12.1 一条后台命令完成诊断
+
+服务器pull后由用户手动执行。本任务为CPU程序，按模板保留 `CUDA_VISIBLE_DEVICES=1`；不使用GPU计算或显存。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/diagnose_official_cache.py \
+  --comparison-report /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_comparison.json \
+  --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --plan /home/fb/src/paper/gazelleV1/cscwd/r4_cache_diagnosis_plan.md \
+  --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1 \
+  --event-radius 3 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.json \
+  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.md \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.log 2>&1 &
+```
+
+成功标记：`Official cache diagnosis completed`。先核对原始与selected缓存的来源/索引/文件SHA，再计算四组合与门控统计。它会重现原始和修正两端的L2/AP及全部temporal/state摘要；若分母或帧映射不一致，报告不会作为成功结果发布。
+
+小报告包括：
+
+- 普通GRU/新机制分别四行“原始/修正坐标×原始/修正状态分数”，含L2/AP、Jitter/准确稳定、joint与state指标。坐标不唯一确定热图，本任务不重新计算AUC。
+- 准确稳定窗口变化的坐标项、状态项、交互项及对称分解；lost/gained窗口按不稳/定位误差/预测画外的失败组合计数。
+- 全部/历史可用/GT状态/稳定帧/三类代理事件邻域的validity、refresh等分布，对应距离与修正幅度关联。邻域固定原帧号±3、同连续段内；GT仅作离线分组。
+
+四组合是对已有输出的诊断，不代替重训结构消融；门值相关性也不直接作为因果结论。结果用于确定下一项有针对性的训练调整。
+
+### 诊断产物与回传
+
+小报告为 `r4_official_cache_diagnosis.json/.md`，两个模型的逐轨迹/事件明细分别写在新输出目录的 `ordinary_gru_cross_details.json`、`history_validity_cross_details.json`。明细留服务器，其路径/SHA记录在报告和provenance。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git add cscwd/results/r4_official_cache_diagnosis.json \
+  cscwd/results/r4_official_cache_diagnosis.md cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record cached output contributions and history control diagnosis"
+git push origin codex/coverage-aware-router
+```
+
+回传后依据坐标/状态分解与控制量选择下一项输出控制、损失调整或最少对照；本任务不产生新的模型权重或测试预测缓存。

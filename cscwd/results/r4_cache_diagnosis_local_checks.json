@@ -1,0 +1,68 @@
+{
+  "task": "R4_cache_diagnosis_local_checks",
+  "date": "2026-11-18",
+  "diagnosis_version": "r4_cache_diagnosis_v1",
+  "based_on_commit": "f841c84c9ce6a8ea9daf0b50357ea1d790637d6a",
+  "passed": true,
+  "scope": "CPU_synthetic_tests_only; real_server_diagnosis_not_run",
+  "runtime": {
+    "python": "3.13.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_cache_diagnosis_plan.md",
+    "sha256": "4ba64cb72e45f309eaaaa4d2344a7614f27e99758f3226844eb6a5d464893b34"
+  },
+  "source_sha256": {
+    "cscwd/code/scripts/diagnose_official_cache.py": "e5dfd6bce16801a8a691d3de47fb6d2d82fee8f8cc6fa6479cb63227b467a13d",
+    "cscwd/code/scripts/test_diagnose_official_cache.py": "9fab9fe2e34f2f884ad622df1f5cc4d9b4465dc4d40a500022c244612b437549",
+    "cscwd/code/stag/cache_diagnosis.py": "36199fdcc143d06cdc7381dd05c6cc1fb1535df0549fffce2992b749c583d0da",
+    "cscwd/code/stag/history_diagnosis.py": "723dc836e5b4f0d1dc0e89f5bc8609f65fd72e27467906d9abbf485426dc9f17",
+    "cscwd/code/stag/test_cache_diagnosis.py": "e822de24474147ddb097fd9c3ef9b2a495773130e32e7ecccaec49d9fd705c7f",
+    "cscwd/code/stag/test_history_diagnosis.py": "f8c9d02f29967ff4ea8b96d75dd3d656462ee42141f2e3e9c7815b3c5d4e13c6"
+  },
+  "test_count": 23,
+  "groups": {
+    "cross_output_decomposition": 11,
+    "history_controls": 8,
+    "script_integration": 4
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*diagnosis.py' -v",
+      "count": 19,
+      "seconds": 0.242,
+      "exit_code": 0
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p test_diagnose_official_cache.py -v",
+      "count": 4,
+      "seconds": 9.727,
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "four_output_combinations_match_shared_metrics": true,
+    "exact_window_factorization_and_shapley_sum": true,
+    "overlapping_failed_conditions_preserved_as_mutually_exclusive_bit_patterns": true,
+    "source_frames_and_diagnostic_rows_aligned_after_reordering": true,
+    "gaps_people_and_event_neighborhoods_respected": true,
+    "history_unavailable_frames_reported_separately": true,
+    "constant_float32_and_float64_correlations_are_null": true,
+    "synthetic_raw_and_refined_endpoints_reproduced": true,
+    "source_caches_unchanged": true,
+    "CPU_CLI_with_torch_import_disabled": true,
+    "report_and_provenance_hashes_match": true,
+    "python_3_10_AST_six_new_files": true,
+    "two_server_command_blocks_bash_syntax": true,
+    "old_source_and_official_training_plan_unchanged": true
+  },
+  "implementation_notes": [
+    "Coordinates and state scores are cross-combined only for offline diagnosis; no retrained ablation or new model output is claimed.",
+    "Gate distributions exclude no-history rows when interpreting validity; GT groups and symmetric event neighborhoods are offline labels only.",
+    "Only prediction/diagnostic caches and small checkpoint SHA records are read; no feature tensors or model forward is used."
+  ],
+  "next_step": "User server pull and manual CPU nohup command in implementation_plan.md section 12.1; return r4_official_cache_diagnosis.json/.md and provenance."
+}

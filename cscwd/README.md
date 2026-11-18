@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-18）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：官方train/test首轮已取回验收，两模型均按AUC规则选epoch 5；新机制优势尚未建立，下一步复用缓存做定位/状态贡献诊断。旧validation实验保留存档。
+> 状态：官方train/test首轮已验收，两模型均选epoch 5。现有预测的贡献/门控诊断入口本地完成，23项检查通过；当前由用户手动运行§12.1的CPU诊断。
 
 ## 目录结构
 
@@ -24,6 +24,7 @@ cscwd/
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
+| [r4_cache_diagnosis_plan.md](r4_cache_diagnosis_plan.md) | 当前诊断：四种坐标/状态组合、准确稳定贡献与历史控制量 |
 | [training_file_guide.md](training_file_guide.md) | 当前训练文件说明：数据JSON、特征、权重、每轮结果与日志的具体路径 |
 | [r4_official_train_test_plan.md](r4_official_train_test_plan.md) | 当前 R4：完整 train、逐 epoch test、AUC 选模 |
 | [r4_compact_plan.md](r4_compact_plan.md) | 原 R4 validation 历史协议与选模规则 |
@@ -39,12 +40,13 @@ cscwd/
 | [results/r4_local_checks.md](results/r4_local_checks.md) | 原 R4 validation 入口与合成 CLI 检查 |
 | [results/r4_official_local_checks.md](results/r4_official_local_checks.md) | 官方 train/test 入口与36项本地检查 |
 | [results/r4_official_local_review.md](results/r4_official_local_review.md) | 官方train/test首轮真实结果、epoch 5选择与下一步诊断 |
+| [results/r4_cache_diagnosis_local_checks.md](results/r4_cache_diagnosis_local_checks.md) | 缓存诊断入口与23项本地合成检查 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**官方train/test首轮已验收 → 现有预测/门控缓存贡献诊断 → 一次针对性调整与最少机制证据 → 论文**。两模型均选epoch 5；§11及旧§9/§10仅保留复现，首轮与test特征无需重跑。
+当前执行顺序：**官方train/test首轮已验收 → §12.1 CPU缓存贡献/门控诊断 → 一次针对性调整与最少机制证据 → 论文**。两模型均选epoch 5；§11及旧§9/§10仅保留复现，首轮与test特征无需重跑。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

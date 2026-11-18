@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | 官方train/test首轮已验收，两模型选epoch 5；新机制优势尚未建立，下一步缓存贡献诊断 |
+| CSCWD | `cscwd/` | 缓存贡献/门控诊断入口本地完成，23项检查通过；等待服务器CPU运行§12.1 |
 
 ## 当前优先级（2026-11-18）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -84,6 +84,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-B / 2026-11-18 / 官方train/test首轮结果验收**：结果已在服务器提交为 `aa0ab55`，GitHub当时仍为 `c966239`；已通过只读Git/SSH取回并合并，保留双方历史。来源/预算/覆盖/算式/选模等 **283项本地核对通过**，产出 `cscwd/results/r4_official_local_review.json/.md`。test特征13,127图像FP16缓存完成，20,646,985,856 bytes；两模型完整train各五轮、每轮完整test，均按AUC规则选 **epoch 5**。单帧→新机制：AUC **0.940182→0.940466**、L2 **0.098995→0.099244**、AP **0.886801→0.892778**，准确稳定 **52.7531%→50.3334%**，状态错误 **19.5165%→19.3289%**，gaze_shift **92/158→88/158**。普通GRU epoch 5为AUC首选（0.940541）；新机制AUC/AP与准确稳定低于GRU，L2更低、leave多1个响应。当前保留小幅标准/状态排序改善与出画响应取舍，尚不宣称核心机制有效。下一步复用缓存分解定位/状态贡献并汇总门控诊断，再决定一次针对性调整；本次未启动新作业。
 
+**R4-D1 / 2026-11-18 / 缓存贡献与门控诊断入口完成**：新增 `cache_diagnosis.py`、`history_diagnosis.py`、`diagnose_official_cache.py` 与三套测试，计划 `cscwd/r4_cache_diagnosis_plan.md`（`r4_cache_diagnosis_v1`）。四种坐标/状态组合计分，准确稳定窗口坐标/状态/交互及对称贡献分解，lost/gained互斥失败组合；新机制控制量按历史可用、GT状态/稳定帧和原帧±3的代理事件邻域汇总。源缓存按人物/原帧/source行对齐，并重现两端L2/AP与全部时序/状态摘要。**23项本地合成检查通过**（交叉11、门控8、入口4），包括禁止Torch导入的实际CLI、缓存不变、轨迹重排和手算分解；记录 `cscwd/results/r4_cache_diagnosis_local_checks.json/.md`。无新增真实VAT数字或训练作业；下一步由用户按§12.1单条CPU nohup运行并回传诊断结果，再决定训练调整。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -94,6 +96,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **缓存贡献诊断**：用已有epoch-5预测，把原始/修正坐标与原始/修正状态交叉计分，定位准确稳定性下降的来源；汇总validity/refresh与历史对应诊断。首轮和test特征无需重跑。
+1. **运行缓存诊断**：新入口本地完成，23项合成检查通过。用户服务器pull后仅运行实现计划§12.1的单条CPU后台命令，再回传 `r4_official_cache_diagnosis.json/.md` 与provenance；复用已有epoch-5缓存，无需重训或重做特征。
 2. 根据诊断选择一项针对性的输出控制/训练目标调整；阈值取舍用train拟合的单调校准对照，主张历史导致AP收益时补同预算无历史修正头。再决定最少机制实验及论文范围。
 3. 当前论文整行取各模型epoch 5，保留全部轮次与test选模协议。核心机制优势尚未建立，先补直接证据；VAT逐人指标与协作收益分别表述。
