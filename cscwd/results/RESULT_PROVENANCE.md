@@ -498,3 +498,12 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 新增交叉输出核心、历史控制汇总、CPU入口及三套测试，六个源码文件SHA见 `cscwd/results/r4_cache_diagnosis_local_checks.json`；JSON SHA256 `a69de9bff562f0fd3a7c85705f08be10ee02abf8eaaa26795add7112440a1d0e`，Markdown SHA256 `b37291c1583256118b8f77f2cb98595cfc765f21641e418d4e5fa580ca46a324`。
 - 23项CPU合成检查通过（交叉11、门控8、入口4），覆盖手算分解/失败组合、源行/人物/原帧对齐、缺口、门值/对应分组、浮点常量关联null、两端重现、原缓存不变以及禁止Torch导入的完整CLI；Python3.10语法和§12命令语法通过。
 - 真实服务器诊断尚未运行，没有新增VAT指标或模型权重。下一步由用户按§12.1手动运行CPU脚本，产出独立 `r4_official_cache_diagnosis.json/.md`；逐轨迹/事件大明细留服务器新目录，实际路径/SHA由入口追加记录。
+
+## Official test cache diagnosis
+
+- UTC: `2026-11-18T05:13:06.448222+00:00`; commit: `ba746f8fc0f53b487a58519e0901afa379fd6eb8`.
+- Command: `/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/diagnose_official_cache.py --comparison-report /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_comparison.json --single-frame-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json --plan /home/fb/src/paper/gazelleV1/cscwd/r4_cache_diagnosis_plan.md --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1 --event-radius 3 --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`.
+- Report: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.json`; SHA256: `3b7c522bcb35b2750e470e2366e1672178b624b22203abe91e8c5d00953802ff`.
+- Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.md`; SHA256: `e576e047659072e809c521842ef5e2c6789c131f654d5890b28a395426140ed2`.
+- ordinary_gru cross details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1/ordinary_gru_cross_details.json`; SHA256: `cd1773005b1e2b5e114333b65d130f986285d609d2bd3ab4118bc664e98c00c9`.
+- history_validity cross details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1/history_validity_cross_details.json`; SHA256: `216713cafe28207d00459f0e627931500fdd0371b58bfa1be52336c103ba1f73`.
