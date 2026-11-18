@@ -7,11 +7,11 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | 官方 train/test 新入口本地完成，36 项检查通过；等待 GPU 1 手动运行 §11.1 |
+| CSCWD | `cscwd/` | 官方 train/test 新入口已由用户启动；等待结果回传，文件说明见 training_file_guide.md |
 
 ## 当前优先级（2026-11-18）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
-方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。R1/R2 已验收，R3 历史视觉对应/有效性模型与诊断本地完成。原精简 R4 `r4_compact_v2` validation 首轮已验收，两模型均选 epoch 1、整体仍首选单帧。用户随后明确取消后续 validation，当前执行 `cscwd/r4_official_train_test_plan.md` 的 `r4_official_train_test_v1`：完整官方 train 训练，每 epoch 完整 test，按 AUC 优先、L2 更低、AP 更高选一整轮。新入口本地完成、36项检查通过，新真实作业尚未运行。原规则 STAG 保留为先导基线，以下 T1–T6 数字保留为真实先导结果。
+方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。R1/R2 已验收，R3 历史视觉对应/有效性模型与诊断本地完成。原精简 R4 `r4_compact_v2` validation 首轮已验收，两模型均选 epoch 1、整体仍首选单帧。用户随后明确取消后续 validation，当前执行 `cscwd/r4_official_train_test_plan.md` 的 `r4_official_train_test_v1`：完整官方 train 训练，每 epoch 完整 test，按 AUC 优先、L2 更低、AP 更高选一整轮。新入口本地完成、36项检查通过，用户已启动服务器作业，等待真实结果回传。原规则 STAG 保留为先导基线，以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
 T2 真实结果已拉取（`24cf720`）并验收通过：指定 ViT-B GazeSpot VAT `epoch_7.pt`（`train_vat_sasa_ggsf/2026-03-12_19-24-13/epoch_7.pt`），覆盖 **298 tracks / 13,127 图像帧 / 31,978 人物帧**；float32 heatmap、inout、argmax 无损读回与重建全部通过，输入 SHA256 对齐 T1，代码 SHA256 对齐 T2 实现提交。NVIDIA GeForce RTX 3090 上整项缓存作业耗时 **731.430930521 秒**；来源见 `cscwd/results/t2_single_frame_cache.json` 与 provenance。
@@ -80,6 +80,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-B / 2026-11-18 / 服务器数据与缓存只读确认**：已SSH检查，官方train/test的轨迹与原图均在，train **1,033 tracks / 132,563人物帧 / 58,507图像**、test **298 / 31,978 / 13,127**，全部图像路径存在且分区不交叉。R1只逻辑拆分官方train，完整train特征与train/test原预测均保留；新test视觉特征目录和完成报告尚不存在，需由§11.1入口先生成。服务器仍为 `f1d41e4`、未pull新脚本。产出 `cscwd/results/r4_official_server_preflight.json/.md`，10项既有数据检查通过；未启动服务器作业。下一步先pull，再手动运行GPU1单条入口。
 
+**R4-B / 2026-11-18 / 训练文件说明完成**：用户已启动官方train/test服务器作业。新增 `cscwd/training_file_guide.md`，按实际源码说明官方分区与训练直接读取的index、预测/视觉特征缓存、标签和行映射、原始/新增权重、逐轮输出、选模、日志及回传文件；同步README入口。只在本地更新文档，未修改运行脚本、协议文件或服务器任务，没有新增实验数字；下一步等待本轮结果回传。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -90,6 +92,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **官方 train/test 新首轮**：服务器 pull 后只执行实现计划 §11.1 的单条后台命令（物理 GPU 1），补 test 冻结特征，再重训普通 GRU/新机制各五轮；完整 test 每轮评测，AUC 优先选择 `selected.pt`。按 §11 末尾清单回传小报告与 provenance。
+1. **官方 train/test 新首轮运行中**：用户已启动服务器作业，等待 test 特征、两模型各五轮及比较完成；按实现计划 §11 末尾清单回传小报告与 provenance。数据/缓存/权重/日志路径见 `cscwd/training_file_guide.md`。
 2. 审查新协议同一官方 test 上单帧/GRU/新机制的真实结果，再决定最少机制对照及论文；旧 validation 结果保持原标签，数据量不同的旧运行不作同次实验混比。
 3. test 参与 checkpoint 选择的事实写入设置、报告与论文；GT 仍只进入当前训练损失或离线计分，不进入历史记忆或重置。仅有 VAT 逐人结果时，协作收益仍需对应下游证据。

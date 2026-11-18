@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-18）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：原 R4 validation 首轮已验收；用户已改为官方 train/test 两份数据，每 epoch 完整 test、AUC 优先选最佳一轮。当前协议 `r4_official_train_test_v1`，36项本地合成检查通过，服务器唯一入口为实现计划 §11.1；新真实结果尚未运行。
+> 状态：原 R4 validation 首轮已验收；用户已改为官方 train/test 两份数据，每 epoch 完整 test、AUC 优先选最佳一轮。当前协议 `r4_official_train_test_v1`，36项本地合成检查通过，服务器唯一入口为实现计划 §11.1；用户已启动服务器作业，等待真实结果回传。
 
 ## 目录结构
 
@@ -24,6 +24,7 @@ cscwd/
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
+| [training_file_guide.md](training_file_guide.md) | 当前训练文件说明：数据JSON、特征、权重、每轮结果与日志的具体路径 |
 | [r4_official_train_test_plan.md](r4_official_train_test_plan.md) | 当前 R4：完整 train、逐 epoch test、AUC 选模 |
 | [r4_compact_plan.md](r4_compact_plan.md) | 原 R4 validation 历史协议与选模规则 |
 | [codex_prompt.md](codex_prompt.md) | codex 提示词 + 追加指令 |

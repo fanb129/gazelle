@@ -367,7 +367,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-18 · R4 分区与后续训练约定确认**：读取指定 PDF 第6页表2，ViT-B的VAT主表为 **0.940 / 0.099 / 0.887**，与已跑官方test单帧 **0.940182 / 0.098995 / 0.886801** 舍入一致；当前 **0.954206 / 0.079605 / 0.960923** 来自official train内的开发validation，原GazeSpot底座曾使用official train训练。确认当前入口已逐epoch完整验证、记录全部历史并选出整轮最佳结果，将此流程写为后续所有训练入口的约定。更新本文档与 `PROGRESS.md`，未新增实验运行；下一步仍为已有缓存贡献诊断。
 - **2026-11-18 · R4 官方 train/test 协议切换**：按用户明确要求取消后续 validation，新增 `r4_official_train_test_plan.md`（`r4_official_train_test_v1`）：完整 train 训练、每 epoch 完整 test，并按用户确认的 AUC 优先、L2 更低、AP 更高选一整轮。旧 validation 报告保留，新的两模型从头训练；新增官方数据/评测/选模模块、test缓存、训练/比较/后台入口及测试；36项本地合成检查通过（数据5、特征6、协议5、训练6、比较8、后台6），记录 `results/r4_official_local_checks.json/.md`。旧源码和报告保持，完整服务器命令见§11。
 - **2026-11-18 · R4 官方服务器数据与缓存只读确认**：已SSH核对官方train/test完整轨迹、全部71,634个RGB路径、既有预测/全train特征索引及NPY header，10项数据检查通过。train为1,033tracks/132,563帧，test为298/31,978帧；R1仅逻辑拆分train，官方test一直存在。新test特征目录与 `r4_official_test_features.json` 均不存在，服务器仍停在 `f1d41e4`，新wrapper尚未pull。产出 `results/r4_official_server_preflight.json/.md`，未运行缓存或训练；下一步先pull，再执行§11.1自动补特征并训练。
-- **当前下一步（官方 train/test）**：用户按 §11 在物理 GPU 1 手动补 test 特征并重训两模型，回传 `r4_official_*` 小报告；新协议的真实结果尚未运行。
+- **2026-11-18 · R4 训练文件说明完成**：用户已启动本轮服务器作业；新增 `training_file_guide.md`，逐项说明实际读入的train/test index、原预测/视觉特征、标签、原GazeSpot与新增模块权重、逐轮预测/诊断/history、选择清单和日志/回传路径。同步状态和README，仅本地文档更新，无新增实验数字；下一步等待真实结果回传。
+- **当前下一步（官方 train/test）**：本轮已由用户启动，等待缓存、训练和比较完成后回传 `r4_official_*` 小报告；路径说明见 `training_file_guide.md`。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -831,7 +832,7 @@ git push origin codex/coverage-aware-router
 
 ## 11. 官方 train/test 新协议服务器运行（当前唯一入口）
 
-协议为 `r4_official_train_test_v1`，完整设置见 `r4_official_train_test_plan.md`。本轮使用完整官方 train，不再使用 validation；普通 GRU 和新机制各从头训练五个 epoch，每轮完整 test，以 **AUC 更高 → L2 更低 → AP 更高 → 较早 epoch** 选整轮结果。新协议的真实作业尚未运行。
+协议为 `r4_official_train_test_v1`，完整设置见 `r4_official_train_test_plan.md`。本轮使用完整官方 train，不再使用 validation；普通 GRU 和新机制各从头训练五个 epoch，每轮完整 test，以 **AUC 更高 → L2 更低 → AP 更高 → 较早 epoch** 选整轮结果。本轮已由用户启动，等待真实结果回传；以下命令保留供复现。
 
 2026-11-18 SSH只读检查已确认完整train特征、train/test原预测与全部RGB存在；R1仅为train内逻辑划分。新test视觉特征及完成报告尚不存在，由以下入口先生成。服务器检查时仍为 `f1d41e4`，需先pull新实现；记录见 `results/r4_official_server_preflight.json/.md`。
 
