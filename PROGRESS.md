@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | 缓存诊断已验收：状态输出项主导稳定损失；下一步train拟合的单调状态校准对照 |
+| CSCWD | `cscwd/` | R4-D2单调状态校准入口完成、18项合成检查通过；下一步服务器手动运行§13.1 |
 
 ## 当前优先级（2026-11-18）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -88,6 +88,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D1 / 2026-11-18 / 真实缓存诊断验收**：拉取 `287d063`，169项本地来源/算式/端点/分母核对通过，产出 `cscwd/results/r4_cache_diagnosis_local_review.json/.md`。新机制M00/M10/M01/M11准确稳定窗口为 **10,443 / 10,399 / 9,992 / 9,964**，总−479；坐标项−44、分数项−451、交互+16；对称分数项−443，约占净下降92.48%。GT画内引入1,155帧画外误判，仅纠正40帧；画外净纠正1,175帧，因此总错帧只少60。历史可用时validity均值0.671961、范围0.496976–0.896991，未见明确事件低门释放形态，聚合不当机制因果证据。下一步R4-D2：固定epoch 5与坐标，为单帧/GRU/新机制做train拟合的一维单调输出状态校准；新增模块先冻结前向补train分数，校准不反馈历史，保持AP排序。D2尚未实现或运行，本次无新增训练作业。
 
+**R4-D2 / 2026-11-18 / 校准对照本地入口完成**：新增 `state_calibration.py`、`calibration_rollout.py`、`calibrate_official_state.py` 与三套测试，规格为 `cscwd/r4_state_calibration_plan.md`（`r4_state_calibration_v1`）。单帧/GRU/新机制各用完整train拟合一个全局log-odds偏置，固定区间[-16,16]、未加权BCE有限可变部分、80轮导数二分；固定epoch 5与坐标，新增模块只冻结前向，校准不反馈历史。float64输出保留原0/1、不同分数顺序和ties，核对train/test AP不变及train目标不增。
+
+**R4-D2 / 本地产出与下一步**：**18项新增CPU合成检查通过**（数学10、因果前向4、完整入口4），覆盖已知偏置、极端float32保序、GT不进入预测、跨chunk一致性/人物与缺口重置、原行映射、来源不变、原端点重现、排序失败阻止成功报告和完整CLI/provenance。记录 `cscwd/results/r4_state_calibration_local_checks.json/.md`；旧源码、真实结果和原训练协议保持。没有新增真实VAT数字，未启动服务器作业。下一步用户按 `implementation_plan.md` §13.1单条命令用物理GPU 1运行，回传 `r4_state_calibration.json/.md` 与provenance，再决定针对性训练调整。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -98,6 +102,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **R4-D2单调状态校准对照**：固定现有epoch 5与坐标；单帧train分数直接复用，GRU/新机制冻结因果前向获得train分数，各自仅用train标签拟合一个全局状态分数偏置。校准只在最终输出应用，不反馈原历史；test保持0.5阈值，核对排序/AP不变并评估状态/时序取舍。
+1. **服务器手动运行R4-D2**：入口与18项合成检查已完成，按 `cscwd/implementation_plan.md` §13.1用GPU 1运行；固定epoch 5与坐标，只补冻结train前向、拟合三个全局状态偏置，复用test预测。回传小报告/provenance后审核状态与时序取舍。
 2. 根据校准对照决定状态输出约束或训练目标调整；要将AP收益归因于历史时，补同输入同预算无历史头。门控的相关/组均值只作诊断，结构收益需实际对照。
 3. 当前论文整行仍取各模型epoch 5；test选模协议与全部失败结果保留，VAT逐人指标和协作收益分别表述。

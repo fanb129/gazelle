@@ -279,3 +279,13 @@ RESULT_PROVENANCE.md
 - [AUC/L2/AP选轮规则](/Users/fanb/src/gazelle/cscwd/code/stag/official_protocol.py)
 - [test评测与原始单帧基线](/Users/fanb/src/gazelle/cscwd/code/stag/official_evaluation.py)
 - [完整报告比较](/Users/fanb/src/gazelle/cscwd/code/scripts/compare_official_joint.py)
+
+## 12. R4-D2校准新增文件
+
+本轮规格见 `r4_state_calibration_plan.md`，唯一启动命令见实现计划§13.1。保持上述官方划分、原始预测/视觉特征与epoch-5权重；没有新的epoch训练或权重文件。
+
+train输入直接读 `r1_train_single_frame_cache.json` 指向的完整train prediction index/分数，GRU与新机制另读 `r2_feature_cache.json` 指向的train特征及各自 `selected.pt`，冻结前向只补分数。test输入读 `t2_single_frame_cache.json` 与 `r4_official_comparison.json` 选中的两套epoch-5预测；无需test特征或RGB。
+
+新输出根目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/`，其 `single_frame/`、`ordinary_gru/`、`history_validity/` 各存 `calibration.json`、`test_inout_calibrated.npy`、`test_details.json`；后两者另有 `train_scores/inout.npy` 与 `index.json`。train分数与校准test分数分别沿用原官方prediction index的全局行序，校准test以float64保存以保持排序。
+
+日志为 `/home/fb/src/paper/gazelleV1/cscwd/results/r4_state_calibration.log`，成功标记为 `R4 state calibration completed`。回传小报告 `r4_state_calibration.json/.md` 与 `RESULT_PROVENANCE.md`；NPY、完整事件明细及参数JSON留服务器，路径和SHA由入口记录。

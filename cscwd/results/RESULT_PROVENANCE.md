@@ -515,3 +515,10 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 新机制GT画内引入1,155帧画外误判、纠正40帧，净增1,115错帧；画外净少1,175错帧，全体只净少60错帧。其失去631/获得152个准确稳定窗口，失去窗口中431个仅状态条件失败。
 - 有历史31,680帧、无历史298帧；有历史validity均值0.671961、范围0.496976–0.896991，refresh均值0.610451。门控聚合未显示清晰的事件低门释放形态，相关与组均值不直接作因果证据。
 - 下一步R4-D2为train拟合的一维严格单调输出状态校准，对单帧/GRU/新机制保持现有epoch 5/坐标/原递归历史，最终分数单独校准；核对AP排序不变并评价状态/时序取舍。D2细节在实现与运行前固定，本次未拟合参数、重训或启动服务器作业。
+
+## R4-D2单调状态校准本地入口（2026-11-18）
+
+- 计划 `cscwd/r4_state_calibration_plan.md`，版本 `r4_state_calibration_v1`，SHA256 `7dadbc8290e882cdc68a9c7fdca3cd749615ebc6f7b0d6b5c806f6b029fa89fe`。固定原epoch 5/坐标/递归历史，三个全局偏置只用完整train拟合；原训练协议和真实报告不改。
+- 18项CPU合成检查通过（数学10、冻结前向4、入口4）；记录 `cscwd/results/r4_state_calibration_local_checks.json` / `cscwd/results/r4_state_calibration_local_checks.md`，SHA256分别为 `76e141db36f1b66811c888eb5a8ec9bd17a482c92f6d6c0c599ba1c929edb432` / `2604e2338886fe8a21b3faf6b03e62a658320ff0939801330af8f8b5061d617f`；六个新源码的SHA见JSON。
+- 覆盖float32极值保序/ties/AP、有限目标、GT不进入预测、人物/缺口与chunk状态、原行序、来源/权重不变、端点重现、失败检查和完整CLI/provenance；Python3.10语法、服务器命令bash语法通过。
+- 未运行真实VAT或服务器作业，没有新的真实校准指标/权重。下一步用户按实现计划§13.1用GPU 1手动运行，输出目录 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/`；实际NPY/参数/明细路径与SHA由入口追加。

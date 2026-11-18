@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-18。官方train/test首轮 `aa0ab55` 已取回并验收，两模型均按AUC优先规则选epoch 5；test特征已完成。新机制AUC/AP小幅改善但准确稳定/切换下降，尚未建立相对GRU的机制优势。缓存诊断已回传验收，状态输出项主导准确稳定损失；当前下一步为R4-D2 train拟合的单调状态校准对照，§11/§12保留复现。
+> 当前版本：2026-11-18。官方train/test首轮 `aa0ab55` 已取回并验收，两模型均按AUC优先规则选epoch 5；test特征已完成。新机制AUC/AP小幅改善但准确稳定/切换下降，尚未建立相对GRU的机制优势。缓存诊断已验收，状态输出项主导准确稳定损失；R4-D2 train拟合的单调状态校准入口已完成，下一步用户手动运行§13.1。§11/§12保留复现。
 
 ## 0. 目标（一句话）
 
@@ -373,7 +373,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-18 · 官方train/test首轮验收完成**：取回服务器提交 `aa0ab55` 并合并本地文档提交 `c966239`，283项来源/覆盖/损失/指标/选模核对通过，产出 `results/r4_official_local_review.json/.md`。test特征完成，两模型均完整五轮、选epoch 5；AUC首选为GRU **0.940541**，新机制 **0.940466**。单帧→新机制AP **0.886801→0.892778**、准确稳定 **52.7531%→50.3334%**、gaze_shift **92/158→88/158**，保留真实折中，机制额外收益尚未建立。
 - **2026-11-18 · R4-D1 缓存诊断入口完成**：新增交叉输出/门控统计模块、CPU入口与三套测试，计划 `r4_cache_diagnosis_plan.md`。23项本地合成检查通过（交叉11、门控8、入口4），包括手算窗口分解/失败组合、门值分布、source行与轨迹重排、两端重现、禁止Torch导入的完整CLI与缓存不变性；产出 `results/r4_cache_diagnosis_local_checks.json/.md`。未修改旧源码或训练协议，无新增真实VAT结果；完整服务器命令见§12.1。
 - **2026-11-18 · R4-D1真实诊断验收**：拉取 `287d063`，169项本地来源/算式/端点/分母核对通过，记录 `results/r4_cache_diagnosis_local_review.json/.md`。新机制窗口10,443→9,964，总−479；坐标/分数/交互为−44/−451/+16，对称分数项−443（92.48%净下降）。真实画内引入1,155错帧、纠正40帧；历史可用validity均值0.671961，汇总未显示清晰低门释放，尚不作机制因果结论。
-- **当前下一步（R4-D2校准对照）**：固定epoch 5与坐标，为单帧/GRU/新机制仅用train拟合一维严格单调输出状态校准；新增模块冻结因果前向获得train分数，校准不反馈历史。以0.5阈值复核状态/时序代价并确认AP排序不变，拟合细节在实现/运行前固定。D2尚未实现或运行。
+- **R4-D2执行约定**：固定epoch 5与坐标，为单帧/GRU/新机制仅用train拟合一维严格单调输出状态校准；新增模块冻结因果前向获得train分数，校准不反馈历史。以0.5阈值复核状态/时序代价并确认AP排序不变，拟合细节已固定于 `r4_state_calibration_plan.md`，服务器入口见§13.1。
+- **2026-11-18 · R4-D2本地入口完成**：新增数学核心、冻结train分数前向、单条校准/评测入口与三套测试，规格 `r4_state_calibration_plan.md`。固定[-16,16]全局偏置、未加权BCE有限可变部分、80轮导数二分；原历史/坐标/epoch保持，train/test严格保序/ties/AP与目标不增纳入成功检查。**18项CPU合成检查通过**（数学10、前向4、入口4），包括人物/缺口与chunk状态、GT不影响预测、来源/原端点重现、排序失败阻止成功报告、完整CLI和provenance；记录 `results/r4_state_calibration_local_checks.json/.md`。旧源码与真实结果未改，无新增VAT数字；下一步用户手动执行§13.1并回传结果。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -936,3 +937,48 @@ git push origin codex/coverage-aware-router
 ```
 
 回传后依据坐标/状态分解与控制量选择下一项输出控制、损失调整或最少对照；本任务不产生新的模型权重或测试预测缓存。
+
+## 13. R4-D2：train拟合的单调状态校准
+
+完整规格见 `r4_state_calibration_plan.md`，版本 `r4_state_calibration_v1`。单帧、普通GRU、新机制各用完整train拟合一个全局log-odds偏置；固定原epoch 5与坐标，不重训时序模块、不重新选轮。仅补两项冻结train前向，test直接复用已有预测；校准分数不反馈原历史。偏置区间固定 `[-16,16]`，未加权BCE有限可变部分、80轮导数二分；float64输出核对train/test严格顺序、ties及AP均保持。
+
+### 13.1 唯一后台启动命令（物理 GPU 1）
+
+由用户在服务器手动执行一次；不需要运行§11或§12。只读取train视觉特征和已有train/test预测，不读取test视觉特征或重新缓存。参数中的输出目录是新目录；原训练与预测不覆盖。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u cscwd/code/scripts/calibrate_official_state.py \
+  --comparison-report /home/fb/src/paper/gazelleV1/cscwd/results/r4_official_comparison.json \
+  --train-prediction-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json \
+  --test-prediction-report /home/fb/src/paper/gazelleV1/cscwd/results/t2_single_frame_cache.json \
+  --train-feature-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
+  --train-feature-report /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_cache.json \
+  --plan /home/fb/src/paper/gazelleV1/cscwd/r4_state_calibration_plan.md \
+  --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1 \
+  --device cuda:0 \
+  --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_state_calibration.json \
+  --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_state_calibration.md \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_state_calibration.log 2>&1 &
+```
+
+外层 `CUDA_VISIBLE_DEVICES=1` 选择物理GPU 1，进程内 `--device cuda:0` 对应该卡。train前向沿用两模型已记录的 `clip_frames=16, batch_size=8, hidden_dim=128, temperature=0.1` 与epoch-5 checkpoint；参数不更新。启动先核对来源与大特征文件SHA，再依次执行单帧校准、GRU冻结train前向/校准、新机制冻结train前向/校准，最后发布小报告。
+
+成功标记：`R4 state calibration completed`。报告核对原始L2/AP与全部temporal/state端点，并全报三种方法校准前后结果。AUC沿用原热图结果、明确未重算；L2/AP重算且不变。真实结果回传后判断全局偏置是否能恢复准确稳定性，以及对画内/画外错误、翻转、enter/leave响应的代价。
+
+### 本轮产物与回传
+
+- 小报告：`cscwd/results/r4_state_calibration.json/.md` 与自动追加的provenance。三个偏置、train目标、来源SHA、前后摘要、事件配对和保序检查都保留。
+- 新实验根目录：`experiments/cscwd_r4_state_calibration_v1/`。每种方法的 `calibration.json`、float64 `test_inout_calibrated.npy`、`test_details.json` 留服务器；GRU/新机制另有 `train_scores/inout.npy` 与 `index.json`，按原train缓存行序保存。实际路径/SHA写入报告和provenance。
+- 无新checkpoint；不修改原热图或历史。原test选epoch的协议继续在报告中注明。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git add cscwd/results/r4_state_calibration.json cscwd/results/r4_state_calibration.md \
+  cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record train-only monotone state calibration control"
+git push origin codex/coverage-aware-router
+```

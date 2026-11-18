@@ -1,0 +1,75 @@
+{
+  "task": "R4_state_calibration_local_checks",
+  "date": "2026-11-18",
+  "created_at_utc": "2026-11-18T05:47:20.215631+00:00",
+  "calibration_version": "r4_state_calibration_v1",
+  "based_on_commit": "a5f08917e6f68ad9f58b9f50b2c4fc471d6c6064",
+  "passed": true,
+  "scope": "CPU_synthetic_checks_only; real_VAT_calibration_and_server_job_not_run",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_state_calibration_plan.md",
+    "sha256": "7dadbc8290e882cdc68a9c7fdca3cd749615ebc6f7b0d6b5c806f6b029fa89fe"
+  },
+  "source_sha256": {
+    "cscwd/code/stag/state_calibration.py": "74bad4622325c74ceec9c522afa713290189a0dfac92b587f78cfe56eebc1d76",
+    "cscwd/code/stag/calibration_rollout.py": "6225bd44123541cf5211435b3c868646c84f3b0e41f96557c622dd813b3eaf94",
+    "cscwd/code/scripts/calibrate_official_state.py": "fdf3db106bbdedd24e1b9c3b05c89c1e3366995a33d116bd26db825085ffc465",
+    "cscwd/code/stag/test_state_calibration.py": "31d824b3b30a062c729a696d9818748acd09279edd61969c1fc6223f8e84ba90",
+    "cscwd/code/stag/test_calibration_rollout.py": "f8d8a7ef927cac7272e96d1456137a322f716fe4ab4d0721d1ec022a4ca5b9a8",
+    "cscwd/code/scripts/test_calibrate_official_state.py": "a23423af03a173fcafcc5f1781698d906b455467d70adea8ff53531411279c66"
+  },
+  "test_count": 18,
+  "groups": {
+    "calibration_math": 10,
+    "frozen_causal_train_rollout": 4,
+    "script_integration": 4
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*calibration*.py' -v",
+      "count": 14,
+      "seconds": 0.622,
+      "exit_code": 0
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_calibrate_official_state.py' -v",
+      "count": 4,
+      "seconds": 11.952,
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "known_bias_recovery_and_stationarity": true,
+    "fixed_endpoints_and_infinite_constant_loss_explicit": true,
+    "dense_float32_extremes_preserve_order_ties_and_AP": true,
+    "bounded_objective_does_not_increase": true,
+    "frozen_eval_no_grad_and_parameters_unchanged": true,
+    "own_predicted_history_without_calibration_feedback": true,
+    "GT_changes_do_not_change_train_predictions": true,
+    "person_gap_resets_and_chunk_size_invariance": true,
+    "source_global_row_mapping_and_full_coverage": true,
+    "fit_receives_only_full_train_labels_for_all_three_models": true,
+    "fixed_epoch_and_input_identity_enforced": true,
+    "raw_test_endpoints_reproduced_and_sources_unchanged": true,
+    "rank_failures_prevent_success_even_if_AP_equal": true,
+    "actual_synthetic_CLI_and_report_provenance_artifact_hashes": true,
+    "python_3_10_AST_six_new_files": true,
+    "two_server_command_blocks_bash_syntax": true,
+    "small_result_JSON_not_ignored": true,
+    "old_source_and_original_protocol_plans_unchanged": true
+  },
+  "implementation_notes": [
+    "Three independent scalar biases; [-16,16], 80-step derivative bisection of unweighted train BCE finite bias-dependent component.",
+    "Frozen temporal checkpoints are epoch 5; test AUC is retained from the identical original heatmaps; L2/AP and temporal/state metrics are recalculated.",
+    "Synthetic integration fixture prescribes an ascending AUC metadata sequence solely to pin its existing epoch-5 checkpoint; those values are not measured VAT results.",
+    "Only final output scores are calibrated. Original causal memory and train/test coordinates are unchanged."
+  ],
+  "next_step": "User manually runs implementation_plan.md section 13.1 on physical GPU 1; return r4_state_calibration.json/.md and provenance."
+}
