@@ -548,3 +548,10 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 验收记录 `cscwd/results/r4_state_calibration_local_review.md`；SHA256 `ceb1afd435d4d3dc504728fdc64932abed213e5c64fc4a538d50174b3056e2e2`。
 - train偏置单帧−0.423750、GRU+0.041511、新机制+0.090667；AUC/L2/AP保持。新机制准确稳定9,964→10,064、错帧6,181→6,055、错误翻转798→758；只补回相对原始单帧479窗口损失的20.88%，gaze_shift仍88/158。校准后比校准单帧/GRU少96/41个稳定窗口，尚无机制额外优势。
 - 下一步D3为状态时序训练监督：稳定段一致性与状态变化后的响应监督，保留逐帧MSE/BCE、冻结GazeSpot、GRU/新机制同预算；先固定细节再实现。不继续test阈值扫描。本次只验收及更新计划，没有新增模型训练、权重或服务器任务。
+
+## R4-D3状态时序监督本地实现（2026-11-18）
+
+- 规格 `cscwd/r4_state_supervision_plan.md`，版本 `r4_state_supervision_v1`，SHA256 `14567f4bf4831fd069dced259745981e33d95a57bc95566b516b9bfc80418f6a`。固定逐帧损失+稳定同状态L1+真实翻转当前及随后两帧BCE，lambda_state/lambda_time均0.1，窗口3帧；GT仅loss，监督carry与预测历史分离。
+- 29项CPU合成检查通过（loss/epoch12、训练/完整比较CLI6、比较7、wrapper4）；记录 `cscwd/results/r4_state_supervision_local_checks.json` / `cscwd/results/r4_state_supervision_local_checks.md`，SHA256分别 `89ba874e19325bfe20832ca679feb674a727c8b54573decff297911170847518` / `e36bcb2764348febd6cb76251151c3570c5d96aefb58750cd76ddf6a074eda14`。八个新源码SHA见JSON，七个新Python的3.10语法及wrapper/服务器命令bash语法通过。
+- 实际跑通临时合成双模型各五轮、完整test/比较、重载、监督计数和test标签不影响五轮权重；没有真实VAT训练指标、没有服务器任务。旧源码/原训练计划/结果保持。
+- 下一步用户手动运行实现计划§14.1，物理GPU 1，复用已有缓存。新实验根目录 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_supervision_v1/`；实际checkpoint/预测/诊断路径与SHA由任务回写，NPY/PT不进Git。

@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | R4-D2真实结果已验收，校准修复部分损失；下一步R4-D3状态时序训练监督 |
+| CSCWD | `cscwd/` | R4-D3状态时序监督入口完成、29项合成检查通过；下一步服务器GPU 1运行§14.1 |
 
 ## 当前优先级（2026-11-18）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -96,6 +96,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D2 / 下一步决策**：不继续在test扫描偏置。优先R4-D3一次训练目标调整：保留逐帧MSE/BCE，增加稳定GT段的相邻状态一致性与真实状态变化后的当前帧响应监督；GRU/新机制同设置、各从头五轮，冻结GazeSpot，沿用官方train/逐epoch test与AUC选整轮。GT只构造loss；掩码、权重、跨chunk处理在下一任务实现前固定。本次仅验收与计划，无新增训练入口或服务器任务；有实际时序信号后再补最少无历史/读门对照。
 
+**R4-D3 / 2026-11-18 / 状态时序监督本地实现完成**：新增 `state_supervision.py`、独立训练/比较入口、顺序wrapper与四套测试，规格固定于 `cscwd/r4_state_supervision_plan.md`（`r4_state_supervision_v1`）。loss为 `L_heatmap + 0.1 * (L_BCE + 0.1 * (L_stable + L_transition))`；稳定同状态相邻概率L1，真实状态翻转当前及随后两帧的当前状态BCE，独立分母。监督carry与模型历史分开，同人物跨chunk保留/detach，跨人/缺口清空；GT仅loss。普通GRU/新机制均从头五轮、seed 0，复用冻结缓存与原完整train/逐epoch test/AUC选整轮，推理架构保持、不应用D2校准。
+
+**R4-D3 / 本地产出与下一步**：**29项CPU合成检查通过**（loss/epoch12、训练及实际比较CLI6、比较7、wrapper4），覆盖手算/梯度、跨chunk完整监督计数、两模型真实合成五轮、重载、同次诊断、test标签不影响五轮权重、前轮同源差值、来源SHA与GPU1/失败停止。记录 `cscwd/results/r4_state_supervision_local_checks.json/.md`；七个新Python文件的3.10语法与shell命令检查通过。旧源码/原结果不改，没有新增真实VAT数字或服务器作业。下一步用户按实现计划§14.1单条命令运行，回传两模型/比较/selection小报告与provenance，再验收稳定/响应取舍及相对GRU效果。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -106,6 +110,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **实现R4-D3状态时序训练监督**：逐帧监督保留，增加稳定段一致性与状态改变后的响应监督；先固定loss细节与一组权重，再实现GRU/新机制同预算训练。D2已验收，§13无需重跑。
+1. **服务器手动运行R4-D3**：loss、训练/比较入口与29项本地合成检查已完成，用户按 `cscwd/implementation_plan.md` §14.1用物理GPU 1启动唯一命令。已有缓存复用、两模型从头各五轮；回传 `r4_state_supervised_*` 与provenance。§11–§13无需重跑。
 2. 真实时序收益出现后补最少无历史头/validity读门对照，确认收益来源；门控相关/组均值和全局校准不直接作历史机制证据。
 3. 当前论文整行仍取各模型epoch 5；test选模协议与全部失败结果保留，VAT逐人指标和协作收益分别表述。

@@ -25,6 +25,7 @@
 - ~/src/gazelle/cscwd/r4_cache_diagnosis_plan.md、results/r4_cache_diagnosis_local_checks.md（已完成缓存诊断方案与检查）
 - ~/src/gazelle/cscwd/results/r4_cache_diagnosis_local_review.md（真实诊断验收与当前R4-D2校准对照决策）
 - ~/src/gazelle/cscwd/results/r4_state_calibration_local_review.md（D2真实校准验收与当前D3状态时序训练决策）
+- ~/src/gazelle/cscwd/r4_state_supervision_plan.md（D3固定loss、跨chunk监督与运行规格）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
@@ -55,7 +56,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-官方train/test首轮结果 `aa0ab55` 已取回验收，两模型均选epoch 5；缓存诊断 `287d063` 显示状态输出项主导稳定损失。D2结果 `75f305c` 已验收，393项本地核对通过；train全局校准保持AUC/L2/AP，新机制稳定9,964→10,064、状态错帧6,181→6,055，gaze_shift仍88/158，尚无超过GRU的机制优势。当前下一步R4-D3：保留逐帧监督，增加稳定状态一致性与状态变化后响应监督，两模型同设置、从头各五轮；先固定loss掩码/权重/跨chunk细节再实现，GT只构造loss。D3尚未实现或运行，不继续test阈值扫描，实际时序收益后再补最少机制对照。§11–§13保留复现，不重复已完成作业；旧validation和原机器报告不改写。
+官方train/test首轮 `aa0ab55`、D1 `287d063`、D2 `75f305c` 均已验收，既有两模型均选epoch 5。D2仅补回新机制100个稳定窗口，gaze_shift仍88/158，尚无相对GRU的机制优势。R4-D3已实现，规格 `r4_state_supervision_plan.md`：固定heatmap+0.1×(BCE+0.1×(稳定L1+真实翻转当前/随后两帧BCE))，监督carry与模型历史分离、GT只算loss。29项CPU合成检查通过，下一步用户按§14.1用GPU 1运行两模型从头各五轮、逐epoch完整test/AUC选整轮，回传 `r4_state_supervised_*` 与provenance。D3真实任务尚未运行，不继续test阈值扫描，实际时序收益后再补最少机制对照。§11–§13保留复现；原源码、validation与真实机器报告不改写。
 
 ---
 

@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-18。官方train/test、D1诊断及D2校准均已验收。两模型均选epoch 5；D2 `75f305c` 修复新机制100个准确稳定窗口，只补回原损失20.88%，仍无相对GRU的机制优势。下一步R4-D3为稳定/状态变化的显式时序训练监督；先固定loss细节再实现。§11–§13保留复现，已完成作业无需重跑。
+> 当前版本：2026-11-18。官方train/test、D1诊断及D2校准均已验收。两模型均选epoch 5；D2 `75f305c` 修复新机制100个准确稳定窗口，只补回原损失20.88%，仍无相对GRU的机制优势。R4-D3状态时序监督已实现，下一步由用户按§14.1运行；固定loss规格见 `r4_state_supervision_plan.md`。§11–§13保留复现，已完成作业无需重跑。
 
 ## 0. 目标（一句话）
 
@@ -376,7 +376,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **R4-D2执行约定**：固定epoch 5与坐标，为单帧/GRU/新机制仅用train拟合一维严格单调输出状态校准；新增模块冻结因果前向获得train分数，校准不反馈历史。以0.5阈值复核状态/时序代价并确认AP排序不变，拟合细节已固定于 `r4_state_calibration_plan.md`，服务器入口见§13.1。
 - **2026-11-18 · R4-D2本地入口完成**：新增数学核心、冻结train分数前向、单条校准/评测入口与三套测试，规格 `r4_state_calibration_plan.md`。固定[-16,16]全局偏置、未加权BCE有限可变部分、80轮导数二分；原历史/坐标/epoch保持，train/test严格保序/ties/AP与目标不增纳入成功检查。**18项CPU合成检查通过**（数学10、前向4、入口4），包括人物/缺口与chunk状态、GT不影响预测、来源/原端点重现、排序失败阻止成功报告、完整CLI和provenance；记录 `results/r4_state_calibration_local_checks.json/.md`。旧源码与真实结果未改，无新增VAT数字；下一步用户手动执行§13.1并回传结果。
 - **2026-11-18 · R4-D2真实结果验收**：已pull `75f305c`，393项本地小报告来源/源码/覆盖/端点/算式核对通过，记录 `results/r4_state_calibration_local_review.json/.md`；大缓存/权重/事件明细未在本地重算。三个偏置−0.423750/+0.041511/+0.090667，均仅train拟合，AUC/L2/AP保持。新机制准确稳定9,964→10,064（50.3334%→50.8386%）、错帧6,181→6,055、翻转798→758，只补回原479窗口损失的20.88%，gaze_shift仍88/158；校准后比单帧/GRU少96/41窗口。单帧校准也使leave91→107，计数提升不能直接作历史贡献。当前效果为部分状态纠偏，尚无机制额外优势。
-- **当前下一步R4-D3**：一次针对性状态时序训练调整，逐帧MSE/BCE保留，增加稳定GT段的相邻分数一致性与真实状态改变后的当前帧响应监督；两模型同设置、从头各五轮、seed 0，冻结整个GazeSpot，沿用完整train/逐epoch test和原AUC选整轮。GT只构造loss，细节/权重/跨chunk处理在下一任务实现时先固定；本次未实现或启动D3。不继续test阈值扫描；有时序信号后再做最少无历史/读门对照。
+- **R4-D2验收后的D3决策**：一次针对性状态时序训练调整，逐帧MSE/BCE保留，增加稳定GT段的相邻分数一致性与真实状态改变后的当前帧响应监督；两模型同设置、从头各五轮、seed 0，冻结整个GazeSpot，沿用完整train/逐epoch test和原AUC选整轮。GT只构造loss，细节/权重/跨chunk处理在下一任务实现时先固定；该次验收未实现或启动D3。不继续test阈值扫描；有时序信号后再做最少无历史/读门对照。
+- **2026-11-18 · R4-D3本地实现完成**：新增 `state_supervision.py`、独立训练/比较入口、顺序wrapper及四套测试；规格 `r4_state_supervision_plan.md`。loss固定为heatmap+0.1×(BCE+0.1×(稳定pair L1+翻转当前及随后两帧BCE))，监督carry独立、跨chunk边界detach，不进入模型输入/历史。**29项CPU合成检查通过**（loss/epoch12、训练/实际比较CLI6、比较7、wrapper4），实际完成双模型各五轮、全test/同次诊断、重载、test标签不影响权重、前轮同源比较和后台失败传播；记录 `results/r4_state_supervision_local_checks.json/.md`。原架构/源码/结果保持，无新增真实VAT数字；下一步用户按§14.1用GPU 1手动运行并回传小报告。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -986,3 +987,53 @@ git add cscwd/results/r4_state_calibration.json cscwd/results/r4_state_calibrati
 git commit -m "Record train-only monotone state calibration control"
 git push origin codex/coverage-aware-router
 ```
+
+## 14. R4-D3：状态稳定与变化响应监督
+
+完整规格为 `r4_state_supervision_plan.md`，版本 `r4_state_supervision_v1`，数据/选模继续沿用 `r4_official_train_test_v1`。架构和输入保持，普通GRU/新机制各从头五轮、seed 0；整个GazeSpot继续冻结。loss固定为 `L_heatmap + 0.1 * (L_BCE + 0.1 * (L_stable + L_transition))`：同状态相邻概率差L1，以及真实状态翻转当前帧及随后最多两帧的当前状态BCE，各自按mask独立归一化。只用当前/过去GT构造loss，与模型历史分开；跨chunk保留监督carry、跨人物/缺口清空。
+
+### 14.1 唯一后台启动命令（物理 GPU 1）
+
+用户在服务器pull后手动执行一次。`run_state_supervised_round.sh` 的六个位置参数依次为Python、仓库、train特征、test特征、新实验根目录和结果目录。它只执行 **GRU训练→新机制训练→比较**，任一步失败即停止；原特征与预测复用，无需重跑§11–§13。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup bash cscwd/code/scripts/run_state_supervised_round.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r4_official_test_native_last_fp16 \
+  /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_supervision_v1 \
+  /home/fb/src/paper/gazelleV1/cscwd/results \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_state_supervised_round.log 2>&1 &
+```
+
+这就是本轮唯一启动命令。外层 `CUDA_VISIBLE_DEVICES=1` 选择物理GPU 1；进程内 `--device cuda:0` 对应唯一可见的卡。固定参数由wrapper完整传入：
+
+- `--epochs 5 --learning-rate 0.0001 --lambda-state 0.1 --lambda-time 0.1 --response-frames 3 --hidden-dim 128 --clip-frames 16 --batch-size 8 --seed 0 --weight-decay 0.01 --gradient-clip-norm 1.0 --temperature 0.1 --device cuda:0`。
+- 输入小报告为结果目录内的 `r1_train_single_frame_cache.json`、`t2_single_frame_cache.json`、`r2_feature_cache.json`、`r4_official_test_features.json`；plan为仓库内 `cscwd/r4_state_supervision_plan.md`。前轮参照固定 `r4_official_comparison.json`，不混入D2校准。
+- 新训练和比较分别由 `train_state_supervised.py`、`compare_state_supervised.py` 执行，完整展开参数见wrapper。开始先核对输入/缓存SHA；新模块随机初始化，不从原epoch 5续训。
+
+外层成功标记为 `R4 state-supervised round completed.`。三个阶段日志均在结果目录：`r4_state_supervised_ordinary_gru.log`、`r4_state_supervised_history_validity.log`、`r4_state_supervised_comparison.log`。训练日志逐轮输出total/stable/transition loss及标准test指标；JSON/history保存各loss的分子/分母及所有joint/state指标。每轮稳定pair/转换帧总数按独立train metadata计数核对。
+
+每epoch完整test，记录五轮，仍按AUC优先、L2更低、AP更高、较早epoch选一整轮；test参与选轮的协议在报告中保留。本轮参数/预测会改变，AUC/L2/AP和时序效果由真实结果判断。
+
+### 本轮产物与回传
+
+- 小报告：`r4_state_supervised_ordinary_gru.json/.md`、`r4_state_supervised_history_validity.json/.md`、`r4_state_supervised_comparison.json/.md`、`r4_state_supervised_selection.json` 与自动追加的provenance。
+- 新模型目录：`/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_supervision_v1/{ordinary_gru,history_validity}/`，各自保存五轮checkpoint、`selected.pt`/`last.pt`、配置/history/selection、五套完整test预测及明细；新机制有同次前向的逐帧历史诊断。大文件留服务器，实际路径/SHA写报告与provenance。
+- 比较含单帧及本轮全部十个候选、两模型选中整行、本轮事件配对，以及相对已验收原首轮各自epoch 5的完整指标/计数差值。旧轮只读取已保存的小报告，不重算旧大缓存；全部原结果保持。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git add cscwd/results/r4_state_supervised_ordinary_gru.json cscwd/results/r4_state_supervised_ordinary_gru.md \
+  cscwd/results/r4_state_supervised_history_validity.json cscwd/results/r4_state_supervised_history_validity.md \
+  cscwd/results/r4_state_supervised_comparison.json cscwd/results/r4_state_supervised_comparison.md \
+  cscwd/results/r4_state_supervised_selection.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record state-supervised causal joint training results"
+git push origin codex/coverage-aware-router
+```
+
+回传后验收新loss覆盖/数值、来源与逐轮选模，判断稳定/响应折中是否改善，以及新机制是否超过同设置GRU；再决定最少机制对照。

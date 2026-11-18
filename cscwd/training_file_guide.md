@@ -289,3 +289,11 @@ train输入直接读 `r1_train_single_frame_cache.json` 指向的完整train pre
 新输出根目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_calibration_v1/`，其 `single_frame/`、`ordinary_gru/`、`history_validity/` 各存 `calibration.json`、`test_inout_calibrated.npy`、`test_details.json`；后两者另有 `train_scores/inout.npy` 与 `index.json`。train分数与校准test分数分别沿用原官方prediction index的全局行序，校准test以float64保存以保持排序。
 
 日志为 `/home/fb/src/paper/gazelleV1/cscwd/results/r4_state_calibration.log`，成功标记为 `R4 state calibration completed`。回传小报告 `r4_state_calibration.json/.md` 与 `RESULT_PROVENANCE.md`；NPY、完整事件明细及参数JSON留服务器，路径和SHA由入口记录。
+
+## 13. 当前R4-D3训练文件
+
+D2已验收；当前手动入口是实现计划§14.1，对应 `r4_state_supervision_plan.md`。train/test划分、标签、原预测、FP16特征缓存均复用本文前述路径；新增状态时序loss只读取train监督，不读取D2校准输出。两种新模块从头初始化，整个GazeSpot仍冻结。
+
+新实验根目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_state_supervision_v1/`，其 `ordinary_gru/`、`history_validity/` 各保存五轮checkpoint、`selected.pt`/`last.pt`、`training_config.json`、`training_history.json`、`selection.json`、逐轮完整 `test_epoch_001/`–`test_epoch_005/`。新增stable/transition loss的分子、分母与汇总值在history中；新机制每轮仍有同次前向的历史控制诊断。
+
+日志位于结果目录，前缀为 `r4_state_supervised_`：`round.log` 为外层阶段日志，`ordinary_gru.log`、`history_validity.log`、`comparison.log` 为具体阶段。外层成功标记为 `R4 state-supervised round completed.`。回传同前缀两模型JSON/MD、comparison JSON/MD、selection JSON和provenance；大文件留服务器，原首轮结果不覆盖。

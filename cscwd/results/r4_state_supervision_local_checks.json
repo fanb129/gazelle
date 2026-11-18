@@ -1,0 +1,91 @@
+{
+  "task": "R4_state_supervision_local_checks",
+  "date": "2026-11-18",
+  "created_at_utc": "2026-11-18T10:16:15.533136+00:00",
+  "supervision_version": "r4_state_supervision_v1",
+  "protocol_version": "r4_official_train_test_v1",
+  "based_on_commit": "94f5e9266181231edfec021c360e73e5999d5fcd",
+  "passed": true,
+  "scope": "CPU_synthetic_tests_only; real_VAT_D3_training_and_server_jobs_not_run",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_state_supervision_plan.md",
+    "sha256": "14567f4bf4831fd069dced259745981e33d95a57bc95566b516b9bfc80418f6a"
+  },
+  "source_sha256": {
+    "cscwd/code/stag/state_supervision.py": "1b3f13b85c77c2666fb59f189d78f76a77da6ccb0d04ac317109dd3dbc863bfb",
+    "cscwd/code/stag/test_state_supervision.py": "d770ed7e67f7c53e21e5fcc4c8df7b4becd46e484cc8547be963bbd1ab7408df",
+    "cscwd/code/scripts/train_state_supervised.py": "b2385cfc0663264ccddb40e08bc1f227ed03a81d59a597578ab51521a7451b7b",
+    "cscwd/code/scripts/test_train_state_supervised.py": "0ca4f6eb7d9899e8a9ec419416e068e7130a12dc5ba1f91032e0855c67f637a1",
+    "cscwd/code/scripts/compare_state_supervised.py": "779f68c766c5d170b2ed4ac665982695d2369b98f383b6068d522b80686f9802",
+    "cscwd/code/scripts/test_compare_state_supervised.py": "9e8f99bba567ca4fcde80399c34e22b9b63d94188b0a42c865c012eb053e4933",
+    "cscwd/code/scripts/run_state_supervised_round.sh": "8e1374c962ce0cda26873543c96d61d96d56cde6779113c65b9455703d2c140d",
+    "cscwd/code/scripts/test_run_state_supervised_round.py": "ecb4011f6069780cf02150d0ca9b8cc1eb179cc3509ffbfbbf73f3c19c6ba635"
+  },
+  "loss": {
+    "formula": "heatmap + lambda_state * (BCE + lambda_time * (stable + transition))",
+    "lambda_state": 0.1,
+    "lambda_time": 0.1,
+    "response_frames": 3,
+    "stable": "L1_on_adjacent_valid_equal_GT_state_pairs",
+    "transition": "current_state_BCE_on_observed_flip_and_next_two_frames; causal_GT_loss_mask_only",
+    "normalization": "independent_mask_means_per_chunk; pooled_component_numerators_and_counts_for_epoch_logs"
+  },
+  "test_count": 29,
+  "groups": {
+    "state_loss_and_epoch": 12,
+    "training_and_actual_comparison_CLI": 6,
+    "comparison_small_reports": 7,
+    "round_wrapper": 4
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*state_supervis*.py' -v",
+      "count": 12,
+      "seconds": 0.649,
+      "exit_code": 0
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_*state_supervis*.py' -v",
+      "count": 17,
+      "seconds": 18.646,
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "hand_computed_stable_L1_and_transition_BCE": true,
+    "independent_mask_normalization_and_differentiable_zero": true,
+    "only_current_or_past_GT_determines_transition_window": true,
+    "chunk_boundaries_preserve_pairs_windows_and_detach_previous_prediction": true,
+    "reset_and_padding_do_not_bridge_people_or_gaps": true,
+    "GT_changes_losses_but_not_model_observations_predictions_or_state": true,
+    "actual_epochs_update_both_new_heads_and_preserve_read_only_sources": true,
+    "metadata_expected_supervision_counts_match_each_epoch": true,
+    "fresh_shared_initialization_matches_original_round": true,
+    "all_five_epochs_and_complete_test_outputs_retained": true,
+    "test_labels_do_not_change_any_of_five_training_checkpoints": true,
+    "selected_last_checkpoint_hashes_and_reload_match_predictions": true,
+    "fixed_budget_loss_settings_and_plan_enforced": true,
+    "actual_two_model_training_and_comparison_CLI": true,
+    "previous_small_report_identity_selection_architecture_and_deltas": true,
+    "previous_large_NPY_PT_not_required_for_prior_round_summary": true,
+    "report_manifest_and_provenance_hashes_match": true,
+    "wrapper_GPU_one_inheritance_quoted_paths_and_failure_propagation": true,
+    "python_3_10_AST_seven_new_Python_files": true,
+    "wrapper_and_two_server_command_blocks_bash_syntax": true,
+    "small_result_JSON_allowed_and_old_sources_original_plans_unchanged": true
+  },
+  "implementation_notes": [
+    "Original model architecture, observations, own predicted history, frozen caches and evaluation functions are imported unchanged.",
+    "Only state training losses change; inference has no GT supervision carry and no D2 state calibration.",
+    "The official test is evaluated after every epoch and used for complete-epoch selection; this is disclosed, not an independent held-out estimate.",
+    "Synthetic fixture metrics are not VAT experiment results."
+  ],
+  "next_step": "User manually runs implementation_plan.md section 14.1 on physical GPU 1; return r4_state_supervised model/comparison/selection reports and provenance."
+}
