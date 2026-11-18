@@ -507,3 +507,11 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_cache_diagnosis.md`; SHA256: `e576e047659072e809c521842ef5e2c6789c131f654d5890b28a395426140ed2`.
 - ordinary_gru cross details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1/ordinary_gru_cross_details.json`; SHA256: `cd1773005b1e2b5e114333b65d130f986285d609d2bd3ab4118bc664e98c00c9`.
 - history_validity cross details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_official_diagnosis_v1/history_validity_cross_details.json`; SHA256: `216713cafe28207d00459f0e627931500fdd0371b58bfa1be52336c103ba1f73`.
+
+## 缓存贡献与门控诊断本地验收（2026-11-18）
+
+- 已拉取 `287d063`，诊断作业源码 `ba746f8`；169项本地来源/源码/计划/端点/窗口分解/状态错帧/门控分母核对通过。记录 `cscwd/results/r4_cache_diagnosis_local_review.json/.md`，JSON SHA256 `c0fe55f1461744b06a612e4cd0373eb38d9a046b0cb5e6290489105e1216c99b`，Markdown SHA256 `24f4680ea79fe6a4cd63e09113513d16ed47bef38c141f266079ce43e1e47c39`。原JSON不改，服务器NPY与逐事件明细未在本地重算。
+- 新机制准确稳定窗口M00/M10/M01/M11=10,443/10,399/9,992/9,964，总−479；坐标−44、状态分数−451、交互+16；对称坐标−36、分数−443，状态输出项占净下降约92.48%。普通GRU为10,443/10,442/10,081/10,078，状态项也主导下降。此为输出替换数值分解，不当作重训结构因果贡献。
+- 新机制GT画内引入1,155帧画外误判、纠正40帧，净增1,115错帧；画外净少1,175错帧，全体只净少60错帧。其失去631/获得152个准确稳定窗口，失去窗口中431个仅状态条件失败。
+- 有历史31,680帧、无历史298帧；有历史validity均值0.671961、范围0.496976–0.896991，refresh均值0.610451。门控聚合未显示清晰的事件低门释放形态，相关与组均值不直接作因果证据。
+- 下一步R4-D2为train拟合的一维严格单调输出状态校准，对单帧/GRU/新机制保持现有epoch 5/坐标/原递归历史，最终分数单独校准；核对AP排序不变并评价状态/时序取舍。D2细节在实现与运行前固定，本次未拟合参数、重训或启动服务器作业。

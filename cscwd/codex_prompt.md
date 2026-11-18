@@ -22,7 +22,8 @@
 - ~/src/gazelle/cscwd/results/r4_local_review.md（原validation首轮结果验收）
 - ~/src/gazelle/cscwd/results/r4_official_local_checks.md（官方train/test入口检查）
 - ~/src/gazelle/cscwd/results/r4_official_local_review.md（真实首轮验收、选epoch 5）
-- ~/src/gazelle/cscwd/r4_cache_diagnosis_plan.md、results/r4_cache_diagnosis_local_checks.md（当前缓存诊断方案与本地检查）
+- ~/src/gazelle/cscwd/r4_cache_diagnosis_plan.md、results/r4_cache_diagnosis_local_checks.md（已完成缓存诊断方案与检查）
+- ~/src/gazelle/cscwd/results/r4_cache_diagnosis_local_review.md（真实诊断验收与当前R4-D2校准对照决策）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
@@ -53,7 +54,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-官方train/test首轮结果 `aa0ab55` 已经取回验收，283项来源/算式/选模核对通过；test特征已完成，两模型均选epoch 5。新机制AUC/AP小幅改善但准确稳定/切换下降，普通GRU为AUC首选。当前缓存诊断入口已本地完成，23项合成检查通过；下一步由用户按实现计划§12.1运行CPU脚本，回传四组合与门控统计，再决定一次针对性调整；不重复运行§11首轮，不改已声明选轮规则。旧validation结果保留原标签，原机器报告不改写。
+官方train/test首轮结果 `aa0ab55` 已经取回验收，283项来源/算式/选模核对通过；test特征已完成，两模型均选epoch 5。新机制AUC/AP小幅改善但准确稳定/切换下降，普通GRU为AUC首选。缓存诊断 `287d063` 已验收：状态输出项占新机制准确稳定净损失约92.48%，当前下一步为R4-D2 train拟合的一维严格单调输出状态校准对照；保持epoch 5/坐标/原历史，校准仅作用最终分数。D2尚未实现或运行；不重复运行§11首轮，不改已声明选轮规则。旧validation结果保留原标签，原机器报告不改写。
 
 ---
 

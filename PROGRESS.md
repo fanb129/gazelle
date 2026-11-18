@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | 缓存贡献/门控诊断入口本地完成，23项检查通过；等待服务器CPU运行§12.1 |
+| CSCWD | `cscwd/` | 缓存诊断已验收：状态输出项主导稳定损失；下一步train拟合的单调状态校准对照 |
 
 ## 当前优先级（2026-11-18）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -86,6 +86,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D1 / 2026-11-18 / 缓存贡献与门控诊断入口完成**：新增 `cache_diagnosis.py`、`history_diagnosis.py`、`diagnose_official_cache.py` 与三套测试，计划 `cscwd/r4_cache_diagnosis_plan.md`（`r4_cache_diagnosis_v1`）。四种坐标/状态组合计分，准确稳定窗口坐标/状态/交互及对称贡献分解，lost/gained互斥失败组合；新机制控制量按历史可用、GT状态/稳定帧和原帧±3的代理事件邻域汇总。源缓存按人物/原帧/source行对齐，并重现两端L2/AP与全部时序/状态摘要。**23项本地合成检查通过**（交叉11、门控8、入口4），包括禁止Torch导入的实际CLI、缓存不变、轨迹重排和手算分解；记录 `cscwd/results/r4_cache_diagnosis_local_checks.json/.md`。无新增真实VAT数字或训练作业；下一步由用户按§12.1单条CPU nohup运行并回传诊断结果，再决定训练调整。
 
+**R4-D1 / 2026-11-18 / 真实缓存诊断验收**：拉取 `287d063`，169项本地来源/算式/端点/分母核对通过，产出 `cscwd/results/r4_cache_diagnosis_local_review.json/.md`。新机制M00/M10/M01/M11准确稳定窗口为 **10,443 / 10,399 / 9,992 / 9,964**，总−479；坐标项−44、分数项−451、交互+16；对称分数项−443，约占净下降92.48%。GT画内引入1,155帧画外误判，仅纠正40帧；画外净纠正1,175帧，因此总错帧只少60。历史可用时validity均值0.671961、范围0.496976–0.896991，未见明确事件低门释放形态，聚合不当机制因果证据。下一步R4-D2：固定epoch 5与坐标，为单帧/GRU/新机制做train拟合的一维单调输出状态校准；新增模块先冻结前向补train分数，校准不反馈历史，保持AP排序。D2尚未实现或运行，本次无新增训练作业。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -96,6 +98,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **运行缓存诊断**：新入口本地完成，23项合成检查通过。用户服务器pull后仅运行实现计划§12.1的单条CPU后台命令，再回传 `r4_official_cache_diagnosis.json/.md` 与provenance；复用已有epoch-5缓存，无需重训或重做特征。
-2. 根据诊断选择一项针对性的输出控制/训练目标调整；阈值取舍用train拟合的单调校准对照，主张历史导致AP收益时补同预算无历史修正头。再决定最少机制实验及论文范围。
-3. 当前论文整行取各模型epoch 5，保留全部轮次与test选模协议。核心机制优势尚未建立，先补直接证据；VAT逐人指标与协作收益分别表述。
+1. **R4-D2单调状态校准对照**：固定现有epoch 5与坐标；单帧train分数直接复用，GRU/新机制冻结因果前向获得train分数，各自仅用train标签拟合一个全局状态分数偏置。校准只在最终输出应用，不反馈原历史；test保持0.5阈值，核对排序/AP不变并评估状态/时序取舍。
+2. 根据校准对照决定状态输出约束或训练目标调整；要将AP收益归因于历史时，补同输入同预算无历史头。门控的相关/组均值只作诊断，结构收益需实际对照。
+3. 当前论文整行仍取各模型epoch 5；test选模协议与全部失败结果保留，VAT逐人指标和协作收益分别表述。
