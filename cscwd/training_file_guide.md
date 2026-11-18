@@ -1,6 +1,6 @@
 # 当前训练会读写哪些文件
 
-适用协议：`r4_official_train_test_v1`，2026-11-18。本文说明当前官方 train/test 作业的实际代码路径、输入和输出。服务器作业已由用户启动；下面的输出目录按代码的生成阶段说明。
+适用协议：`r4_official_train_test_v1`，2026-11-18。本文说明当前官方 train/test 作业的实际代码路径、输入和输出。官方首轮已完成并验收，两模型均按AUC规则选epoch 5；真实结果解读见 `cscwd/results/r4_official_local_review.md`。下面说明实际文件组织与生成阶段。
 
 可以把这次训练理解为：**读取已经算好的单帧观察，训练一个小型时序修正模块；每训练一轮，就在官方 test 上完整评测一次，最后挑出 AUC 最好的一轮。**
 
@@ -233,7 +233,7 @@ test:  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7
 
 上述 Markdown 均有同名 JSON，JSON保存更完整的指标、全精度数值和来源。比较报告的 `selected` 是各模型选中行，`per_model_selection` 含权重路径，`candidate_rows` 含单帧及十个训练候选，`paired_response` 含事件配对比较。manifest 记录 test 参与 checkpoint 选择的本轮协议。
 
-写论文时从各模型 `selected` 对应的同一个 epoch 取 AUC/L2/AP、时序和状态指标。`last.pt` 的含义只是最后一轮，是否同时是最佳轮由实际结果决定；本轮最佳epoch尚待训练完成。
+写论文时从各模型 `selected` 对应的同一个 epoch 取 AUC/L2/AP、时序和状态指标。`last.pt` 的含义只是最后一轮，是否同时是最佳轮由实际结果决定；本轮两模型最佳epoch均已确定为5，`selected.pt`与各自 `epoch_005.pt` 一致。
 
 ## 9. 运行过程中先看哪些文件
 

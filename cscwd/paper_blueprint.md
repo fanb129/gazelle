@@ -1,7 +1,7 @@
 # CSCWD 2027 · 论文蓝图（因果联合时序修正）
 
 > 更新：2026-11-17。当前方案见 [temporal_joint_refinement.md](temporal_joint_refinement.md)，执行与验收以 [implementation_plan.md](implementation_plan.md) 的 R1–R6 为准。
-> 状态：T1–T6、R1/R2 与原 R4 validation 首轮已验收。当前按用户指定的 `r4_official_train_test_v1`：完整 train 训练，每 epoch 完整 test，AUC 优先选择一轮；新结果等待服务器手动运行。以下贡献按真实结果收敛。
+> 状态：官方train/test首轮已验收，两模型按AUC规则选epoch 5；新机制AUC/AP略增、准确稳定与切换下降，尚未建立优于普通GRU的机制证据。真实结果见 `results/r4_official_local_review.md`，下阶段先做缓存贡献诊断。
 
 ## 1. 工作标题与任务范围
 
@@ -66,7 +66,7 @@ R3 已实现冻结空间预测区域模板、当前网格 cosine 对应、连续
 | 规则 STAG | 0.936860 | 0.099197 | 0.886801 | 0.012135 | 0.581532 | 0.550633 |
 | 固定 EMA 0.75 | 0.940120 | 0.098941 | 0.886801 | 0.014229 | 0.542534 | 0.569620 |
 
-六种先导方法均保留在 T5 完整表；此处展示 EMA 0.75 不表示按 test 选定最优配置。旧规则只修正 heatmap，所以 AP 与 `leave_frame` 响应不变；`enter_frame` 同时要求定位正确，可随热图变化。新方案官方 test 结果待 `r4_official_*` 实际回传后另列。
+六种先导方法均保留在 T5 完整表；此处展示 EMA 0.75 不表示按 test 选定最优配置。旧规则只修正 heatmap，所以 AP 与 `leave_frame` 响应不变；`enter_frame` 同时要求定位正确，可随热图变化。新方案官方test首轮见 `results/r4_official_comparison.md` 与 `r4_official_local_review.md`，后者明确记录全部真实折中与选轮。
 
 ### 5.2 精简对照与核心证据
 

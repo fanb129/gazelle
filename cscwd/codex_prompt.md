@@ -20,7 +20,8 @@
 - ~/src/gazelle/cscwd/results/r2_local_review.md、r2_local_review.json（已验收冻结缓存、普通联合头 smoke 与真实指标折中）
 - ~/src/gazelle/cscwd/results/r3_mechanism_design.md、r3_local_checks.json（R3 已实现机制与本地检查）
 - ~/src/gazelle/cscwd/results/r4_local_review.md（原validation首轮结果验收）
-- ~/src/gazelle/cscwd/results/r4_official_local_checks.md（新官方train/test入口就绪，36项检查通过）
+- ~/src/gazelle/cscwd/results/r4_official_local_checks.md（官方train/test入口检查）
+- ~/src/gazelle/cscwd/results/r4_official_local_review.md（真实首轮验收、选epoch 5与当前下一步）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
@@ -51,7 +52,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-当前入口为实现计划 §11 的官方 train/test 单条后台命令（物理 GPU 1）。补 test 特征后，普通 GRU/新机制各 seed 0、五轮，从新模块随机初始化训练完整官方 train；每轮完整 test 并记录全部指标，按 AUC 优先选 `selected.pt`。复用 R2 train 特征和既有 train/test 原预测，不读取 R1 split 作为新划分。旧 validation 首轮结果已回传 `f1d41e4`，保留为开发历史；用户已启动新协议服务器作业，等待真实结果回传。当前不重复启动，文件路径说明见 training_file_guide.md，原机器报告不改写。
+官方train/test首轮结果 `aa0ab55` 已经取回验收，283项来源/算式/选模核对通过；test特征已完成，两模型均选epoch 5。新机制AUC/AP小幅改善但准确稳定/切换下降，普通GRU为AUC首选。当前下一步是复用已有预测/门控缓存分解定位与状态贡献，再决定一次针对性调整；不重复运行§11首轮，不改已声明选轮规则。旧validation结果保留原标签，原机器报告不改写。
 
 ---
 

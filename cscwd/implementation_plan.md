@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-18。用户已将后续协议改为官方 train/test 两份数据：完整 train 训练、每 epoch 完整 test、按 AUC 优先选整轮最佳结果。当前协议 `r4_official_train_test_v1`，运行入口见 §11；旧 `r4_compact_v2` validation 结果保留存档。
+> 当前版本：2026-11-18。官方train/test首轮 `aa0ab55` 已取回并验收，两模型均按AUC优先规则选epoch 5；test特征已完成。新机制AUC/AP小幅改善但准确稳定/切换下降，尚未建立相对GRU的机制优势。下一步先做现有缓存的定位/状态贡献诊断；§11保留复现。
 
 ## 0. 目标（一句话）
 
@@ -252,6 +252,8 @@ cscwd/
 - **选择**：test AUC 降序，完全并列时 L2 升序、AP 降序、较早 epoch、model_id。每轮保留全部标准/joint/state 指标、预测、诊断和 checkpoint，选择一轮整套结果为 `selected.pt`，最终轮为 `last.pt`；旧 precision eligibility 不应用于新协议。
 - **产出**：`results/r4_official_test_features.json/.md`、`r4_official_ordinary_gru.json/.md`、`r4_official_history_validity.json/.md`、`r4_official_comparison.json/.md`、`r4_official_selection.json`。大文件留服务器新目录，旧结果不覆盖。唯一服务器启动入口见 §11，物理 GPU 1。
 - **解释**：论文明确按 test 指标选择 epoch；不将其称为未参与选择的独立 test 估计。旧 validation 数据与新 full-train 运行分表记录，不改写既有结论。
+- **2026-11-18真实首轮验收**：服务器结果 `aa0ab55` 经Git/SSH取回并合并文档分支；283项本地核对通过，见 `results/r4_official_local_review.json/.md`。test特征完成，两模型五轮完整覆盖且均选epoch 5。新机制AUC/L2/AP为 **0.940466 / 0.099244 / 0.892778**，准确稳定 **50.3334%**，gaze_shift **88/158**；单帧为 **0.940182 / 0.098995 / 0.886801**、**52.7531%**、**92/158**。普通GRU为AUC首选，新机制额外优势尚未建立。
+- **当前后续**：先复用epoch-5缓存交叉计分原始/修正坐标与状态，汇总validity/refresh及对应诊断；根据状态阈值与空间贡献选择一次针对性调整。此项是缓存诊断，不称为重训消融；主张AP增益来自历史时补同输入同预算无历史修正头。
 
 #### R5 官方 test 结果汇总（并入新 R4）
 
@@ -368,7 +370,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-18 · R4 官方 train/test 协议切换**：按用户明确要求取消后续 validation，新增 `r4_official_train_test_plan.md`（`r4_official_train_test_v1`）：完整 train 训练、每 epoch 完整 test，并按用户确认的 AUC 优先、L2 更低、AP 更高选一整轮。旧 validation 报告保留，新的两模型从头训练；新增官方数据/评测/选模模块、test缓存、训练/比较/后台入口及测试；36项本地合成检查通过（数据5、特征6、协议5、训练6、比较8、后台6），记录 `results/r4_official_local_checks.json/.md`。旧源码和报告保持，完整服务器命令见§11。
 - **2026-11-18 · R4 官方服务器数据与缓存只读确认**：已SSH核对官方train/test完整轨迹、全部71,634个RGB路径、既有预测/全train特征索引及NPY header，10项数据检查通过。train为1,033tracks/132,563帧，test为298/31,978帧；R1仅逻辑拆分train，官方test一直存在。新test特征目录与 `r4_official_test_features.json` 均不存在，服务器仍停在 `f1d41e4`，新wrapper尚未pull。产出 `results/r4_official_server_preflight.json/.md`，未运行缓存或训练；下一步先pull，再执行§11.1自动补特征并训练。
 - **2026-11-18 · R4 训练文件说明完成**：用户已启动本轮服务器作业；新增 `training_file_guide.md`，逐项说明实际读入的train/test index、原预测/视觉特征、标签、原GazeSpot与新增模块权重、逐轮预测/诊断/history、选择清单和日志/回传路径。同步状态和README，仅本地文档更新，无新增实验数字；下一步等待真实结果回传。
-- **当前下一步（官方 train/test）**：本轮已由用户启动，等待缓存、训练和比较完成后回传 `r4_official_*` 小报告；路径说明见 `training_file_guide.md`。
+- **2026-11-18 · 官方train/test首轮验收完成**：取回服务器提交 `aa0ab55` 并合并本地文档提交 `c966239`，283项来源/覆盖/损失/指标/选模核对通过，产出 `results/r4_official_local_review.json/.md`。test特征完成，两模型均完整五轮、选epoch 5；AUC首选为GRU **0.940541**，新机制 **0.940466**。单帧→新机制AP **0.886801→0.892778**、准确稳定 **52.7531%→50.3334%**、gaze_shift **92/158→88/158**，保留真实折中，机制额外收益尚未建立。
+- **当前下一步（缓存贡献诊断）**：复用已保存的预测与门控控制量分解定位/状态贡献，再选择一次针对性输出控制或训练目标调整；当前不重跑首轮，不改变已声明的epoch 5选择。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -830,9 +833,9 @@ git commit -m "Record R4 compact first-round development results"
 git push origin codex/coverage-aware-router
 ```
 
-## 11. 官方 train/test 新协议服务器运行（当前唯一入口）
+## 11. 官方 train/test 首轮服务器运行（已完成，保留复现）
 
-协议为 `r4_official_train_test_v1`，完整设置见 `r4_official_train_test_plan.md`。本轮使用完整官方 train，不再使用 validation；普通 GRU 和新机制各从头训练五个 epoch，每轮完整 test，以 **AUC 更高 → L2 更低 → AP 更高 → 较早 epoch** 选整轮结果。本轮已由用户启动，等待真实结果回传；以下命令保留供复现。
+协议为 `r4_official_train_test_v1`，完整设置见 `r4_official_train_test_plan.md`。本轮使用完整官方 train，不再使用 validation；普通 GRU 和新机制各从头训练五个 epoch，每轮完整 test，以 **AUC 更高 → L2 更低 → AP 更高 → 较早 epoch** 选整轮结果。本轮结果 `aa0ab55` 已取回验收，test特征及两模型五轮完成，当前无需重跑；以下命令保留供复现。
 
 2026-11-18 SSH只读检查已确认完整train特征、train/test原预测与全部RGB存在；R1仅为train内逻辑划分。新test视觉特征及完成报告尚不存在，由以下入口先生成。服务器检查时仍为 `f1d41e4`，需先pull新实现；记录见 `results/r4_official_server_preflight.json/.md`。
 

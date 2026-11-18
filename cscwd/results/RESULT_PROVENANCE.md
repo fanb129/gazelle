@@ -482,3 +482,12 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_comparison.md`; SHA256: `9d16ae70558c659c0d2236139fdc8ad05636b447704e0e5c98cb6e018dee6cfd`.
 - Test-selected checkpoint manifest: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_official_selection.json`; SHA256: `6684ce0d8bd8bc0082f5343e681c68febf187f938b4bd2ab2f0bd7059541ae29`.
 - Full official test evaluated after every epoch and used for checkpoint selection; no independent held-out claim.
+
+## 官方train/test首轮本地验收（2026-11-18）
+
+- 结果提交 `aa0ab55` 在服务器已提交、GitHub当时尚无此提交；本地通过只读Git/SSH fetch取回，与文档提交 `c966239` 合并，保留双方历史。本次没有修改服务器文件或启动作业。作业源码为 `0de0330`，协议计划SHA `b33216abf59f95d3500ec7efc5b8cd99eb1b2581377cd0b19489ca7c68785a99`。
+- 验收记录 `cscwd/results/r4_official_local_review.json/.md`，JSON SHA256 `669b03b8f1d5c4f6850217623f8c55a2972fdd8911fbe185a9eece625ce4cba4`，Markdown SHA256 `1ce8c0b8371cf7038ce28155f3d62e7f4bcb91b8a6b7f96b163557f693e0737d`。283项本地来源/源码/计划/覆盖/损失/比例/候选/差值/选模与manifest核对通过；完整NPY/PT/index和逐事件数据留服务器，未在本地重算。
+- test特征缓存完成，13,127唯一图像，`[13127,768,32,32]` FP16，20,646,985,856 bytes；首批8图/32人物帧FP32 heatmap/InOut最大误差1.400709152e-6/1.788139344e-7、argmax变化0。大文件路径/SHA见原服务器条目。
+- 两模型均完整train五轮，每轮训练132,563帧（画内88,919）、test31,978帧（定位20,655）；均按AUC规则选epoch 5，selected/last/epoch_005的SHA相同。普通GRU AUC/L2/AP **0.940540935 / 0.099481836 / 0.892941195**，新机制 **0.940466415 / 0.099243910 / 0.892777853**；同一test单帧 **0.940181658 / 0.098994832 / 0.886801040**。
+- 单帧→新机制准确稳定52.7531%→50.3334%，gaze_shift92/158→88/158，状态错误6,241→6,181，状态翻转592→798；leave91/192→107/192。新机制比GRU的L2更低、leave多1个，但AUC/AP、准确稳定与状态错误不占优，当前核心机制额外优势尚未建立。
+- 下一步用现有缓存交叉分解坐标/状态贡献，并汇总validity/refresh与历史对应诊断，依据结果决定一次针对性调整；本次没有新增训练、评测或修改选轮规则。论文当前版本整行使用各模型epoch 5，保留test参与epoch选择的协议说明。

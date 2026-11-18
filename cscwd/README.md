@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前方案（2026-11-18）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：原 R4 validation 首轮已验收；用户已改为官方 train/test 两份数据，每 epoch 完整 test、AUC 优先选最佳一轮。当前协议 `r4_official_train_test_v1`，36项本地合成检查通过，服务器唯一入口为实现计划 §11.1；用户已启动服务器作业，等待真实结果回传。
+> 状态：官方train/test首轮已取回验收，两模型均按AUC规则选epoch 5；新机制优势尚未建立，下一步复用缓存做定位/状态贡献诊断。旧validation实验保留存档。
 
 ## 目录结构
 
@@ -37,13 +37,14 @@ cscwd/
 | [results/r3_mechanism_design.md](results/r3_mechanism_design.md) | R3 已实现机制、状态/诊断和参数量 |
 | [results/r3_local_checks.md](results/r3_local_checks.md) | R3 本地模型、合成训练/验证与诊断检查 |
 | [results/r4_local_checks.md](results/r4_local_checks.md) | 原 R4 validation 入口与合成 CLI 检查 |
-| [results/r4_official_local_checks.md](results/r4_official_local_checks.md) | 当前官方 train/test 入口与36项本地检查 |
+| [results/r4_official_local_checks.md](results/r4_official_local_checks.md) | 官方 train/test 入口与36项本地检查 |
+| [results/r4_official_local_review.md](results/r4_official_local_review.md) | 官方train/test首轮真实结果、epoch 5选择与下一步诊断 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**补 test 冻结特征 → 完整 train 重训普通 GRU/新机制各五个 epoch → 每轮完整 test 并选最佳 AUC 一轮 → 回传比较 → 最少机制证据与论文**。复用既有 train 特征及 train/test 原预测，新增参数从头初始化。物理 GPU 1 的唯一后台命令见实现计划 §11；旧 §9/§10 只保留复现。
+当前执行顺序：**官方train/test首轮已验收 → 现有预测/门控缓存贡献诊断 → 一次针对性调整与最少机制证据 → 论文**。两模型均选epoch 5；§11及旧§9/§10仅保留复现，首轮与test特征无需重跑。
 
 ## 论文索引（快速查，详见 literature_review.md）
 
