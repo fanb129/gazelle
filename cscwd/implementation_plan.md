@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-19。D3结果 `db239cf` 已验收，按AUC规则选GRU epoch 2/HV epoch 3；固定时序loss未显示一致收益。与原同轮相比，两模型五轮AP均下降、L2均增加，准确稳定只有epoch 4改善。当前下一步为D4单个当前帧无历史修正头，判定原AP增益是否依赖历史；先固定实现约定。§11–§14保留复现，无需重跑。
+> 当前版本：2026-11-19。D3结果 `db239cf` 已验收，固定时序loss未显示一致收益。D4当前帧无历史对照已完成本地实现与23项合成检查；下一步用户按 **§15.1** 用物理GPU 1手动运行单模型五轮，回传后判定原AP增益是否依赖历史。§11–§14保留复现，无需重跑。
 
 ## 0. 目标（一句话）
 
@@ -253,7 +253,7 @@ cscwd/
 - **产出**：`results/r4_official_test_features.json/.md`、`r4_official_ordinary_gru.json/.md`、`r4_official_history_validity.json/.md`、`r4_official_comparison.json/.md`、`r4_official_selection.json`。大文件留服务器新目录，旧结果不覆盖。唯一服务器启动入口见 §11，物理 GPU 1。
 - **解释**：论文明确按 test 指标选择 epoch；不将其称为未参与选择的独立 test 估计。旧 validation 数据与新 full-train 运行分表记录，不改写既有结论。
 - **2026-11-18真实首轮验收**：服务器结果 `aa0ab55` 经Git/SSH取回并合并文档分支；283项本地核对通过，见 `results/r4_official_local_review.json/.md`。test特征完成，两模型五轮完整覆盖且均选epoch 5。新机制AUC/L2/AP为 **0.940466 / 0.099244 / 0.892778**，准确稳定 **50.3334%**，gaze_shift **88/158**；单帧为 **0.940182 / 0.098995 / 0.886801**、**52.7531%**、**92/158**。普通GRU为AUC首选，新机制额外优势尚未建立。
-- **当前后续（2026-11-19）**：D1输出/门控诊断、D2状态校准和D3时序监督均已完成验收，详细结果见进展记录。D3固定loss未取得一致收益；下一步D4只做一个当前帧无历史联合修正头，使用原逐帧目标/同预算，回答原AP增益是否来自历史，再决定历史机制取舍。
+- **当前后续（2026-11-19）**：D1–D3已验收，D3固定loss未取得一致收益。D4单个当前帧无历史联合修正头本地实现完成，使用原逐帧目标/同预算；用户按§15.1运行后，回答原AP增益是否来自历史，再决定历史机制取舍。
 
 #### R5 官方 test 结果汇总（并入新 R4）
 
@@ -379,9 +379,11 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **R4-D2验收后的D3决策**：一次针对性状态时序训练调整，逐帧MSE/BCE保留，增加稳定GT段的相邻分数一致性与真实状态改变后的当前帧响应监督；两模型同设置、从头各五轮、seed 0，冻结整个GazeSpot，沿用完整train/逐epoch test和原AUC选整轮。GT只构造loss，细节/权重/跨chunk处理在下一任务实现时先固定；该次验收未实现或启动D3。不继续test阈值扫描；有时序信号后再做最少无历史/读门对照。
 - **2026-11-18 · R4-D3本地实现完成**：新增 `state_supervision.py`、独立训练/比较入口、顺序wrapper及四套测试；规格 `r4_state_supervision_plan.md`。loss固定为heatmap+0.1×(BCE+0.1×(稳定pair L1+翻转当前及随后两帧BCE))，监督carry独立、跨chunk边界detach，不进入模型输入/历史。**29项CPU合成检查通过**（loss/epoch12、训练/实际比较CLI6、比较7、wrapper4），实际完成双模型各五轮、全test/同次诊断、重载、test标签不影响权重、前轮同源比较和后台失败传播；记录 `results/r4_state_supervision_local_checks.json/.md`。原架构/源码/结果保持，无新增真实VAT数字；下一步用户按§14.1用GPU 1手动运行并回传小报告。
 - **2026-11-19 · R4-D3真实结果验收**：pull `db239cf`，240项本地小报告核对通过，记录 `results/r4_state_supervision_local_review.json/.md`。五轮train/监督完整（132,563帧、129,666 stable pairs、5,358 transition frames）；选轮GRU 2/HV 3。HV为AUC/L2/AP **0.940481/0.099299/0.888879**、准确稳定 **51.2225%**、gaze **89/158**，仍低于单帧稳定/切换和同轮GRU稳定。原HV5→D3HV3的稳定+176伴随选轮变化；同HV epoch 3稳定 **10,232→10,140**、翻转 **660→717**。两模型各五轮同轮AP均降低/L2均增加，稳定只有epoch 4改善，固定loss无一致收益；不临时改选epoch 4或拼列。原结果/计划不改，未本地重算大文件。
-- **当前下一步R4-D4**：一个当前帧无历史联合修正头，保留普通GRU当前视觉/原预测/真实头框和双输出结构，每帧清空历史，原逐帧MSE/BCE、单配置seed 0、从头五轮/每epoch完整test/AUC选整轮；先固定重置及有效参数约定再实现。依据该对照决定历史模块是否保留/调整，再按信号做最少读门对照。本次未实现D4，不追加D3 lambda扫描或校准。
+- **D3验收后的D4决策（下述本地实现已完成）**：一个当前帧无历史联合修正头，保留普通GRU当前视觉/原预测/真实头框和双输出结构，每帧清空历史，原逐帧MSE/BCE、单配置seed 0、从头五轮/每epoch完整test/AUC选整轮。依据该对照决定历史模块是否保留/调整，再按信号做最少读门对照，不追加D3 lambda扫描或校准。
 - **2026-11-19 · R4方向复盘**：新增 `idea_feasibility_review.md`，区分当前实例未成功、研究问题未被否定、底座规模/模型设计与时序增量。核对T5 EMA0.75真实稳定54.2534%、gaze90/158/L2 0.098941，以及官方Gazelle/DINOv2与本地GazeSpot/DINOv3定义。理想对照要求同底座SF/当前帧头/强EMA/GRU/选择机制比较，不填预测指标。建议保留B缓存完成D4最小归因，重构前用train标签分析因果历史候选效用；显式候选选择/直接效用监督/空间与状态分离为讨论，尚未实现。L与官方Gazelle留作有信号后的规模/泛化验证。本次无新代码、训练或底座切换。
 - **2026-11-19 · R4架构说明**：新增 `method_architecture.md`，三张图分别对应已实现门控GRU双残差、尚未实现的历史候选/效用选择、待做D4每帧清空历史对照；标明D3/D2所在位置、GT仅loss和当前/过去输入边界。下一步仍D4本地实现/服务器手动五轮后归因，再决定重构；没有新增实验或切换底座。
+- **2026-11-19 · R4-D4本地实现完成**：规格 `r4_current_frame_plan.md` 固定版本 `r4_current_frame_v1`；新增 `current_frame_model.py`、独立训练/比较入口、顺序wrapper和四套测试。保留原GRU层/初始化，每帧以空状态计算并返回None；原逐帧MSE+0.1×BCE、从头五轮/seed 0、完整train/逐epoch完整test/AUC选整轮，无D3 loss或D2校准。名义参数347,522，其中74,112个权重元素对应结构性零历史输入，单独记录有效作用差异。
+- **R4-D4本地产出与下一步**：23项CPU合成检查通过（模型7、训练/真实合成比较CLI6、小报告比较7、wrapper3），覆盖历史独立、梯度/AdamW区别、共享初始化、五轮完整test/重载、test标签不影响训练权重、全部同epoch差值和GPU1/失败停止。记录 `results/r4_current_frame_local_checks.json/.md`；无新增真实VAT性能数字，旧源码/结果保持。下一步用户按§15.1手动运行并回传小报告，判断原AP增益是否依赖历史。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -1043,3 +1045,51 @@ git push origin codex/coverage-aware-router
 ```
 
 回传后验收新loss覆盖/数值、来源与逐轮选模，判断稳定/响应折中是否改善，以及新机制是否超过同设置GRU；再决定最少机制对照。
+
+## 15. R4-D4：当前帧无历史联合修正对照
+
+本地实现已完成，23项CPU合成检查通过，记录见 `results/r4_current_frame_local_checks.json/.md`。完整规格为 `r4_current_frame_plan.md`（`r4_current_frame_v1`），数据/选轮沿用 `r4_official_train_test_v1`；真实VAT作业由用户手动运行。
+
+只训练一个 `current_frame` 模型，保留原GRU当前输入、层和双输出结构，但每帧无条件清空hidden/过去heatmap/过去score，忽略传入历史且返回None。名义参数347,522相同，其中74,112个权重元素始终乘零历史，不能据此声称有效参数作用完全一致。使用原逐帧MSE+0.1×BCE，不加D3时序loss或D2校准；整个GazeSpot继续冻结，新模块从头初始化。
+
+### 15.1 唯一后台启动命令（物理 GPU 1）
+
+在服务器 `fb@3090.lab` 手动执行一次。六个位置参数依次为Python、仓库、train特征、test特征、新实验根目录、结果目录。wrapper顺序执行 **当前帧头五轮训练→与原首轮比较**，任一步失败即停止；复用全部既有预测/特征，不重跑§11–§14。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup bash cscwd/code/scripts/run_current_frame_round.sh \
+  /home/fb/anaconda3/envs/py310/bin/python \
+  /home/fb/src/paper/gazelleV1 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 \
+  /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r4_official_test_native_last_fp16 \
+  /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1 \
+  /home/fb/src/paper/gazelleV1/cscwd/results \
+  > /home/fb/src/paper/gazelleV1/cscwd/results/r4_current_frame_round.log 2>&1 &
+```
+
+固定参数由wrapper完整传入训练入口：`--epochs 5 --learning-rate 0.0001 --lambda-state 0.1 --hidden-dim 128 --clip-frames 16 --batch-size 8 --seed 0 --weight-decay 0.01 --gradient-clip-norm 1.0 --temperature 0.1 --device cuda:0`。物理GPU由外层选择，内部 `cuda:0` 指唯一可见的GPU 1；temperature只保留原预算字段，D4没有对应温度运算。
+
+- 输入小报告位于 `/home/fb/src/paper/gazelleV1/cscwd/results/`：`r1_train_single_frame_cache.json`、`t2_single_frame_cache.json`、`r2_feature_cache.json`、`r4_official_test_features.json`；比较参照固定为同目录的 `r4_official_comparison.json`。plan为 `/home/fb/src/paper/gazelleV1/cscwd/r4_current_frame_plan.md`。
+- 训练入口 `train_current_frame.py`，比较入口 `compare_current_frame.py`；完整参数在 `code/scripts/run_current_frame_round.sh`。只核对/读取原首轮小报告，不要求旧轮大数组或权重重新前向。
+- 新实验目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1/current_frame/`。保存 `training_config.json`、`training_history.json`、`selection.json`、`epoch_001.pt`–`epoch_005.pt`、`selected.pt`、`last.pt`、`baseline_details.json`、`test_epoch_001/`–`test_epoch_005/` 的完整预测与事件明细；没有历史控制诊断。
+- 外层日志为 `/home/fb/src/paper/gazelleV1/cscwd/results/r4_current_frame_round.log`，阶段日志为同目录 `r4_current_frame_train.log` 和 `r4_current_frame_comparison.log`。各阶段成功标记分别为 `R4 current-frame training completed`、`R4 current-frame comparison completed`，外层最终标记为 **`R4 current-frame round completed.`**。
+
+完整官方train每轮132,563人物帧、完整test每轮31,978人物帧，保存全部五轮指标；仍按test AUC更高→L2更低→AP更高→较早epoch选择一整轮。test参与选轮的协议在报告中明确记录。
+
+### 本轮产物与回传
+
+结果目录内生成 `r4_current_frame.json/.md`、`r4_current_frame_comparison.json/.md`、`r4_current_frame_selection.json` 并自动追加 `RESULT_PROVENANCE.md`。比较保留单帧、D4全部五轮/选中整行、原首轮GRU/HV选中整行及与两者全部同epoch差值；事件配对只对本轮与单帧进行。大NPY/PT/完整明细留服务器，实际路径/SHA写入报告与provenance。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git add cscwd/results/r4_current_frame.json cscwd/results/r4_current_frame.md \
+  cscwd/results/r4_current_frame_comparison.json cscwd/results/r4_current_frame_comparison.md \
+  cscwd/results/r4_current_frame_selection.json cscwd/results/RESULT_PROVENANCE.md
+git commit -m "Record current-frame no-history attribution control"
+git push origin codex/coverage-aware-router
+```
+
+回传后先核对来源、五轮/选轮和参数使用说明，再比较AP、定位、准确稳定及响应。D4已相当或更好时，原收益在本配置下不需要历史；普通GRU领先D4而新机制不领先GRU时，重构历史选择。是否实现候选效用方案由该结果决定，本轮不并行铺开新结构。

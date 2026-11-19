@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | D3真实结果已验收，固定时序loss未显示一致收益；下一步D4当前帧无历史对照 |
+| CSCWD | `cscwd/` | D4当前帧无历史对照本地完成，23项合成检查通过；等待用户按§15.1运行GPU 1五轮 |
 
 ## 当前优先级（2026-11-19）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -108,6 +108,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4架构说明 / 2026-11-19**：新增 `cscwd/method_architecture.md`，分开绘制已实现GRU门控双残差、讨论中的显式候选/效用选择、待实施D4无历史对照。按代码核对HV未显式warp过去heatmap、validity/refresh读写路径、D3仅训练loss、D2输出校准无历史反馈。下一步仍本地实现D4→用户GPU1五轮→回传决定结构，重构前分析train候选效用。本次仅图和说明，无新代码/结果/实验。
 
+**R4-D4 / 2026-11-19 / 当前帧无历史对照本地完成**：固定 `cscwd/r4_current_frame_plan.md`（`r4_current_frame_v1`），新增 `CurrentFrameRefiner`、独立训练/比较入口、单模型顺序wrapper与四套测试。沿用原GRU层和初始化，每帧强制空状态且返回None，原逐帧MSE+0.1×BCE、seed 0、从头五轮；复用官方完整train/test与既有冻结B缓存，不加D3时序loss或D2校准。名义参数 **347,522**，其中 **74,112** 个权重元素对应结构性零历史输入，报告明确有效参数作用不同。
+
+**R4-D4 / 本地产出与下一步**：**23项CPU合成检查通过**（模型7、训练/实际比较CLI6、小报告比较7、wrapper3），覆盖历史/顺序/chunk独立、活跃梯度、共享初始化、五轮完整test、test标签不改变训练权重、选中/末轮重载、全部同epoch参照与GPU1失败传播；记录 `cscwd/results/r4_current_frame_local_checks.json/.md`。唯一服务器命令在 `implementation_plan.md` **§15.1**，新输出位于 `experiments/cscwd_r4_current_frame_v1/current_frame/`。无新增真实VAT性能数字，未启动服务器作业；下一步用户手动运行并回传小报告，判断原AP收益是否依赖历史。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -118,6 +122,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **实现R4-D4当前帧无历史对照**：一个模型、原逐帧目标、从头五轮；先固定每帧清空历史的约定，再实现与原首轮同预算的训练/比较。D3已验收，§14无需重跑。
+1. **用户手动运行R4-D4**：本地实现与23项合成检查已完成，按 `cscwd/implementation_plan.md` §15.1用物理GPU 1运行一个当前帧模型、原逐帧目标、从头五轮；回传 `r4_current_frame*` 小报告与provenance。D3已验收，§14无需重跑。
 2. 根据D4判断历史是否贡献原AP增益：无历史已相当或更好时调整/简化历史方案，历史有明确收益时再做最少validity读门对照。
 3. 结果整行分轮次保留：原首轮GRU/HV均epoch 5，D3为GRU epoch 2/HV epoch 3，D2校准另列；不混用最好列，test选模协议保留。

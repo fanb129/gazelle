@@ -1,6 +1,6 @@
 # 当前训练会读写哪些文件
 
-适用协议：`r4_official_train_test_v1`，2026-11-18。本文说明当前官方 train/test 作业的实际代码路径、输入和输出。官方首轮已完成并验收，两模型均按AUC规则选epoch 5；真实结果解读见 `cscwd/results/r4_official_local_review.md`。下面说明实际文件组织与生成阶段。
+适用协议：`r4_official_train_test_v1`，更新于2026-11-19。§1–§11说明已验收官方首轮的文件组织；D2/D3见§12/§13；**当前待运行的D4见§14**，唯一启动命令在实现计划§15.1。官方首轮两模型均按AUC规则选epoch 5，真实结果见 `cscwd/results/r4_official_local_review.md`。
 
 可以把这次训练理解为：**读取已经算好的单帧观察，训练一个小型时序修正模块；每训练一轮，就在官方 test 上完整评测一次，最后挑出 AUC 最好的一轮。**
 
@@ -299,3 +299,26 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 日志位于结果目录，前缀为 `r4_state_supervised_`：`round.log` 为外层阶段日志，`ordinary_gru.log`、`history_validity.log`、`comparison.log` 为具体阶段。外层成功标记为 `R4 state-supervised round completed.`。回传同前缀两模型JSON/MD、comparison JSON/MD、selection JSON和provenance；大文件留服务器，原首轮结果不覆盖。
 
 本轮 `selected.pt` 分别对应普通GRU的 `epoch_002.pt` 与新机制的 `epoch_003.pt`；`last.pt` 仍为各自 `epoch_005.pt`。D3与原首轮epoch-5结果分开记录，具体SHA见各自小报告和provenance。
+
+## 14. R4-D4当前帧无历史对照（待用户运行）
+
+规格 `r4_current_frame_plan.md`，启动命令见实现计划§15.1。后台入口为 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/run_current_frame_round.sh`，依次调用 `train_current_frame.py` 和 `compare_current_frame.py`。这轮只训练一个当前帧头，每帧历史清空；整个GazeSpot仍冻结，原逐帧MSE/BCE、seed 0、从头五轮。GT只用于loss/计分。
+
+下面各路径都以服务器 `/home/fb/src/paper/gazelleV1` 为仓库根目录，以 `/newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7` 为缓存根目录。
+
+| 用途 | 实际读取位置 |
+|---|---|
+| 官方train轨迹/标签和原预测 | 缓存根目录 `r1_train_predictions/index.json` 及同目录 `heatmap.npy/inout.npy/argmax_xy.npy` |
+| 官方test轨迹/标签和原预测 | 缓存根目录 `test/index.json` 及同目录 `heatmap.npy/inout.npy/argmax_xy.npy` |
+| train视觉特征 | 缓存根目录 `r2_native_last_fp16/index.json`、`scene_features.npy` |
+| test视觉特征 | 缓存根目录 `r4_official_test_native_last_fp16/index.json`、`scene_features.npy` |
+| 输入来源小报告 | 仓库 `cscwd/results/{r1_train_single_frame_cache,t2_single_frame_cache,r2_feature_cache,r4_official_test_features}.json` |
+| 原首轮参照 | 仓库 `cscwd/results/r4_official_comparison.json` 及其指向的GRU/HV小报告 |
+
+不读取R1开发validation划分，也不读取D2校准输出、D3新增loss或其checkpoint。模型每帧收到当前冻结视觉特征、原heatmap/InOut和真实头框；不复用上帧hidden或输出。旧轮只追溯小报告，当前轮完整核对大文件。
+
+新实验根目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1/current_frame/`，保存 `training_config.json`、`training_history.json`、`selection.json`、五轮 `epoch_001.pt`–`epoch_005.pt`、`selected.pt`、`last.pt`、`baseline_details.json` 及五套 `test_epoch_001/`–`test_epoch_005/`。每套test内保存完整heatmap/InOut/argmax与逐事件明细；D4不生成history diagnostics。
+
+每轮完整test、AUC→L2→AP→较早epoch选择整轮，与原首轮一致；`selected.pt`具体对应哪一轮由真实结果决定，`last.pt`始终对应epoch 5。报告还给出D4与原GRU/HV的全部同epoch差值。名义参数347,522，其中74,112个权重元素对应零历史输入，说明见报告 `parameter_usage`。
+
+结果和日志均在 `/home/fb/src/paper/gazelleV1/cscwd/results/`：外层 `r4_current_frame_round.log`、训练 `r4_current_frame_train.log`、比较 `r4_current_frame_comparison.log`；外层成功标记为 `R4 current-frame round completed.`。回传 `r4_current_frame.json/.md`、`r4_current_frame_comparison.json/.md`、`r4_current_frame_selection.json` 和自动追加的provenance；大文件仍留服务器。

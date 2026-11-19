@@ -27,6 +27,7 @@
 - ~/src/gazelle/cscwd/results/r4_state_calibration_local_review.md（D2真实校准验收与当前D3状态时序训练决策）
 - ~/src/gazelle/cscwd/r4_state_supervision_plan.md（D3固定loss、跨chunk监督与运行规格）
 - ~/src/gazelle/cscwd/results/r4_state_supervision_local_review.md（D3真实验收、同epoch对比和当前D4无历史对照决策）
+- ~/src/gazelle/cscwd/r4_current_frame_plan.md、results/r4_current_frame_local_checks.md（D4已本地实现的固定约定与23项检查；服务器入口见实现计划§15.1）
 - ~/src/gazelle/cscwd/idea_feasibility_review.md（方向复盘、底座选择与理想实验关系；候选重构尚未实现）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
@@ -58,7 +59,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-官方train/test首轮 `aa0ab55`、D1 `287d063`、D2 `75f305c`、D3 `db239cf` 均已验收。原首轮两模型epoch 5；D3按原规则选GRU epoch 2/HV epoch 3。D3HV准确稳定51.2225%、gaze89/158，仍低于单帧；同epoch 3稳定10,232→10,140、翻转660→717，两模型五个同轮AP均下降/L2均增加，固定时序loss无一致收益。当前下一步D4单个当前帧无历史联合修正头：保留普通GRU当前输入和双输出结构、每帧清空历史、原逐帧MSE/BCE、从头五轮/seed0/逐epoch完整test/AUC选整轮，先固定重置及有效参数区别再实现。该对照决定原AP增益是否依赖历史，再决定机制取舍。本次不实现D4，不追加D3权重扫描/校准；§11–§14保留复现，原源码/validation/机器报告不改写。
+官方train/test首轮 `aa0ab55`、D1 `287d063`、D2 `75f305c`、D3 `db239cf` 均已验收。原首轮两模型epoch 5；D3按原规则选GRU epoch 2/HV epoch 3，固定时序loss无一致收益。D4当前帧无历史对照已本地实现（`r4_current_frame_v1`），23项合成检查通过：保留普通GRU层与当前输入，每帧强制空状态且返回None，原逐帧MSE/BCE、从头五轮/seed0/逐epoch完整test/AUC选整轮；名义参数347,522，其中74,112权重元素接收结构性零历史，报告明确作用不同。下一步用户按§15.1在GPU1手动运行并回传 `r4_current_frame*` 小报告/provenance，本地核对同epoch和选中整行，决定历史机制取舍。未启动服务器D4，没有新VAT数字；不追加D3扫描/校准，不实现讨论中的候选效用结构。§11–§14保留复现，原源码/validation/机器报告不改写。
 
 ---
 

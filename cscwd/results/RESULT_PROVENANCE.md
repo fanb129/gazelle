@@ -617,3 +617,12 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 分析文件 `cscwd/idea_feasibility_review.md`；SHA256 `4231c9e08d72ddb50d3e5c171251b816637ff21048a25bf09bbc03e180d5e7c9`。引用已有T5/R4/D1–D3真实报告、官方Gaze-LLE与本地GazeSpot源稿；没有新实验数字，理想结果只写比较关系。
 - 官方Gazelle/DINOv2论文数值与本地GazeSpot/DINOv3结果分开；GazeSpot-L源稿记录不是CSCWD同协议的新复现。底座规模与模块增量分别评价。
 - 本次仅讨论/文档更新，D4尚未实现/运行，没有切换底座、训练或评测。当前候选选择/效用监督为后续假设，原代码/结果/预声明训练计划保持。
+
+## R4-D4当前帧无历史对照本地实现（2026-11-19）
+
+- Control: `r4_current_frame_v1`; data/selection: `r4_official_train_test_v1`. Plan: `cscwd/r4_current_frame_plan.md`; SHA256: `09215386d2257bb6b75c9650eb4e62a2f648f36cb294f3a85b86fb4a5b45fb20`.
+- Local checks: `cscwd/results/r4_current_frame_local_checks.json`; SHA256: `0e6205067d9805534c99f815832bd71fdd240c6c83402e6aef7d8a76104d4f9f`.
+- Local summary: `cscwd/results/r4_current_frame_local_checks.md`; SHA256: `0eebaa14e21d336cab852ba4a8dfdc7b5601c0ecf114c6712a47153b8412b25d`.
+- 23 CPU synthetic tests passed (model7, training/actual comparison CLI6, comparison7, wrapper3); final root rerun: 7 in0.145s +16 in14.531s. Seven Python3.10 AST checks, wrapper/two server command blocks bash syntax passed.
+- Fresh state every frame; original per-frame MSE/BCE, five epochs/seed0. Nominal347,522 parameters;74,112 weight elements multiply structurally zero history. Effective use is not claimed identical.
+- Server D4 job not started; no new VAT performance numbers. Manual GPU1 command: implementation_plan.md §15.1. New large artifacts will stay at `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1/current_frame/`; actual artifact hashes will be recorded by server scripts.

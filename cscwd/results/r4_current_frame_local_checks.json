@@ -1,0 +1,89 @@
+{
+  "task": "R4_current_frame_local_checks",
+  "date": "2026-11-19",
+  "created_at_utc": "2026-11-19T07:21:55.239248+00:00",
+  "control_version": "r4_current_frame_v1",
+  "protocol_version": "r4_official_train_test_v1",
+  "based_on_commit": "8d224f6659ec9c9919333e48e109d437c772e2aa",
+  "passed": true,
+  "scope": "CPU_synthetic_tests_only; real_VAT_D4_training_and_server_jobs_not_run",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_current_frame_plan.md",
+    "sha256": "09215386d2257bb6b75c9650eb4e62a2f648f36cb294f3a85b86fb4a5b45fb20"
+  },
+  "source_sha256": {
+    "cscwd/code/scripts/compare_current_frame.py": "0ffba99a62f9899d8521eae69396810c072fe7ca0408742d3929620e90b63b18",
+    "cscwd/code/scripts/run_current_frame_round.sh": "9659a781b8d0578538fe13e888b2026c460a553a62ee4b1a8e55d962d38b8edb",
+    "cscwd/code/scripts/test_compare_current_frame.py": "7fa443fc34b20bbb86796c13705df4b00af0168ae6748797f57605f3a6e1b747",
+    "cscwd/code/scripts/test_run_current_frame_round.py": "04e466b4d630bd9749d857f5f79758d102b6285652be8182debbf9bdaef393cf",
+    "cscwd/code/scripts/test_train_current_frame.py": "fcb921c2692dc3438a376d2bce1a2668b3d57f15e235b15fc2ee0822bd706286",
+    "cscwd/code/scripts/train_current_frame.py": "4f3a0e40b7ccce300386e1ebfeea7fca7a298c043aa5ffcb7731335be0cd3378",
+    "cscwd/code/stag/current_frame_model.py": "cb075c6c9740b804dd52c452198f18b19e47f1c42b9a16d472da6579a81069cf",
+    "cscwd/code/stag/test_current_frame_model.py": "61686756f4035fea31e1688410e5040e160237c88fd97dbcdc7df8e3e83ea11c"
+  },
+  "test_count": 23,
+  "groups": {
+    "model": 7,
+    "training_and_actual_comparison_CLI": 6,
+    "comparison_small_reports": 7,
+    "round_wrapper": 3
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_*current_frame*.py' -v",
+      "count": 7,
+      "seconds": 0.145,
+      "exit_code": 0
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_*current_frame*.py' -v",
+      "count": 16,
+      "seconds": 14.531,
+      "exit_code": 0
+    }
+  ],
+  "parameter_usage": {
+    "native_feature_channels": 768,
+    "hidden_dim": 128,
+    "full_parameter_count": 347522,
+    "structural_zero_weight_elements": 74112,
+    "same_nominal_parameter_shapes_as_ordinary_gru": true,
+    "effective_parameter_use_matches_recurrent_model": false,
+    "interpretation": "structural_zero_input_weight_count; not_effective_degrees_of_freedom_or_FLOPs"
+  },
+  "checks": {
+    "supplied_history_and_reset_ignored_no_state_returned": true,
+    "frame_order_prior_inputs_and_chunk_boundaries_do_not_change_outputs": true,
+    "fresh_ordinary_gru_step_and_shared_initialization_match": true,
+    "native_feature_shape_and_parameter_usage_counts": true,
+    "active_head_projection_bias_gradients_and_zero_history_weight_task_gradients": true,
+    "adamw_decay_can_move_zero_task_gradient_weights_without_output_dependency": true,
+    "all_five_epochs_complete_train_test_and_original_loss_retained": true,
+    "test_labels_do_not_change_any_of_five_training_checkpoints": true,
+    "checkpoint_reload_selected_last_hashes_and_no_history_diagnostics": true,
+    "fixed_budget_and_plan_enforced": true,
+    "actual_training_and_comparison_CLI_report_manifest_provenance": true,
+    "reference_small_report_sources_initializer_budget_baseline_selection_verified": true,
+    "all_same_epoch_and_selected_complete_rows_retained": true,
+    "previous_large_NPY_PT_not_required_for_reference_summary": true,
+    "wrapper_one_model_GPU_one_quoted_paths_train_then_compare_failure_propagation": true,
+    "python_3_10_AST_seven_new_Python_files": true,
+    "wrapper_and_two_server_command_blocks_bash_syntax": true,
+    "previously_tracked_model_code_unchanged_and_small_result_JSON_allowed": true,
+    "git_diff_check": true
+  },
+  "implementation_notes": [
+    "CurrentFrameRefiner imports the original GRU architecture and resets all history every step; predictions never feed subsequent frames.",
+    "Original data, per-frame losses, evaluation and complete-epoch selection functions are imported unchanged.",
+    "Official test is used for epoch selection, explicitly disclosed as not an independent held-out estimate.",
+    "No real VAT D4 performance numbers are available; synthetic fixture metrics are not experiment results."
+  ],
+  "next_step": "User manually runs implementation_plan.md section 15.1 on physical GPU 1 and returns r4_current_frame model/comparison/selection reports and provenance."
+}
