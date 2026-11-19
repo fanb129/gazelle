@@ -668,3 +668,20 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - 28 synthetic CPU tests passed: candidate12/0.084s, scoring9/0.693s, final CLI7/1.866s; six Python3.10 AST checks and two server command blocks bash syntax passed.
 - Fixed five candidates, original InOut, one-hop raw visual transport and independent EMA; complete candidate generation precedes GT scoring. Oracle never feeds memory.
 - Real VAT D5 analysis/server job not run. Manual GPU1 command in implementation_plan.md §16.1; future artifacts at `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/`. No new checkpoint; actual large-artifact paths/SHA will be recorded by server script.
+
+## R4-D5 train-only history utility
+
+- UTC: `2026-11-19T12:50:12.595776+00:00`; commit: `8f1bf4f0d3b59a5f6f80765e93898a717da7703e`.
+- Command: `/home/fb/anaconda3/envs/py310/bin/python cscwd/code/scripts/analyze_history_utility.py --feature-cache /newhome/fb/dataset/videoattentiontarget/cscwd_cache/gazespot_vitb_epoch7/r2_native_last_fp16 --feature-report /home/fb/src/paper/gazelleV1/cscwd/results/r2_feature_cache.json --prediction-report /home/fb/src/paper/gazelleV1/cscwd/results/r1_train_single_frame_cache.json --plan /home/fb/src/paper/gazelleV1/cscwd/r4_history_utility_plan.md --output-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1 --device cuda:0 --report /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_utility.json --summary /home/fb/src/paper/gazelleV1/cscwd/results/r4_history_utility.md --provenance /home/fb/src/paper/gazelleV1/cscwd/results/RESULT_PROVENANCE.md`.
+- Plan: `/home/fb/src/paper/gazelleV1/cscwd/r4_history_utility_plan.md`; SHA256: `3bad42a8efbe7925198c1e9f40cd893e25053fc1a4830e33debef81a78cc8006`.
+- Report: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_history_utility.json`; SHA256: `dc0ec7bb6b976a3ee22b9f4755abc03d267008c713b31c8a9489f95eb73cff4f`.
+- Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_history_utility.md`; SHA256: `6ddee813877ab5069072e1b8b52df5616f099598108fc3e87aa7a37873b106fb`.
+- Complete official train only; no test access, training or checkpoint; original InOut fixed.
+- GT/oracle scoring follows candidate generation and never feeds memory.
+- candidate_xy: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/candidate_xy.npy`; SHA256: `e5488770f50753968544ab7fa81e5ff1043b70229479bf172026df5468ea1e3e`.
+- history_available: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/history_available.npy`; SHA256: `eeff757cad5e8dabb6905c39d1918477329ee7e83d4e8371aec393cec605a168`.
+- errors: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/errors.npy`; SHA256: `1127c1115d5e3002113426f88f8d2850e188a248bea7630ef9ca7fdb69ebd871`.
+- group_codes: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/group_codes.npy`; SHA256: `46e3c2f8569d482857169b9cedd9513091567b44bcd9b21911e51b80d9d00764`.
+- oracle_choice: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/oracle_choice.npy`; SHA256: `6a22df395dcc4adf9657a23499db3420fd1550f56456a6ec54044d6791e3a8ec`.
+- details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/utility_details.json`; SHA256: `682f089dcf989403bb906a34ef7d0a05c30e16bdef9036d40c716245cb619426`.
+- index: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/index.json`; SHA256: `9e44e79f4da29493609b95348b7cf472948988eeb05b5670b5053efd341192c8`.
