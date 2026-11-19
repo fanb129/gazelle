@@ -602,3 +602,12 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_state_supervised_comparison.md`; SHA256: `48666e66f120d717f700dedbe9f925b0d61d16bcb6381343f7e11c89e27ad7a0`.
 - Selection manifest: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_state_supervised_selection.json`; SHA256: `04590b0d3c6b675b31c72da3f42be7c6edf65e7139cf213f9b174a0c685b49cf`.
 - Full official test evaluated each epoch and used for selection; original outputs, no D2 calibration.
+
+## R4-D3真实结果本地验收（2026-11-19）
+
+- 已pull结果提交 `db239cf`，作业源码 `524999f`。240项小报告来源/源码/覆盖/损失算式/选轮/模板/provenance核对通过；服务器NPY/PT/index/完整事件未下载或本地重算。
+- 验收记录 `cscwd/results/r4_state_supervision_local_review.json`；SHA256 `8083396698b2f8c4b7bc999302de49dc8c0e081b9e5ea40d6ee463a438355597`。
+- 验收记录 `cscwd/results/r4_state_supervision_local_review.md`；SHA256 `e036faa8df6a829659212834ca2aaebfd5018742a66d479b932f4b7fb2ddcbf9`。
+- 两模型完整五轮，train每轮132,563帧、stable pairs129,666、transition frames5,358。按原规则选GRU epoch 2/HV epoch 3；HV AUC/L2/AP为0.940481/0.099299/0.888879，准确稳定51.2225%、错帧6,168、翻转717、gaze89/158，核心机制优势尚未建立。
+- 同epoch分析：HV3稳定10,232→10,140、翻转660→717；GRU2稳定10,256→10,203。两模型十个同轮AP均下降/L2均增加，稳定只有epoch4增加；不把选轮提前后的整行改善直接归功新loss，也不临时换选epoch4。
+- 下一步D4只做一个当前帧无历史联合修正头，原逐帧目标/五轮预算，判定原AP收益是否依赖历史；先固定约定再实现。不继续D3权重扫描/校准。本次仅分析和计划，没有新的模型训练或服务器任务。

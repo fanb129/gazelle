@@ -7,9 +7,9 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | R4-D3状态时序监督入口完成、29项合成检查通过；下一步服务器GPU 1运行§14.1 |
+| CSCWD | `cscwd/` | D3真实结果已验收，固定时序loss未显示一致收益；下一步D4当前帧无历史对照 |
 
-## 当前优先级（2026-11-18）
+## 当前优先级（2026-11-19）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
 方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。R1/R2 已验收，R3 历史视觉对应/有效性模型与诊断本地完成。原精简 R4 `r4_compact_v2` validation 首轮已验收，两模型均选 epoch 1、整体仍首选单帧。用户随后明确取消后续 validation，当前执行 `cscwd/r4_official_train_test_plan.md` 的 `r4_official_train_test_v1`：完整官方 train 训练，每 epoch 完整 test，按 AUC 优先、L2 更低、AP 更高选一整轮。官方train/test首轮结果 `aa0ab55` 已通过服务器Git取回并验收，两模型均选epoch 5；AUC/AP小幅改善，但定位误差和时序指标有代价，新机制尚未显示超过普通GRU的额外收益。原规则 STAG 保留为先导基线，以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
@@ -100,6 +100,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D3 / 本地产出与下一步**：**29项CPU合成检查通过**（loss/epoch12、训练及实际比较CLI6、比较7、wrapper4），覆盖手算/梯度、跨chunk完整监督计数、两模型真实合成五轮、重载、同次诊断、test标签不影响五轮权重、前轮同源差值、来源SHA与GPU1/失败停止。记录 `cscwd/results/r4_state_supervision_local_checks.json/.md`；七个新Python文件的3.10语法与shell命令检查通过。旧源码/原结果不改，没有新增真实VAT数字或服务器作业。下一步用户按实现计划§14.1单条命令运行，回传两模型/比较/selection小报告与provenance，再验收稳定/响应取舍及相对GRU效果。
 
+**R4-D3 / 2026-11-19 / 真实结果验收与分析**：已pull `db239cf`，240项本地小报告来源/源码/覆盖/loss/选轮/模板/provenance核对通过，记录 `cscwd/results/r4_state_supervision_local_review.json/.md`。每轮train 132,563帧、stable pairs 129,666、transition frames 5,358；两模型完整五轮，按原规则选 **GRU epoch 2 / 新机制 epoch 3**。新机制整行 **AUC 0.940481 / L2 0.099299 / AP 0.888879**，准确稳定 **51.2225%**、状态错帧 **6,168**、错误翻转 **717**、gaze_shift **89/158**；仍比单帧少303个准确稳定窗口、3个gaze响应，比本轮GRU少63个稳定窗口。原首轮选epoch 5→D3选epoch 3的+176稳定窗口不能直接归因于loss；同epoch 3实际 **10,232→10,140**、翻转 **660→717**。两模型五个同轮AP均下降/L2均增加，稳定只有epoch 4增加。本固定配置无一致收益，尚无历史有效性机制优势；大数组/权重/事件未在本地重算，原报告保持。
+
+**R4-D3 / 下一步决策**：不继续追加D3权重扫描或校准。下一项 **R4-D4当前帧无历史联合修正对照**：保留普通GRU当前视觉输入/原预测/真实头框与双输出结构，每帧清空预测历史，使用原逐帧MSE/BCE、单配置seed 0、从头五轮，沿用官方train/逐epoch test/AUC选整轮。它用于判定原AP增益是否依赖历史，并决定保留或调整当前历史机制；重置约定及有效参数区别在实现前固定。本次仅验收和计划，未实现D4或启动作业。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -110,6 +114,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **服务器手动运行R4-D3**：loss、训练/比较入口与29项本地合成检查已完成，用户按 `cscwd/implementation_plan.md` §14.1用物理GPU 1启动唯一命令。已有缓存复用、两模型从头各五轮；回传 `r4_state_supervised_*` 与provenance。§11–§13无需重跑。
-2. 真实时序收益出现后补最少无历史头/validity读门对照，确认收益来源；门控相关/组均值和全局校准不直接作历史机制证据。
-3. 当前论文整行仍取各模型epoch 5；test选模协议与全部失败结果保留，VAT逐人指标和协作收益分别表述。
+1. **实现R4-D4当前帧无历史对照**：一个模型、原逐帧目标、从头五轮；先固定每帧清空历史的约定，再实现与原首轮同预算的训练/比较。D3已验收，§14无需重跑。
+2. 根据D4判断历史是否贡献原AP增益：无历史已相当或更好时调整/简化历史方案，历史有明确收益时再做最少validity读门对照。
+3. 结果整行分轮次保留：原首轮GRU/HV均epoch 5，D3为GRU epoch 2/HV epoch 3，D2校准另列；不混用最好列，test选模协议保留。

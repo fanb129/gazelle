@@ -1,8 +1,8 @@
 # CSCWD 2027 · 因果联合时序修正
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
-> 当前方案（2026-11-18）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：R4-D2真实校准已验收；R4-D3稳定状态/变化响应监督入口完成，29项合成检查通过。下一步由用户在服务器按§14.1用GPU 1手动运行。
+> 当前方案（2026-11-19）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
+> 状态：D3真实结果已验收，固定时序loss无一致收益，尚无历史有效性机制优势。下一步D4单个当前帧无历史对照，确定原AP收益是否依赖历史。
 
 ## 目录结构
 
@@ -26,7 +26,7 @@ cscwd/
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
 | [r4_cache_diagnosis_plan.md](r4_cache_diagnosis_plan.md) | 已完成诊断：四种坐标/状态组合、准确稳定贡献与历史控制量 |
 | [r4_state_calibration_plan.md](r4_state_calibration_plan.md) | 已完成R4-D2：train拟合全局状态偏置、固定原预测历史与坐标 |
-| [r4_state_supervision_plan.md](r4_state_supervision_plan.md) | 当前R4-D3：固定状态稳定/变化监督、跨chunk处理与同预算训练 |
+| [r4_state_supervision_plan.md](r4_state_supervision_plan.md) | 已完成R4-D3：固定状态稳定/变化监督、跨chunk处理与同预算训练 |
 | [training_file_guide.md](training_file_guide.md) | 当前训练文件说明：数据JSON、特征、权重、每轮结果与日志的具体路径 |
 | [r4_official_train_test_plan.md](r4_official_train_test_plan.md) | 当前 R4：完整 train、逐 epoch test、AUC 选模 |
 | [r4_compact_plan.md](r4_compact_plan.md) | 原 R4 validation 历史协议与选模规则 |
@@ -47,12 +47,13 @@ cscwd/
 | [results/r4_state_calibration_local_checks.md](results/r4_state_calibration_local_checks.md) | 校准入口与18项本地合成检查 |
 | [results/r4_state_calibration_local_review.md](results/r4_state_calibration_local_review.md) | 真实校准验收、部分恢复与D3状态时序训练决策 |
 | [results/r4_state_supervision_local_checks.md](results/r4_state_supervision_local_checks.md) | D3 loss/训练/比较/后台入口及29项本地合成检查 |
+| [results/r4_state_supervision_local_review.md](results/r4_state_supervision_local_review.md) | D3真实验收、同epoch分析与D4当前帧对照决策 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**官方train/test、D1/D2已验收 → 用户运行§14.1的D3训练 → 最少机制证据 → 论文**。既有两模型均选epoch 5；§9–§13保留复现，已完成作业无需重跑。
+当前执行顺序：**官方train/test、D1–D3已验收 → D4当前帧无历史对照 → 决定历史机制取舍 → 论文证据**。原首轮两模型均epoch 5，D3为GRU epoch 2/HV epoch 3；§9–§14保留复现，已完成作业无需重跑。
 
 ## 论文索引（快速查，详见 literature_review.md）
 
