@@ -651,3 +651,20 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - Report: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_current_frame_comparison.json`; SHA256: `2a75e0a6211a53ecaf1579c2d3e53947871679f28c67c75e787d9f7acb7fce49`.
 - Summary: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_current_frame_comparison.md`; SHA256: `94ae3ce143ec70b16dd0074c8309e5e617a2649259ba48167a16062efae3609b`.
 - Selection manifest: `/home/fb/src/paper/gazelleV1/cscwd/results/r4_current_frame_selection.json`; SHA256: `2a55f5a6bca3774ac453bc9f560a85addd6221db44433cfb6ac9dc87fab21f19`.
+
+## R4-D4真实结果本地验收（2026-11-19）
+
+- Result commit: `6eeb594`; job code: `4058054fc76d43bda7d25877138cbd52a4a84b33`. 235 actual named small-report checks passed; server NPY/PT/index/full events were not downloaded or recomputed locally.
+- Review: `cscwd/results/r4_current_frame_local_review.json`; SHA256: `89b611902348e3b3fa4748274281d00f0451fc427e7dcfd2cf59cf25c0c2cf52`.
+- Review summary: `cscwd/results/r4_current_frame_local_review.md`; SHA256: `dd26114914caf2909c83cad7dcc6b715ede519470fe739ebb88aedd1f3e1e112`.
+- Selected epoch5: AUC0.9404074807484596/L2 0.09936236130604252/AP0.8930672866412298; accurate stable10050/19796, gaze87/158, leave107/192.
+- AP/leave benefits are reproduced without history; ordinary GRU retains higher AUC at all five matched epochs. Next: train-only candidate utility analysis, not further expansion of the original GRU/HV.
+
+## R4-D5训练集候选效用本地实现（2026-11-19）
+
+- Utility version: `r4_history_utility_v1`; plan: `cscwd/r4_history_utility_plan.md`; SHA256: `3bad42a8efbe7925198c1e9f40cd893e25053fc1a4830e33debef81a78cc8006`.
+- Local checks: `cscwd/results/r4_history_utility_local_checks.json`; SHA256: `a560eee0aa3c735ad2d6baa8cbba1cea4fec55687759af7b708c8642ccdbe884`.
+- Local summary: `cscwd/results/r4_history_utility_local_checks.md`; SHA256: `6b2734e83b47fdfea12321eda0626860d7ee4e1940eebd6d1288641ea4521289`.
+- 28 synthetic CPU tests passed: candidate12/0.084s, scoring9/0.693s, final CLI7/1.866s; six Python3.10 AST checks and two server command blocks bash syntax passed.
+- Fixed five candidates, original InOut, one-hop raw visual transport and independent EMA; complete candidate generation precedes GT scoring. Oracle never feeds memory.
+- Real VAT D5 analysis/server job not run. Manual GPU1 command in implementation_plan.md §16.1; future artifacts at `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/`. No new checkpoint; actual large-artifact paths/SHA will be recorded by server script.

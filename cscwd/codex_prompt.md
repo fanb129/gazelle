@@ -1,4 +1,4 @@
-# Codex 提示词（CSCWD 联合时序修正 · 2026-11-18 当前版）
+# Codex 提示词（CSCWD 联合时序修正 · 2026-11-19 当前版）
 
 以下整段是给 codex 的完整提示词，直接复制到 codex 新会话开头即可：
 
@@ -27,14 +27,15 @@
 - ~/src/gazelle/cscwd/results/r4_state_calibration_local_review.md（D2真实校准验收与当前D3状态时序训练决策）
 - ~/src/gazelle/cscwd/r4_state_supervision_plan.md（D3固定loss、跨chunk监督与运行规格）
 - ~/src/gazelle/cscwd/results/r4_state_supervision_local_review.md（D3真实验收、同epoch对比和当前D4无历史对照决策）
-- ~/src/gazelle/cscwd/r4_current_frame_plan.md、results/r4_current_frame_local_checks.md（D4已本地实现的固定约定与23项检查；服务器入口见实现计划§15.1）
+- ~/src/gazelle/cscwd/results/r4_current_frame_local_review.md（D4真实验收，AP/出画收益不需要历史即可重现）
+- ~/src/gazelle/cscwd/r4_history_utility_plan.md、results/r4_history_utility_local_checks.md（D5训练集候选分析已本地实现，28项检查，服务器命令§16.1）
 - ~/src/gazelle/cscwd/idea_feasibility_review.md（方向复盘、底座选择与理想实验关系；候选重构尚未实现）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
 当前状态：T1–T6 和 R1/R2 已验收。R2 全量特征缓存与普通联合头固定一个 epoch smoke 结果 85d9050 已回传，契约为末层 768×32×32、FP16，58,507 张图像。实际训练/验证 98,362/34,201 帧，347,522 个新增参数，两个头更新。标准指标基本持平，状态错误 11.13%→10.53%，准确稳定 60.19%→59.46%，state enter 179/189→175/189，leave 93/169→97/169；该配置未达到最终选模条件。记录见 results/r2_local_review.json/.md。原规则 STAG 和普通 GRU 保留为对照，R3 本地完成情况见下一段。
 
-R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预测区域模板，validity 控制历史读入、refresh 控制模板写入；step兼容R2，诊断可按原全局索引落盘。372,677 参数；24项新增检查和18项回归通过，原validation首轮已真实训练并验收；当前待新官方train/test重训。
+R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预测区域模板，validity 控制历史读入、refresh 控制模板写入；step兼容R2，诊断可按原全局索引落盘。372,677 参数；24项新增检查和18项回归通过。validation和官方train/test均已真实训练验收，当前进度以下段为准。
 
 目标：按 implementation_plan.md §3.2 继续当前官方 train/test R4；不重做 T1–T6、R1–R3。用户已明确取消后续 validation，完整 train 训练、每 epoch 完整 test，按 AUC 更高、L2 更低、AP 更高、较早 epoch 选一整轮；如实记录 test 参与 checkpoint 选择。任务是“推进 idea”，不是“审计问题”。
 
@@ -59,7 +60,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-官方train/test首轮 `aa0ab55`、D1 `287d063`、D2 `75f305c`、D3 `db239cf` 均已验收。原首轮两模型epoch 5；D3按原规则选GRU epoch 2/HV epoch 3，固定时序loss无一致收益。D4当前帧无历史对照已本地实现（`r4_current_frame_v1`），23项合成检查通过：保留普通GRU层与当前输入，每帧强制空状态且返回None，原逐帧MSE/BCE、从头五轮/seed0/逐epoch完整test/AUC选整轮；名义参数347,522，其中74,112权重元素接收结构性零历史，报告明确作用不同。下一步用户按§15.1在GPU1手动运行并回传 `r4_current_frame*` 小报告/provenance，本地核对同epoch和选中整行，决定历史机制取舍。未启动服务器D4，没有新VAT数字；不追加D3扫描/校准，不实现讨论中的候选效用结构。§11–§14保留复现，原源码/validation/机器报告不改写。
+官方train/test首轮、D1–D4均已验收。D4结果 `6eeb594` 经235项核对通过，按AUC选epoch5：AUC0.940407/L2 0.099362/AP0.893067，稳定10,050/19,796、gaze87/158、leave107/192；原AP/出画收益无需历史可重现，GRU五个同epoch AUC仍略高，不能断言历史完全无用。下一步D5已本地实现（`r4_history_utility_v1`），28项合成检查通过。只在完整train比较current/current_grid/previous_raw/EMA0.75/视觉传输，原InOut固定，候选生成落盘后才用GT做四象限/分组和固定集合oracle参考；GT/oracle不反馈历史。用户按§16.1在GPU1手动运行并回传 `r4_history_utility.json/.md` 与provenance，确认补救空间后再实现选择门。本地无真实D5数字，未启动服务器，不切换底座/追加旧GRU。§11–§15保留复现，原源码/validation/机器报告不改写。
 
 ---
 

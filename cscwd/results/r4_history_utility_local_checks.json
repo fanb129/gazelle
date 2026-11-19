@@ -1,0 +1,103 @@
+{
+  "task": "R4_history_utility_local_checks",
+  "date": "2026-11-19",
+  "created_at_utc": "2026-11-19T11:59:19.799289+00:00",
+  "utility_version": "r4_history_utility_v1",
+  "based_on_commit": "6eeb59449dab85be647beee735902cd54a8c3698",
+  "passed": true,
+  "scope": "synthetic_CPU_tests_only; no_real_VAT_D5_analysis_or_server_job",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_history_utility_plan.md",
+    "sha256": "3bad42a8efbe7925198c1e9f40cd893e25053fc1a4830e33debef81a78cc8006"
+  },
+  "source_sha256": {
+    "cscwd/code/stag/history_candidates.py": "ea441d48709c19ff334913c8acb792abfcae838e55026b4aa8f3366c817c1580",
+    "cscwd/code/stag/test_history_candidates.py": "57a9b2955483e9f0cb46c334c25c599a81194fcc5827ffa47dca56fa7fc20a7e",
+    "cscwd/code/stag/history_utility.py": "cfce6c4c79a04886dfc746c03842e318335d0e3f26024c2e412388abb6f011a7",
+    "cscwd/code/stag/test_history_utility.py": "6e52420a858b7b062d0da8a588502bef22c2b12c0dd859c5e24994e184e00408",
+    "cscwd/code/scripts/analyze_history_utility.py": "129425b8910a4b57d777dbcd891130823cf46c653b7c94bdf0f6b63088d43f0d",
+    "cscwd/code/scripts/test_analyze_history_utility.py": "b378d42051d373e9185ecb5c18f151d13b9b854eaedf31bcb1f8053b54f3865f"
+  },
+  "test_count": 28,
+  "groups": {
+    "candidate_generation": 12,
+    "utility_scoring": 9,
+    "actual_CLI_integration": 7
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_history_candidates.py' -v",
+      "count": 12,
+      "seconds": 0.084,
+      "exit_code": 0,
+      "runner": "candidate_design_review"
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_history_utility.py' -v",
+      "count": 9,
+      "seconds": 0.693,
+      "exit_code": 0,
+      "runner": "history_utility_scoring"
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_analyze_history_utility.py' -v",
+      "count": 7,
+      "seconds": 1.866,
+      "exit_code": 0,
+      "runner": "root_final_after_summary_update"
+    }
+  ],
+  "candidate_names": [
+    "current",
+    "current_grid",
+    "previous_raw",
+    "ema_075",
+    "transport_previous"
+  ],
+  "fixed_config": {
+    "ema_current_weight": 0.75,
+    "transport_temperature": 0.1,
+    "inout": "raw_unchanged",
+    "training": false,
+    "test_accessed": false,
+    "oracle_feedback": false
+  },
+  "checks": {
+    "native_768_32_32_FP16_input_FP32_candidate_computation": true,
+    "source_to_target_mass_transport_direction_and_many_to_one_hand_examples": true,
+    "current_grid_resolution_reference_and_original_argmax_convention": true,
+    "EMA_matches_original_numpy_implementation": true,
+    "person_gap_and_future_frame_isolation": true,
+    "no_GT_or_inout_observations_and_no_transport_or_oracle_feedback": true,
+    "hand_counted_localization_and_fixed_inout_quadrants": true,
+    "GT_group_boundaries_priority_and_utility_denominator": true,
+    "raw_out_blocks_spatial_rescues_without_changing_state": true,
+    "oracle_current_first_ties_excludes_resolution_control_and_no_temporal_claim": true,
+    "existing_temporal_state_functions_reused_exactly": true,
+    "actual_CLI_completes_with_all_test_files_removed": true,
+    "changed_GT_changes_scores_but_not_candidate_coordinates_or_availability": true,
+    "changed_future_heatmaps_features_leave_earlier_coordinates_unchanged": true,
+    "source_files_unchanged_and_corruption_rejected": true,
+    "complete_source_row_mapping_artifact_hashes_and_current_coordinate_readback": true,
+    "fixed_state_and_leave_responses_match_independent_original_evaluators": true,
+    "repeated_output_and_wrong_plan_rejected": true,
+    "Python_3_10_AST_six_new_files": true,
+    "two_section_16_server_command_blocks_bash_syntax": true,
+    "previously_tracked_gazelle_and_cscwd_code_unchanged": true,
+    "git_diff_check": true
+  },
+  "notes": [
+    "All candidate coordinates are stored and reopened read-only before GT utility scoring.",
+    "Oracle reference uses only the fixed candidate set; choices never alter causal memory and are not deployment results.",
+    "No candidate AUC or new checkpoint is produced. Fixed raw InOut AP is computed once on official train.",
+    "Synthetic fixture outputs are not VAT performance numbers."
+  ],
+  "next_step": "User manually runs implementation_plan.md section16.1 on physical GPU1; return r4_history_utility.json/.md and provenance, then decide a supervised utility selector."
+}

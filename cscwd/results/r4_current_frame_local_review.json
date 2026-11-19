@@ -1,0 +1,1272 @@
+{
+  "task": "R4_current_frame_local_review",
+  "date": "2026-11-19",
+  "created_at_utc": "2026-11-19T11:49:35.079032+00:00",
+  "source_result_commit": "6eeb594",
+  "job_code_commit": "4058054fc76d43bda7d25877138cbd52a4a84b33",
+  "passed": true,
+  "check_count": 235,
+  "checks": {
+    "run:passed": true,
+    "run:commit": true,
+    "run:code:cscwd/code/scripts/train_current_frame.py": true,
+    "run:code:cscwd/code/scripts/train_compact_joint.py": true,
+    "run:code:cscwd/code/scripts/train_temporal_joint.py": true,
+    "run:code:cscwd/code/scripts/prepare_development.py": true,
+    "run:code:cscwd/code/scripts/eval_temporal.py": true,
+    "run:code:gazelle/utils.py": true,
+    "run:code:cscwd/code/stag/current_frame_model.py": true,
+    "run:code:cscwd/code/stag/official_protocol.py": true,
+    "run:code:cscwd/code/stag/official_data.py": true,
+    "run:code:cscwd/code/stag/official_evaluation.py": true,
+    "run:code:cscwd/code/stag/compact_protocol.py": true,
+    "run:code:cscwd/code/stag/compact_validation.py": true,
+    "run:code:cscwd/code/stag/temporal_model.py": true,
+    "run:code:cscwd/code/stag/temporal_data.py": true,
+    "run:code:cscwd/code/stag/history_model.py": true,
+    "run:code:cscwd/code/stag/history_diagnostics.py": true,
+    "run:code:cscwd/code/stag/feature_cache.py": true,
+    "run:code:cscwd/code/stag/cache.py": true,
+    "run:code:cscwd/code/stag/metrics.py": true,
+    "run:code:cscwd/code/stag/state_metrics.py": true,
+    "run:plan:sha": true,
+    "run:plan:size": true,
+    "run:source:train_feature_report:sha": true,
+    "run:source:train_feature_report:size": true,
+    "run:source:test_feature_report:sha": true,
+    "run:source:test_feature_report:size": true,
+    "run:source:train_prediction_report:sha": true,
+    "run:source:train_prediction_report:size": true,
+    "run:source:test_prediction_report:sha": true,
+    "run:source:test_prediction_report:size": true,
+    "run:source:plan:sha": true,
+    "run:source:plan:size": true,
+    "compare:passed": true,
+    "compare:commit": true,
+    "compare:code:cscwd/code/scripts/compare_current_frame.py": true,
+    "compare:code:cscwd/code/scripts/compare_compact_joint.py": true,
+    "compare:code:cscwd/code/scripts/compare_state_supervised.py": true,
+    "compare:code:cscwd/code/scripts/eval_temporal.py": true,
+    "compare:code:cscwd/code/stag/cache.py": true,
+    "compare:code:cscwd/code/stag/official_protocol.py": true,
+    "compare:code:cscwd/code/stag/compact_protocol.py": true,
+    "compare:plan:sha": true,
+    "compare:plan:size": true,
+    "compare:source:current_frame:sha": true,
+    "compare:source:current_frame:size": true,
+    "compare:source:reference_comparison:sha": true,
+    "compare:source:reference_comparison:size": true,
+    "budget:epochs": true,
+    "budget:learning_rate": true,
+    "budget:lambda_state": true,
+    "budget:hidden_dim": true,
+    "budget:clip_frames": true,
+    "budget:batch_size": true,
+    "budget:seed": true,
+    "budget:weight_decay": true,
+    "budget:gradient_clip_norm": true,
+    "budget:temperature": true,
+    "coverage": true,
+    "history": true,
+    "temporal_loss": true,
+    "calibration": true,
+    "epochs": true,
+    "1:train": true,
+    "1:inframe": true,
+    "1:test": true,
+    "1:localization": true,
+    "1:diag": true,
+    "1:candidate": true,
+    "1:heatloss": true,
+    "1:stateloss": true,
+    "1:loss": true,
+    "1:stable_ratio": true,
+    "1:joint_response:all": true,
+    "1:joint_response:enter_frame": true,
+    "1:joint_response:leave_frame": true,
+    "1:joint_response:gaze_shift": true,
+    "1:state_response:all": true,
+    "1:state_response:enter_frame": true,
+    "1:state_response:leave_frame": true,
+    "1:error_rate": true,
+    "1:flip_rate": true,
+    "2:train": true,
+    "2:inframe": true,
+    "2:test": true,
+    "2:localization": true,
+    "2:diag": true,
+    "2:candidate": true,
+    "2:heatloss": true,
+    "2:stateloss": true,
+    "2:loss": true,
+    "2:stable_ratio": true,
+    "2:joint_response:all": true,
+    "2:joint_response:enter_frame": true,
+    "2:joint_response:leave_frame": true,
+    "2:joint_response:gaze_shift": true,
+    "2:state_response:all": true,
+    "2:state_response:enter_frame": true,
+    "2:state_response:leave_frame": true,
+    "2:error_rate": true,
+    "2:flip_rate": true,
+    "3:train": true,
+    "3:inframe": true,
+    "3:test": true,
+    "3:localization": true,
+    "3:diag": true,
+    "3:candidate": true,
+    "3:heatloss": true,
+    "3:stateloss": true,
+    "3:loss": true,
+    "3:stable_ratio": true,
+    "3:joint_response:all": true,
+    "3:joint_response:enter_frame": true,
+    "3:joint_response:leave_frame": true,
+    "3:joint_response:gaze_shift": true,
+    "3:state_response:all": true,
+    "3:state_response:enter_frame": true,
+    "3:state_response:leave_frame": true,
+    "3:error_rate": true,
+    "3:flip_rate": true,
+    "4:train": true,
+    "4:inframe": true,
+    "4:test": true,
+    "4:localization": true,
+    "4:diag": true,
+    "4:candidate": true,
+    "4:heatloss": true,
+    "4:stateloss": true,
+    "4:loss": true,
+    "4:stable_ratio": true,
+    "4:joint_response:all": true,
+    "4:joint_response:enter_frame": true,
+    "4:joint_response:leave_frame": true,
+    "4:joint_response:gaze_shift": true,
+    "4:state_response:all": true,
+    "4:state_response:enter_frame": true,
+    "4:state_response:leave_frame": true,
+    "4:error_rate": true,
+    "4:flip_rate": true,
+    "5:train": true,
+    "5:inframe": true,
+    "5:test": true,
+    "5:localization": true,
+    "5:diag": true,
+    "5:candidate": true,
+    "5:heatloss": true,
+    "5:stateloss": true,
+    "5:loss": true,
+    "5:stable_ratio": true,
+    "5:joint_response:all": true,
+    "5:joint_response:enter_frame": true,
+    "5:joint_response:leave_frame": true,
+    "5:joint_response:gaze_shift": true,
+    "5:state_response:all": true,
+    "5:state_response:enter_frame": true,
+    "5:state_response:leave_frame": true,
+    "5:error_rate": true,
+    "5:flip_rate": true,
+    "selection_winner": true,
+    "selection_epoch": true,
+    "selection_id": true,
+    "selected_checkpoint": true,
+    "last_checkpoint": true,
+    "compareselection": true,
+    "manifest:task": true,
+    "manifest:status": true,
+    "manifest:protocol_version": true,
+    "manifest:control_version": true,
+    "manifest:plan": true,
+    "manifest:source_reports": true,
+    "manifest:sources": true,
+    "manifest:coverage": true,
+    "manifest:selected": true,
+    "manifest:selection": true,
+    "manifest:selection_rule": true,
+    "manifest:selection_split": true,
+    "manifest:test_selected": true,
+    "manifest:test_used_for_checkpoint_selection": true,
+    "manifest:test_labels_used_for_gradient": true,
+    "manifest:independent_test_estimate": true,
+    "manifest:comparison:sha": true,
+    "manifest:comparison:size": true,
+    "manifest:codes": true,
+    "MD": true,
+    "baseline": true,
+    "comparisonsources": true,
+    "original:sources": true,
+    "original:feature_contract": true,
+    "original:shared_initialization_sha256": true,
+    "current_snapshot": true,
+    "deltaSF": true,
+    "old:ordinary_gru:sha": true,
+    "old:ordinary_gru:size": true,
+    "old:ordinary_gru:sources": true,
+    "old:ordinary_gru:feature_contract": true,
+    "old:ordinary_gru:shared_initialization_sha256": true,
+    "ordinary_gru:1:oldrow": true,
+    "ordinary_gru:1:currentrow": true,
+    "ordinary_gru:1:delta": true,
+    "ordinary_gru:2:oldrow": true,
+    "ordinary_gru:2:currentrow": true,
+    "ordinary_gru:2:delta": true,
+    "ordinary_gru:3:oldrow": true,
+    "ordinary_gru:3:currentrow": true,
+    "ordinary_gru:3:delta": true,
+    "ordinary_gru:4:oldrow": true,
+    "ordinary_gru:4:currentrow": true,
+    "ordinary_gru:4:delta": true,
+    "ordinary_gru:5:oldrow": true,
+    "ordinary_gru:5:currentrow": true,
+    "ordinary_gru:5:delta": true,
+    "old:history_validity:sha": true,
+    "old:history_validity:size": true,
+    "old:history_validity:sources": true,
+    "old:history_validity:feature_contract": true,
+    "old:history_validity:shared_initialization_sha256": true,
+    "history_validity:1:oldrow": true,
+    "history_validity:1:currentrow": true,
+    "history_validity:1:delta": true,
+    "history_validity:2:oldrow": true,
+    "history_validity:2:currentrow": true,
+    "history_validity:2:delta": true,
+    "history_validity:3:oldrow": true,
+    "history_validity:3:currentrow": true,
+    "history_validity:3:delta": true,
+    "history_validity:4:oldrow": true,
+    "history_validity:4:currentrow": true,
+    "history_validity:4:delta": true,
+    "history_validity:5:oldrow": true,
+    "history_validity:5:currentrow": true,
+    "history_validity:5:delta": true,
+    "parameters": true,
+    "unused": true,
+    "parameters_compare": true
+  },
+  "scope": "Local small reports, source code and plan identities, arithmetic, coverage, selection and stored reference comparisons only; server NPY/PT/index/full event details were not downloaded or recomputed.",
+  "source_files": {
+    "cscwd/results/r4_current_frame.json": {
+      "sha256": "6da801593e4c64f6e9f3399074cbe45ec0d54432ed8d7f601614dc072fa8df88",
+      "size_bytes": 42409
+    },
+    "cscwd/results/r4_current_frame.md": {
+      "sha256": "45708d4b0d46c2b01566292bc03f8d9b18cce4a07ee16819c1ad6c63eb8eaa20",
+      "size_bytes": 1549
+    },
+    "cscwd/results/r4_current_frame_comparison.json": {
+      "sha256": "2a75e0a6211a53ecaf1579c2d3e53947871679f28c67c75e787d9f7acb7fce49",
+      "size_bytes": 133267
+    },
+    "cscwd/results/r4_current_frame_comparison.md": {
+      "sha256": "94ae3ce143ec70b16dd0074c8309e5e617a2649259ba48167a16062efae3609b",
+      "size_bytes": 1842
+    },
+    "cscwd/results/r4_current_frame_selection.json": {
+      "sha256": "2a55f5a6bca3774ac453bc9f560a85addd6221db44433cfb6ac9dc87fab21f19",
+      "size_bytes": 4968
+    }
+  },
+  "selected_epoch": 5,
+  "selected_checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1/current_frame/selected.pt",
+    "sha256": "93a849123ec80a983143b5cb5c25f400dd00d477a74366cf174feb54c7d9599e",
+    "size_bytes": 1397204
+  },
+  "current_selected": {
+    "model_id": "current_frame",
+    "epoch": 5,
+    "summary": {
+      "standard": {
+        "auc": 0.9404074807484596,
+        "l2": 0.09936236130604252,
+        "inout_ap": 0.8930672866412298,
+        "person_frames": 31978,
+        "localization_frames": 20655
+      },
+      "temporal": {
+        "jitter": {
+          "pairs": 20225,
+          "predicted": {
+            "count": 20225,
+            "mean": 0.01665303348098355,
+            "median": 0.0,
+            "p90": 0.03125,
+            "p95": 0.04941058844013093
+          },
+          "ground_truth": {
+            "count": 20225,
+            "mean": 0.0059218882811410915,
+            "median": 0.0005208333333333315,
+            "p90": 0.006402461428675593,
+            "p95": 0.011702413566505627
+          }
+        },
+        "stability": {
+          "eligible_windows": 19796,
+          "stable_predicted_frames": 15256,
+          "stable_gt_frames": 18752,
+          "accurate_stable_frames": 10050,
+          "stable_ratio": 0.7706607395433421,
+          "ground_truth_stable_ratio": 0.9472620731460901,
+          "accurate_stable_ratio": 0.5076783188522934
+        },
+        "response": {
+          "all": {
+            "events": 688,
+            "assessable_events": 581,
+            "insufficient_followup_events": 107,
+            "responded_events": 347,
+            "censored_events": 234,
+            "response_rate": 0.5972461273666093,
+            "responded_delay_frames": {
+              "count": 347,
+              "mean": 2.893371757925072,
+              "median": 0.0,
+              "p90": 10.0,
+              "p95": 15.699999999999989
+            }
+          },
+          "enter_frame": {
+            "events": 251,
+            "assessable_events": 231,
+            "insufficient_followup_events": 20,
+            "responded_events": 153,
+            "censored_events": 78,
+            "response_rate": 0.6623376623376623,
+            "responded_delay_frames": {
+              "count": 153,
+              "mean": 2.2287581699346406,
+              "median": 0.0,
+              "p90": 7.0,
+              "p95": 13.0
+            }
+          },
+          "leave_frame": {
+            "events": 238,
+            "assessable_events": 192,
+            "insufficient_followup_events": 46,
+            "responded_events": 107,
+            "censored_events": 85,
+            "response_rate": 0.5572916666666666,
+            "responded_delay_frames": {
+              "count": 107,
+              "mean": 3.7476635514018692,
+              "median": 1.0,
+              "p90": 13.0,
+              "p95": 17.69999999999999
+            }
+          },
+          "gaze_shift": {
+            "events": 199,
+            "assessable_events": 158,
+            "insufficient_followup_events": 41,
+            "responded_events": 87,
+            "censored_events": 71,
+            "response_rate": 0.5506329113924051,
+            "responded_delay_frames": {
+              "count": 87,
+              "mean": 3.0114942528735633,
+              "median": 0.0,
+              "p90": 10.800000000000011,
+              "p95": 14.400000000000006
+            }
+          }
+        }
+      },
+      "state": {
+        "state_error": {
+          "person_frames": 31978,
+          "errors": 6123,
+          "error_rate": 0.19147538933016447,
+          "by_gt_state": {
+            "out_of_frame": {
+              "person_frames": 11323,
+              "errors": 3470,
+              "error_rate": 0.30645588624922726
+            },
+            "in_frame": {
+              "person_frames": 20655,
+              "errors": 2653,
+              "error_rate": 0.12844347615589446
+            }
+          }
+        },
+        "stable_state_flips": {
+          "eligible_pairs": 31191,
+          "flips": 742,
+          "flip_rate": 0.02378891346862877,
+          "by_gt_state": {
+            "out_of_frame": {
+              "eligible_pairs": 10966,
+              "flips": 336,
+              "flip_rate": 0.03064016049607879
+            },
+            "in_frame": {
+              "eligible_pairs": 20225,
+              "flips": 406,
+              "flip_rate": 0.02007416563658838
+            }
+          }
+        },
+        "response": {
+          "all": {
+            "events": 489,
+            "assessable_events": 436,
+            "insufficient_followup_events": 53,
+            "responded_events": 316,
+            "censored_events": 120,
+            "response_rate": 0.7247706422018348,
+            "responded_delay_frames": {
+              "count": 316,
+              "mean": 2.1202531645569622,
+              "median": 0.0,
+              "p90": 6.5,
+              "p95": 13.0
+            }
+          },
+          "enter_frame": {
+            "events": 251,
+            "assessable_events": 244,
+            "insufficient_followup_events": 7,
+            "responded_events": 209,
+            "censored_events": 35,
+            "response_rate": 0.8565573770491803,
+            "responded_delay_frames": {
+              "count": 209,
+              "mean": 1.2870813397129186,
+              "median": 0.0,
+              "p90": 4.0,
+              "p95": 5.0
+            }
+          },
+          "leave_frame": {
+            "events": 238,
+            "assessable_events": 192,
+            "insufficient_followup_events": 46,
+            "responded_events": 107,
+            "censored_events": 85,
+            "response_rate": 0.5572916666666666,
+            "responded_delay_frames": {
+              "count": 107,
+              "mean": 3.7476635514018692,
+              "median": 1.0,
+              "p90": 13.0,
+              "p95": 17.69999999999999
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "auc": 0.9404074807484596,
+      "l2": 0.09936236130604252,
+      "inout_ap": 0.8930672866412298,
+      "jitter_mean": 0.01665303348098355,
+      "accurate_stable_ratio": 0.5076783188522934,
+      "state_error_rate": 0.19147538933016447,
+      "state_flip_rate": 0.02378891346862877,
+      "joint_enter_frame_response_rate": 0.6623376623376623,
+      "joint_leave_frame_response_rate": 0.5572916666666666,
+      "joint_gaze_shift_response_rate": 0.5506329113924051,
+      "state_all_response_rate": 0.7247706422018348,
+      "state_enter_frame_response_rate": 0.8565573770491803,
+      "state_leave_frame_response_rate": 0.5572916666666666
+    },
+    "counts": {
+      "accurate_stable_windows": 10050,
+      "eligible_stability_windows": 19796,
+      "state_errors": 6123,
+      "in_frame_state_errors": 2653,
+      "out_of_frame_state_errors": 3470,
+      "stable_state_flips": 742,
+      "joint_enter_frame_responded": 153,
+      "joint_leave_frame_responded": 107,
+      "joint_gaze_shift_responded": 87,
+      "state_enter_frame_responded": 209,
+      "state_leave_frame_responded": 107
+    }
+  },
+  "delta_vs_single_frame": {
+    "metrics": {
+      "auc": 0.00022582303326024178,
+      "l2": 0.0003675290930093139,
+      "inout_ap": 0.0062662467624681195,
+      "jitter_mean": 6.267969607835766e-06,
+      "accurate_stable_ratio": -0.019852495453626995,
+      "state_error_rate": -0.0036900369003690092,
+      "state_flip_rate": 0.004809079542175625,
+      "joint_enter_frame_response_rate": -0.03463203463203468,
+      "joint_leave_frame_response_rate": 0.08333333333333331,
+      "joint_gaze_shift_response_rate": -0.03164556962025311,
+      "state_all_response_rate": 0.006880733944954143,
+      "state_enter_frame_response_rate": -0.05327868852459017,
+      "state_leave_frame_response_rate": 0.08333333333333331
+    },
+    "counts": {
+      "accurate_stable_windows": -393,
+      "eligible_stability_windows": 0,
+      "state_errors": -118,
+      "in_frame_state_errors": 871,
+      "out_of_frame_state_errors": -989,
+      "stable_state_flips": 150,
+      "joint_enter_frame_responded": -8,
+      "joint_leave_frame_responded": 16,
+      "joint_gaze_shift_responded": -5,
+      "state_enter_frame_responded": -13,
+      "state_leave_frame_responded": 16
+    }
+  },
+  "reference_selected": {
+    "ordinary_gru": {
+      "model_id": "ordinary_gru",
+      "epoch": 5,
+      "summary": {
+        "standard": {
+          "auc": 0.9405409348335207,
+          "l2": 0.09948183608586703,
+          "inout_ap": 0.8929411945270439,
+          "person_frames": 31978,
+          "localization_frames": 20655
+        },
+        "temporal": {
+          "jitter": {
+            "pairs": 20225,
+            "predicted": {
+              "count": 20225,
+              "mean": 0.0168164345822856,
+              "median": 0.0,
+              "p90": 0.03125,
+              "p95": 0.04941058844013093
+            },
+            "ground_truth": {
+              "count": 20225,
+              "mean": 0.0059218882811410915,
+              "median": 0.0005208333333333315,
+              "p90": 0.006402461428675593,
+              "p95": 0.011702413566505627
+            }
+          },
+          "stability": {
+            "eligible_windows": 19796,
+            "stable_predicted_frames": 15306,
+            "stable_gt_frames": 18752,
+            "accurate_stable_frames": 10078,
+            "stable_ratio": 0.7731865023237018,
+            "ground_truth_stable_ratio": 0.9472620731460901,
+            "accurate_stable_ratio": 0.5090927460092948
+          },
+          "response": {
+            "all": {
+              "events": 688,
+              "assessable_events": 581,
+              "insufficient_followup_events": 107,
+              "responded_events": 344,
+              "censored_events": 237,
+              "response_rate": 0.5920826161790017,
+              "responded_delay_frames": {
+                "count": 344,
+                "mean": 2.7093023255813953,
+                "median": 0.0,
+                "p90": 9.0,
+                "p95": 13.0
+              }
+            },
+            "enter_frame": {
+              "events": 251,
+              "assessable_events": 231,
+              "insufficient_followup_events": 20,
+              "responded_events": 150,
+              "censored_events": 81,
+              "response_rate": 0.6493506493506493,
+              "responded_delay_frames": {
+                "count": 150,
+                "mean": 2.18,
+                "median": 0.0,
+                "p90": 7.0,
+                "p95": 12.099999999999966
+              }
+            },
+            "leave_frame": {
+              "events": 238,
+              "assessable_events": 192,
+              "insufficient_followup_events": 46,
+              "responded_events": 106,
+              "censored_events": 86,
+              "response_rate": 0.5520833333333334,
+              "responded_delay_frames": {
+                "count": 106,
+                "mean": 3.2358490566037736,
+                "median": 1.0,
+                "p90": 12.5,
+                "p95": 13.0
+              }
+            },
+            "gaze_shift": {
+              "events": 199,
+              "assessable_events": 158,
+              "insufficient_followup_events": 41,
+              "responded_events": 88,
+              "censored_events": 70,
+              "response_rate": 0.5569620253164557,
+              "responded_delay_frames": {
+                "count": 88,
+                "mean": 2.977272727272727,
+                "median": 0.0,
+                "p90": 9.299999999999997,
+                "p95": 14.299999999999983
+              }
+            }
+          }
+        },
+        "state": {
+          "state_error": {
+            "person_frames": 31978,
+            "errors": 6109,
+            "error_rate": 0.19103758834198512,
+            "by_gt_state": {
+              "out_of_frame": {
+                "person_frames": 11323,
+                "errors": 3406,
+                "error_rate": 0.3008036739380023
+              },
+              "in_frame": {
+                "person_frames": 20655,
+                "errors": 2703,
+                "error_rate": 0.1308641975308642
+              }
+            }
+          },
+          "stable_state_flips": {
+            "eligible_pairs": 31191,
+            "flips": 731,
+            "flip_rate": 0.02343624763553589,
+            "by_gt_state": {
+              "out_of_frame": {
+                "eligible_pairs": 10966,
+                "flips": 329,
+                "flip_rate": 0.030001823819077147
+              },
+              "in_frame": {
+                "eligible_pairs": 20225,
+                "flips": 402,
+                "flip_rate": 0.019876390605686033
+              }
+            }
+          },
+          "response": {
+            "all": {
+              "events": 489,
+              "assessable_events": 436,
+              "insufficient_followup_events": 53,
+              "responded_events": 312,
+              "censored_events": 124,
+              "response_rate": 0.7155963302752294,
+              "responded_delay_frames": {
+                "count": 312,
+                "mean": 1.9647435897435896,
+                "median": 0.0,
+                "p90": 5.0,
+                "p95": 13.0
+              }
+            },
+            "enter_frame": {
+              "events": 251,
+              "assessable_events": 244,
+              "insufficient_followup_events": 7,
+              "responded_events": 206,
+              "censored_events": 38,
+              "response_rate": 0.8442622950819673,
+              "responded_delay_frames": {
+                "count": 206,
+                "mean": 1.3106796116504855,
+                "median": 0.0,
+                "p90": 4.0,
+                "p95": 6.5
+              }
+            },
+            "leave_frame": {
+              "events": 238,
+              "assessable_events": 192,
+              "insufficient_followup_events": 46,
+              "responded_events": 106,
+              "censored_events": 86,
+              "response_rate": 0.5520833333333334,
+              "responded_delay_frames": {
+                "count": 106,
+                "mean": 3.2358490566037736,
+                "median": 1.0,
+                "p90": 12.5,
+                "p95": 13.0
+              }
+            }
+          }
+        }
+      },
+      "metrics": {
+        "auc": 0.9405409348335207,
+        "l2": 0.09948183608586703,
+        "inout_ap": 0.8929411945270439,
+        "jitter_mean": 0.0168164345822856,
+        "accurate_stable_ratio": 0.5090927460092948,
+        "state_error_rate": 0.19103758834198512,
+        "state_flip_rate": 0.02343624763553589,
+        "joint_enter_frame_response_rate": 0.6493506493506493,
+        "joint_leave_frame_response_rate": 0.5520833333333334,
+        "joint_gaze_shift_response_rate": 0.5569620253164557,
+        "state_all_response_rate": 0.7155963302752294,
+        "state_enter_frame_response_rate": 0.8442622950819673,
+        "state_leave_frame_response_rate": 0.5520833333333334
+      },
+      "counts": {
+        "accurate_stable_windows": 10078,
+        "eligible_stability_windows": 19796,
+        "state_errors": 6109,
+        "in_frame_state_errors": 2703,
+        "out_of_frame_state_errors": 3406,
+        "stable_state_flips": 731,
+        "joint_enter_frame_responded": 150,
+        "joint_leave_frame_responded": 106,
+        "joint_gaze_shift_responded": 88,
+        "state_enter_frame_responded": 206,
+        "state_leave_frame_responded": 106
+      }
+    },
+    "history_validity": {
+      "model_id": "history_validity",
+      "epoch": 5,
+      "summary": {
+        "standard": {
+          "auc": 0.9404664149174539,
+          "l2": 0.09924390981255092,
+          "inout_ap": 0.8927778529963241,
+          "person_frames": 31978,
+          "localization_frames": 20655
+        },
+        "temporal": {
+          "jitter": {
+            "pairs": 20225,
+            "predicted": {
+              "count": 20225,
+              "mean": 0.017033109312568885,
+              "median": 0.0,
+              "p90": 0.03125,
+              "p95": 0.04941058844013093
+            },
+            "ground_truth": {
+              "count": 20225,
+              "mean": 0.0059218882811410915,
+              "median": 0.0005208333333333315,
+              "p90": 0.006402461428675593,
+              "p95": 0.011702413566505627
+            }
+          },
+          "stability": {
+            "eligible_windows": 19796,
+            "stable_predicted_frames": 15255,
+            "stable_gt_frames": 18752,
+            "accurate_stable_frames": 9964,
+            "stable_ratio": 0.7706102242877348,
+            "ground_truth_stable_ratio": 0.9472620731460901,
+            "accurate_stable_ratio": 0.5033340068700748
+          },
+          "response": {
+            "all": {
+              "events": 688,
+              "assessable_events": 581,
+              "insufficient_followup_events": 107,
+              "responded_events": 344,
+              "censored_events": 237,
+              "response_rate": 0.5920826161790017,
+              "responded_delay_frames": {
+                "count": 344,
+                "mean": 2.63953488372093,
+                "median": 0.0,
+                "p90": 8.699999999999989,
+                "p95": 13.0
+              }
+            },
+            "enter_frame": {
+              "events": 251,
+              "assessable_events": 231,
+              "insufficient_followup_events": 20,
+              "responded_events": 149,
+              "censored_events": 82,
+              "response_rate": 0.645021645021645,
+              "responded_delay_frames": {
+                "count": 149,
+                "mean": 2.1476510067114094,
+                "median": 0.0,
+                "p90": 7.0,
+                "p95": 12.199999999999989
+              }
+            },
+            "leave_frame": {
+              "events": 238,
+              "assessable_events": 192,
+              "insufficient_followup_events": 46,
+              "responded_events": 107,
+              "censored_events": 85,
+              "response_rate": 0.5572916666666666,
+              "responded_delay_frames": {
+                "count": 107,
+                "mean": 3.102803738317757,
+                "median": 1.0,
+                "p90": 12.0,
+                "p95": 13.0
+              }
+            },
+            "gaze_shift": {
+              "events": 199,
+              "assessable_events": 158,
+              "insufficient_followup_events": 41,
+              "responded_events": 88,
+              "censored_events": 70,
+              "response_rate": 0.5569620253164557,
+              "responded_delay_frames": {
+                "count": 88,
+                "mean": 2.909090909090909,
+                "median": 0.0,
+                "p90": 8.299999999999997,
+                "p95": 14.299999999999983
+              }
+            }
+          }
+        },
+        "state": {
+          "state_error": {
+            "person_frames": 31978,
+            "errors": 6181,
+            "error_rate": 0.19328913628119332,
+            "by_gt_state": {
+              "out_of_frame": {
+                "person_frames": 11323,
+                "errors": 3284,
+                "error_rate": 0.29002914421972975
+              },
+              "in_frame": {
+                "person_frames": 20655,
+                "errors": 2897,
+                "error_rate": 0.14025659646574679
+              }
+            }
+          },
+          "stable_state_flips": {
+            "eligible_pairs": 31191,
+            "flips": 798,
+            "flip_rate": 0.02558430316437434,
+            "by_gt_state": {
+              "out_of_frame": {
+                "eligible_pairs": 10966,
+                "flips": 348,
+                "flip_rate": 0.03173445194236732
+              },
+              "in_frame": {
+                "eligible_pairs": 20225,
+                "flips": 450,
+                "flip_rate": 0.022249690976514216
+              }
+            }
+          },
+          "response": {
+            "all": {
+              "events": 489,
+              "assessable_events": 436,
+              "insufficient_followup_events": 53,
+              "responded_events": 313,
+              "censored_events": 123,
+              "response_rate": 0.7178899082568807,
+              "responded_delay_frames": {
+                "count": 313,
+                "mean": 1.987220447284345,
+                "median": 0.0,
+                "p90": 5.0,
+                "p95": 13.0
+              }
+            },
+            "enter_frame": {
+              "events": 251,
+              "assessable_events": 244,
+              "insufficient_followup_events": 7,
+              "responded_events": 206,
+              "censored_events": 38,
+              "response_rate": 0.8442622950819673,
+              "responded_delay_frames": {
+                "count": 206,
+                "mean": 1.4077669902912622,
+                "median": 0.0,
+                "p90": 4.0,
+                "p95": 7.0
+              }
+            },
+            "leave_frame": {
+              "events": 238,
+              "assessable_events": 192,
+              "insufficient_followup_events": 46,
+              "responded_events": 107,
+              "censored_events": 85,
+              "response_rate": 0.5572916666666666,
+              "responded_delay_frames": {
+                "count": 107,
+                "mean": 3.102803738317757,
+                "median": 1.0,
+                "p90": 12.0,
+                "p95": 13.0
+              }
+            }
+          }
+        }
+      },
+      "metrics": {
+        "auc": 0.9404664149174539,
+        "l2": 0.09924390981255092,
+        "inout_ap": 0.8927778529963241,
+        "jitter_mean": 0.017033109312568885,
+        "accurate_stable_ratio": 0.5033340068700748,
+        "state_error_rate": 0.19328913628119332,
+        "state_flip_rate": 0.02558430316437434,
+        "joint_enter_frame_response_rate": 0.645021645021645,
+        "joint_leave_frame_response_rate": 0.5572916666666666,
+        "joint_gaze_shift_response_rate": 0.5569620253164557,
+        "state_all_response_rate": 0.7178899082568807,
+        "state_enter_frame_response_rate": 0.8442622950819673,
+        "state_leave_frame_response_rate": 0.5572916666666666
+      },
+      "counts": {
+        "accurate_stable_windows": 9964,
+        "eligible_stability_windows": 19796,
+        "state_errors": 6181,
+        "in_frame_state_errors": 2897,
+        "out_of_frame_state_errors": 3284,
+        "stable_state_flips": 798,
+        "joint_enter_frame_responded": 149,
+        "joint_leave_frame_responded": 107,
+        "joint_gaze_shift_responded": 88,
+        "state_enter_frame_responded": 206,
+        "state_leave_frame_responded": 107
+      }
+    }
+  },
+  "matched_epoch_deltas": {
+    "ordinary_gru": [
+      {
+        "epoch": 1,
+        "metrics": {
+          "auc": -6.873395846829222e-05,
+          "l2": -0.00011419148119727607,
+          "inout_ap": 0.000181118679973169,
+          "jitter_mean": -2.4451315992969624e-05,
+          "accurate_stable_ratio": -0.0010608203677511252,
+          "state_error_rate": 0.0002501719932453683,
+          "state_flip_rate": 0.00019236318168702402,
+          "joint_enter_frame_response_rate": -0.008658008658008698,
+          "joint_leave_frame_response_rate": 0.00520833333333337,
+          "joint_gaze_shift_response_rate": 0.0,
+          "state_all_response_rate": 0.0,
+          "state_enter_frame_response_rate": -0.004098360655737654,
+          "state_leave_frame_response_rate": 0.00520833333333337
+        },
+        "counts": {
+          "accurate_stable_windows": -21,
+          "eligible_stability_windows": 0,
+          "state_errors": 8,
+          "in_frame_state_errors": 49,
+          "out_of_frame_state_errors": -41,
+          "stable_state_flips": 6,
+          "joint_enter_frame_responded": -2,
+          "joint_leave_frame_responded": 1,
+          "joint_gaze_shift_responded": 0,
+          "state_enter_frame_responded": -1,
+          "state_leave_frame_responded": 1
+        }
+      },
+      {
+        "epoch": 2,
+        "metrics": {
+          "auc": -0.00014382263276413454,
+          "l2": 6.238818752231368e-05,
+          "inout_ap": 0.00032430263332328124,
+          "jitter_mean": 8.182357203541032e-05,
+          "accurate_stable_ratio": 0.00035360678925033806,
+          "state_error_rate": -0.0005941584839577185,
+          "state_flip_rate": -0.00028854477253053776,
+          "joint_enter_frame_response_rate": 0.0,
+          "joint_leave_frame_response_rate": 0.0,
+          "joint_gaze_shift_response_rate": 0.006329113924050667,
+          "state_all_response_rate": 0.0,
+          "state_enter_frame_response_rate": 0.0,
+          "state_leave_frame_response_rate": 0.0
+        },
+        "counts": {
+          "accurate_stable_windows": 7,
+          "eligible_stability_windows": 0,
+          "state_errors": -19,
+          "in_frame_state_errors": 33,
+          "out_of_frame_state_errors": -52,
+          "stable_state_flips": -9,
+          "joint_enter_frame_responded": 0,
+          "joint_leave_frame_responded": 0,
+          "joint_gaze_shift_responded": 1,
+          "state_enter_frame_responded": 0,
+          "state_leave_frame_responded": 0
+        }
+      },
+      {
+        "epoch": 3,
+        "metrics": {
+          "auc": -0.00012444923719501233,
+          "l2": 1.364735170841791e-05,
+          "inout_ap": 0.00015276944604525333,
+          "jitter_mean": 0.00013043235041741014,
+          "accurate_stable_ratio": -0.0006566983228935008,
+          "state_error_rate": -0.0005628869848020579,
+          "state_flip_rate": 0.0003206053028117113,
+          "joint_enter_frame_response_rate": -0.0043290043290042934,
+          "joint_leave_frame_response_rate": 0.00520833333333337,
+          "joint_gaze_shift_response_rate": 0.006329113924050667,
+          "state_all_response_rate": -0.002293577981651307,
+          "state_enter_frame_response_rate": -0.008196721311475419,
+          "state_leave_frame_response_rate": 0.00520833333333337
+        },
+        "counts": {
+          "accurate_stable_windows": -13,
+          "eligible_stability_windows": 0,
+          "state_errors": -18,
+          "in_frame_state_errors": 1,
+          "out_of_frame_state_errors": -19,
+          "stable_state_flips": 10,
+          "joint_enter_frame_responded": -1,
+          "joint_leave_frame_responded": 1,
+          "joint_gaze_shift_responded": 1,
+          "state_enter_frame_responded": -2,
+          "state_leave_frame_responded": 1
+        }
+      },
+      {
+        "epoch": 4,
+        "metrics": {
+          "auc": -0.00015924082550700103,
+          "l2": -8.47981917130175e-05,
+          "inout_ap": -0.00023222382980092604,
+          "jitter_mean": 4.3231163457776306e-05,
+          "accurate_stable_ratio": 0.0011113356233581895,
+          "state_error_rate": 0.0010632309712927668,
+          "state_flip_rate": 0.0003847263633740515,
+          "joint_enter_frame_response_rate": 0.0043290043290042934,
+          "joint_leave_frame_response_rate": -0.02083333333333326,
+          "joint_gaze_shift_response_rate": 0.006329113924050556,
+          "state_all_response_rate": -0.00917431192660556,
+          "state_enter_frame_response_rate": 0.0,
+          "state_leave_frame_response_rate": -0.02083333333333326
+        },
+        "counts": {
+          "accurate_stable_windows": 22,
+          "eligible_stability_windows": 0,
+          "state_errors": 34,
+          "in_frame_state_errors": -43,
+          "out_of_frame_state_errors": 77,
+          "stable_state_flips": 12,
+          "joint_enter_frame_responded": 1,
+          "joint_leave_frame_responded": -4,
+          "joint_gaze_shift_responded": 1,
+          "state_enter_frame_responded": 0,
+          "state_leave_frame_responded": -4
+        }
+      },
+      {
+        "epoch": 5,
+        "metrics": {
+          "auc": -0.00013345408506115763,
+          "l2": -0.00011947477982450494,
+          "inout_ap": 0.00012609211418590505,
+          "jitter_mean": -0.0001634011013020506,
+          "accurate_stable_ratio": -0.0014144271570013522,
+          "state_error_rate": 0.00043780098817935986,
+          "state_flip_rate": 0.00035266583309287794,
+          "joint_enter_frame_response_rate": 0.012987012987012991,
+          "joint_leave_frame_response_rate": 0.005208333333333259,
+          "joint_gaze_shift_response_rate": -0.006329113924050556,
+          "state_all_response_rate": 0.00917431192660545,
+          "state_enter_frame_response_rate": 0.012295081967213073,
+          "state_leave_frame_response_rate": 0.005208333333333259
+        },
+        "counts": {
+          "accurate_stable_windows": -28,
+          "eligible_stability_windows": 0,
+          "state_errors": 14,
+          "in_frame_state_errors": -50,
+          "out_of_frame_state_errors": 64,
+          "stable_state_flips": 11,
+          "joint_enter_frame_responded": 3,
+          "joint_leave_frame_responded": 1,
+          "joint_gaze_shift_responded": -1,
+          "state_enter_frame_responded": 3,
+          "state_leave_frame_responded": 1
+        }
+      }
+    ],
+    "history_validity": [
+      {
+        "epoch": 1,
+        "metrics": {
+          "auc": -5.308707791984446e-05,
+          "l2": -0.00017210713832754854,
+          "inout_ap": 5.8045123098149354e-05,
+          "jitter_mean": -0.00018524257143967895,
+          "accurate_stable_ratio": 0.0,
+          "state_error_rate": 0.0001876289949340193,
+          "state_flip_rate": 0.00012824212112468383,
+          "joint_enter_frame_response_rate": 0.0,
+          "joint_leave_frame_response_rate": 0.00520833333333337,
+          "joint_gaze_shift_response_rate": 0.0,
+          "state_all_response_rate": 0.002293577981651307,
+          "state_enter_frame_response_rate": 0.0,
+          "state_leave_frame_response_rate": 0.00520833333333337
+        },
+        "counts": {
+          "accurate_stable_windows": 0,
+          "eligible_stability_windows": 0,
+          "state_errors": 6,
+          "in_frame_state_errors": 25,
+          "out_of_frame_state_errors": -19,
+          "stable_state_flips": 4,
+          "joint_enter_frame_responded": 0,
+          "joint_leave_frame_responded": 1,
+          "joint_gaze_shift_responded": 0,
+          "state_enter_frame_responded": 0,
+          "state_leave_frame_responded": 1
+        }
+      },
+      {
+        "epoch": 2,
+        "metrics": {
+          "auc": -4.5162977846624486e-05,
+          "l2": 6.65224418369692e-05,
+          "inout_ap": -0.0003619826525730341,
+          "jitter_mean": 5.1371562253262754e-05,
+          "accurate_stable_ratio": 0.0006566983228935008,
+          "state_error_rate": 0.0004378009881793876,
+          "state_flip_rate": -0.00022442371196819758,
+          "joint_enter_frame_response_rate": 0.0,
+          "joint_leave_frame_response_rate": -0.00520833333333337,
+          "joint_gaze_shift_response_rate": 0.0,
+          "state_all_response_rate": -0.002293577981651307,
+          "state_enter_frame_response_rate": 0.0,
+          "state_leave_frame_response_rate": -0.00520833333333337
+        },
+        "counts": {
+          "accurate_stable_windows": 13,
+          "eligible_stability_windows": 0,
+          "state_errors": 14,
+          "in_frame_state_errors": 14,
+          "out_of_frame_state_errors": 0,
+          "stable_state_flips": -7,
+          "joint_enter_frame_responded": 0,
+          "joint_leave_frame_responded": -1,
+          "joint_gaze_shift_responded": 0,
+          "state_enter_frame_responded": 0,
+          "state_leave_frame_responded": -1
+        }
+      },
+      {
+        "epoch": 3,
+        "metrics": {
+          "auc": -5.982215195687868e-05,
+          "l2": -1.6997228224457928e-05,
+          "inout_ap": -0.00114005777334647,
+          "jitter_mean": 3.9915387529669555e-05,
+          "accurate_stable_ratio": -5.051525560717529e-05,
+          "state_error_rate": -0.0002501719932453683,
+          "state_flip_rate": 0.0,
+          "joint_enter_frame_response_rate": 0.0043290043290042934,
+          "joint_leave_frame_response_rate": -0.00520833333333337,
+          "joint_gaze_shift_response_rate": 0.0,
+          "state_all_response_rate": -0.002293577981651307,
+          "state_enter_frame_response_rate": 0.0,
+          "state_leave_frame_response_rate": -0.00520833333333337
+        },
+        "counts": {
+          "accurate_stable_windows": -1,
+          "eligible_stability_windows": 0,
+          "state_errors": -8,
+          "in_frame_state_errors": -43,
+          "out_of_frame_state_errors": 35,
+          "stable_state_flips": 0,
+          "joint_enter_frame_responded": 1,
+          "joint_leave_frame_responded": -1,
+          "joint_gaze_shift_responded": 0,
+          "state_enter_frame_responded": 0,
+          "state_leave_frame_responded": -1
+        }
+      },
+      {
+        "epoch": 4,
+        "metrics": {
+          "auc": -6.149160157642442e-05,
+          "l2": 3.798737925922446e-05,
+          "inout_ap": -0.0005758979672618736,
+          "jitter_mean": 0.00015947286733035068,
+          "accurate_stable_ratio": 0.00277833905839564,
+          "state_error_rate": 3.127149915568839e-05,
+          "state_flip_rate": -0.0008335737873104397,
+          "joint_enter_frame_response_rate": 0.0043290043290042934,
+          "joint_leave_frame_response_rate": -0.015625,
+          "joint_gaze_shift_response_rate": 0.0,
+          "state_all_response_rate": -0.002293577981651418,
+          "state_enter_frame_response_rate": 0.008196721311475419,
+          "state_leave_frame_response_rate": -0.015625
+        },
+        "counts": {
+          "accurate_stable_windows": 55,
+          "eligible_stability_windows": 0,
+          "state_errors": 1,
+          "in_frame_state_errors": -135,
+          "out_of_frame_state_errors": 136,
+          "stable_state_flips": -26,
+          "joint_enter_frame_responded": 1,
+          "joint_leave_frame_responded": -3,
+          "joint_gaze_shift_responded": 0,
+          "state_enter_frame_responded": 2,
+          "state_leave_frame_responded": -3
+        }
+      },
+      {
+        "epoch": 5,
+        "metrics": {
+          "auc": -5.8934168994273506e-05,
+          "l2": 0.00011845149349160033,
+          "inout_ap": 0.0002894336449057455,
+          "jitter_mean": -0.00038007583158533587,
+          "accurate_stable_ratio": 0.004344311982218629,
+          "state_error_rate": -0.001813746951028844,
+          "state_flip_rate": -0.0017953896957455702,
+          "joint_enter_frame_response_rate": 0.017316017316017285,
+          "joint_leave_frame_response_rate": 0.0,
+          "joint_gaze_shift_response_rate": -0.006329113924050556,
+          "state_all_response_rate": 0.006880733944954143,
+          "state_enter_frame_response_rate": 0.012295081967213073,
+          "state_leave_frame_response_rate": 0.0
+        },
+        "counts": {
+          "accurate_stable_windows": 86,
+          "eligible_stability_windows": 0,
+          "state_errors": -58,
+          "in_frame_state_errors": -244,
+          "out_of_frame_state_errors": 186,
+          "stable_state_flips": -56,
+          "joint_enter_frame_responded": 4,
+          "joint_leave_frame_responded": 0,
+          "joint_gaze_shift_responded": -1,
+          "state_enter_frame_responded": 3,
+          "state_leave_frame_responded": 0
+        }
+      }
+    ]
+  },
+  "interpretation": [
+    "Current-frame-only control reproduces the AP and leave-frame gains without temporal input; these gains do not establish history utility.",
+    "Ordinary GRU has higher AUC than D4 at all five matched epochs; the result does not show that all history is useless.",
+    "D4 still loses accurate-stable windows and gaze-shift responses versus the raw single frame; the existing history-validity mechanism has not established core temporal benefit.",
+    "Only one seed and the declared five-epoch budget are tested; test is used for epoch selection."
+  ],
+  "next_step": "Train-only causal history candidate utility analysis before building an explicit candidate selection mechanism."
+}

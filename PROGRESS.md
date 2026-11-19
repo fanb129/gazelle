@@ -7,7 +7,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | D4当前帧无历史对照本地完成，23项合成检查通过；等待用户按§15.1运行GPU 1五轮 |
+| CSCWD | `cscwd/` | D4真实结果验收通过；D5训练集候选效用分析本地完成，28项合成检查通过，服务器入口§16.1 |
 
 ## 当前优先级（2026-11-19）
 **CSCWD 投稿是第一优先。当前主方案：冻结 GazeSpot ViT-B，训练轻量因果模块，结合人物与场景视觉证据判断历史有效性，联合修正 heatmap 与 In/Out。**
@@ -112,6 +112,12 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D4 / 本地产出与下一步**：**23项CPU合成检查通过**（模型7、训练/实际比较CLI6、小报告比较7、wrapper3），覆盖历史/顺序/chunk独立、活跃梯度、共享初始化、五轮完整test、test标签不改变训练权重、选中/末轮重载、全部同epoch参照与GPU1失败传播；记录 `cscwd/results/r4_current_frame_local_checks.json/.md`。唯一服务器命令在 `implementation_plan.md` **§15.1**，新输出位于 `experiments/cscwd_r4_current_frame_v1/current_frame/`。无新增真实VAT性能数字，未启动服务器作业；下一步用户手动运行并回传小报告，判断原AP收益是否依赖历史。
 
+**R4-D4 / 2026-11-19 / 真实结果验收**：已pull `6eeb594`，235项本地小报告来源/代码/plan SHA、覆盖/预算/loss、整轮选择、同epoch差值及manifest/模板核对通过，记录 `cscwd/results/r4_current_frame_local_review.json/.md`。按原规则选epoch 5：**AUC0.940407 / L2 0.099362 / AP0.893067**，准确稳定10,050/19,796、状态错帧6,123、错误翻转742、gaze87/158、leave107/192。AP略高于原GRU/HV，leave与HV相同，说明原AP/出画收益无需历史即可重现；稳定比单帧少393窗、gaze少5个。GRU全部五个同epoch AUC仍略高，不能断言历史完全无用。服务器大文件未本地重算，原结果保持；当前不继续扩展旧GRU/HV。
+
+**R4-D5 / 2026-11-19 / 训练集候选效用分析本地完成**：规格 `cscwd/r4_history_utility_plan.md`（`r4_history_utility_v1`），新增候选生成、独立计分和单条CLI及三套测试。只读完整官方train，固定current/current_grid/previous_raw/EMA0.75/视觉传输五候选；source→target patch质量传输temperature0.1，一跳raw历史，原InOut保持。候选全量落盘后再读GT，按稳定/变化组报四象限、补救/伤害、状态阻断和固定集合min-L2参考；GT/oracle不反馈历史，不读取test、不训练门。
+
+**R4-D5 / 本地产出与下一步**：**28项合成检查通过**（生成12、计分9、实际CLI集成7），覆盖原生特征/搬运方向、EMA一致性、人物/缺口/未来因果、手算四象限/分组/选择参考、原指标/状态保持、无test文件运行、GT隔离与来源/坐标读回。记录 `cscwd/results/r4_history_utility_local_checks.json/.md`；无新增真实VAT D5数字，未启动服务器。下一步用户按实现计划 **§16.1** 用GPU 1手动运行，回传 `r4_history_utility.json/.md` 与provenance，再决定是否训练显式效用选择门。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -122,6 +128,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **用户手动运行R4-D4**：本地实现与23项合成检查已完成，按 `cscwd/implementation_plan.md` §15.1用物理GPU 1运行一个当前帧模型、原逐帧目标、从头五轮；回传 `r4_current_frame*` 小报告与provenance。D3已验收，§14无需重跑。
-2. 根据D4判断历史是否贡献原AP增益：无历史已相当或更好时调整/简化历史方案，历史有明确收益时再做最少validity读门对照。
+1. **用户手动运行R4-D5**：本地实现与28项合成检查已完成，按 `cscwd/implementation_plan.md` §16.1用GPU 1做完整train固定候选分析，回传JSON/MD/provenance；§11–§15均已验收，无需重跑。
+2. 根据候选补救/伤害及稳定/变化组结果，决定一版显式效用监督选择门；先固定原InOut，不继续扩大旧GRU或直接切换底座。
 3. 结果整行分轮次保留：原首轮GRU/HV均epoch 5，D3为GRU epoch 2/HV epoch 3，D2校准另列；不混用最好列，test选模协议保留。

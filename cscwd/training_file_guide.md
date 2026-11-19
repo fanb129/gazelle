@@ -1,6 +1,6 @@
 # 当前训练会读写哪些文件
 
-适用协议：`r4_official_train_test_v1`，更新于2026-11-19。§1–§11说明已验收官方首轮的文件组织；D2/D3见§12/§13；**当前待运行的D4见§14**，唯一启动命令在实现计划§15.1。官方首轮两模型均按AUC规则选epoch 5，真实结果见 `cscwd/results/r4_official_local_review.md`。
+适用协议：`r4_official_train_test_v1`，更新于2026-11-19。§1–§11说明已验收官方首轮的文件组织；D2/D3/D4见§12–§14；**当前待运行的D5候选分析见§15**，唯一启动命令在实现计划§16.1。D5只做train分析，不训练模型。官方首轮两模型均按AUC规则选epoch 5。
 
 可以把这次训练理解为：**读取已经算好的单帧观察，训练一个小型时序修正模块；每训练一轮，就在官方 test 上完整评测一次，最后挑出 AUC 最好的一轮。**
 
@@ -300,7 +300,7 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 
 本轮 `selected.pt` 分别对应普通GRU的 `epoch_002.pt` 与新机制的 `epoch_003.pt`；`last.pt` 仍为各自 `epoch_005.pt`。D3与原首轮epoch-5结果分开记录，具体SHA见各自小报告和provenance。
 
-## 14. R4-D4当前帧无历史对照（待用户运行）
+## 14. R4-D4当前帧无历史对照（结果已验收）
 
 规格 `r4_current_frame_plan.md`，启动命令见实现计划§15.1。后台入口为 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/run_current_frame_round.sh`，依次调用 `train_current_frame.py` 和 `compare_current_frame.py`。这轮只训练一个当前帧头，每帧历史清空；整个GazeSpot仍冻结，原逐帧MSE/BCE、seed 0、从头五轮。GT只用于loss/计分。
 
@@ -319,6 +319,28 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 
 新实验根目录为 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_current_frame_v1/current_frame/`，保存 `training_config.json`、`training_history.json`、`selection.json`、五轮 `epoch_001.pt`–`epoch_005.pt`、`selected.pt`、`last.pt`、`baseline_details.json` 及五套 `test_epoch_001/`–`test_epoch_005/`。每套test内保存完整heatmap/InOut/argmax与逐事件明细；D4不生成history diagnostics。
 
-每轮完整test、AUC→L2→AP→较早epoch选择整轮，与原首轮一致；`selected.pt`具体对应哪一轮由真实结果决定，`last.pt`始终对应epoch 5。报告还给出D4与原GRU/HV的全部同epoch差值。名义参数347,522，其中74,112个权重元素对应零历史输入，说明见报告 `parameter_usage`。
+每轮完整test、AUC→L2→AP→较早epoch选择整轮，与原首轮一致；D4实际选epoch 5，因此 `selected.pt`、`last.pt`均对应 `epoch_005.pt`。报告还给出D4与原GRU/HV的全部同epoch差值。名义参数347,522，其中74,112个权重元素对应零历史输入，说明见报告 `parameter_usage`；验收见 `results/r4_current_frame_local_review.md`。
 
 结果和日志均在 `/home/fb/src/paper/gazelleV1/cscwd/results/`：外层 `r4_current_frame_round.log`、训练 `r4_current_frame_train.log`、比较 `r4_current_frame_comparison.log`；外层成功标记为 `R4 current-frame round completed.`。回传 `r4_current_frame.json/.md`、`r4_current_frame_comparison.json/.md`、`r4_current_frame_selection.json` 和自动追加的provenance；大文件仍留服务器。
+
+## 15. R4-D5训练集候选效用分析（待用户运行）
+
+唯一入口为 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/analyze_history_utility.py`，完整GPU1命令见实现计划§16.1，规格 `r4_history_utility_plan.md`。本轮不读取test、D4/旧GRU权重或validation manifest，不训练模块，不生成新的 `.pt`。
+
+沿用§14表中的train原预测 `r1_train_predictions/index.json`/三个NPY和train视觉特征 `r2_native_last_fp16/index.json`/`scene_features.npy`。来源小报告为仓库 `cscwd/results/r1_train_single_frame_cache.json` 与 `r2_feature_cache.json`；完整官方train全部132,563人物帧均使用，不按R1开发划分缩减。
+
+先根据当前/过去预测、冻结特征和原帧号生成五个候选坐标，再独立读取train标签计分；原InOut不变。历史只来自本人上一连续帧或自身EMA，GT/oracle选择不进入记忆。
+
+新目录 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/`：
+
+| 文件 | 内容 |
+|---|---|
+| `candidate_xy.npy` | `[132563,5,2]` float32，各帧固定五候选坐标，顺序见index |
+| `history_available.npy` | `[132563]` bool，起点/缺口为false |
+| `errors.npy` | 各候选对GT的L2，GT画外为NaN；仅事后计分数据 |
+| `group_codes.npy` | 起点/缺口、GT画外、enter、stable、motion、gaze_shift的离线分组 |
+| `oracle_choice.npy` | 事后min-L2参考，原候选列号0/2/3/4，GT画外为−1 |
+| `index.json` | 原轨迹/全局行映射、候选名、来源和文件SHA |
+| `utility_details.json` | 各固定候选的完整逐轨迹/事件时序计分 |
+
+没有新epoch、checkpoint或全量候选heatmap。小报告 `cscwd/results/r4_history_utility.json/.md` 汇总补救/伤害、稳定/变化组、固定状态阻断和候选集合参考，自动追加provenance。日志同目录 `r4_history_utility.log`，成功标记 `R4 history utility completed`。只回传两个小报告和provenance，大文件/完整明细留服务器。
