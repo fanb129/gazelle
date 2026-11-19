@@ -1,6 +1,6 @@
 # 方法架构、实现状态与下一步
 
-2026-11-19。图一是已实现/已评测的方法；图二是讨论中的选择门重构；图三是已评测的D4对照。当前D5只实现固定历史候选及train效用分析，尚未训练图二选择门。三者不能串成已经完成的同一套模型。
+2026-11-20。图一是原已评测联合残差；图二是D6已本地实现、待服务器训练的成本监督选择门；图三是已评测D4对照。D5候选分析已真实验收。三者不是串联成一套模型。
 
 ## 1. 已实现：冻结底座＋门控历史＋GRU联合残差
 
@@ -42,39 +42,40 @@ flowchart TB
 
 对应代码：[history_model.py](/Users/fanb/src/gazelle/cscwd/code/stag/history_model.py:56)、[temporal_model.py](/Users/fanb/src/gazelle/cscwd/code/stag/temporal_model.py:48)。目前这套实现尚未建立超过强EMA/普通GRU的核心时序优势。
 
-## 2. 推荐讨论的重构：显式历史候选＋效用选择
+## 2. D6：强当前锚点＋成本监督历史选择（本地完成，待训练）
 
-**选择门尚未实现或训练；D5已实现固定空间候选的train分析，保持原InOut。**
+**D6选择门已实现，38项合成检查通过，真实训练由用户按实现计划§17.1手动启动。原InOut保持。**
 
 ```mermaid
 flowchart TB
     I["当前 RGB + 当前真实头框"] --> B["冻结单帧底座<br/>当前继续用 GazeSpot-B"]
-    B --> C["当前候选 h_t"]
+    B --> R["当前 raw heatmap"]
+    R --> C["当前锚点 C<br/>grid 下采样/上采样"]
     B --> F["当前视觉证据 F_t"]
     B --> S["原状态分数 p_t"]
-    P["本人过去预测与空间视觉记忆"] --> A["因果视觉对齐"]
+    P["本人上一连续帧 raw map / feature"] --> A["固定 source→target<br/>patch 质量传输"]
     F --> A
     A --> H["历史候选 h_hist_t"]
-    C --> G["历史效用门 alpha_t<br/>当前人物证据 + 两候选差异 / 可靠性"]
+    C --> G["效用 MLP<br/>六冻结描述符 + 17 标量"]
     H --> G
     F --> G
-    C --> U["受控候选融合"]
+    C --> U["整图硬选择<br/>logit>0且有历史选H，否则C"]
     H --> U
     G --> U
     U --> O["定位输出 H_t"]
     S --> Q["状态直接保留 p_t"]
-    O --> M["更新空间记忆<br/>供下一帧使用"]
+    R --> M["只保存 raw 观察<br/>供下一帧使用"]
     F --> M
-    T["仅训练：当前 GT"] -.-> L["比较当前 / 历史候选误差<br/>构造 history utility 监督"]
+    T["仅训练：当前 GT"] -.-> L["d = L2_C - L2_H<br/>y = d>0，weight = abs(d)"]
     C -.-> L
     H -.-> L
-    L -.-> V["效用监督 loss"]
+    L -.-> V["成本加权 BCE"]
     G -.-> V
 ```
 
-旧门间接控制记忆读写；新门直接对应“历史候选在这一帧是否比当前预测有帮助”，并有相应监督。train GT只进入loss，不参与候选生成、推理门控或记忆；候选生成也不使用过去GT。
+新门直接学习两候选的L2效用差，较大补救/伤害有较大损失权重。GT只进入train loss，不参与观察/候选/重置/记忆；门输出也不反馈raw历史。候选图幅值不同，因此选择完整图，不做线性混合。无历史强制当前锚点。
 
-对齐、候选表达、融合形式和写入规则需在实际实现前固定；本图描述研究方向，不表示这些细节已完成。固定InOut时AP、状态错误/翻转和leave响应保持原值，只对定位稳定、enter/gaze_shift等相关效果提出主张。
+实现见 `utility_selector.py`、`selector_bank.py`、`selector_evaluation.py` 和 `train_utility_selector.py`；规格 `r4_utility_selector_plan.md`。先一次生成冻结bank，再单模型五轮/逐轮完整test/AUC选整轮。对照含raw、grid、raw-EMA、grid-EMA、always-transport。固定InOut使AP、状态错误/翻转和leave响应保持，只评价定位—稳定—响应折中。
 
 ## 3. D4：当前帧无历史对照（真实结果已验收）
 
@@ -90,10 +91,6 @@ D4保留普通GRU的当前输入和双输出结构，每帧清空hidden、过去
 
 结果 `6eeb594` 已通过235项小报告核对，选epoch5。D4 AP0.893067、leave107/192，重现了原AP/出画收益；准确稳定10,050窗与gaze87/158仍低于单帧。普通GRU五个同epoch AUC仍略高，不能据此说历史完全无用。当前停止扩大旧GRU/HV，转向检验显式候选的补救空间。
 
-当前任务顺序：
+当前任务顺序：D5已验收（GT参考救3,126帧，grid无历史稳定增加4.3015pp）→用户按§17.1训练图二门控→回传比较grid/grid-EMA和配对响应。候选可补救不代表门已能学会选择，D6训练将直接检验这一点。
 
-1. **D5本地完成**：只在train生成current、分辨率参考、previous_raw、EMA0.75和视觉质量传输候选，28项生成/计分/CLI合成检查通过。规格 `r4_history_utility_plan.md`；候选全量落盘后GT计分，oracle不写回记忆。
-2. **用户运行分析**：GPU1唯一nohup命令见实现计划§16.1，回传候选四象限、稳定/变化组与固定InOut阻断统计；不训练模型或读取test。
-3. **候选有效再训练门**：依据补救/伤害与可观察信号，固定一版显式效用监督选择规则，再实现图二门控。GT选择参考不作为模型成绩或视频信息理论上限。
-
-当前保持GazeSpot-B。官方Gazelle与ViT-L用于机制出现增量后的公开复现/跨底座验证，详见 [方向复盘](/Users/fanb/src/gazelle/cscwd/idea_feasibility_review.md)。D5尚无真实运行数字，图二选择门仍为候选研究方向。
+当前保持GazeSpot-B。官方Gazelle与ViT-L用于机制出现增量后的公开复现/跨底座验证，详见 [方向复盘](/Users/fanb/src/gazelle/cscwd/idea_feasibility_review.md)。D6没有真实性能数字，尚未启动服务器作业。

@@ -1,0 +1,110 @@
+{
+  "task": "R4_utility_selector_local_checks",
+  "date": "2026-11-20",
+  "created_at_utc": "2026-11-19T20:48:18.096295+00:00",
+  "version": "r4_utility_selector_v1",
+  "protocol_version": "r4_official_train_test_v1",
+  "based_on_commit": "a6928e6e39a414601191fb84edbe35a519027ef3",
+  "passed": true,
+  "scope": "CPU_synthetic_tests_only; real_VAT_D6_training_evaluation_and_server_job_not_run",
+  "runtime": {
+    "python": "3.13.0",
+    "torch": "2.6.0",
+    "numpy": "2.2.6",
+    "scikit_learn": "1.9.1",
+    "device": "CPU"
+  },
+  "plan": {
+    "path": "cscwd/r4_utility_selector_plan.md",
+    "sha256": "59a2a083f8260533048680e1f3c7b8b70e93fa5fc9b2caa5f14e1d84aee88162"
+  },
+  "source_sha256": {
+    "cscwd/code/stag/utility_selector.py": "e5626a829c830d9dfd07647b8109d45e12701b131bde2369915182412d62df36",
+    "cscwd/code/stag/test_utility_selector.py": "2341a2e9cd658c390d73b582d3bdfa5babcee10bddf12f8b5e2ffb4975ac6be1",
+    "cscwd/code/stag/selector_bank.py": "eb3dda341cb7932686582867bb6f1f9445b52c6d4d0f5e8471bcb8109669d358",
+    "cscwd/code/stag/test_selector_bank.py": "d3a2088ca4cd0b620ba61a71874312c1b0825cf1d2fe5ee61df8471c4626dfbe",
+    "cscwd/code/stag/selector_evaluation.py": "68af8c436c514d4c452faf5aaba51d6746ee11733213ba9076799a923ca5e54c",
+    "cscwd/code/stag/test_selector_evaluation.py": "cda5d1ebd10d07ec2c194dcf6da4888aae41c30280560eee50cc3f412f3652c6",
+    "cscwd/code/scripts/train_utility_selector.py": "3cd028f679b4b9869f1c2844a3ace6366a2e9721dcd7f3681d035d66600e4e2b",
+    "cscwd/code/scripts/test_train_utility_selector.py": "4005b53686f1eb4f85a5f1acec57406baeaa40d9ce06049cb1cdd3bb0b8927ec"
+  },
+  "test_count": 38,
+  "groups": {
+    "model_observations_and_cost_loss": 15,
+    "frozen_bank": 7,
+    "whole_candidate_evaluation": 8,
+    "actual_full_training_CLI": 8
+  },
+  "tests": [
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_utility_selector.py' -v",
+      "count": 15,
+      "seconds": 0.734,
+      "exit_code": 0,
+      "runner": "candidate_design_review"
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_selector_bank.py' -v",
+      "count": 7,
+      "seconds": 0.724,
+      "exit_code": 0,
+      "runner": "d4_result_integrity"
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/stag -p 'test_selector_evaluation.py' -v",
+      "count": 8,
+      "seconds": 0.517,
+      "exit_code": 0,
+      "runner": "d5_interpretation"
+    },
+    {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /private/tmp/gazelle-r2-venv/bin/python -m unittest discover -s cscwd/code/scripts -p 'test_train_utility_selector.py' -v",
+      "count": 8,
+      "seconds": 3.982,
+      "exit_code": 0,
+      "runner": "d4_result_integrity"
+    }
+  ],
+  "model": {
+    "feature_channels": 768,
+    "observation_dim": 4625,
+    "hidden_dim": 64,
+    "parameter_count": 296129,
+    "anchor": "current_grid",
+    "history": "transport_previous",
+    "initial_hard_output": "current_grid",
+    "inout": "raw_unchanged"
+  },
+  "checks": {
+    "six_normalized_tokens_and_17_scalar_order_hand_examples": true,
+    "native_FP16_features_to_FP32_observation_shape_and_parameter_count": true,
+    "zero_initialization_current_anchor_and_metadata_forced_no_history_choice": true,
+    "cost_weighted_BCE_hand_values_gradients_zero_cost_and_float64_GT_advantage": true,
+    "no_class_reweighting_or_margin_scan": true,
+    "raw_only_memory_person_gap_future_and_GT_isolation": true,
+    "raw_EMA_and_grid_EMA_match_declared_recursions": true,
+    "bank_complete_global_row_mapping_FP32_heatmaps_observations_raw_scores_and_coordinates": true,
+    "bank_live_disk_value_hashes_header_file_and_index_verification": true,
+    "whole_candidate_no_map_mixing_same_forward_logits_and_choices_readback": true,
+    "original_cache_loader_standard_temporal_state_functions_reused": true,
+    "complete_dual_bank_five_controls_and_five_epoch_actual_CLI": true,
+    "independent_epoch_cost_numerator_denominator_mask_preference_and_tie_recalculation": true,
+    "all_five_checkpoints_full_test_outputs_and_selected_last_hashes_retained": true,
+    "checkpoint_reload_cached_and_online_frame_predictions_match": true,
+    "test_GT_labels_do_not_change_any_of_five_training_model_tensors": true,
+    "AP_state_and_leave_responses_fixed_against_each_control_and_epoch": true,
+    "budget_plan_duplicate_output_and_cache_corruption_checks": true,
+    "sources_unchanged_and_banks_read_only": true,
+    "Python_3_10_AST_eight_new_files": true,
+    "two_section_17_command_blocks_bash_syntax": true,
+    "previously_tracked_code_unchanged_and_git_diff_check": true
+  },
+  "notes": [
+    "Only a new MLP is trained; GazeSpot backbone/decoder and all fixed candidates remain frozen.",
+    "GT forms train-only current-frame cost targets; no GT, oracle or gate output feeds candidate generation or memory.",
+    "Current_grid and grid_EMA controls are retained to distinguish history selection from spatial resampling or fixed smoothing.",
+    "All official test frames are evaluated each epoch and used for whole-epoch AUC/L2/AP selection, explicitly not an independent held-out estimate.",
+    "Synthetic fixture metrics are not VAT experiment performance."
+  ],
+  "next_step": "User manually runs implementation_plan.md section17.1 on physical GPU1, returns selector JSON/MD/selection/provenance, then review versus current_grid and grid_EMA."
+}

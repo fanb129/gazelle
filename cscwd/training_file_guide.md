@@ -1,6 +1,6 @@
 # 当前训练会读写哪些文件
 
-适用协议：`r4_official_train_test_v1`，更新于2026-11-19。§1–§11说明已验收官方首轮的文件组织；D2/D3/D4见§12–§14；**当前待运行的D5候选分析见§15**，唯一启动命令在实现计划§16.1。D5只做train分析，不训练模型。官方首轮两模型均按AUC规则选epoch 5。
+适用协议：`r4_official_train_test_v1`，更新于2026-11-20。§1–§11说明已验收官方首轮；D2–D5见§12–§15；**当前待运行D6选择门见§16**，唯一启动命令在实现计划§17.1。D6训练新MLP，底座/原InOut冻结；官方首轮两模型均按AUC选epoch5。
 
 可以把这次训练理解为：**读取已经算好的单帧观察，训练一个小型时序修正模块；每训练一轮，就在官方 test 上完整评测一次，最后挑出 AUC 最好的一轮。**
 
@@ -323,7 +323,7 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 
 结果和日志均在 `/home/fb/src/paper/gazelleV1/cscwd/results/`：外层 `r4_current_frame_round.log`、训练 `r4_current_frame_train.log`、比较 `r4_current_frame_comparison.log`；外层成功标记为 `R4 current-frame round completed.`。回传 `r4_current_frame.json/.md`、`r4_current_frame_comparison.json/.md`、`r4_current_frame_selection.json` 和自动追加的provenance；大文件仍留服务器。
 
-## 15. R4-D5训练集候选效用分析（待用户运行）
+## 15. R4-D5训练集候选效用分析（结果已验收）
 
 唯一入口为 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/analyze_history_utility.py`，完整GPU1命令见实现计划§16.1，规格 `r4_history_utility_plan.md`。本轮不读取test、D4/旧GRU权重或validation manifest，不训练模块，不生成新的 `.pt`。
 
@@ -344,3 +344,28 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 | `utility_details.json` | 各固定候选的完整逐轨迹/事件时序计分 |
 
 没有新epoch、checkpoint或全量候选heatmap。小报告 `cscwd/results/r4_history_utility.json/.md` 汇总补救/伤害、稳定/变化组、固定状态阻断和候选集合参考，自动追加provenance。日志同目录 `r4_history_utility.log`，成功标记 `R4 history utility completed`。只回传两个小报告和provenance，大文件/完整明细留服务器。
+
+## 16. R4-D6成本监督选择门（待用户运行）
+
+唯一入口 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/train_utility_selector.py`，GPU1完整命令在实现计划§17.1，规格 `r4_utility_selector_plan.md`。顺序：核对旧输入→生成train/test bank→五固定test对照→新MLP五轮训练/逐轮test→选整轮/比较。没有GRU续训或底座重训。
+
+实际输入仍为前述完整官方train/test原预测 `r1_train_predictions/`、`test/`，以及 `r2_native_last_fp16/`、`r4_official_test_native_last_fp16/` 两套特征。六个输入参数含这两个特征目录和四个来源小报告，plan为仓库 `cscwd/r4_utility_selector_plan.md`。不读取validation分区、旧模块权重或D5 oracle选择数组。
+
+新根目录 `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_utility_selector_v1/`：
+
+| 目录/文件 | 内容 |
+|---|---|
+| `banks/{train,test}/heatmaps.npy` | FP32 `[N,5,64,64]`，顺序raw/grid/rawEMA/gridEMA/visual transport |
+| `banks/{train,test}/observations.npy` | FP32 `[N,4625]`，六冻结768维描述符+17观察标量，无GT |
+| 同bank的 `inout.npy/candidate_xy.npy/history_available.npy` | 原状态分数、五候选坐标和metadata历史可用性 |
+| 同bank的 `index.json` | 原轨迹/标签供后续loss计分、观察/候选来源、shape/dtype/文件SHA；标签不进入观察生成 |
+| `baselines/<candidate>/` | 五个固定对照的完整test cache、choices与事件计分明细 |
+| `selector/training_config.json` | 固定预算、来源、plan与两bank记录 |
+| `selector/training_history.json` | 每轮成本BCE分子/权重和监督计数、完整test指标与checkpoint SHA |
+| `selector/epoch_001.pt`–`epoch_005.pt` | 五轮新MLP权重，只含新增模块参数和配置 |
+| `selector/selected.pt / last.pt / selection.json` | AUC规则选中轮、最后一轮与选择记录；最佳epoch由真实结果决定 |
+| `selector/test_epoch_001/`–`test_epoch_005/` | 最终整张被选图、原InOut、坐标、choices、同次selector_logits和完整事件明细 |
+
+N分别为train132,563/test31,978。五轮直接读取bank，不重复提取RGB或读取全部空间feature；训练只更新296,129参数的MLP。GT只在train构造成本权重和方向，test只计分/按原规则选轮。输出整图二选一，无历史强制grid，原分数不变。
+
+日志 `/home/fb/src/paper/gazelleV1/cscwd/results/r4_utility_selector.log`，成功标记 `R4 utility selector completed`。回传 `r4_utility_selector.json/.md`、`r4_utility_selector_selection.json` 和provenance；所有bank、PT、完整预测/事件留服务器。比较报告同时给grid和grid-EMA差值/配对响应，不能只用raw作参照。

@@ -1,8 +1,8 @@
 # CSCWD 2027 · 因果联合时序修正
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
-> 当前方案（2026-11-19）：冻结 GazeSpot ViT-B，以当前视觉证据判断历史有效性，训练轻量因果模块，联合修正 heatmap 与 In/Out。
-> 状态：D4真实结果已验收，原AP/出画收益无需历史即可重现，核心时序优势尚未建立。D5训练集候选效用分析本地完成，28项合成检查通过；用户按实现计划 **§16.1** 用GPU 1手动运行。
+> 当前D6方案（2026-11-20）：冻结 GazeSpot ViT-B/原InOut，以current_grid为锚，用成本监督门选择是否采用一跳视觉历史，检验定位—稳定—响应折中。
+> 状态：D5真实候选分析已验收；D6完整入口本地完成，38项合成检查通过。用户按实现计划 **§17.1** 用GPU1手动运行，包含grid-EMA强控制。
 
 ## 目录结构
 
@@ -31,6 +31,7 @@ cscwd/
 | [r4_state_supervision_plan.md](r4_state_supervision_plan.md) | 已完成R4-D3：固定状态稳定/变化监督、跨chunk处理与同预算训练 |
 | [r4_current_frame_plan.md](r4_current_frame_plan.md) | R4-D4：每帧清空历史、原目标/五轮预算与参数使用区别 |
 | [r4_history_utility_plan.md](r4_history_utility_plan.md) | R4-D5：train固定因果历史候选、四象限补救/伤害与GT知情参考 |
+| [r4_utility_selector_plan.md](r4_utility_selector_plan.md) | R4-D6：强当前锚点/视觉历史二选一、成本BCE、固定状态和五轮预算 |
 | [training_file_guide.md](training_file_guide.md) | 当前训练文件说明：数据JSON、特征、权重、每轮结果与日志的具体路径 |
 | [r4_official_train_test_plan.md](r4_official_train_test_plan.md) | 当前 R4：完整 train、逐 epoch test、AUC 选模 |
 | [r4_compact_plan.md](r4_compact_plan.md) | 原 R4 validation 历史协议与选模规则 |
@@ -55,12 +56,14 @@ cscwd/
 | [results/r4_current_frame_local_checks.md](results/r4_current_frame_local_checks.md) | D4模型/训练/比较/后台入口及23项本地合成检查 |
 | [results/r4_current_frame_local_review.md](results/r4_current_frame_local_review.md) | D4真实验收、原AP归因和下一步候选分析 |
 | [results/r4_history_utility_local_checks.md](results/r4_history_utility_local_checks.md) | D5生成/计分/真实CLI及28项本地检查 |
+| [results/r4_history_utility_local_review.md](results/r4_history_utility_local_review.md) | D5真实验收、候选补救空间与grid强控制 |
+| [results/r4_utility_selector_local_checks.md](results/r4_utility_selector_local_checks.md) | D6核心/bank/评测/训练CLI及38项合成检查 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**官方train/test、D1–D4已验收 → 用户运行§16.1的train候选效用分析 → 决定显式选择门 → 论文证据**。D5本地入口已完成；原首轮两模型/D4均epoch 5，D3为GRU epoch 2/HV epoch 3；§9–§15保留复现，无需重跑。
+当前执行顺序：**官方train/test、D1–D5已验收 → 用户运行§17.1的成本监督选择门 → 与grid/grid-EMA比较 → 论文证据**。D6本地入口已完成；原首轮两模型/D4均epoch5，D3为GRU2/HV3；§9–§16保留复现，无需重跑。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

@@ -685,3 +685,20 @@ T6 本地验收与观察（2026-11-13，结果提交 `9e0fdd0`）：
 - oracle_choice: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/oracle_choice.npy`; SHA256: `6a22df395dcc4adf9657a23499db3420fd1550f56456a6ec54044d6791e3a8ec`.
 - details: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/utility_details.json`; SHA256: `682f089dcf989403bb906a34ef7d0a05c30e16bdef9036d40c716245cb619426`.
 - index: `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_history_utility_v1/index.json`; SHA256: `9e44e79f4da29493609b95348b7cf472948988eeb05b5670b5053efd341192c8`.
+
+## R4-D5真实结果本地验收（2026-11-20）
+
+- Result commit: `a6928e6`; job code: `8f1bf4f0d3b59a5f6f80765e93898a717da7703e`. 879 actual small-report/source/formula checks passed; server NPY/index/full events not downloaded or recomputed locally.
+- Review: `cscwd/results/r4_history_utility_local_review.json`; SHA256: `53d6b6a1a422a616e99d6f954bfc292d84cd9b28107a9e6739c6e69db8bceea0`.
+- Review summary: `cscwd/results/r4_history_utility_local_review.md`; SHA256: `78b9a088bd4b0081f628ea8b5b06915aaa0444c3bc7b0d551bfdffb0c9df12bb`.
+- Train utility denominator88,270/current errors22,831; fixed-set GT reference rescues3,126 (2,972 with fixed raw InOut,154 blocked). Oracle L2 .08165971810370352 is not deployment performance.
+- Visual transport rescue2,624/harm3,145; no-history current_grid accurate stable47,676→51,364 and gaze499→504/816. Next train selector anchored on grid with grid_EMA control.
+
+## R4-D6成本监督选择门本地实现（2026-11-20）
+
+- Version: `r4_utility_selector_v1`; plan: `cscwd/r4_utility_selector_plan.md`; SHA256: `59a2a083f8260533048680e1f3c7b8b70e93fa5fc9b2caa5f14e1d84aee88162`.
+- Local checks: `cscwd/results/r4_utility_selector_local_checks.json`; SHA256: `5ad457c395b51e62ce1e09bf116ec1dc964c189562b13d37460f858400be168e`.
+- Local summary: `cscwd/results/r4_utility_selector_local_checks.md`; SHA256: `d337dbdd427daf4b3270ad1e890e88bc3b5ab93ab54b876f428f6cbe12fbf519`.
+- 38 synthetic CPU checks passed: core15/0.734s, bank7/0.724s, evaluation8/0.517s, actual full training CLI8/3.982s. Eight Python3.10 AST checks/two server command blocks passed.
+- MLP296,129 parameters, six frozen tokens+17 scalars; train-only cost-weighted BCE. Hard grid/visual-history choice, raw InOut unchanged; no GT/oracle/gate-output memory feedback.
+- Real VAT D6 training/evaluation/server job not run. GPU1 manual command: implementation_plan.md §17.1. New large banks/checkpoints/full outputs at `/home/fb/src/paper/gazelleV1/experiments/cscwd_r4_utility_selector_v1/`; server script will record actual paths/SHA.
