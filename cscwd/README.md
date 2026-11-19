@@ -23,6 +23,7 @@ cscwd/
 |---|---|
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
 | [idea_feasibility_review.md](idea_feasibility_review.md) | 方向复盘：当前实例、ViT-B/L与Gazelle/GazeSpot选择、理想结果关系与最小路线 |
+| [method_architecture.md](method_architecture.md) | 三张架构图：已实现方法、候选重构和D4对照；下一步任务 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
 | [implementation_plan.md](implementation_plan.md) | 权威执行规格：R1–R6 依赖/产出/验收；保留 T1–T6 结果与历史命令 |
 | [r4_cache_diagnosis_plan.md](r4_cache_diagnosis_plan.md) | 已完成诊断：四种坐标/状态组合、准确稳定贡献与历史控制量 |
