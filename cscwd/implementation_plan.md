@@ -380,6 +380,7 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-18 · R4-D3本地实现完成**：新增 `state_supervision.py`、独立训练/比较入口、顺序wrapper及四套测试；规格 `r4_state_supervision_plan.md`。loss固定为heatmap+0.1×(BCE+0.1×(稳定pair L1+翻转当前及随后两帧BCE))，监督carry独立、跨chunk边界detach，不进入模型输入/历史。**29项CPU合成检查通过**（loss/epoch12、训练/实际比较CLI6、比较7、wrapper4），实际完成双模型各五轮、全test/同次诊断、重载、test标签不影响权重、前轮同源比较和后台失败传播；记录 `results/r4_state_supervision_local_checks.json/.md`。原架构/源码/结果保持，无新增真实VAT数字；下一步用户按§14.1用GPU 1手动运行并回传小报告。
 - **2026-11-19 · R4-D3真实结果验收**：pull `db239cf`，240项本地小报告核对通过，记录 `results/r4_state_supervision_local_review.json/.md`。五轮train/监督完整（132,563帧、129,666 stable pairs、5,358 transition frames）；选轮GRU 2/HV 3。HV为AUC/L2/AP **0.940481/0.099299/0.888879**、准确稳定 **51.2225%**、gaze **89/158**，仍低于单帧稳定/切换和同轮GRU稳定。原HV5→D3HV3的稳定+176伴随选轮变化；同HV epoch 3稳定 **10,232→10,140**、翻转 **660→717**。两模型各五轮同轮AP均降低/L2均增加，稳定只有epoch 4改善，固定loss无一致收益；不临时改选epoch 4或拼列。原结果/计划不改，未本地重算大文件。
 - **当前下一步R4-D4**：一个当前帧无历史联合修正头，保留普通GRU当前视觉/原预测/真实头框和双输出结构，每帧清空历史，原逐帧MSE/BCE、单配置seed 0、从头五轮/每epoch完整test/AUC选整轮；先固定重置及有效参数约定再实现。依据该对照决定历史模块是否保留/调整，再按信号做最少读门对照。本次未实现D4，不追加D3 lambda扫描或校准。
+- **2026-11-19 · R4方向复盘**：新增 `idea_feasibility_review.md`，区分当前实例未成功、研究问题未被否定、底座规模/模型设计与时序增量。核对T5 EMA0.75真实稳定54.2534%、gaze90/158/L2 0.098941，以及官方Gazelle/DINOv2与本地GazeSpot/DINOv3定义。理想对照要求同底座SF/当前帧头/强EMA/GRU/选择机制比较，不填预测指标。建议保留B缓存完成D4最小归因，重构前用train标签分析因果历史候选效用；显式候选选择/直接效用监督/空间与状态分离为讨论，尚未实现。L与官方Gazelle留作有信号后的规模/泛化验证。本次无新代码、训练或底座切换。
 
 ## 7. 先导阶段服务器命令存档
 

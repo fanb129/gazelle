@@ -1,8 +1,8 @@
 # 因果视频注视联合修正方案
 
-> 更新：2026-11-17。本文记录方向复盘后的研究方案；任务顺序和验收以 [implementation_plan.md](implementation_plan.md) 为准。
-> 状态：T1–T6 与 R1/R2 已验收；R3 历史视觉对应/有效性模型和诊断本地完成，24 项新增检查和18项回归通过，真实新机制训练尚未运行。现有规则方法继续使用 `stag` 标识，新方法暂称 `temporal_joint_refiner`。
-> R3 结构见 `results/r3_mechanism_design.md`；`r4_compact_v2` 首轮入口已本地完成，下一步按实现计划 §10 手动运行并回传。R1/R2 原命令保留于 §8/§9，无需重跑。
+> 更新：2026-11-19。本文保留已实现联合修正方案的定义；任务顺序和真实验收以 [implementation_plan.md](implementation_plan.md) 为准。
+> 状态：T1–T6、R1–R3、官方R4首轮及D1–D3均已完成验收。当前GRU残差/模板有效性实例尚未建立稳定—响应优势，D4无历史对照尚未执行。规则方法继续使用 `stag` 标识，联合模块为 `temporal_joint_refiner`。
+> 当前方向复盘见 [idea_feasibility_review.md](idea_feasibility_review.md)：区分底座绝对精度与时序增量，讨论显式历史候选/效用监督及理想对照关系。该候选重构尚未实现，不覆盖现有模型或原实验结果。§8–§14的已完成作业无需重跑。
 
 ## 1. 最终目标与 motivation
 

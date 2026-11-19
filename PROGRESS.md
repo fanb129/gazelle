@@ -104,6 +104,8 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D3 / 下一步决策**：不继续追加D3权重扫描或校准。下一项 **R4-D4当前帧无历史联合修正对照**：保留普通GRU当前视觉输入/原预测/真实头框与双输出结构，每帧清空预测历史，使用原逐帧MSE/BCE、单配置seed 0、从头五轮，沿用官方train/逐epoch test/AUC选整轮。它用于判定原AP增益是否依赖历史，并决定保留或调整当前历史机制；重置约定及有效参数区别在实现前固定。本次仅验收和计划，未实现D4或启动作业。
 
+**R4方向复盘 / 2026-11-19 / 可行性与底座选择讨论**：新增 `cscwd/idea_feasibility_review.md`，核对现有T5/D1–D3、模型路径、官方Gaze-LLE论文/代码及本地GazeSpot源稿。现有B底座EMA已达准确稳定54.2534%、gaze90/158、L2 0.098941，优于D3新机制对应时间/L2指标；当前失败不能归因于B太小。Gazelle指官方DINOv2 Gaze-LLE，关闭本地SASA/GGSF不是同一模型。建议先用现成B缓存做最小归因/可行性判定，机制有增量后再加公开Gazelle和L规模验证；候选重构为显式当前/对齐历史预测、train效用监督与分离状态记忆，可先固定In/Out收缩目标。理想实验用同底座增量与稳定—响应关系表达，未填假想数字。D4仍未实施，本次无新实验或底座切换；下一步仍先按既定D4确认原AP归因，重构前分析train历史候选的可用空间。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 

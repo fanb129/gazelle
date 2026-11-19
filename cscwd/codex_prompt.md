@@ -27,6 +27,7 @@
 - ~/src/gazelle/cscwd/results/r4_state_calibration_local_review.md（D2真实校准验收与当前D3状态时序训练决策）
 - ~/src/gazelle/cscwd/r4_state_supervision_plan.md（D3固定loss、跨chunk监督与运行规格）
 - ~/src/gazelle/cscwd/results/r4_state_supervision_local_review.md（D3真实验收、同epoch对比和当前D4无历史对照决策）
+- ~/src/gazelle/cscwd/idea_feasibility_review.md（方向复盘、底座选择与理想实验关系；候选重构尚未实现）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
 
