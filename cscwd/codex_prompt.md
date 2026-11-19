@@ -29,7 +29,7 @@
 - ~/src/gazelle/cscwd/results/r4_state_supervision_local_review.md（D3真实验收、同epoch对比和当前D4无历史对照决策）
 - ~/src/gazelle/cscwd/results/r4_current_frame_local_review.md（D4真实验收，AP/出画收益不需要历史即可重现）
 - ~/src/gazelle/cscwd/results/r4_history_utility_local_review.md（D5真实候选补救/伤害与grid强控制验收）
-- ~/src/gazelle/cscwd/r4_utility_selector_plan.md、results/r4_utility_selector_local_checks.md（D6成本监督二选一门，38项检查，服务器命令§17.1）
+- ~/src/gazelle/cscwd/r4_utility_selector_plan.md、results/r4_utility_selector_local_review.md（D6已真实验收，epoch1等同grid；下一任务冻结train诊断见进展记录）
 - ~/src/gazelle/cscwd/idea_feasibility_review.md（方向复盘、底座选择与理想实验关系；候选重构尚未实现）
 - ~/src/gazelle/cscwd/code/data_prep/preprocess_vat_tracks.py（T1 已完成的 track 恢复）
 - ~/src/gazelle/gazelle/model.py、gazelle/dataloader.py（单帧底座与数据加载）
@@ -61,7 +61,7 @@ R3 已本地完成：HistoryValidityRefiner 在原始冻结空间匹配过去预
 - 避免防御性写作：进展记录不写"风险/待解决问题"清单，不反复强调"可能不对/需验证"；直接写做了什么、结果、下一步。
 - 一步一个任务，本地实现及相应验收后再进入下一个 R 任务；需要真实作业的任务完成服务器回传验收后再推进，不一次铺开多个半成品。R3 是本地结构/检查任务，不追加服务器 smoke。
 
-官方train/test首轮、D1–D5均已验收。D4表明原AP/出画收益不需要历史。D5结果 `a6928e6` 经879项小报告核对通过：train固定集合GT参考能救3,126/22,831错误，transport救2,624/伤3,145；无历史grid稳定55.6066%→59.9081%，后续必须含grid与grid-EMA控制。D6已本地完成（`r4_utility_selector_v1`），38项合成检查通过：C=grid/H=raw一跳视觉传输，六冻结token+17标量/hidden64/296,129参数，成本加权BCE监督整图硬选择，原InOut保持，无GT/门输出反馈。单入口双bank→五固定对照→单门seed0五轮/逐epoch完整test/原AUC规则选整轮。用户按§17.1在GPU1手动运行并回传selector JSON/MD/selection/provenance，再判断相对grid/grid-EMA的额外作用。无真实D6数字/服务器作业，不增加状态分支/切换底座/扩大旧GRU；§11–§16保留复现，原源码与机器报告不改写。
+官方train/test首轮、D1–D6均已验收。D6结果 `4bbfdad` 经1,485项小报告核对通过，按原规则选epoch1，历史选择0/31,978，预测SHA/全部指标等同current_grid：AUC0.942892/L2 0.097854/AP0.886801、稳定11,226/19,796、gaze91/158。收益属于空间处理，不能称历史门有效。在线BCE0.652967→0.596276；后四轮实际采用188/1,156/2,908/2,087帧历史，但AUC/L2/稳定均比grid差。grid-EMA稳定11,479窗、gaze90/158，原InOut/state保持。下一任务D7复用train bank和五个checkpoint，冻结前向并分解C=grid/H=transport二候选效用、常数cost先验、模型收益/伤害/regret和固定GT组；不新增训练、不扫描test阈值、不改变epoch1。D5 raw多候选oracle不代表该二候选空间，在线训练loss不代表冻结hard决策收益。当前仅完成D6验收/该计划，§11–§17保留复现，原源码与机器报告不改写。
 
 ---
 

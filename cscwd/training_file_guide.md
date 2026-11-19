@@ -1,6 +1,6 @@
 # 当前训练会读写哪些文件
 
-适用协议：`r4_official_train_test_v1`，更新于2026-11-20。§1–§11说明已验收官方首轮；D2–D5见§12–§15；**当前待运行D6选择门见§16**，唯一启动命令在实现计划§17.1。D6训练新MLP，底座/原InOut冻结；官方首轮两模型均按AUC选epoch5。
+适用协议：`r4_official_train_test_v1`，更新于2026-11-20。§1–§11说明已验收官方首轮；D2–D5见§12–§15；**D6已运行并验收，文件见§16**，实现计划§17.1保留复现。D6选epoch1，输出等同current_grid；下一任务复用这些bank/权重做冻结train效用诊断。
 
 可以把这次训练理解为：**读取已经算好的单帧观察，训练一个小型时序修正模块；每训练一轮，就在官方 test 上完整评测一次，最后挑出 AUC 最好的一轮。**
 
@@ -345,7 +345,7 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 
 没有新epoch、checkpoint或全量候选heatmap。小报告 `cscwd/results/r4_history_utility.json/.md` 汇总补救/伤害、稳定/变化组、固定状态阻断和候选集合参考，自动追加provenance。日志同目录 `r4_history_utility.log`，成功标记 `R4 history utility completed`。只回传两个小报告和provenance，大文件/完整明细留服务器。
 
-## 16. R4-D6成本监督选择门（待用户运行）
+## 16. R4-D6成本监督选择门（结果已验收）
 
 唯一入口 `/home/fb/src/paper/gazelleV1/cscwd/code/scripts/train_utility_selector.py`，GPU1完整命令在实现计划§17.1，规格 `r4_utility_selector_plan.md`。顺序：核对旧输入→生成train/test bank→五固定test对照→新MLP五轮训练/逐轮test→选整轮/比较。没有GRU续训或底座重训。
 
@@ -363,9 +363,11 @@ D3结果 `db239cf` 已验收，分析见 `results/r4_state_supervision_local_rev
 | `selector/training_config.json` | 固定预算、来源、plan与两bank记录 |
 | `selector/training_history.json` | 每轮成本BCE分子/权重和监督计数、完整test指标与checkpoint SHA |
 | `selector/epoch_001.pt`–`epoch_005.pt` | 五轮新MLP权重，只含新增模块参数和配置 |
-| `selector/selected.pt / last.pt / selection.json` | AUC规则选中轮、最后一轮与选择记录；最佳epoch由真实结果决定 |
+| `selector/selected.pt / last.pt / selection.json` | 实际选epoch1，selected对应epoch_001.pt；last对应epoch_005.pt |
 | `selector/test_epoch_001/`–`test_epoch_005/` | 最终整张被选图、原InOut、坐标、choices、同次selector_logits和完整事件明细 |
 
 N分别为train132,563/test31,978。五轮直接读取bank，不重复提取RGB或读取全部空间feature；训练只更新296,129参数的MLP。GT只在train构造成本权重和方向，test只计分/按原规则选轮。输出整图二选一，无历史强制grid，原分数不变。
 
 日志 `/home/fb/src/paper/gazelleV1/cscwd/results/r4_utility_selector.log`，成功标记 `R4 utility selector completed`。回传 `r4_utility_selector.json/.md`、`r4_utility_selector_selection.json` 和provenance；所有bank、PT、完整预测/事件留服务器。比较报告同时给grid和grid-EMA差值/配对响应，不能只用raw作参照。
+
+本轮 `4bbfdad` 已验收，详见 `results/r4_utility_selector_local_review.md`。epoch1 test choices全为current_grid，三个预测NPY及事件明细的SHA与该固定对照相同；后四轮有历史选择但指标未超过grid。下一任务只需复用上述 `banks/train/` 和五个 `selector/epoch_*.pt`，补冻结train前向/效用分解；不重新提取特征或训练，不改变既有test选轮。

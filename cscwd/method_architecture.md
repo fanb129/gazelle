@@ -1,6 +1,6 @@
 # 方法架构、实现状态与下一步
 
-2026-11-20。图一是原已评测联合残差；图二是D6已本地实现、待服务器训练的成本监督选择门；图三是已评测D4对照。D5候选分析已真实验收。三者不是串联成一套模型。
+2026-11-20。图一是原已评测联合残差；图二是已完成真实训练/验收的D6成本监督选择门；图三是已评测D4对照。D6最佳输出等同无历史grid，尚无额外历史收益。三者不是串联成一套模型。
 
 ## 1. 已实现：冻结底座＋门控历史＋GRU联合残差
 
@@ -42,9 +42,9 @@ flowchart TB
 
 对应代码：[history_model.py](/Users/fanb/src/gazelle/cscwd/code/stag/history_model.py:56)、[temporal_model.py](/Users/fanb/src/gazelle/cscwd/code/stag/temporal_model.py:48)。目前这套实现尚未建立超过强EMA/普通GRU的核心时序优势。
 
-## 2. D6：强当前锚点＋成本监督历史选择（本地完成，待训练）
+## 2. D6：强当前锚点＋成本监督历史选择（真实结果已验收）
 
-**D6选择门已实现，38项合成检查通过，真实训练由用户按实现计划§17.1手动启动。原InOut保持。**
+**结果 `4bbfdad` 已验收。按原规则选epoch1，test历史选择0，输出等同current_grid；后四轮采用历史后AUC/L2/稳定均下降。原InOut保持。§17.1仅保留复现。**
 
 ```mermaid
 flowchart TB
@@ -91,6 +91,6 @@ D4保留普通GRU的当前输入和双输出结构，每帧清空hidden、过去
 
 结果 `6eeb594` 已通过235项小报告核对，选epoch5。D4 AP0.893067、leave107/192，重现了原AP/出画收益；准确稳定10,050窗与gaze87/158仍低于单帧。普通GRU五个同epoch AUC仍略高，不能据此说历史完全无用。当前停止扩大旧GRU/HV，转向检验显式候选的补救空间。
 
-当前任务顺序：D5已验收（GT参考救3,126帧，grid无历史稳定增加4.3015pp）→用户按§17.1训练图二门控→回传比较grid/grid-EMA和配对响应。候选可补救不代表门已能学会选择，D6训练将直接检验这一点。
+当前任务顺序：D6已验收（grid test稳定56.7084%、gaze91/158；最佳门与它完全相同）→D7冻结train效用诊断→根据实际收益决定结构。诊断复用五个checkpoint/train bank，比较二候选GT参考与常数cost先验，分解选择收益/伤害和regret；不直接追加训练。
 
-当前保持GazeSpot-B。官方Gazelle与ViT-L用于机制出现增量后的公开复现/跨底座验证，详见 [方向复盘](/Users/fanb/src/gazelle/cscwd/idea_feasibility_review.md)。D6没有真实性能数字，尚未启动服务器作业。
+当前保持GazeSpot-B。官方Gazelle与ViT-L用于机制出现增量后的公开复现/跨底座验证，详见 [方向复盘](/Users/fanb/src/gazelle/cscwd/idea_feasibility_review.md)。D6完整真实结果已记录，本次只验收和确定诊断计划，没有新增服务器任务。

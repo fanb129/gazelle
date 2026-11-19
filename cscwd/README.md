@@ -2,7 +2,7 @@
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
 > 当前D6方案（2026-11-20）：冻结 GazeSpot ViT-B/原InOut，以current_grid为锚，用成本监督门选择是否采用一跳视觉历史，检验定位—稳定—响应折中。
-> 状态：D5真实候选分析已验收；D6完整入口本地完成，38项合成检查通过。用户按实现计划 **§17.1** 用GPU1手动运行，包含grid-EMA强控制。
+> 状态：D6真实结果已验收，最佳epoch1未采用历史、输出完全等同current_grid，尚无额外历史收益。下一任务为复用bank/权重的冻结train效用诊断，再决定结构；§17无需重跑。
 
 ## 目录结构
 
@@ -58,12 +58,13 @@ cscwd/
 | [results/r4_history_utility_local_checks.md](results/r4_history_utility_local_checks.md) | D5生成/计分/真实CLI及28项本地检查 |
 | [results/r4_history_utility_local_review.md](results/r4_history_utility_local_review.md) | D5真实验收、候选补救空间与grid强控制 |
 | [results/r4_utility_selector_local_checks.md](results/r4_utility_selector_local_checks.md) | D6核心/bank/评测/训练CLI及38项合成检查 |
+| [results/r4_utility_selector_local_review.md](results/r4_utility_selector_local_review.md) | D6真实验收、grid收益归因与冻结train诊断计划 |
 
 ## 工作流
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**官方train/test、D1–D5已验收 → 用户运行§17.1的成本监督选择门 → 与grid/grid-EMA比较 → 论文证据**。D6本地入口已完成；原首轮两模型/D4均epoch5，D3为GRU2/HV3；§9–§16保留复现，无需重跑。
+当前执行顺序：**官方train/test、D1–D6已验收 → D7冻结train效用诊断 → 根据实际决策收益决定结构**。D6选epoch1且等同grid；原首轮两模型/D4均epoch5，D3为GRU2/HV3；§9–§17保留复现，无需重跑。当前不新增训练或扫描test阈值。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

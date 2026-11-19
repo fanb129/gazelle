@@ -2,7 +2,7 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 关联：论文结构 `paper_blueprint.md`，venue 扫描 `cscwd_2025_2026_related.md`。冲突时以本文档为准。
-> 当前版本：2026-11-20。D5结果 `a6928e6` 已验收：候选GT选择可救回13.69%的当前错误，但盲用视觉历史伤害更多；无历史current_grid本身已提高稳定性。下一步为 **§17.1** 的D6成本监督二选一门，以current_grid为锚、视觉传输为历史，保持原InOut；包含grid-EMA强控制。§11–§16保留复现，无需重跑。
+> 当前版本：2026-11-20。D6结果 `4bbfdad` 已验收：按原规则选epoch1，test历史选择0，全部输出等同current_grid；后四轮采用历史后AUC/L2/稳定均更差。现有门未提供额外历史收益。下一步D7复用train bank/五个checkpoint做冻结效用诊断，再决定结构；§11–§17保留复现，无需重跑。
 
 ## 0. 目标（一句话）
 
@@ -255,7 +255,7 @@ cscwd/
 - **产出**：`results/r4_official_test_features.json/.md`、`r4_official_ordinary_gru.json/.md`、`r4_official_history_validity.json/.md`、`r4_official_comparison.json/.md`、`r4_official_selection.json`。大文件留服务器新目录，旧结果不覆盖。唯一服务器启动入口见 §11，物理 GPU 1。
 - **解释**：论文明确按 test 指标选择 epoch；不将其称为未参与选择的独立 test 估计。旧 validation 数据与新 full-train 运行分表记录，不改写既有结论。
 - **2026-11-18真实首轮验收**：服务器结果 `aa0ab55` 经Git/SSH取回并合并文档分支；283项本地核对通过，见 `results/r4_official_local_review.json/.md`。test特征完成，两模型五轮完整覆盖且均选epoch 5。新机制AUC/L2/AP为 **0.940466 / 0.099244 / 0.892778**，准确稳定 **50.3334%**，gaze_shift **88/158**；单帧为 **0.940182 / 0.098995 / 0.886801**、**52.7531%**、**92/158**。普通GRU为AUC首选，新机制额外优势尚未建立。
-- **当前后续（2026-11-20）**：D1–D5已验收。D5支持检验效用是否可学习，同时要求强无历史控制；下一步§17.1只训练一版current_grid/视觉历史二选一MLP，成本加权BCE，原InOut不变，不继续扩大旧GRU。
+- **当前后续（2026-11-20）**：D1–D6已验收。D6未超过current_grid，在线loss下降和test使用历史都未转成额外收益。下一任务D7只补冻结checkpoint的train前向，分解决策成本、补救/伤害和二候选oracle/常数先验；按结果区分train可学性与泛化，再决定新训练。
 
 #### R5 官方 test 结果汇总（并入新 R4）
 
@@ -392,6 +392,8 @@ CUDA_VISIBLE_DEVICES=<gpu> setsid nohup /home/fb/anaconda3/envs/py310/bin/python
 - **2026-11-20 · R4-D5真实结果验收**：已pull `a6928e6`，879项小报告源码/来源/plan SHA、覆盖/分组/四象限/加权算式、状态/leave不变、oracle/工件/模板/provenance核对通过，记录 `results/r4_history_utility_local_review.json/.md`。主分母88,270帧，当前错22,831，固定集合GT选择可救3,126（13.6919%），原状态阻断154；oracle L2 0.081660仅为train离线参考。transport救2,624/伤3,145，不能盲用。current_grid无历史准确稳定47,676→51,364（+4.3015pp）、L2 0.094313→0.094019、gaze499→504/816，后续必须含grid和grid-EMA强控制。大数组未本地重算；下一步D6以grid为锚的成本监督二选一门，检验效用可学习性，不将oracle当模型成绩。
 - **2026-11-20 · R4-D6本地实现完成**：固定 `r4_utility_selector_plan.md`（`r4_utility_selector_v1`），新增 `utility_selector.py`、`selector_bank.py`、`selector_evaluation.py`、`train_utility_selector.py` 和四套测试。C=current_grid/H=一跳视觉传输，六冻结token+17标量、hidden64/296,129参数，初始全选C；GT仅train成本加权BCE，原InOut和raw历史保持。单入口双bank→五对照→单模型从头五轮/逐epoch完整test/AUC选整轮，五轮权重/输出全部留存。
 - **R4-D6本地产出与下一步**：38项合成检查通过（核心15、bank7、评测8、实际CLI8），含原生特征/17标量顺序、成本梯度、因果/重置、双EMA、读回/来源、整图与同次选择logits、完整五轮及在线重载、test GT不改训练权重、原AP/state/leave保持。记录 `results/r4_utility_selector_local_checks.json/.md`；无新真实VAT D6数字或服务器作业。下一步用户按§17.1用GPU1手动执行并回传，评价相对grid及grid-EMA的额外作用。
+- **2026-11-20 · R4-D6真实结果验收**：已pull `4bbfdad`，1,485项小报告来源/代码/plan SHA、预算/双bank/覆盖、成本loss/固定状态、整轮选择/manifest、差值/配对/模板核对通过，记录 `results/r4_utility_selector_local_review.json/.md`。按原规则选epoch1，H选择0/31,978，预测三文件及明细SHA与current_grid相同，整行AUC0.942892/L2 0.097854/AP0.886801、稳定11,226/19,796、gaze91/158。raw→grid的+783稳定窗/精度改善来自空间处理；grid-EMA稳定11,479、gaze90/158。在线BCE0.652967→0.596276，后四轮H选择188/1,156/2,908/2,087，稳定比grid少10/89/214/155且AUC/L2均更差，不能归咎没有训练，也不临时换选轮。本地未重算大数组/权重，原报告保持；下一步D7冻结train效用诊断，当前不新增训练。
+- **下一任务R4-D7（计划）**：复用既有train bank与五个checkpoint，冻结前向保存train logits/选择；独立计算checkpoint的完整train weighted BCE、成本收益/伤害、regret、C=grid/H=transport二候选GT参考及最优常数cost先验，分固定GT组汇总。D6日志是训练过程中的在线loss，不能当作最终冻结模型的决策收益；D5 raw多候选oracle也不代表本二候选空间。GT只计分，不反馈观察/记忆；test仅沿用已有结果，不扫描阈值或改变epoch。先回答train也无效还是train有效/test无效，再决定结构。本次只完成D6验收与该计划。
 
 ## 7. 先导阶段服务器命令存档
 
@@ -1150,7 +1152,9 @@ git push origin codex/coverage-aware-router
 
 回传后先看补救/伤害、稳定/变化分组与固定状态阻断，再与分辨率参考比较视觉传输。存在可利用空间后才实现效用监督选择门；当前任务不训练新门或切换ViT-L/官方Gazelle。
 
-## 17. R4-D6：成本监督的当前/历史二选一门
+## 17. R4-D6：成本监督的当前/历史二选一门（已完成，保留复现）
+
+结果 `4bbfdad` 已验收，分析见 `results/r4_utility_selector_local_review.md`，当前无需重跑。原规则选epoch1，预测等同current_grid，无额外历史收益；下一任务见进展记录D7。
 
 规格 `r4_utility_selector_plan.md`（`r4_utility_selector_v1`）。C固定为无历史current_grid，H为D5一跳视觉传输；logit>0且有历史才整图选H，否则C，原InOut保持，不混合幅值不同的热图。整个GazeSpot冻结，仅训练六冻结token+17标量输入的64-hidden MLP，296,129参数。GT只构造当前帧成本监督：`d=L2_C-L2_H`、`y=(d>0)`、`w=abs(d)`，mask为train GT画内且有历史，loss为加权BCE；无类别重加权、margin扫描或额外时序loss。
 

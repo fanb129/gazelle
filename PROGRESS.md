@@ -7,10 +7,10 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与实验结果在 `rebuttal/results` |
 | ICASSP 2027 | `icassp2027/` | 初稿完成（2026-09 底），源稿在 `icassp2027/2026ACMMM` |
-| CSCWD | `cscwd/` | D5真实结果已验收；D6成本监督选择门本地完成，38项合成检查通过，服务器入口§17.1 |
+| CSCWD | `cscwd/` | D6真实结果已验收；最佳epoch1等同current_grid，无额外历史收益；下一步冻结bank/权重做train效用诊断 |
 
 ## 当前优先级（2026-11-20）
-**CSCWD 投稿是第一优先。当前D6路线：冻结 GazeSpot ViT-B和原InOut，以强无历史current_grid为锚，训练轻量效用门决定是否整图采用因果视觉历史。先检验定位—稳定—响应折中。**
+**CSCWD 投稿是第一优先。D6真实结果未超过强无历史current_grid，当前收益来自空间处理；下一步复用bank与五个checkpoint做冻结train效用诊断，再决定结构。GazeSpot-B和原InOut保持冻结。**
 方案已写入 `cscwd/temporal_joint_refinement.md`；R1–R6 的依赖、产出与验收写入 `cscwd/implementation_plan.md`。R1/R2 已验收，R3 历史视觉对应/有效性模型与诊断本地完成。原精简 R4 `r4_compact_v2` validation 首轮已验收，两模型均选 epoch 1、整体仍首选单帧。用户随后明确取消后续 validation，当前执行 `cscwd/r4_official_train_test_plan.md` 的 `r4_official_train_test_v1`：完整官方 train 训练，每 epoch 完整 test，按 AUC 优先、L2 更低、AP 更高选一整轮。官方train/test首轮结果 `aa0ab55` 已通过服务器Git取回并验收，两模型均选epoch 5；AUC/AP小幅改善，但定位误差和时序指标有代价，新机制尚未显示超过普通GRU的额外收益。原规则 STAG 保留为先导基线，以下 T1–T6 数字保留为真实先导结果。
 T1 真实结果已从服务器拉取（`17699cc`）并验收通过：train **1,033 tracks / 58,507 图像帧 / 132,563 人物帧**；test **298 tracks / 13,127 图像帧 / 31,978 人物帧**。原始 CSV 与旧 JSON 的全部计数核对通过，脚本 SHA256 一致；来源见 `cscwd/results/t1_track_recovery.json` 与 `RESULT_PROVENANCE.md`。
 
@@ -124,6 +124,10 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 
 **R4-D6 / 本地产出与下一步**：**38项合成检查通过**（核心15、bank7、评测8、实际训练CLI8），覆盖成本loss手算/梯度、标签/未来/人物/缺口隔离、双EMA、无损bank/整图输出、完整五轮/同次logits选择、重载在线与bank一致、test GT不改变五轮权重和强控制/AP/state保持。记录 `cscwd/results/r4_utility_selector_local_checks.json/.md`；无新增真实VAT D6数字，未启动服务器。下一步用户按实现计划 **§17.1** 用GPU1手动运行，回传selector报告/selection/provenance，再决定机制是否有额外时序收益。
 
+**R4-D6 / 2026-11-20 / 真实结果验收**：已pull `4bbfdad`，1,485项小报告代码/plan/来源SHA、预算/双bank/覆盖、成本算式、选轮/工件/差值/事件配对核对通过，记录 `cscwd/results/r4_utility_selector_local_review.json/.md`。原规则选 **epoch1**，H选择 **0/31,978**；预测三文件/事件明细SHA、全部指标与current_grid相同。整行 **AUC0.942892 / L2 0.097854 / AP0.886801**，准确稳定 **11,226/19,796（56.7084%）**、gaze **91/158**。相对raw的+783稳定窗和AUC/L2提升属于当前重采样，不是历史门收益；grid-EMA稳定11,479窗、gaze90/158，仍是折中。
+
+**R4-D6 / 结果解释与下一步**：在线训练weighted BCE **0.652967→0.596276**，每轮监督88,270帧、H偏好24,583、tie11,430。后四轮实际H选择188/1,156/2,908/2,087帧，但AUC/L2/准确稳定均差于grid，稳定分别少10/89/214/155窗；不能称未训练或五轮都不用历史。AP/状态错帧6,241/错误翻转592/leave91/192均保持。大数组/权重未本地重算，原报告不改。本次仅验收和计划；下一任务D7只冻结已有checkpoint、在train bank前向并分解成本收益/伤害、二候选oracle与常数先验，区分train决策无效或泛化不足，再决定新训练。
+
 ## 已知阻塞
 - Router 探索线（coverage-aware-router）：VAT 效果不明显，已暂停；详细状态见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`，与当前 CSCWD 时序方向无关。
 
@@ -134,6 +138,6 @@ R1 人工诊断已逐例记录于 `cscwd/results/r1_manual_review.json/.md`：�
 - git 双向传递：本地改 code → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）push 回本地；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE 记路径+SHA
 
 ## 下一步
-1. **用户手动运行R4-D6**：本地实现与38项合成检查已完成，按 `cscwd/implementation_plan.md` §17.1用GPU1运行双bank→五固定对照→单选择门五轮/逐epoch test，回传JSON/MD/selection/provenance；§11–§16无需重跑。
-2. 根据相对current_grid和grid-EMA的定位—稳定—响应折中、配对事件和历史选择比例判断新门作用；当前不增加状态分支/更换底座/继续扩大旧GRU。
+1. **下一任务D7冻结效用诊断**：复用train bank与五个D6 checkpoint，只补冻结train前向，分解实际收益/伤害与L2 regret，比较C=grid/H=transport二候选参考和最优常数cost先验；不新增训练或扫描test阈值。§11–§17已验收，无需重跑。
+2. 根据冻结train决策是否有净收益，区分当前观察/候选的可学性与泛化，再决定是否更换候选或目标；不把current_grid收益计作时序创新，不临时改选epoch。
 3. 结果整行分轮次保留：原首轮GRU/HV均epoch 5，D3为GRU epoch 2/HV epoch 3，D2校准另列；不混用最好列，test选模协议保留。
