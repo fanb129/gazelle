@@ -1,6 +1,8 @@
 # GazeSpot + ConvLSTM：实现计划
 
-2026-11-20。当前主线唯一规格。旧工作整体归档至 `cscwd_v0/`，不再执行旧诊断或候选选择路线。
+更新：2026-11-21。当前主线唯一规格。旧工作整体归档至 `cscwd_v0/`，不再执行旧诊断或候选选择路线。
+
+**当前阶段：第6节的train/test人工失败案例分析。** ConvLSTM首轮在完成6轮后按用户指令停止，第7轮test中断；第2–4节保留其已实现规格，不代表继续训练。暂不实现新的模型模块。
 
 ## 1. 目标
 
@@ -82,4 +84,18 @@ inout_t = original_inout_head(z'_t)
 
 - **V1-0 / 2026-11-20 / 目录重建完成**：原 `cscwd/` 全量移动为 `cscwd_v0/`，365个原文件/链接（含隐藏/忽略项）逐项保持内容；旧根进度另存 `cscwd_v0/PROGRESS_SNAPSHOT.md`。新目录仅含本方案、目录骨架与新结果provenance入口。没有新训练/评测数字。
 - **V1-1 / 2026-11-20 / 可运行基线实现完成**：上述缓存、ConvLSTM、完整train/逐epoch test/整轮选模/来源记录和服务器手动入口已实现。必要合成检查覆盖真实GazeSpot代码路径的零初始化输出、冻结与梯度、因果状态/重置、FP32缓存与行映射、两轮合成训练/评测/checkpoint读写。检查记录见 `results/LOCAL_CHECKS.md`。`gazelle/`未修改，新代码不依赖 `cscwd_v0/`。
-- **下一步V1-2**：用户在服务器手动执行README中的GPU1命令，完整train训练10轮、每轮完整test，将真实小报告和provenance经Git回传。目前无新VAT缓存、训练或评测结果，不宣称性能增益。
+- **V1-2 / 2026-11-21 / 首轮停止**：真实运行 `convlstm_v1_seed0_20261120_130802` 已完成6轮，未观察到有效的共同增益。按用户指令停止PID2458835并确认退出。保留selected epoch4、last epoch6，第7轮评测中断；10轮是原计划预算，不能记录为已完成。完整六轮指标及checkpoint路径/SHA见 `results/convlstm_v1_stopped_summary.json`。
+- **V1-3 / 2026-11-21 / 人工分析入口**：用户批准train/test都抽案例并人工看图。实现第6节的原始预测读取、独立分层抽样、连续历史窗口、离线浏览标注和CPU导出入口；真实导出仍由用户手动在服务器执行。
+
+## 6. 当前阶段：train/test人工失败案例分析
+
+目标是明确GazeSpot当前帧缺少什么证据、历史是否提供仍然适用的补充信息，再决定改进机制；不预先假定所有错误都应由时序模型修复。
+
+- 复用服务器 `cscwd_cache/gazespot_vitb_epoch7/r1_train_predictions/` 和 `test/` 的原始 `heatmap.npy/inout.npy/argmax_xy.npy/index.json`。实际文件及索引SHA已与历史报告核对；checkpoint和轨迹来源与新基线一致。仅读取数据，不import `cscwd_v0/` 代码，不重新运行GazeSpot推理。
+- 两split独立、同seed抽样，默认各48组：大L2 16、InOut FN 8、FP 8、中等L2 8、正确对照8。大L2从各split画内误差最高10%抽；中等取40%–60%分位；正确对照混合低L2画内正确和画外正确。InOut分类阈值固定0.5，仅用于抽例，不能据此宣称AP改善。
+- 各类别轮流抽样，全类别合计每人物轨迹最多2组、每视频最多6组；同轨迹最大历史窗口不重叠。选定后按seed随机打乱展示，避免顺序泄漏类别。约束导致不足时明确记录shortfall，不自动放宽或重复选例。统计全体候选数量和实际所选数量，分层样本比例不是总体错误频率。
+- 默认当前帧+过去16帧，包内最多保存过去64帧以便展开32/64。人物切换或原帧号缺口处截断，绝不补未来帧；保留track/frame/path/原数组row映射。旧预测行序与新X/z行序不同，不能直接混用。
+- 离线HTML默认只显示当前RGB、头框和原预测，不揭GT、L2和案例类别。先记当前困难/猜测，再展开历史，记录历史是否提供证据及描述，最后揭GT并填失败机制/备注。GT揭示时间记录在标注中；RGB/热图预览不烘焙GT。
+- 浏览器保存标注，支持JSON/CSV导出、同包JSON导入；包内含空白标注模板。人工判断只形成机制假设，不能替代后续完整test计分。
+- **train和test均参与人工分析/方法开发，无validation；后续test不视为独立验证。** 协议写入页面、manifest、小报告和provenance。
+- 新代码：`code/stag/failure_cases.py`、`review_package.py`、`review_viewer.html`；服务器CPU入口 `code/scripts/build_failure_review.py`。完整手动导出/取回/标注回传说明见 [FAILURE_REVIEW.md](FAILURE_REVIEW.md)。大型图片/ZIP留服务器或本机忽略目录，小JSON/MD经Git回传。

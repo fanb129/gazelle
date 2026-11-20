@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GazeSpot · 时序证据观察</title>
+  <style>
+    :root{color-scheme:light;--ink:#172b3a;--muted:#6e7e89;--line:#dce5e8;--paper:#fff;--bg:#f2f6f7;--brand:#087f8c;--brand-pale:#e5f4f4;--orange:#b3681d;--orange-pale:#fff5e6;--shadow:0 8px 28px #1c394609}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,input,select,textarea{font:inherit}button,select{cursor:pointer}button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;color:var(--ink);transition:.15s}button:hover{border-color:#8eafb6;background:#f8fbfb}button:disabled{cursor:default;opacity:.4}button.primary{background:var(--brand);border-color:var(--brand);color:#fff}button.primary:hover{background:#066d78}button.active{border-color:var(--brand);color:var(--brand);background:var(--brand-pale)}button.small{padding:4px 9px;font-size:12px}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #63bcc1;outline-offset:2px}select{border:1px solid var(--line);background:white;border-radius:8px;padding:7px 9px;color:var(--ink);min-width:0}textarea{width:100%;resize:vertical;min-height:73px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:#fcfdfd;color:var(--ink);font-size:13px;line-height:1.6}textarea:focus{background:white}label{display:block}input[type=checkbox]{accent-color:var(--brand)}input[type=range]{accent-color:var(--brand)}[hidden]{display:none!important}.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums}.eyebrow{font-size:10px;letter-spacing:.16em;font-weight:700;color:var(--brand)}.pill{font-size:11px;line-height:1;padding:5px 7px;border-radius:5px;background:#eaf0f3;color:#52707f;white-space:nowrap}.pill.train{background:#e5f4ee;color:#257757}.pill.test{background:#fff1da;color:#9b6417}.flex{display:flex;align-items:center;gap:9px}.spacer{flex:1}.hint{font-size:12px;color:var(--muted)}
+    header{padding:20px 28px 15px;background:#fff;border-bottom:1px solid var(--line)}.header-top{display:flex;align-items:center;gap:16px}.brand-icon{width:42px;height:42px;display:grid;place-items:center;background:var(--brand-pale);border-radius:12px;color:var(--brand);flex:none}.brand-icon svg{width:25px}h1{font-size:20px;letter-spacing:-.025em;margin:0 0 2px}.subtitle{color:var(--muted);font-size:12px}.header-actions{margin-left:auto;display:flex;gap:7px;align-items:center}.protocol{margin:15px 0 0;background:var(--orange-pale);color:#865c25;border:1px solid #f1dfc1;border-radius:8px;padding:9px 12px;font-size:12px;display:flex;align-items:flex-start;gap:8px}.protocol strong{font-weight:650}.status{font-size:11px;color:var(--muted);white-space:nowrap}.layout{max-width:1800px;margin:auto;display:grid;grid-template-columns:235px minmax(460px,1fr) 322px;gap:18px;padding:20px 24px 28px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.sidebar{position:sticky;top:16px}.panel-heading{padding:16px 16px 12px;border-bottom:1px solid var(--line)}h2{font-size:14px;margin:0}.filters{padding:12px 12px 9px;display:grid;gap:8px}.filters select{width:100%;font-size:12px}.case-count{padding:0 14px 8px;font-size:11px;color:var(--muted)}.case-list{max-height:calc(100vh - 340px);min-height:180px;overflow-y:auto;padding:0 8px 9px;scrollbar-width:thin}.case-button{width:100%;display:flex;align-items:center;gap:8px;padding:10px 9px;margin:3px 0;border-color:transparent;text-align:left;border-radius:7px}.case-button.active{background:var(--brand-pale);border-color:#b3d9dc}.case-button .case-name{font-size:12px;font-weight:650}.case-button .pill{margin-left:auto;font-size:9px;padding:4px 5px}.record-dot{height:6px;width:6px;background:#d4dfe3;flex:none;border-radius:50%}.record-dot.filled{background:var(--brand)}.sidebar-footer{border-top:1px solid var(--line);padding:11px 14px;font-size:11px;color:var(--muted)}.main-column{min-width:0}.case-top{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:0 2px}.case-top h2{font-size:19px;letter-spacing:-.02em}.case-position{color:var(--muted);font-size:12px}.case-top button{padding:5px 10px}.view-top{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}.stage-title{font-size:12px;font-weight:650}.stage-light{height:7px;width:7px;background:var(--brand);border-radius:50%;margin-right:1px}.stage-help{font-size:11px;color:var(--muted)}.scene-wrap{padding:12px;background:#edf2f4}.scene{height:clamp(270px,43vw,565px);max-height:59vh;position:relative;background:#1e2d35;border-radius:8px;border:2px solid #88a0aa;overflow:hidden}.scene.anchor{border-color:#1ea9b0}.scene>img,.scene>svg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.scene>svg{pointer-events:none}.frame-badge{position:absolute;top:11px;left:11px;font-size:10px;font-weight:700;letter-spacing:.08em;color:white;background:#172b3ac4;padding:5px 8px;border-radius:5px;z-index:2}.frame-badge.anchor{background:#087f8ce8}.image-error{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#fff;padding:30px;background:#263943;z-index:3}.canvas-caption{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 1px 0;font-size:11px;color:#536c79;flex-wrap:wrap}.canvas-caption .mono{font-size:11px}.overlays{display:flex;flex-wrap:wrap;gap:12px;padding:11px 15px;border-top:1px solid var(--line);font-size:12px;align-items:center}.overlays label{display:flex;align-items:center;gap:4px}.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}.head-color{background:#55d8a1}.pred-color{background:#ffc063}.gt-color{background:#ff76aa}.opacity-label{margin-left:auto;color:var(--muted);font-size:11px}.opacity-label input{width:60px}.history-bar{padding:12px 15px;border-top:1px solid var(--line);display:flex;align-items:center;gap:7px;flex-wrap:wrap}.history-bar .label{font-size:12px;color:var(--muted)}.history-empty{padding:17px 16px;border-top:1px solid var(--line);background:#fbfdfd;font-size:12px;color:var(--muted)}.timeline{padding:4px 15px 15px}.play-controls{display:flex;align-items:center;gap:7px;margin:3px 0 10px}.play-controls select{font-size:11px;padding:5px 7px;max-width:172px}.frame-slider{display:flex;align-items:center;gap:9px}.frame-slider input{width:100%;min-width:80px}.frame-slider span{font-size:10px;white-space:nowrap;color:var(--muted)}.filmstrip{display:flex;gap:7px;overflow-x:auto;padding:12px 0 3px;scrollbar-width:thin}.film-card{padding:0;flex:1 0 67px;max-width:110px;border:2px solid transparent;border-radius:6px;overflow:hidden;background:#eff3f4;position:relative}.film-card img{height:54px;width:100%;object-fit:cover;display:block;opacity:.83}.film-card span{display:block;font:10px ui-monospace,SFMono-Regular,monospace;text-align:center;padding:5px 2px;color:#627681;background:#f1f5f6}.film-card.anchor{border-color:#8bbbc0}.film-card.active{border-color:var(--brand)}.film-card.active img{opacity:1}.film-card.active span{color:var(--brand);background:#e5f4f4;font-weight:700}.window-info{margin:8px 0 0;font-size:11px;color:var(--muted)}.gt-details{margin-top:13px;padding:15px 17px;background:#fffaf5;border-color:#eddcc7}.gt-details h3{font-size:12px;margin:0 0 9px;color:#8d6234}.gt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 20px;font-size:12px}.gt-grid small{display:block;color:#8c8173;font-size:10px;margin-bottom:2px}.gt-grid span{overflow-wrap:anywhere}.gt-details .source-path{font-size:10px;color:#8c8173;overflow-wrap:anywhere;margin-top:12px;padding-top:9px;border-top:1px solid #eedfcb}.keyboard{margin:13px 2px;color:var(--muted);font-size:11px;display:flex;gap:12px;flex-wrap:wrap}kbd{font:10px ui-monospace,SFMono-Regular,monospace;border:1px solid #d3dfe3;background:#fff;border-radius:4px;padding:2px 4px;color:#5b707c}
+    .notes{position:sticky;top:16px}.notes-title{display:flex;align-items:center;gap:8px;padding:15px 16px 12px;border-bottom:1px solid var(--line)}.notes-title h2{font-size:14px}.notes-title .hint{margin-left:auto;font-size:10px}.note-section{padding:15px 16px;border-bottom:1px solid var(--line)}.note-section:last-child{border:0}.section-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-weight:650;font-size:12px}.step-number{display:grid;place-items:center;width:21px;height:21px;border-radius:6px;background:#e6f2f3;font-size:10px;color:var(--brand);flex:none}.note-section label{font-size:11px;color:#566d79;margin-top:10px;margin-bottom:4px}.note-section .hint{font-size:11px;margin-top:7px;line-height:1.65}.evidence-options{display:flex;gap:5px;margin:8px 0}.evidence-options button{flex:1;white-space:nowrap;padding:6px 3px;font-size:11px}.reveal-button{width:100%;margin-top:4px;background:var(--orange-pale);border-color:#ecd5b6;color:#8d602c;font-size:12px}.reveal-button.active{background:#fff2df;border-color:#d5ae79;color:#8d602c}.note-section.gated{background:#fbfcfc}.gated .section-heading{color:#6d7f88}.gated .step-number{background:#edf1f3;color:#8a9ba3}.reveal-status{font-size:10px;color:#9a8063;margin-top:7px;overflow-wrap:anywhere}.empty-state{padding:42px 20px;text-align:center;color:var(--muted);font-size:13px}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);max-width:90vw;padding:11px 17px;background:#173a43;color:white;border-radius:8px;box-shadow:0 8px 30px #123b4430;font-size:12px;z-index:10}.toast.error{background:#8e4139}
+    .empty-results{grid-column:2/-1;padding:70px 24px;text-align:center;color:var(--muted)}.empty-results h2{font-size:16px;color:var(--ink);margin-bottom:8px}.empty-results button{margin-top:15px}.head-crop{position:absolute;right:12px;bottom:12px;z-index:2;width:108px;border:1px solid #78af9f;border-radius:6px;overflow:hidden;background:#1c3034e8;box-shadow:0 3px 12px #0004}.head-crop img{display:block;width:106px;height:106px;object-fit:contain}.head-crop span{display:block;padding:4px 3px;text-align:center;font-size:9px;color:#bce8d8}
+    @media(min-width:1600px){.layout{grid-template-columns:250px minmax(600px,1fr) 350px;gap:22px}.scene{max-height:64vh}}@media(max-width:1150px){.layout{grid-template-columns:195px minmax(430px,1fr);gap:14px;padding:17px}.notes{grid-column:2;position:static;display:grid;grid-template-columns:1fr 1fr}.notes-title{grid-column:1/-1}.note-section{border-right:1px solid var(--line)}.note-section:last-child{grid-column:1/-1}.scene{max-height:none;height:480px}.header-actions{flex-wrap:wrap;justify-content:flex-end}.status{width:100%;text-align:right}}@media(max-width:750px){header{padding:16px}.header-top{align-items:flex-start;flex-wrap:wrap}.header-actions{width:100%;justify-content:flex-start;margin-left:0}.status{width:auto;text-align:left;margin-left:auto}.layout{grid-template-columns:1fr;padding:12px}.sidebar{position:static}.filters{display:flex}.case-list{min-height:0;max-height:130px;display:flex;gap:4px;flex-wrap:wrap}.case-button{width:auto;min-width:130px}.sidebar-footer{display:none}.notes{grid-column:auto;display:block}.notes-title{display:flex}.note-section{border-right:0}.scene{height:360px}.stage-help{display:none}.case-top{margin-top:3px}.gt-grid{grid-template-columns:1fr}.keyboard{gap:8px}.empty-results{grid-column:auto}.head-crop{width:86px}.head-crop img{width:84px;height:84px}h1{font-size:18px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><path d="M3 14s4-7 11-7 11 7 11 7-4 7-11 7S3 14 3 14Z" stroke="currentColor" stroke-width="1.7"/><circle cx="14" cy="14" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M14 2v3M14 23v3M2 3l3 3M23 22l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+    <div><div class="eyebrow">GAZESPOT · CAUSAL EVIDENCE REVIEW</div><h1>时序证据观察</h1><div class="subtitle">先看当前，再看过去，最后揭示标注。所有帧均不晚于当前 anchor。</div></div>
+    <div class="header-actions"><button id="exportJson" class="small">导出 JSON</button><button id="exportCsv" class="small">导出 CSV</button><button id="importButton" class="small">导入标签</button><input id="importFile" type="file" accept=".json,application/json" hidden><span id="saveStatus" class="status" role="status">本地自动保存</span></div>
+  </div>
+  <div class="protocol"><span aria-hidden="true">◈</span><div><strong>实验协议：</strong><span id="protocolText">test 案例参与人工分析与方法开发；后续 test 结果须披露这一点，不能视为独立验证。保持官方 train / test，不新增 validation。</span> 本页的分类、GT 与误差默认隐藏；按类别筛选会主动暴露所选类型。</div></div>
+</header>
+<div class="layout">
+  <aside class="sidebar panel" aria-label="案例选择">
+    <div class="panel-heading"><div class="flex"><h2>观察队列</h2><span id="totalCount" class="pill"></span></div><div class="hint" style="margin-top:4px">中性编号 · 不预览错误标签</div></div>
+    <div class="filters"><select id="splitFilter" aria-label="数据划分"><option value="all">全部划分 · train + test</option><option value="train">train</option><option value="test">test</option></select><select id="categoryFilter" aria-label="主动按错误类型筛选"><option value="all">全部类型 · 默认隐藏</option></select></div>
+    <div id="caseCount" class="case-count"></div><nav id="caseList" class="case-list"></nav>
+    <div id="sidebarFooter" class="sidebar-footer"></div>
+  </aside>
+  <main class="main-column" id="mainContent">
+    <div class="case-top"><h2 id="caseTitle">CASE 001</h2><span id="splitBadge" class="pill"></span><span id="casePosition" class="case-position"></span><span class="spacer"></span><button id="previousCase" aria-label="上一个案例">←</button><button id="nextCase" aria-label="下一个案例">→</button></div>
+    <section class="viewer panel" aria-label="因果帧观察">
+      <div class="view-top"><span class="stage-light"></span><span id="viewStage" class="stage-title">01 · 仅看当前帧</span><span class="stage-help">当前 → 历史 → GT</span><span class="spacer"></span><button id="historyToggle" class="small primary">展开历史 H</button><button id="anchorButton" class="small">回到当前帧</button></div>
+      <div class="scene-wrap"><div class="scene anchor" id="scene"><img id="sceneImage" alt="人物当前帧与过去帧"><svg id="sceneOverlay" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" aria-label="头部框与预测点叠加"></svg><span id="frameBadge" class="frame-badge anchor">ANCHOR · 当前</span><div id="headCrop" class="head-crop" hidden><img id="headCropImage" alt="真实头部框附近的局部放大"><span>头部局部 · 真实框</span></div><div id="imageError" class="image-error" hidden>图像无法载入。请保留 HTML 与 assets 的相对位置。</div></div><div class="canvas-caption"><span id="frameInfo" class="mono"></span><span id="predictionInfo" class="mono"></span></div></div>
+      <div class="overlays"><label><input id="headToggle" type="checkbox" checked><span class="legend-dot head-color"></span>真实头部框</label><label><input id="predictionToggle" type="checkbox" checked><span class="legend-dot pred-color"></span>原模型预测点</label><label><input id="cropToggle" type="checkbox" checked>头部放大</label><label><input id="heatmapToggle" type="checkbox">原始热图</label><label class="opacity-label">热图透明度 <input id="heatmapOpacity" type="range" min="0" max="0.9" value="0.45" step="0.05" aria-label="热图透明度"></label><span id="gtLegend" class="hint" hidden><span class="legend-dot gt-color"></span> GT 点</span></div>
+      <div id="historyEmpty" class="history-empty">历史已收起。先在右侧记录当前帧的困难与猜测，再按 <kbd>H</kbd> 查看过去的证据。</div>
+      <div id="historyControls" hidden><div class="history-bar"><span class="label">过去窗口</span><button class="small active window-button" data-window="16">16 帧</button><button class="small window-button" data-window="32">32 帧</button><button class="small window-button" data-window="64">64 帧</button><span class="spacer"></span><span class="hint">只含过去与当前</span></div><div class="timeline"><div class="play-controls"><button id="olderFrame" class="small" aria-label="上一帧">←</button><button id="playButton" class="small">▶ 播放</button><button id="newerFrame" class="small" aria-label="下一帧">→</button><select id="playSpeed" aria-label="逐帧浏览速度"><option value="250">每帧 0.25 秒 · 浏览</option><option value="500" selected>每帧 0.5 秒 · 浏览</option><option value="1000">每帧 1 秒 · 浏览</option></select><span class="hint">非原视频 FPS</span></div><div class="frame-slider"><span>更早</span><input id="frameSlider" type="range" min="0" max="0" value="0" step="1" aria-label="全帧时间轴"><span>当前</span></div><div id="filmstrip" class="filmstrip" aria-label="稀疏历史快选"></div><div id="windowInfo" class="window-info"></div></div></div>
+    </section>
+    <section id="gtDetails" class="gt-details panel" hidden><h3>GT 已揭示 · 仅用于离线解释与记录</h3><div class="gt-grid"><div><small>ANCHOR 错误类型</small><span id="gtCategory"></span></div><div><small>ANCHOR L2 · 仅 GT 画内有效</small><span id="gtAnchorL2" class="mono"></span></div><div><small>所选帧 GT InOut</small><span id="gtInout"></span></div><div><small>所选帧 L2</small><span id="gtFrameL2" class="mono"></span></div><div><small>人物轨迹</small><span id="gtTrack" class="mono"></span></div><div><small>真实案例 ID</small><span id="gtCaseId" class="mono"></span></div></div><div id="gtSource" class="source-path"></div></section>
+    <div class="keyboard"><span><kbd>H</kbd> 历史开关</span><span><kbd>G</kbd> GT 开关</span><span><kbd>←</kbd> <kbd>→</kbd> 逐帧</span><span><kbd>Space</kbd> 播放 / 暂停</span><span>输入文字时快捷键暂停</span></div>
+  </main>
+  <section id="emptyResults" class="empty-results panel" hidden><h2>没有符合筛选的案例</h2><div>调整数据划分或类型筛选后继续观察。</div><button id="clearFilters">清除筛选</button></section>
+  <aside class="notes panel" id="notesPanel" aria-label="分阶段人工记录">
+    <div class="notes-title"><h2>人工观察记录</h2><span class="hint">自动保存 · 可编辑</span></div>
+    <section class="note-section"><div class="section-heading"><span class="step-number">01</span>当前帧 · 先验观察</div><div class="hint">先不看 GT。写下凭当前画面能够判断的内容。</div><label for="currentDifficulty">当前困难</label><textarea id="currentDifficulty" data-field="current_difficulty" placeholder="例如：目标被遮挡、头部方向含糊、多人交互…"></textarea><label for="currentGuess">当前猜测</label><textarea id="currentGuess" data-field="current_guess" placeholder="你认为人物在看哪里？有什么可见依据？"></textarea></section>
+    <section class="note-section gated" id="historyNotesSection"><div class="section-heading"><span class="step-number">02</span>过去帧 · 是否提供证据</div><div class="hint" id="historyNotesHint">展开历史后，区分“有可用证据”与“只是看起来平滑”。</div><div id="historyFields"><div class="evidence-options" role="group" aria-label="历史是否提供证据"><button data-evidence="yes">有证据</button><button data-evidence="no">无证据</button><button data-evidence="uncertain">无法判断</button></div><label for="historyNotes">证据描述</label><textarea id="historyNotes" data-field="history_notes" placeholder="指出具体哪一帧、哪个目标或动作；也可说明历史为何无帮助。"></textarea></div></section>
+    <section class="note-section gated" id="gtNotesSection"><div class="section-heading"><span class="step-number">03</span>揭示 GT · 解释与归纳</div><div class="hint">揭示后将显示 GT 点、状态、错误类型与 L2。首次揭示时间会保留，隐藏 GT 不会清除。</div><button id="revealButton" class="reveal-button">揭示 GT G</button><div id="revealStatus" class="reveal-status"></div><div id="postGtFields" hidden><label for="failureMechanism">失败机制</label><textarea id="failureMechanism" data-field="failure_mechanism" placeholder="描述可复用的机制；若无足够证据，直接记录无法判断。"></textarea><label for="notes">备注</label><textarea id="notes" data-field="notes" placeholder="标注歧义、人物切换、历史目标改变，或其他观察。"></textarea></div></section>
+  </aside>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script id="reviewData" type="application/json">__REVIEW_DATA__</script>
+<script>
+"use strict";
+const reviewData = JSON.parse(document.getElementById("reviewData").textContent);
+const cases = reviewData.cases;
+const byId = new Map(cases.map((item, index) => [item.case_id, {item, index}]));
+const storageKey = "cscwd-review-labels-v1:" + reviewData.package_id;
+const textFields = ["current_difficulty", "current_guess", "history_notes", "failure_mechanism", "notes"];
+const exportFields = ["case_id", ...textFields.slice(0, 2), "history_evidence", ...textFields.slice(2), "gt_revealed_at", "updated_at"];
+const $ = id => document.getElementById(id);
+let labels = {}, selectedId = cases.length ? cases[0].case_id : null;
+let historyVisible = false, gtVisible = false, historyWindow = 16, selectedFrameIndex = 0;
+let playTimer = null, toastTimer = null, storageAvailable = true;
+
+function blankLabel(id) {
+  return Object.fromEntries(exportFields.map(field => [field, field === "case_id" ? id : ""]));
+}
+function labelFor(id) { return labels[id] || (labels[id] = blankLabel(id)); }
+function currentCase() { return byId.get(selectedId)?.item; }
+function neutralName(id) { return "CASE " + String(byId.get(id).index + 1).padStart(3, "0"); }
+function formatNumber(value, digits = 4) { return value === null || value === undefined || !Number.isFinite(Number(value)) ? "—" : Number(value).toFixed(digits); }
+function numberValue(value) { return Array.isArray(value) ? value[0] : value; }
+function categoryName(category) {
+  const names = {large_l2:"大 L2", high_l2:"大 L2", l2:"大 L2", inout_fp:"InOut 假阳性", inout_fn:"InOut 假阴性", inout_false_positive:"InOut 假阳性", inout_false_negative:"InOut 假阴性", false_positive:"InOut 假阳性", false_negative:"InOut 假阴性", correct:"正确对照", control:"正确对照", correct_control:"正确对照", moderate:"中等错误", medium_l2:"中等错误"};
+  return names[category] || String(category);
+}
+function toast(message, error = false) {
+  clearTimeout(toastTimer); $("toast").textContent = message; $("toast").classList.toggle("error", error); $("toast").hidden = false;
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 4500);
+}
+function recordHasNotes(id) {
+  const record = labelFor(id); return textFields.some(field => record[field].trim()) || !!record.history_evidence;
+}
+function persist() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(makeExport()));
+    $("saveStatus").textContent = "已保存到本机 · " + new Date().toLocaleTimeString("zh-CN", {hour:"2-digit", minute:"2-digit"});
+  } catch (error) {
+    storageAvailable = false; $("saveStatus").textContent = "本地存储不可用 · 请导出";
+  }
+  renderList();
+}
+function filteredCases() {
+  return cases.filter(item => ($("splitFilter").value === "all" || item.split === $("splitFilter").value)
+    && ($("categoryFilter").value === "all" || item.category === $("categoryFilter").value));
+}
+function applyFilters() {
+  const filtered = filteredCases(), empty = !filtered.length;
+  $("mainContent").hidden = empty; $("notesPanel").hidden = empty; $("emptyResults").hidden = !empty;
+  if (empty) { stopPlayback(); renderList(); }
+  else if (!filtered.some(item => item.case_id === selectedId)) selectCase(filtered[0].case_id);
+  else renderCase();
+}
+function renderList() {
+  const filtered = filteredCases(), container = $("caseList"); container.replaceChildren();
+  $("caseCount").textContent = filtered.length + " / " + cases.length + " 个案例" + ($("categoryFilter").value !== "all" ? " · 已主动筛选类型" : "");
+  if (!filtered.length) {
+    const empty = document.createElement("div"); empty.className = "empty-state"; empty.textContent = "没有符合筛选的案例"; container.append(empty);
+  }
+  filtered.forEach(item => {
+    const button = document.createElement("button"); button.className = "case-button" + (item.case_id === selectedId ? " active" : ""); button.setAttribute("aria-current", item.case_id === selectedId ? "true" : "false");
+    const dot = document.createElement("span"); dot.className = "record-dot" + (recordHasNotes(item.case_id) ? " filled" : "");
+    const name = document.createElement("span"); name.className = "case-name mono"; name.textContent = neutralName(item.case_id);
+    const badge = document.createElement("span"); badge.className = "pill " + (item.split === "train" ? "train" : "test"); badge.textContent = item.split;
+    button.append(dot, name, badge); button.addEventListener("click", () => selectCase(item.case_id)); container.append(button);
+  });
+  $("sidebarFooter").textContent = cases.filter(item => recordHasNotes(item.case_id)).length + " / " + cases.length + " 已记录 · 实心点表示有文字或判断";
+  const position = filtered.findIndex(item => item.case_id === selectedId);
+  $("casePosition").textContent = position >= 0 ? (position + 1) + " / " + filtered.length : "筛选外案例";
+  $("previousCase").disabled = position <= 0; $("nextCase").disabled = position < 0 || position >= filtered.length - 1;
+}
+function validFrames() {
+  const item = currentCase(); if (!item) return [];
+  return item.frames.filter(frame => Number(frame.relative_to_anchor) <= 0 && (historyVisible ? Number(frame.relative_to_anchor) >= -historyWindow : Number(frame.relative_to_anchor) === 0))
+    .sort((a,b) => Number(a.frame_index) - Number(b.frame_index));
+}
+function currentFrame() { return validFrames()[selectedFrameIndex]; }
+function stopPlayback() { if (playTimer !== null) clearInterval(playTimer); playTimer = null; $("playButton").textContent = "▶ 播放"; }
+function selectCase(id) {
+  stopPlayback(); selectedId = id; historyVisible = false; gtVisible = false;
+  selectedFrameIndex = 0; renderCase();
+}
+function moveCase(direction) {
+  const filtered = filteredCases(), index = filtered.findIndex(item => item.case_id === selectedId);
+  if (filtered[index + direction]) selectCase(filtered[index + direction].case_id);
+}
+function fillNotes() {
+  const record = labelFor(selectedId);
+  document.querySelectorAll("[data-field]").forEach(input => { input.value = record[input.dataset.field]; });
+  document.querySelectorAll("[data-evidence]").forEach(button => { button.classList.toggle("active", record.history_evidence === button.dataset.evidence); button.setAttribute("aria-pressed", record.history_evidence === button.dataset.evidence ? "true" : "false"); });
+}
+function renderCase() {
+  const item = currentCase(); if (!item) return;
+  $("caseTitle").textContent = neutralName(selectedId); $("splitBadge").textContent = item.split; $("splitBadge").className = "pill " + (item.split === "train" ? "train" : "test");
+  fillNotes(); renderList(); renderStage(); renderFilmstrip(); renderFrame();
+}
+function renderStage() {
+  $("viewStage").textContent = gtVisible ? "03 · 已揭示 GT" : historyVisible ? "02 · 查看过去的证据" : "01 · 仅看当前帧";
+  $("historyToggle").textContent = historyVisible ? "收起历史 H" : "展开历史 H";
+  $("historyToggle").classList.toggle("active", historyVisible); $("historyToggle").classList.toggle("primary", !historyVisible);
+  $("historyControls").hidden = !historyVisible; $("historyEmpty").hidden = historyVisible;
+  $("gtDetails").hidden = !gtVisible; $("gtLegend").hidden = !gtVisible; $("postGtFields").hidden = !gtVisible;
+  $("historyNotesSection").classList.toggle("gated", !historyVisible); $("gtNotesSection").classList.toggle("gated", !gtVisible);
+  $("revealButton").textContent = gtVisible ? "隐藏 GT G" : "揭示 GT G"; $("revealButton").classList.toggle("active", gtVisible);
+  $("revealStatus").textContent = labelFor(selectedId).gt_revealed_at ? "首次揭示：" + new Date(labelFor(selectedId).gt_revealed_at).toLocaleString("zh-CN") : "尚未揭示 GT";
+  document.querySelectorAll(".window-button").forEach(button => button.classList.toggle("active", Number(button.dataset.window) === historyWindow));
+}
+function setHistory(visible) {
+  stopPlayback(); historyVisible = visible; selectedFrameIndex = Math.max(0, validFrames().length - 1);
+  renderStage(); renderFilmstrip(); renderFrame();
+}
+function toggleGt() {
+  gtVisible = !gtVisible;
+  if (gtVisible) {
+    const record = labelFor(selectedId);
+    if (!record.gt_revealed_at) { record.gt_revealed_at = new Date().toISOString(); record.updated_at = record.gt_revealed_at; persist(); }
+  }
+  renderStage(); renderFrame();
+}
+function renderFilmstrip() {
+  const frames = validFrames(), container = $("filmstrip"); container.replaceChildren();
+  if (!frames.length) return;
+  const selected = new Set([0, frames.length - 1]);
+  [-64,-32,-16,-8,-4,-2,-1,0].filter(offset => offset >= -historyWindow).forEach(offset => {
+    const nearest = frames.reduce((best, frame, index) => Math.abs(frame.relative_to_anchor - offset) < Math.abs(frames[best].relative_to_anchor - offset) ? index : best, 0); selected.add(nearest);
+  });
+  [...selected].sort((a,b) => a-b).forEach(index => {
+    const frame = frames[index], button = document.createElement("button"); button.className = "film-card" + (frame.relative_to_anchor === 0 ? " anchor" : "") + (index === selectedFrameIndex ? " active" : ""); button.dataset.frame = index;
+    const image = document.createElement("img"); image.src = frame.image; image.alt = frame.relative_to_anchor === 0 ? "当前帧" : "过去 " + Math.abs(frame.relative_to_anchor) + " 帧"; image.loading = "lazy";
+    const caption = document.createElement("span"); caption.textContent = frame.relative_to_anchor === 0 ? "0 · ANCHOR" : String(frame.relative_to_anchor);
+    button.append(image, caption); button.addEventListener("click", () => { stopPlayback(); setFrame(index); }); container.append(button);
+  });
+  const historyCount = frames.filter(frame => frame.relative_to_anchor < 0).length;
+  $("windowInfo").textContent = "窗口内 " + historyCount + " 个过去帧 + 当前帧；稀疏缩略图快选，全帧滑杆可查看全部帧。原始编号间隔见画面下方。";
+  $("frameSlider").max = frames.length - 1;
+}
+function setFrame(index) {
+  selectedFrameIndex = Math.max(0, Math.min(index, validFrames().length - 1)); renderFrame();
+}
+function moveFrame(direction) { if (historyVisible) setFrame(selectedFrameIndex + direction); }
+function renderFrame() {
+  const frame = currentFrame(); if (!frame) return;
+  const anchor = frame.relative_to_anchor === 0; $("scene").classList.toggle("anchor", anchor);
+  $("frameBadge").textContent = anchor ? "ANCHOR · 当前" : "HISTORY · " + frame.relative_to_anchor; $("frameBadge").classList.toggle("anchor", anchor);
+  $("frameInfo").textContent = "原帧号 " + frame.frame_index + " · offset " + (anchor ? "0" : frame.relative_to_anchor);
+  $("predictionInfo").textContent = "原模型 P(In) = " + formatNumber(frame.score);
+  $("imageError").hidden = true; $("sceneImage").src = frame.image;
+  $("headCrop").hidden = !frame.head_crop || !$("cropToggle").checked;
+  if (frame.head_crop) $("headCropImage").src = frame.head_crop;
+  $("frameSlider").value = selectedFrameIndex; $("olderFrame").disabled = selectedFrameIndex === 0;
+  $("newerFrame").disabled = selectedFrameIndex >= validFrames().length - 1;
+  document.querySelectorAll(".film-card").forEach(button => button.classList.toggle("active", Number(button.dataset.frame) === selectedFrameIndex));
+  drawOverlay();
+  if (gtVisible) {
+    const item = currentCase(); $("gtCategory").textContent = categoryName(item.category);
+    $("gtAnchorL2").textContent = item.anchor_gt_inout === 1 ? formatNumber(item.anchor_l2) : "— · GT 画外";
+    $("gtInout").textContent = Number(frame.inout) === 1 ? "画内 · 1" : "画外 · 0";
+    $("gtFrameL2").textContent = Number(frame.inout) === 1 ? formatNumber(frame.l2) : "— · GT 画外";
+    $("gtTrack").textContent = item.track_id; $("gtCaseId").textContent = item.case_id; $("gtSource").textContent = "原图路径：" + frame.path;
+  }
+}
+function svgElement(tag, attributes) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.entries(attributes).forEach(([key,value]) => element.setAttribute(key, String(value))); return element;
+}
+function drawOverlay() {
+  const frame = currentFrame(), svg = $("sceneOverlay"), image = $("sceneImage"); svg.replaceChildren(); if (!frame) return;
+  const width = image.naturalWidth || 1000, height = image.naturalHeight || 1000;
+  svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+  const stroke = Math.max(width, height) / 350, radius = Math.max(width, height) / 95;
+  if ($("heatmapToggle").checked && frame.heatmap) svg.append(svgElement("image", {href:frame.heatmap, x:0, y:0, width, height, preserveAspectRatio:"none", opacity:$("heatmapOpacity").value}));
+  if ($("headToggle").checked && frame.bbox_norm) {
+    const box = frame.bbox_norm; svg.append(svgElement("rect", {x:box[0]*width, y:box[1]*height, width:(box[2]-box[0])*width, height:(box[3]-box[1])*height, fill:"none", stroke:"#55d8a1", "stroke-width":stroke}));
+  }
+  if ($("predictionToggle").checked && frame.pred_xy) {
+    const [x,y] = frame.pred_xy;
+    svg.append(svgElement("circle", {cx:x*width, cy:y*height, r:radius, fill:"#ffc063", "fill-opacity":0.2, stroke:"#ffc063", "stroke-width":stroke}));
+    svg.append(svgElement("path", {d:`M ${x*width-radius*1.6} ${y*height} h ${radius*3.2} M ${x*width} ${y*height-radius*1.6} v ${radius*3.2}`, stroke:"#ffc063", "stroke-width":stroke, fill:"none"}));
+  }
+  if (gtVisible && Number(frame.inout) === 1) {
+    const x = Number(numberValue(frame.gazex_norm)), y = Number(numberValue(frame.gazey_norm));
+    if (x >= 0 && y >= 0 && Number.isFinite(x) && Number.isFinite(y)) {
+      svg.append(svgElement("circle", {cx:x*width, cy:y*height, r:radius, fill:"#ff76aa", stroke:"white", "stroke-width":stroke*0.8}));
+    }
+  }
+}
+function togglePlayback() {
+  if (playTimer !== null) { stopPlayback(); return; }
+  if (!historyVisible) setHistory(true);
+  if (validFrames().length < 2) { toast("此案例没有可播放的过去帧"); return; }
+  if (selectedFrameIndex >= validFrames().length - 1) setFrame(0);
+  $("playButton").textContent = "Ⅱ 暂停";
+  playTimer = setInterval(() => {
+    if (selectedFrameIndex >= validFrames().length - 1) { stopPlayback(); return; }
+    moveFrame(1);
+    if (selectedFrameIndex >= validFrames().length - 1) stopPlayback();
+  }, Number($("playSpeed").value));
+}
+function makeExport() {
+  return {schema_version:1, artifact_type:"cscwd_failure_review_labels", package_id:reviewData.package_id,
+    exported_at:new Date().toISOString(), labels:cases.map(item => ({...labelFor(item.case_id)}))};
+}
+function download(name, content, type) {
+  const url = URL.createObjectURL(new Blob([content], {type})), link = document.createElement("a");
+  link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function safeFileName() { return String(reviewData.package_id).replace(/[^a-zA-Z0-9_.-]/g, "_") + "_labels"; }
+function csvCell(value) { return '"' + String(value ?? "").replace(/"/g, '""') + '"'; }
+function importLabels(value, initial = false) {
+  if (value.schema_version !== 1 || value.artifact_type !== "cscwd_failure_review_labels" || value.package_id !== reviewData.package_id || !Array.isArray(value.labels)) {
+    throw new Error("Label schema or package_id mismatch; no labels were changed.");
+  }
+  const incomingIds = new Set();
+  value.labels.forEach(record => {
+    if (!record || !byId.has(record.case_id) || incomingIds.has(record.case_id)) throw new Error("Unknown or duplicate case_id; no labels were changed.");
+    incomingIds.add(record.case_id);
+    if (!["", "yes", "no", "uncertain"].includes(record.history_evidence ?? "")) throw new Error("history_evidence must be yes, no, uncertain, or empty.");
+    if (exportFields.some(field => record[field] !== undefined && typeof record[field] !== "string")) throw new Error("All label fields must be strings; no labels were changed.");
+    if (record.gt_revealed_at && !Number.isFinite(Date.parse(record.gt_revealed_at))) throw new Error("Invalid gt_revealed_at timestamp; no labels were changed.");
+  });
+  if (incomingIds.size !== cases.length) throw new Error("Labels must cover every case in this package; no labels were changed.");
+  const next = {};
+  value.labels.forEach(record => {
+    const normalized = blankLabel(record.case_id);
+    exportFields.forEach(field => { if (record[field] !== undefined) normalized[field] = record[field]; });
+    const previousTime = labels[record.case_id]?.gt_revealed_at;
+    if (previousTime && (!normalized.gt_revealed_at || Date.parse(previousTime) < Date.parse(normalized.gt_revealed_at))) normalized.gt_revealed_at = previousTime;
+    next[record.case_id] = normalized;
+  });
+  labels = next;
+  if (!initial) { persist(); renderCase(); toast("已导入 " + value.labels.length + " 个案例标签；首次 GT 揭示时间保留。"); }
+}
+
+$("totalCount").textContent = cases.length;
+if (reviewData.protocol?.test_used_for_manual_analysis === false && cases.every(item => item.split === "train")) $("protocolText").textContent = "本包仅含用于方法开发的 train 案例；最终仍须在完整官方 test 计分。保持官方 train / test，不新增 validation。";
+[...new Set(cases.map(item => item.category))].sort().forEach(category => { const option = document.createElement("option"); option.value = category; option.textContent = "主动筛选：" + categoryName(category); $("categoryFilter").append(option); });
+try { const saved = localStorage.getItem(storageKey); if (saved) importLabels(JSON.parse(saved), true); } catch (error) { storageAvailable = false; $("saveStatus").textContent = "本地记录未载入 · 可导入 JSON"; }
+$("splitFilter").addEventListener("change", applyFilters); $("categoryFilter").addEventListener("change", applyFilters);
+$("clearFilters").addEventListener("click", () => { $("splitFilter").value = "all"; $("categoryFilter").value = "all"; applyFilters(); });
+$("previousCase").addEventListener("click", () => moveCase(-1)); $("nextCase").addEventListener("click", () => moveCase(1));
+$("historyToggle").addEventListener("click", () => setHistory(!historyVisible)); $("anchorButton").addEventListener("click", () => { stopPlayback(); setFrame(validFrames().length - 1); });
+$("revealButton").addEventListener("click", toggleGt);
+document.querySelectorAll(".window-button").forEach(button => button.addEventListener("click", () => { stopPlayback(); historyWindow = Number(button.dataset.window); selectedFrameIndex = Math.max(0, validFrames().length - 1); renderStage(); renderFilmstrip(); renderFrame(); }));
+$("olderFrame").addEventListener("click", () => { stopPlayback(); moveFrame(-1); }); $("newerFrame").addEventListener("click", () => { stopPlayback(); moveFrame(1); });
+$("frameSlider").addEventListener("input", event => { stopPlayback(); setFrame(Number(event.target.value)); }); $("playButton").addEventListener("click", togglePlayback); $("playSpeed").addEventListener("change", stopPlayback);
+$("sceneImage").addEventListener("load", drawOverlay); $("sceneImage").addEventListener("error", () => { $("imageError").hidden = false; });
+["headToggle", "predictionToggle", "heatmapToggle", "heatmapOpacity"].forEach(id => $(id).addEventListener("input", drawOverlay));
+$("cropToggle").addEventListener("input", () => { $("headCrop").hidden = !currentFrame()?.head_crop || !$("cropToggle").checked; });
+document.querySelectorAll("[data-field]").forEach(input => input.addEventListener("input", () => { const record = labelFor(selectedId); record[input.dataset.field] = input.value; record.updated_at = new Date().toISOString(); persist(); }));
+document.querySelectorAll("[data-evidence]").forEach(button => button.addEventListener("click", () => { const record = labelFor(selectedId); record.history_evidence = record.history_evidence === button.dataset.evidence ? "" : button.dataset.evidence; record.updated_at = new Date().toISOString(); persist(); fillNotes(); }));
+$("exportJson").addEventListener("click", () => download(safeFileName() + ".json", JSON.stringify(makeExport(), null, 2) + "\n", "application/json;charset=utf-8"));
+$("exportCsv").addEventListener("click", () => { const rows = [exportFields.map(csvCell).join(","), ...makeExport().labels.map(record => exportFields.map(field => csvCell(record[field])).join(","))]; download(safeFileName() + ".csv", "\uFEFF" + rows.join("\r\n") + "\r\n", "text/csv;charset=utf-8"); });
+$("importButton").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async event => { const file = event.target.files[0]; if (!file) return; try { importLabels(JSON.parse(await file.text())); } catch (error) { toast(error.message || "Invalid JSON; no labels were imported.", true); } event.target.value = ""; });
+document.addEventListener("keydown", event => {
+  if (!currentCase() || $("mainContent").hidden) return;
+  if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest("input,textarea,select,[contenteditable=true]")) return;
+  const key = event.key.toLowerCase();
+  if (["h", "g", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
+  if (key === "h") setHistory(!historyVisible); else if (key === "g") toggleGt(); else if (key === "arrowleft") { stopPlayback(); moveFrame(-1); } else if (key === "arrowright") { stopPlayback(); moveFrame(1); } else if (key === " ") togglePlayback();
+});
+if (cases.length) { renderCase(); if (!storageAvailable) toast("浏览器本地存储不可用或已有标签不兼容；请及时导出 JSON。", true); }
+else { $("mainContent").innerHTML = '<div class="empty-state panel">本包没有案例。</div>'; $("notesPanel").hidden = true; }
+</script>
+</body>
+</html>

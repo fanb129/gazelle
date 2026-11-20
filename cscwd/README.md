@@ -15,7 +15,9 @@ cscwd/
 └── latex/                  # 新论文材料
 ```
 
-已按 [implementation_plan.md](implementation_plan.md) 实现冻结任务特征缓存、共享单向ConvLSTM、完整训练/逐epoch test/选模与报告。本机9项必要合成检查通过，详见 [LOCAL_CHECKS.md](results/LOCAL_CHECKS.md)。尚未运行本轮真实VAT作业，没有性能结果。
+已实现冻结任务特征缓存和ConvLSTM基线。真实首轮完成6轮后按用户指令停止，第7轮test中断；尚未观察到有效的AUC/L2/AP共同增益，真实快照见 [stopped summary](results/convlstm_v1_stopped_summary.json)。基线本机检查见 [LOCAL_CHECKS.md](results/LOCAL_CHECKS.md)。
+
+**当前工作是train/test人工失败案例分析**：复用已有原始逐帧预测，导出当前/历史图像，人工标注共同失败机制后再确定新方案。CPU导出命令和离线浏览方式见 [FAILURE_REVIEW.md](FAILURE_REVIEW.md)。下方训练命令保留用于历史复现，当前不重启训练。
 
 旧目录全部归档到 `../cscwd_v0/`，其代码、文献、论文材料和结果均保留；旧根进度见 `../cscwd_v0/PROGRESS_SNAPSHOT.md`。历史脚本对应归档前提交 `a77c8be`，内部原路径/SHA保持原样；新代码独立建立，不从归档代码导入。
 

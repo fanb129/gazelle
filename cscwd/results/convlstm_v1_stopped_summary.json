@@ -1,0 +1,233 @@
+{
+  "baseline_metrics": {
+    "auc": 0.9401816955322009,
+    "l2": 0.09899483221303307,
+    "inout_ap": 0.8868009650702925,
+    "person_frames": 31978,
+    "gt_in_frame": 20655,
+    "gt_out_of_frame": 11323,
+    "seconds": 160.85539075901033
+  },
+  "training_history": {
+    "protocol": {
+      "training_split": "complete_official_train",
+      "evaluation_split": "complete_official_test_every_epoch",
+      "validation_split": null,
+      "checkpoint_selection": "test_auc_desc_then_l2_asc_then_inout_ap_desc_then_epoch_asc",
+      "test_used_for_checkpoint_selection": true,
+      "reported_columns": "one_selected_epoch_no_cross_epoch_column_mixing",
+      "localization_population": "all_GT_in_frame_person_frames_regardless_of_predicted_inout",
+      "inout_ap_population": "all_valid_person_frames",
+      "loss": "heatmap_MSE_GT_in_frame_plus_0.1_inout_BCE_all_valid",
+      "state": "causal_track_order_reset_on_person_change_or_original_frame_gap_detach_across_chunks",
+      "inputs": "frozen_post_person_transformer_RGB_current_raw_GT_head_box_features_only"
+    },
+    "baseline": {
+      "auc": 0.9401816955322009,
+      "l2": 0.09899483221303307,
+      "inout_ap": 0.8868009650702925,
+      "person_frames": 31978,
+      "gt_in_frame": 20655,
+      "gt_out_of_frame": 11323,
+      "seconds": 160.85539075901033
+    },
+    "epochs": [
+      {
+        "epoch": 1,
+        "train": {
+          "loss": 0.032843250648973414,
+          "heatmap_mse": 0.0031881056811912706,
+          "inout_bce": 0.2965514496778214,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2184,
+          "seconds": 3355.6845039489854
+        },
+        "test": {
+          "auc": 0.9401867954212214,
+          "l2": 0.09900195137614212,
+          "inout_ap": 0.8868032396196149,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 1912.1530283629836
+        }
+      },
+      {
+        "epoch": 2,
+        "train": {
+          "loss": 0.03277466631411434,
+          "heatmap_mse": 0.003187584174203214,
+          "inout_bce": 0.29587082139911125,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2189,
+          "seconds": 3834.4384524869965
+        },
+        "test": {
+          "auc": 0.9402018399984059,
+          "l2": 0.09901983808436113,
+          "inout_ap": 0.8866199943470833,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 2014.8980614289758
+        }
+      },
+      {
+        "epoch": 3,
+        "train": {
+          "loss": 0.032690158820564835,
+          "heatmap_mse": 0.003184745639410888,
+          "inout_bce": 0.29505413181153944,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2181,
+          "seconds": 3482.1494870359893
+        },
+        "test": {
+          "auc": 0.9401936047218485,
+          "l2": 0.09894554898577985,
+          "inout_ap": 0.8866194642627993,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 1989.346124068019
+        }
+      },
+      {
+        "epoch": 4,
+        "train": {
+          "loss": 0.03269969088951426,
+          "heatmap_mse": 0.0031857783936413155,
+          "inout_bce": 0.2951391249587294,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2195,
+          "seconds": 3567.544923065987
+        },
+        "test": {
+          "auc": 0.9402356932398892,
+          "l2": 0.09921475758914311,
+          "inout_ap": 0.8867715859362536,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 2063.7426426029997
+        }
+      },
+      {
+        "epoch": 5,
+        "train": {
+          "loss": 0.03277248206021148,
+          "heatmap_mse": 0.0031839841395045246,
+          "inout_bce": 0.2958849792070695,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2179,
+          "seconds": 3290.1022502349806
+        },
+        "test": {
+          "auc": 0.9400964677334543,
+          "l2": 0.09921936413755897,
+          "inout_ap": 0.886700296928608,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 2691.220711524016
+        }
+      },
+      {
+        "epoch": 6,
+        "train": {
+          "loss": 0.03267569162892121,
+          "heatmap_mse": 0.0031864998104134583,
+          "inout_bce": 0.2948919181850775,
+          "person_frames": 132563,
+          "gt_in_frame": 88919,
+          "optimizer_steps": 2186,
+          "seconds": 3414.2044444649946
+        },
+        "test": {
+          "auc": 0.9401952789020679,
+          "l2": 0.09906034667047313,
+          "inout_ap": 0.8867568838345339,
+          "person_frames": 31978,
+          "gt_in_frame": 20655,
+          "gt_out_of_frame": 11323,
+          "seconds": 2511.094750999997
+        }
+      }
+    ],
+    "selected_epoch": 4,
+    "selected_metrics": {
+      "auc": 0.9402356932398892,
+      "l2": 0.09921475758914311,
+      "inout_ap": 0.8867715859362536,
+      "person_frames": 31978,
+      "gt_in_frame": 20655,
+      "gt_out_of_frame": 11323,
+      "seconds": 2063.7426426029997
+    }
+  },
+  "artifacts": {
+    "checkpoints": [
+      {
+        "epoch": 1,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_01.pt",
+        "sha256": "f0f374a6db24cf98cb11836fdff409b45f3710f4d452b1db22238805fad1165a"
+      },
+      {
+        "epoch": 2,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_02.pt",
+        "sha256": "d8d36aedc528a1f235b936da61da87e55a51c05c55526b7f8d9cdc8c1a53940e"
+      },
+      {
+        "epoch": 3,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_03.pt",
+        "sha256": "b105fe3d4204ee9956b51e4b17d45047d1f6ecbbaa2fa9ac033179bc099155b3"
+      },
+      {
+        "epoch": 4,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_04.pt",
+        "sha256": "5995b9bfae097f81071d6fe8b3ab4efdd78ec777cefc59d43441fbfe4805612c"
+      },
+      {
+        "epoch": 5,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_05.pt",
+        "sha256": "d38510d492aa3264f79287cadab3d0013cbb6d79f93b16d961ec4d93e6111d95"
+      },
+      {
+        "epoch": 6,
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/epoch_06.pt",
+        "sha256": "d019e67bf7fb42c3ac9baf2d7c79e14089a1472b233b6508b75655084e693936"
+      }
+    ],
+    "last": {
+      "epoch": 6,
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/last.pt",
+      "sha256": "d019e67bf7fb42c3ac9baf2d7c79e14089a1472b233b6508b75655084e693936"
+    },
+    "selected": {
+      "epoch": 4,
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_convlstm_v1/convlstm_v1_seed0_20261120_130802/selected.pt",
+      "sha256": "5995b9bfae097f81071d6fe8b3ab4efdd78ec777cefc59d43441fbfe4805612c"
+    }
+  },
+  "run_id": "convlstm_v1_seed0_20261120_130802",
+  "status": "stopped_by_user_during_epoch_7_test",
+  "completed_epochs": 6,
+  "configured_epochs": 10,
+  "snapshot_at_utc": "2026-11-20T17:23:27.450413+00:00",
+  "process_exists_at_snapshot": false,
+  "server_commit": "5bebdb9affe1fcb13649bb402089a0f3d955e4c7",
+  "reports_path": "/home/fb/src/paper/gazelleV1/cscwd/results/convlstm_v1_seed0_20261120_130802",
+  "termination": {
+    "requested_by_user": true,
+    "signal": "SIGTERM",
+    "pid": 2458835,
+    "checkpoint_epoch_7_saved": false,
+    "reason": "User stopped the run and switched to manual failure-case review."
+  },
+  "interpretation": "No effective joint AUC/L2/AP improvement observed in six complete epochs; epoch 7 test was interrupted. This is not a completed 10-epoch run."
+}
