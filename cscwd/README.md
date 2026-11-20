@@ -1,8 +1,8 @@
 # CSCWD 2027 · 因果联合时序修正
 
 > 投稿：CSCWD 2027（IEEE SMC，CCF-C），截稿 2026-11-30（AoE），6 页双栏 single-blind。
-> 当前D6方案（2026-11-20）：冻结 GazeSpot ViT-B/原InOut，以current_grid为锚，用成本监督门选择是否采用一跳视觉历史，检验定位—稳定—响应折中。
-> 状态：D6真实结果已验收，最佳epoch1未采用历史、输出完全等同current_grid，尚无额外历史收益。下一任务为复用bank/权重的冻结train效用诊断，再决定结构；§17无需重跑。
+> 当前推荐方案（2026-11-20用户重置）：GazeSpot人物条件任务特征→共享单向ConvLSTM→原heatmap/InOut双heads，直接优化VAT AUC/L2/AP，保持train/test。
+> 状态：D7冻结诊断和候选选择路线取消。新规格 `temporal_gazespot_plan.md`，下一任务实现特征缓存与完整10轮训练入口；D1–D6结果保留。
 
 ## 目录结构
 
@@ -22,6 +22,7 @@ cscwd/
 | 文档 | 作用 |
 |---|---|
 | [temporal_joint_refinement.md](temporal_joint_refinement.md) | 当前方案：motivation、方法假设、双输出训练、先导证据与创新边界 |
+| [temporal_gazespot_plan.md](temporal_gazespot_plan.md) | 用户重置后的推荐主线：GazeSpot+ConvLSTM直接优化VAT主指标 |
 | [idea_feasibility_review.md](idea_feasibility_review.md) | 方向复盘：当前实例、ViT-B/L与Gazelle/GazeSpot选择、理想结果关系与最小路线 |
 | [method_architecture.md](method_architecture.md) | 三张架构图：已实现方法、候选重构和D4对照；下一步任务 |
 | [paper_blueprint.md](paper_blueprint.md) | 论文结构：motivation / method / baseline / 指标 |
@@ -64,7 +65,7 @@ cscwd/
 
 本地改 `cscwd/code/` → git push → 服务器 `fb@3090.lab` pull → nohup 手动跑 → 关键小结果（JSON/MD）push 回本地。大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径 + SHA。
 
-当前执行顺序：**官方train/test、D1–D6已验收 → D7冻结train效用诊断 → 根据实际决策收益决定结构**。D6选epoch1且等同grid；原首轮两模型/D4均epoch5，D3为GRU2/HV3；§9–§17保留复现，无需重跑。当前不新增训练或扫描test阈值。
+当前执行顺序：**实现GazeSpot+ConvLSTM完整入口→用户服务器手动单配置训练→查看AUC/L2/AP**。D7取消，不再追加冻结诊断。原§9–§17与D1–D6数字均为历史，保留复现。
 
 ## 论文索引（快速查，详见 literature_review.md）
 

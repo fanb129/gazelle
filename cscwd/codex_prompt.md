@@ -2,6 +2,8 @@
 
 以下整段是给 codex 的完整提示词，直接复制到 codex 新会话开头即可：
 
+**最新指令优先（2026-11-20）**：用户要求停止继续分析/候选选择，取消D7。下一任务直接按 `temporal_gazespot_plan.md` 实现GazeSpot人物条件任务特征后的共享ConvLSTM64、原双heads输出、MSE+0.1BCE、单配置10轮/逐epoch test/AUC选整轮。原GazeSpot冻结，保持train/test，主目标AUC/L2/AP；下文D阶段为历史，不再据此执行冻结诊断。
+
 ---
 
 你在 gazelle 仓库（~/src/gazelle，分支 codex/coverage-aware-router）实现 CSCWD 2027 投稿的时序方向。工作模式：你只在本机写代码；训练/评测在服务器（ssh fb@3090.lab）手动跑，代码经 git 传递、关键结果经 git 传回。用中文回复，代码/标识符/CLI/错误信息用英文。
@@ -9,6 +11,7 @@
 先读这些文件：
 - ~/src/gazelle/PROGRESS.md（状态）
 - ~/src/gazelle/cscwd/implementation_plan.md（**实现规格，照它干活**）
+- ~/src/gazelle/cscwd/temporal_gazespot_plan.md（最新用户重置：取消D7，直接实现GazeSpot+ConvLSTM双输出优化VAT指标）
 - ~/src/gazelle/cscwd/r4_official_train_test_plan.md（当前协议：完整 train、每 epoch test、AUC 选模）
 - ~/src/gazelle/cscwd/r4_compact_plan.md（原 validation 实验存档）
 - ~/src/gazelle/cscwd/temporal_joint_refinement.md（当前方案、训练目标、创新边界）
