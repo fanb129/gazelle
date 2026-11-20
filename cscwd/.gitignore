@@ -1,5 +1,6 @@
 # Small experiment reports belong in Git despite the repository-wide JSON rule.
 !/results/*.json
+!/results/**/*.json
 
 # Large artifacts stay on the server.
 *.npy

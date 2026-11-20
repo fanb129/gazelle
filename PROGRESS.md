@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已投，返修材料与结果保留 |
 | ICASSP 2027 | `icassp2027/` | 初稿保留 |
-| CSCWD新主线 | `cscwd/` | 干净目录已建立，准备实现GazeSpot+ConvLSTM基线 |
+| CSCWD新主线 | `cscwd/` | GazeSpot+ConvLSTM基线已实现，本机合成检查通过，待用户服务器实跑 |
 | CSCWD旧工作 | `cscwd_v0/` | 全量归档，文献/代码/结果/论文材料保持原样 |
 
 ## 当前目标
@@ -27,8 +27,10 @@ GazeSpot-B + 共享单向ConvLSTM，直接提高VAT的AUC、L2、AP，保持官�
 
 **V1-0 / 2026-11-20 / 归档与初始化完成**：按用户要求把原 `cscwd/` 整体移为 `cscwd_v0/`；365个原文件/链接（含隐藏/忽略项）内容保持。旧根进度保存为 `cscwd_v0/PROGRESS_SNAPSHOT.md`。新建干净 `cscwd/`，仅含新方案、忽略规则、目录骨架与新结果provenance。服务器数据/缓存/checkpoint未移动，没有新训练或评测结果。
 
+**V1-1 / 2026-11-20 / 可运行时序基线实现完成**：独立wrapper捕获原人物Transformer之后两头之前的FP32任务特征，按图像合并多人提取并记录人物轨迹/原帧号/图像/数组行及SHA。新增共享hidden64单向ConvLSTM，双残差输出投影零初始化；原heads冻结且eval，输入梯度保留。轨迹槽位保序，跨chunk保留H/C并detach，人物切换/原帧缺口重置。完整train、逐epoch完整test，固定MSE+0.1BCE、AdamW配置；保存每轮checkpoint/指标、history、selected/last、与冻结GazeSpot-B的整轮比较，明确test参与选模。新代码无旧归档运行依赖，`gazelle/`未修改。本机必要合成检查通过，包含真实GazeSpot代码路径输出一致性与两轮合成训练/评测/读写；记录见 `cscwd/results/LOCAL_CHECKS.md`。服务器任务未启动，无新VAT性能数字。
+
 ## 下一步
 
-实现GazeSpot任务特征缓存、ConvLSTM适配器和一个完整训练/逐轮test入口；首轮seed0、10epochs。完成后给用户完整GPU1 nohup命令。
+用户在服务器手动运行 `cscwd/README.md` 的完整GPU1 nohup命令：`cscwd/code/scripts/run_baseline.py` 串起新目录的官方train/test缓存与seed0、10epochs训练。真实小报告和来源记录经Git回传后，再判断AUC/L2/AP增益；不追加旧诊断路线。
 
 历史详细进度和全部旧结果见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v0/results/`。Router旧探索线状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。
