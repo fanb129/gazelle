@@ -94,11 +94,24 @@
 - **完成内容**：新增 `code/stag/backbone_sparse_dinov2.py`，继承官方 `DinoV2Backbone`，支持复用已加载的 DINOv2 模型。prefix 默认 blocks 0–5；按图 gather 选中 patch，保留 special tokens；suffix blocks 6–11；scatter 回完整网格，未选位置保留 block-5 原始激活，再按官方顺序对完整 token 序列做末尾 LayerNorm。K100 经过同一条 gather/suffix/scatter 路径，无 dense shortcut。旧 `gazelle/` 未修改。
 - **产出文件**：上述 backbone、`code/stag/test_backbone_sparse_dinov2.py`、服务器入口 `code/scripts/check_sparse_dinov2.py`；小结果见 `results/t1_local_checks.json`、`results/LOCAL_CHECKS.md`；来源见 `results/RESULT_PROVENANCE.md`。新增目录级 `.gitignore`，允许小 JSON 入 Git，排除 PT/PTH/NPY 等大型工件。
 - **产出数字**：本机 CPU 合成检查 **9/9 通过**；使用官方 DINOv2 源码的随机小模型（24 维、12 blocks、patch 14）。448×448 输入下，K100 的 `[1, 1024, 24]` patch 输出与官方 `forward_features` 逐值一致：`max_abs_diff=0.0`、`mismatched_values=0`。另外覆盖矩形输入、位置插值、不同 route block、K50 suffix 长度、early-exit fill、梯度、state-dict 读写及原版 decoder 的多人查询。该记录是合成工程检查；本机未读取真实数据或官方 checkpoint。
-- **下一步**：用户按第 7 节在服务器手动执行真实 ViT-B checkpoint 检查，回传 JSON 和 provenance。检查通过后登记 T1 的服务器验收，再进入 T2 Router 适配；当前未开始 T2。
+- **下一步**：该阶段之后已完成服务器验收并进入 T2，见下面两条记录。
+
+### 2026-11-21 · T1：服务器验收通过
+
+- **完成内容**：按用户要求 pull 服务器结果提交 `32224be`；核对报告与 provenance 的 SHA256、五个相关源码文件的 SHA256、权重路径与 SHA、六组逐值比较及稀疏 suffix 长度。
+- **产出文件与数字**：`results/t1_dinov2_checkpoint_checks.json`、审查记录 `results/T1_REVIEW.md`。实际 GPU 1、RTX 3090；单测 9/9 通过；B1/B2/B8 × FP32/FP16 共 6 组，K100 backbone 与原版 decoder 的 `max_abs_diff=0.0`、不一致元素 0；K50 suffix 全部为 513 tokens，未选位置回填逐值一致。
+- **下一步**：T1 完整验收通过，进入 T2。
+
+### 2026-11-21 · T2：Router 接入与本机检查完成
+
+- **完成内容**：新增 `code/stag/router_dinov2.py`，将现有 `CoverageAwareSpatialRouter` 原样接到 DINOv2 block-5 规范化特征，保留 scene/head appearance/bbox-relative geometry、每人 support、每图 max-union、固定预算 Top-K。backbone 全冻结并保持 eval；support-only 只跑 prefix，完整路由每图共享一次 suffix。复用原 `coverage_router_loss`，旧 `gazelle/` 未修改。
+- **产出文件**：上述 Router 适配器、`code/data_prep/synthetic_support.py`、`code/stag/test_router_dinov2.py`、服务器入口 `code/scripts/check_router_dinov2.py`；结果见 `results/t2_local_checks.json` 和 `results/LOCAL_CHECKS.md`。
+- **产出数字**：本机 T1 回归 9 项 + T2 新增 11 项，**20/20 通过**；随机小模型的 K25/K50/K100 检查全部通过，4×4 网格分别保留 4/8/16 patches；两图三人 K50 前六层输入 `[2, 17]`、后六层 `[2, 9]`，验证了按图共享前向。coverage loss 的有限梯度和三条输入分支的梯度已检查；本机未执行 support 拟合，没有记录 loss 下降数值。
+- **下一步**：用户按第 9 节在服务器手动跑 80-step 合成 support 拟合并回传结果；coverage loss 下降且结构检查通过后，完成 T2 验收，进入 T3 staged recipe 与评测。
 
 ## 7. T1 服务器运行与结果回传
 
-本节为待用户手动执行的命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。
+本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。
 
 先在本机提交第 8 节的文件并 push；服务器在本分支 pull 后运行：
 
@@ -109,7 +122,7 @@ git pull --ff-only origin codex/coverage-aware-router
 mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
 mkdir -p /home/fb/src/paper/gazelleV1/cscwd_router/results
 
-CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   cscwd_router/code/scripts/check_sparse_dinov2.py \
   --decoder-checkpoint /home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt \
   --device cuda \
@@ -151,5 +164,65 @@ git add \
   cscwd_router/implementation_plan.md \
   PROGRESS.md
 git commit -m "Add DINOv2 sparse backbone and T1 equivalence checks"
+git push origin codex/coverage-aware-router
+```
+
+## 9. T2 服务器合成拟合与结果回传
+
+本节尚未执行。先按第 10 节提交本机代码；服务器 pull 后由用户手动运行。脚本仅使用合成 RGB、合成头框与合成目标，缓存一次冻结的官方 DINOv2 block-5 特征，只更新 Router；这是可训练性检查，不是 GazeFollow 实验。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only origin codex/coverage-aware-router
+mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/check_router_dinov2.py \
+  --device cuda \
+  --batch-size 2 \
+  --image-size 448 \
+  --route-after-block 5 \
+  --keep-ratio 0.25 \
+  --hidden-dim 256 \
+  --temperature 1.0 \
+  --escape-tokens 8 \
+  --steps 80 \
+  --learning-rate 0.001 \
+  --budget-weight 0.05 \
+  --seed 3106 \
+  --output /home/fb/src/paper/gazelleV1/cscwd_router/results/t2_dinov2_support_checks.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/t2_dinov2_support_checks.log 2>&1 &
+```
+
+运行内容：T1/T2 合成单测；两图三人的 80-step Router-only support 拟合（FP32）；拟合后 K25/K50/K100 的固定预算、按图 max-union、逐人映射、逐 block 实际 batch/token 数、early-exit fill 与 K100 官方等价检查。记录每一步实际 coverage/total/soft/hard 指标和第 2 步的三条输入分支梯度，同时记录 backbone 可训练参数数与非空梯度数。
+
+T2 通过标准：`fit.coverage_decreased=true`、三条分支梯度连通、backbone 可训练参数与非空梯度数均为 0、全部路由检查通过、无跳过或失败单测，以及顶层 `passed=true`。只要求合成 coverage loss 相比初始值下降，不将这批合成数据上的 coverage 数字作为论文实验。
+
+权重仍从 `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth` 加载，SHA256 在实际运行时计算；本任务不需要 decoder 权重，不保存新的大型工件。JSON 保存实际命令、环境、配置、输入与源码 SHA、完整 history；provenance 自动追加输入和结果的路径与 SHA。
+
+运行结束后回传：
+
+```bash
+git add cscwd_router/results/t2_dinov2_support_checks.json cscwd_router/results/RESULT_PROVENANCE.md
+git commit -m "Record T2 DINOv2 support trainability checks"
+git push origin codex/coverage-aware-router
+```
+
+## 10. T2 本机提交范围
+
+```bash
+git add \
+  cscwd_router/code/stag/router_dinov2.py \
+  cscwd_router/code/stag/test_router_dinov2.py \
+  cscwd_router/code/data_prep/synthetic_support.py \
+  cscwd_router/code/scripts/check_router_dinov2.py \
+  cscwd_router/results/T1_REVIEW.md \
+  cscwd_router/results/t2_local_checks.json \
+  cscwd_router/results/LOCAL_CHECKS.md \
+  cscwd_router/results/RESULT_PROVENANCE.md \
+  cscwd_router/implementation_plan.md \
+  PROGRESS.md
+git commit -m "Connect gaze-conditioned Router to frozen DINOv2 features"
 git push origin codex/coverage-aware-router
 ```

@@ -1,0 +1,357 @@
+{
+  "task": "T2",
+  "date": "2026-11-21",
+  "execution": "local_cpu_structural_and_backward_checks",
+  "base_git_commit": "32224becb1a65a92742e5743c6e3202dcaf03387",
+  "command": "PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle /private/tmp/gazelle-cscwd-check/bin/python -m unittest -v cscwd_router.code.stag.test_backbone_sparse_dinov2 cscwd_router.code.stag.test_router_dinov2",
+  "environment": {
+    "python": "3.10.20",
+    "torch": "2.12.0",
+    "device": "cpu"
+  },
+  "dinov2_source_commit": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+  "model": {
+    "weights": "random",
+    "embed_dim": 24,
+    "depth": 12,
+    "patch_size": 14,
+    "image_size": 56,
+    "router_hidden_dim": 16
+  },
+  "unittest": {
+    "run": 20,
+    "t1_run": 9,
+    "t2_run": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reported_seconds": 0.358,
+    "passed_tests": [
+      "test_feature_gradients_reach_the_input_through_the_split",
+      "test_gather_scatter_preserve_per_image_values_and_gradients",
+      "test_k100_at_the_full_448_input_grid",
+      "test_k100_is_exactly_official_forward_features",
+      "test_official_state_dict_layout_and_round_trip",
+      "test_prefix_is_the_exact_block5_output",
+      "test_server_check_case_uses_the_unmodified_official_decoder",
+      "test_sparse_suffix_keeps_original_positions_and_early_fill",
+      "test_suffix_really_receives_k_patches_and_cls_in_both_paths",
+      "test_existing_router_receives_normalized_block5_features",
+      "test_k100_still_matches_official_forward_features",
+      "test_missing_head_box_is_rejected_instead_of_using_a_placeholder",
+      "test_multi_person_union_uses_one_fixed_budget_suffix_per_image",
+      "test_person_permutation_preserves_the_learned_union_and_route",
+      "test_scene_head_and_geometry_branches_are_all_connected",
+      "test_server_route_checks_cover_all_three_budgets",
+      "test_support_only_skips_suffix_and_keeps_backbone_frozen_in_train_mode",
+      "test_synthetic_fixture_is_rgb_and_person_targets_are_aligned",
+      "test_unselected_grid_uses_the_same_block5_features",
+      "test_zero_initialized_support_has_a_finite_coverage_gradient"
+    ]
+  },
+  "routing_cases": [
+    {
+      "keep_ratio": 0.25,
+      "keep_count": 4,
+      "feature_shape": [
+        2,
+        24,
+        4,
+        4
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 5
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 5
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 5
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 5
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 5
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 5
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "early_exit_fill": {
+        "equal": true,
+        "shape": [
+          24,
+          24
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    },
+    {
+      "keep_ratio": 0.5,
+      "keep_count": 8,
+      "feature_shape": [
+        2,
+        24,
+        4,
+        4
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 9
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 9
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 9
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 9
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 9
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 9
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "early_exit_fill": {
+        "equal": true,
+        "shape": [
+          16,
+          24
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    },
+    {
+      "keep_ratio": 1.0,
+      "keep_count": 16,
+      "feature_shape": [
+        2,
+        24,
+        4,
+        4
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 17
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 17
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "k100_backbone": {
+        "equal": true,
+        "shape": [
+          2,
+          16,
+          24
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    }
+  ],
+  "source_sha256": {
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "cscwd_router/code/stag/backbone_sparse_dinov2.py": "5b1db1ac2f9b15a1aba6a9bbc2d77791c3f0e7700a81515d0878bfcc4bd46072",
+    "cscwd_router/code/stag/router_dinov2.py": "eadef5c7fbde7d3b63a2b825e3a506b91212d583fe03228169f1d90658ac6071",
+    "cscwd_router/code/stag/test_router_dinov2.py": "0bf91c2c2d133aea077c0d17333cf9c0689bc3010209a2c2be54505deb007b47",
+    "cscwd_router/code/data_prep/synthetic_support.py": "f01de8a00ea260dd12c0a540329f368128cea5b4fc58735abff4c465c29a1c26",
+    "cscwd_router/code/scripts/check_router_dinov2.py": "4ce35c99641253df8a38e9ad85d2b9600de1200666c8f6d277a49ab8de9d842e"
+  },
+  "support_fitting_executed": false,
+  "official_checkpoint_loaded": false,
+  "dataset_read": false,
+  "server_support_fit": "not_run_locally",
+  "passed": true
+}

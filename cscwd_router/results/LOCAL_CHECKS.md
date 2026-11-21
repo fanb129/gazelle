@@ -27,4 +27,30 @@ PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle \
 - `model.*` state-dict 键与官方 backbone 对齐，checkpoint 序列化与加载成功。
 - 服务器检查函数已用原版 `DinoV2Backbone.forward`、原版 `GazeLLE.forward` 和随机小模型执行两图多人查询，K100 heatmap 逐值一致；只替换测试中的权重加载 I/O。
 
-服务器真实 ViT-B/官方 decoder 检查由用户按 [implementation_plan.md 第 7 节](../implementation_plan.md#7-t1-服务器运行与结果回传) 手动运行。该检查将记录服务器实际使用的 DINOv2 源码和 checkpoint SHA256；本文件记录的是本机合成工程结果。
+服务器真实 ViT-B/官方 decoder 检查已由用户手动运行并验收通过，结果见 [T1_REVIEW.md](T1_REVIEW.md)。复现命令见 [implementation_plan.md 第 7 节](../implementation_plan.md#7-t1-服务器运行与结果回传)；本节记录本机合成工程结果。
+
+## T2 本机结构与梯度检查（2026-11-21）
+
+结果：[t2_local_checks.json](t2_local_checks.json)。T1 回归 9 项 + T2 新增 11 项，共 **20/20 通过**。环境和官方 DINOv2 临时源码 checkout 与上述 T1 本机检查一致；T2 使用 56×56 随机 RGB 输入、24 维/12 blocks 小模型、16 维 Router，得到 4×4 的 block-5 网格。
+
+```bash
+cd /Users/fanb/src/gazelle
+PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle \
+  /private/tmp/gazelle-cscwd-check/bin/python -m unittest -v \
+  cscwd_router.code.stag.test_backbone_sparse_dinov2 \
+  cscwd_router.code.stag.test_router_dinov2
+```
+
+T2 检查覆盖：
+
+- 直接使用现有 `CoverageAwareSpatialRouter`，实际输入等于规范化后的 DINOv2 block-5 特征。
+- 两图、三人对齐为 `[0, 0, 1]`；按人预测 support，按图精确 max-union，Top-K 排序且预算固定。
+- hook 确认 backbone 按图执行：K50 时前六层收到 `[2, 17]`，后六层收到 `[2, 9]`，没有按三个人重复 suffix。
+- support-only 不调用后六层；`train()` 后 backbone 继续冻结并保持 eval。
+- zero-init support 的 coverage loss 有有限、非零的 score-head 梯度；在测试中将末层设为非零后，scene/head/geometry 三条分支均能收到梯度。检查仅做 backward，未执行优化器更新。
+- 人物顺序交换后 support 对应交换，union 与选中 patch 不变；缺失头框不会被替换为占位框。
+- K100 继续逐值等于官方 `forward_features`，未选位置与 block-5 特征逐值一致。
+- 服务器路由检查函数已在本机小模型上运行 K25/K50/K100 三种预算并全部通过，实际每图保留 4/8/16 patches。
+- 合成数据生成器的 RGB、头框与逐人目标对齐且可复现。
+
+服务器入口 `code/scripts/check_router_dinov2.py --help` 和四个新增 Python 文件的编译检查通过。本机没有执行 support 拟合；coverage loss 的下降数值由服务器脚本实际运行后写入 `t2_dinov2_support_checks.json`。
