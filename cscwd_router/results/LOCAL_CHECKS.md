@@ -54,3 +54,31 @@ T2 检查覆盖：
 - 合成数据生成器的 RGB、头框与逐人目标对齐且可复现。
 
 服务器入口 `code/scripts/check_router_dinov2.py --help` 和四个新增 Python 文件的编译检查通过。本机没有执行 support 拟合；coverage loss 的下降数值由服务器脚本实际运行后写入 `t2_dinov2_support_checks.json`。
+
+## T3 本机结构、协议与 checkpoint 检查（2026-11-21）
+
+T2 的服务器拟合已通过，见 [T2_REVIEW.md](T2_REVIEW.md)。本轮结果：[t3_local_checks.json](t3_local_checks.json)。
+
+T1 9 项 + T2 11 项 + T3 新增 14 项，**34/34 全部通过**。T3 随机小模型为 DINOv2 24 维/12 blocks/patch 14、56 输入，decoder 为 32 维/1 层，Router 为 16 维；本机环境仍为 Python 3.10.20、PyTorch 2.12.0、CPU。
+
+```bash
+cd /Users/fanb/src/gazelle
+PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle \
+  /private/tmp/gazelle-cscwd-check/bin/python -m unittest -v \
+  cscwd_router.code.stag.test_backbone_sparse_dinov2 \
+  cscwd_router.code.stag.test_router_dinov2 \
+  cscwd_router.code.stag.test_training_dinov2
+```
+
+T3 检查内容：
+
+- 新模型的原始 dense 和零初始化 K100 输出均与原版 `GazeLLE.forward` 逐值一致，实测最大差值 0.0、不一致元素 0。
+- support 的 backward 只到 Router，且不调用 decoder；sparse/matched 的 backward 只到 decoder。backbone 全程冻结，训练模式切换正确。
+- matched dense 不读取 Router 参数；大幅改变 Router 权重后，dense 输出仍逐值一致。
+- compact checkpoint 只存 decoder/Router，保留外部 DINOv2 来源；稀疏预测读写逐值一致，优化器与 scheduler 初始状态可读回。
+- 训练调度与恢复单测在临时目录内注入参数状态扰动，验证中断恢复不重复已完成 epoch、分支从同一官方 decoder 起点开始、两条 decoder 分支预算一致。该测试没有执行优化器更新，临时模拟 history 没有保存到结果目录。
+- 多标注 AUC/Avg L2/Min L2 与现有 `gazefollow_auc`、`gazefollow_l2` 一致，按人汇总，保留同图多人查询。
+- 人工生成的 RGB/annotation 文件验证了图像分组 holdout、逐人训练 collate 和全头框 validation；full-train 不构造 validation/test，synthetic 不要求真实数据路径。
+- official-test 请求拒绝 holdout、support 和非 fixed-final checkpoint。
+
+两个入口的 `--help` 和八个新增 Python 文件的编译检查通过。本机未加载真实 checkpoint，也未执行真实优化；T3 的实际 3+5+5 更新、标准指标计算和 GPU checkpoint 往返由服务器 synthetic smoke 运行后记录。

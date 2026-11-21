@@ -107,7 +107,20 @@
 - **完成内容**：新增 `code/stag/router_dinov2.py`，将现有 `CoverageAwareSpatialRouter` 原样接到 DINOv2 block-5 规范化特征，保留 scene/head appearance/bbox-relative geometry、每人 support、每图 max-union、固定预算 Top-K。backbone 全冻结并保持 eval；support-only 只跑 prefix，完整路由每图共享一次 suffix。复用原 `coverage_router_loss`，旧 `gazelle/` 未修改。
 - **产出文件**：上述 Router 适配器、`code/data_prep/synthetic_support.py`、`code/stag/test_router_dinov2.py`、服务器入口 `code/scripts/check_router_dinov2.py`；结果见 `results/t2_local_checks.json` 和 `results/LOCAL_CHECKS.md`。
 - **产出数字**：本机 T1 回归 9 项 + T2 新增 11 项，**20/20 通过**；随机小模型的 K25/K50/K100 检查全部通过，4×4 网格分别保留 4/8/16 patches；两图三人 K50 前六层输入 `[2, 17]`、后六层 `[2, 9]`，验证了按图共享前向。coverage loss 的有限梯度和三条输入分支的梯度已检查；本机未执行 support 拟合，没有记录 loss 下降数值。
-- **下一步**：用户按第 9 节在服务器手动跑 80-step 合成 support 拟合并回传结果；coverage loss 下降且结构检查通过后，完成 T2 验收，进入 T3 staged recipe 与评测。
+- **下一步**：该阶段之后服务器合成拟合已通过，见下一条 T2 验收记录。
+
+### 2026-11-21 · T2：服务器验收通过
+
+- **完成内容**：pull 服务器结果提交 `a08e944`；核对报告 SHA、八个相关源码 SHA、与 T1 相同的 backbone 权重 SHA、完整 81 条 history、冻结状态和三种预算的执行路径。
+- **产出文件与数字**：`results/t2_dinov2_support_checks.json`、`results/T2_REVIEW.md`。RTX 3090、GPU 1、FP32，80 步 Router-only 拟合的 coverage loss 为 `3.465735674 → 0.000011941`，soft/hard coverage 为 `0.999988079 / 0.961666822`；backbone 可训练参数与带梯度参数数均为 0。K25/K50/K100 分别保留 256/512/1024 patches，所有结构检查通过；单测 20/20 通过。
+- **下一步**：T2 完整验收通过，进入 T3。
+
+### 2026-11-21 · T3：训练/评测闭环实现与本机检查完成
+
+- **完成内容**：新增 `code/stag/model_dinov2.py`，以 feature-grid adapter 直接调用原版 `GazeLLE.forward`，严格加载官方 decoder。新增 `engine.py`、`checkpoint.py`、`pipeline.py` 与 `code/data_prep/gazefollow.py`，实现固定 support 3ep、K100→K75→K50→K50→K50 decoder 5ep、matched dense 5ep；两条 decoder 分支重置到同一官方权重，使用相同 epoch seed、样本与更新预算。支持按 epoch 恢复、图像分组 holdout、full-train/no-eval、原版 AUC/Avg L2/Min L2 和独立 fixed-final 评测；backbone 始终冻结。compact checkpoint 只保存 decoder/Router，外部 DINOv2 路径和 SHA 随文件登记。
+- **产出文件**：上述模型/engine/checkpoint/pipeline/data、`code/scripts/train_router_dinov2.py`、`code/scripts/eval_router_dinov2.py`、`code/stag/test_training_dinov2.py`；小结果 `results/t3_local_checks.json`，说明见 `results/LOCAL_CHECKS.md`。
+- **产出数字**：本机 T1/T2/T3 共 **34/34 通过**，新增 T3 14 项；随机小模型 dense/零初始化 K100 与原版 GazeLLE 的最大差值 0.0、不一致元素 0。阶段梯度、checkpoint 往返、多标注指标、图像分组和恢复调度已检查；本机优化器更新数为 0，调度单测的参数扰动仅发生于临时测试目录。
+- **下一步**：用户按第 11 节手动执行官方权重上的 synthetic 3+5+5 smoke，再运行独立 synthetic checkpoint 评测并回传小报告。通过后登记 T3 验收，再进入 T4 真实 GazeFollow 主实验与效率矩阵。
 
 ## 7. T1 服务器运行与结果回传
 
@@ -169,7 +182,7 @@ git push origin codex/coverage-aware-router
 
 ## 9. T2 服务器合成拟合与结果回传
 
-本节尚未执行。先按第 10 节提交本机代码；服务器 pull 后由用户手动运行。脚本仅使用合成 RGB、合成头框与合成目标，缓存一次冻结的官方 DINOv2 block-5 特征，只更新 Router；这是可训练性检查，不是 GazeFollow 实验。
+本节已执行并通过；以下保留复现命令。脚本仅使用合成 RGB、合成头框与合成目标，缓存一次冻结的官方 DINOv2 block-5 特征，只更新 Router；这是可训练性检查，不是 GazeFollow 实验。
 
 ```bash
 cd /home/fb/src/paper/gazelleV1
@@ -224,5 +237,107 @@ git add \
   cscwd_router/implementation_plan.md \
   PROGRESS.md
 git commit -m "Connect gaze-conditioned Router to frozen DINOv2 features"
+git push origin codex/coverage-aware-router
+```
+
+## 11. T3 服务器 synthetic 训练、评测与回传
+
+### 11.1 当前运行：固定 3+5+5 smoke
+
+先按第 12 节提交/push，服务器 pull 后由用户运行。该命令使用官方 ViT-B backbone 和官方 decoder，但只生成合成 RGB/头框/目标；每个 epoch 使用同一批两图三人，共执行规格规定的 3+5+5 个单 batch epoch。`--protocol synthetic` 不读取 `--data-path`。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only origin codex/coverage-aware-router
+mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/train_router_dinov2.py \
+  --protocol synthetic \
+  --data-path /newhome/fb/dataset/gazefollow_extended \
+  --decoder-checkpoint /home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt \
+  --run-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106 \
+  --report-dir /home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106 \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  --device cuda \
+  --batch-size 2 \
+  --eval-batch-size 2 \
+  --workers 0 \
+  --router-lr 0.001 \
+  --decoder-lr 0.0001 \
+  --weight-decay 0 \
+  --budget-weight 0.05 \
+  --seed 3106 \
+  --split-seed 3106 \
+  --val-fraction 0 \
+  --router-hidden-dim 256 \
+  --router-temperature 1.0 \
+  --escape-tokens 8 \
+  --log-every 1 \
+  --no-augment \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/t3_synthetic_seed3106.log 2>&1 &
+```
+
+FP32、448 输入、route block 5、decoder 256 维/3 层固定。synthetic 模式先执行本机同套结构单测，再进行实际优化。summary 的 `passed` 表示 T3 工程验收：初始 dense/K100 逐值等于官方模型；support 只改变 Router；另外两阶段只改变 decoder；decoder 起点相同，五轮的更新次数、人数预算与 epoch seed 相同；backbone 冻结；稀疏与 matched checkpoint 重新加载后输出逐值一致。实际 loss/history、synthetic AUC/L2 由运行生成，均作为工程结果保存。
+
+输出位置：
+
+- 小报告：`cscwd_router/results/t3_synthetic_seed3106/summary.json`、`manifest.json`、`initial_equivalence.json` 和逐阶段 history/summary。
+- 大文件：`experiments/cscwd_router/t3_synthetic_seed3106/{dense_official,support,sparse_decoder,matched_dense}/final.pt`；后三阶段另有 `last.pt`。实际运行后全部登记路径和 SHA。
+
+中断后在同一命令中加 `--resume`，可从已完成 epoch 的 `last.pt` 继续，已完成阶段不重训；日志改为 `t3_synthetic_seed3106_resume.log`。恢复会核对同一源码、权重、分组与训练配置。
+
+### 11.2 训练结束后：独立加载 sparse checkpoint 评测
+
+完成 11.1 后再执行，验证独立脚本从磁盘读取 checkpoint 与外部 backbone 的路径。该命令仍为 synthetic，不读取 official test。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/eval_router_dinov2.py \
+  --checkpoint /home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt \
+  --split synthetic \
+  --data-path /newhome/fb/dataset/gazefollow_extended \
+  --device cuda \
+  --batch-size 2 \
+  --workers 0 \
+  --output /home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/standalone_sparse_eval.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/t3_standalone_sparse_eval.log 2>&1 &
+```
+
+评测直接沿用 `gazelle.utils.gazefollow_auc/gazefollow_l2`：AUC 在原始图像分辨率计算，Avg L2 为预测点到平均标注坐标的距离，Min L2 为到最近标注的距离，最终按人平均。eval loader 按图聚合全部 in-frame 头框。输出文件存在时拒绝覆盖。
+
+真实数据接口已经实现：`--protocol holdout` 对 train 做稳定图像分组，并在各 decoder 阶段末尾读取 holdout；`--protocol full_train --val-fraction 0` 不构造 eval loader，只保存固定 final。`--split official_test` 只接受 full-train 的 fixed-final baseline/K50/matched checkpoint。真实数据运行命令在 T3 验收后随 T4 发布。
+
+### 11.3 回传
+
+```bash
+git add cscwd_router/results/t3_synthetic_seed3106 cscwd_router/results/RESULT_PROVENANCE.md
+git commit -m "Record T3 staged training and checkpoint smoke"
+git push origin codex/coverage-aware-router
+```
+
+只回传小报告与 provenance；PT 文件保留服务器。
+
+## 12. T3 本机提交范围
+
+```bash
+git add \
+  cscwd_router/code/stag/model_dinov2.py \
+  cscwd_router/code/stag/engine.py \
+  cscwd_router/code/stag/checkpoint.py \
+  cscwd_router/code/stag/pipeline.py \
+  cscwd_router/code/stag/test_training_dinov2.py \
+  cscwd_router/code/data_prep/gazefollow.py \
+  cscwd_router/code/scripts/train_router_dinov2.py \
+  cscwd_router/code/scripts/eval_router_dinov2.py \
+  cscwd_router/results/T2_REVIEW.md \
+  cscwd_router/results/t3_local_checks.json \
+  cscwd_router/results/LOCAL_CHECKS.md \
+  cscwd_router/results/RESULT_PROVENANCE.md \
+  cscwd_router/implementation_plan.md \
+  PROGRESS.md
+git commit -m "Add official DINOv2 decoder recipe and evaluation pipeline"
 git push origin codex/coverage-aware-router
 ```

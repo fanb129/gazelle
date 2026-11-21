@@ -41,3 +41,11 @@
 - report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/t2_dinov2_support_checks.json`; SHA256: `b7f6561e4322311e1b6f8e0937528356080739754609658a8316786a051bfc66`; passed: `True`
 - input: `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth`; SHA256: `0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73`
 - synthetic coverage loss: `3.465735673904419` → `1.1940904187213164e-05`; steps: `80`
+
+## T2 结果审查与 T3 本机检查（2026-11-21）
+
+- 拉取结果提交：`a08e944`。T2 报告 SHA256：`b7f6561e4322311e1b6f8e0937528356080739754609658a8316786a051bfc66`；与本文件登记一致，八个相关源码 SHA 匹配，backbone SHA 与 T1 相同。审查见 `results/T2_REVIEW.md`。
+- T3 本机小结果：`cscwd_router/results/t3_local_checks.json`；SHA256：`15c34b9dcedeef43162e0d4fa501a90af29dcb64fd63a73698c4a6395885ec37`。
+- 本机 T1/T2/T3 共 34/34 结构、backward、协议与序列化检查通过。随机小模型的 dense/K100 与原版 GazeLLE 逐值一致，最大差值 0.0、不一致元素 0；源码 SHA 与环境在 JSON。本机优化器更新数为 0；恢复调度单测使用临时状态扰动，临时文件已删除。
+- T3 服务器入口为 `code/scripts/train_router_dinov2.py`，实际大文件写到 `experiments/cscwd_router/t3_synthetic_seed3106/`，关键小报告写到 `results/t3_synthetic_seed3106/`。运行后自动登记两份输入权重、四个 final checkpoint、三个 last checkpoint 的完整路径与 SHA256，权重不进 Git。
+- 独立评测入口 `code/scripts/eval_router_dinov2.py` 重新加载 checkpoint，沿用现有 GazeFollow 指标；输出小 JSON 的路径与 SHA256 也由实际运行追加到本文件。
