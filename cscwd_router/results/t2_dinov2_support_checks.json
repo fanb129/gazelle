@@ -1,0 +1,1256 @@
+{
+  "task": "T2",
+  "protocol": "synthetic_support_fit_v1",
+  "created_utc": "2026-11-21T06:39:24.292574+00:00",
+  "argv": [
+    "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/check_router_dinov2.py",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "2",
+    "--image-size",
+    "448",
+    "--route-after-block",
+    "5",
+    "--keep-ratio",
+    "0.25",
+    "--hidden-dim",
+    "256",
+    "--temperature",
+    "1.0",
+    "--escape-tokens",
+    "8",
+    "--steps",
+    "80",
+    "--learning-rate",
+    "0.001",
+    "--budget-weight",
+    "0.05",
+    "--seed",
+    "3106",
+    "--output",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/t2_dinov2_support_checks.json",
+    "--provenance",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md"
+  ],
+  "config": {
+    "device": "cuda",
+    "batch_size": 2,
+    "image_size": 448,
+    "route_after_block": 5,
+    "keep_ratio": 0.25,
+    "hidden_dim": 256,
+    "temperature": 1.0,
+    "escape_tokens": 8,
+    "steps": 80,
+    "learning_rate": 0.001,
+    "budget_weight": 0.05,
+    "seed": 3106
+  },
+  "git_commit": "3babdbdcc680f54d8d167e4d76e8b582255d06fe",
+  "environment": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda",
+    "cuda_visible_devices": "1",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "precision": "fp32"
+  },
+  "synthetic_tests": {
+    "run": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "input_checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth",
+    "sha256": "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
+  },
+  "sources": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/gazelle/routing/router.py",
+      "sha256": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/gazelle/routing/losses.py",
+      "sha256": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/stag/backbone_sparse_dinov2.py",
+      "sha256": "5b1db1ac2f9b15a1aba6a9bbc2d77791c3f0e7700a81515d0878bfcc4bd46072"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/stag/router_dinov2.py",
+      "sha256": "eadef5c7fbde7d3b63a2b825e3a506b91212d583fe03228169f1d90658ac6071"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/stag/test_router_dinov2.py",
+      "sha256": "0bf91c2c2d133aea077c0d17333cf9c0689bc3010209a2c2be54505deb007b47"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/data_prep/synthetic_support.py",
+      "sha256": "f01de8a00ea260dd12c0a540329f368128cea5b4fc58735abff4c465c29a1c26"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/check_router_dinov2.py",
+      "sha256": "4ce35c99641253df8a38e9ad85d2b9600de1200666c8f6d277a49ab8de9d842e"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/check_sparse_dinov2.py",
+      "sha256": "cddde4a2e6595dc06d7dc1b56edafe02219aac5469c2c141e216b5657d2633f1"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/dinov2/dinov2/models/vision_transformer.py",
+      "sha256": "7799a260f2d7d0fe197331d08502fb8c542f9b7424723650f6a39b64fa2639ea"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/dinov2/dinov2/layers/attention.py",
+      "sha256": "a3223b5c3757d95eb65482b460854af1986e3f815c4b8b4a88dbb165908171fd"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/dinov2/dinov2/layers/block.py",
+      "sha256": "2fe017598d6d2ca2af9750ed352a97d5602a13d55c9c4ef246f6bcd68048affb"
+    }
+  ],
+  "batch": {
+    "image_shape": [
+      2,
+      3,
+      448,
+      448
+    ],
+    "heads_per_image": [
+      2,
+      1
+    ],
+    "target_shape": [
+      3,
+      64,
+      64
+    ],
+    "feature_shape": [
+      2,
+      768,
+      32,
+      32
+    ],
+    "real_data_read": false
+  },
+  "fit": {
+    "history": [
+      {
+        "step": 0,
+        "total": 3.4938607215881348,
+        "coverage": 3.465735673904419,
+        "budget": 0.5625,
+        "entropy": 1.0,
+        "soft_coverage": 0.03125,
+        "hard_coverage": 0.011285764165222645,
+        "mean_support": 1.0
+      },
+      {
+        "step": 1,
+        "total": 3.4750008583068848,
+        "coverage": 3.4468815326690674,
+        "budget": 0.5623841881752014,
+        "entropy": 0.9999889135360718,
+        "soft_coverage": 0.03184501454234123,
+        "hard_coverage": 0.8160505294799805,
+        "mean_support": 0.9999227523803711
+      },
+      {
+        "step": 2,
+        "total": 3.415290355682373,
+        "coverage": 3.387253999710083,
+        "budget": 0.5607293844223022,
+        "entropy": 0.9998295307159424,
+        "soft_coverage": 0.03380321338772774,
+        "hard_coverage": 0.9365388751029968,
+        "mean_support": 0.9988186359405518
+      },
+      {
+        "step": 3,
+        "total": 3.3120548725128174,
+        "coverage": 3.2844066619873047,
+        "budget": 0.5529662370681763,
+        "entropy": 0.999076247215271,
+        "soft_coverage": 0.03747167810797691,
+        "hard_coverage": 0.9480989575386047,
+        "mean_support": 0.9936169981956482
+      },
+      {
+        "step": 4,
+        "total": 3.1557326316833496,
+        "coverage": 3.1292827129364014,
+        "budget": 0.5289984941482544,
+        "entropy": 0.9966907501220703,
+        "soft_coverage": 0.04378136992454529,
+        "hard_coverage": 0.961432158946991,
+        "mean_support": 0.9773228168487549
+      },
+      {
+        "step": 5,
+        "total": 2.9430718421936035,
+        "coverage": 2.9193735122680664,
+        "budget": 0.4739682078361511,
+        "entropy": 0.9908357858657837,
+        "soft_coverage": 0.05405173823237419,
+        "hard_coverage": 0.9706748127937317,
+        "mean_support": 0.9384534358978271
+      },
+      {
+        "step": 6,
+        "total": 2.6754648685455322,
+        "coverage": 2.656661033630371,
+        "budget": 0.37607860565185547,
+        "entropy": 0.9787853956222534,
+        "soft_coverage": 0.0703742578625679,
+        "hard_coverage": 0.9717144966125488,
+        "mean_support": 0.8632520437240601
+      },
+      {
+        "step": 7,
+        "total": 2.361421823501587,
+        "coverage": 2.3491361141204834,
+        "budget": 0.24571610987186432,
+        "entropy": 0.9576650857925415,
+        "soft_coverage": 0.09589975327253342,
+        "hard_coverage": 0.9772350192070007,
+        "mean_support": 0.7456939220428467
+      },
+      {
+        "step": 8,
+        "total": 2.0178303718566895,
+        "coverage": 2.0118000507354736,
+        "budget": 0.12060533463954926,
+        "entropy": 0.9256395101547241,
+        "soft_coverage": 0.13486672937870026,
+        "hard_coverage": 0.9812512993812561,
+        "mean_support": 0.5972588062286377
+      },
+      {
+        "step": 9,
+        "total": 1.6631033420562744,
+        "coverage": 1.6613160371780396,
+        "budget": 0.03574609011411667,
+        "entropy": 0.8811765909194946,
+        "soft_coverage": 0.192572221159935,
+        "hard_coverage": 0.9812868237495422,
+        "mean_support": 0.43890780210494995
+      },
+      {
+        "step": 10,
+        "total": 1.3160417079925537,
+        "coverage": 1.3159548044204712,
+        "budget": 0.0017381921643391252,
+        "entropy": 0.8214489817619324,
+        "soft_coverage": 0.27365395426750183,
+        "hard_coverage": 0.9829955697059631,
+        "mean_support": 0.2902735471725464
+      },
+      {
+        "step": 11,
+        "total": 0.9961719512939453,
+        "coverage": 0.995860755443573,
+        "budget": 0.006223923526704311,
+        "entropy": 0.7455952167510986,
+        "soft_coverage": 0.3774217665195465,
+        "hard_coverage": 0.9821004867553711,
+        "mean_support": 0.17175891995429993
+      },
+      {
+        "step": 12,
+        "total": 0.7125378847122192,
+        "coverage": 0.7113359570503235,
+        "budget": 0.024038784205913544,
+        "entropy": 0.6601128578186035,
+        "soft_coverage": 0.49858811497688293,
+        "hard_coverage": 0.9816970825195312,
+        "mean_support": 0.09519195556640625
+      },
+      {
+        "step": 13,
+        "total": 0.4676649272441864,
+        "coverage": 0.46569621562957764,
+        "budget": 0.03937447443604469,
+        "entropy": 0.5707612037658691,
+        "soft_coverage": 0.632106602191925,
+        "hard_coverage": 0.9816710352897644,
+        "mean_support": 0.0517573356628418
+      },
+      {
+        "step": 14,
+        "total": 0.2735307812690735,
+        "coverage": 0.2710886299610138,
+        "budget": 0.04884286969900131,
+        "entropy": 0.48357218503952026,
+        "soft_coverage": 0.7648692727088928,
+        "hard_coverage": 0.9809383749961853,
+        "mean_support": 0.029160192236304283
+      },
+      {
+        "step": 15,
+        "total": 0.14313644170761108,
+        "coverage": 0.14045655727386475,
+        "budget": 0.05359780043363571,
+        "entropy": 0.4139176905155182,
+        "soft_coverage": 0.8703009486198425,
+        "hard_coverage": 0.9649367332458496,
+        "mean_support": 0.018595360219478607
+      },
+      {
+        "step": 16,
+        "total": 0.07021748274564743,
+        "coverage": 0.06742440164089203,
+        "budget": 0.055861636996269226,
+        "entropy": 0.36813509464263916,
+        "soft_coverage": 0.9353035092353821,
+        "hard_coverage": 0.9650814533233643,
+        "mean_support": 0.0137152299284935
+      },
+      {
+        "step": 17,
+        "total": 0.03454537317156792,
+        "coverage": 0.03168889507651329,
+        "budget": 0.05712956190109253,
+        "entropy": 0.3361380696296692,
+        "soft_coverage": 0.9689581990242004,
+        "hard_coverage": 0.9674310684204102,
+        "mean_support": 0.011025672778487206
+      },
+      {
+        "step": 18,
+        "total": 0.018479537218809128,
+        "coverage": 0.01558105181902647,
+        "budget": 0.05796971172094345,
+        "entropy": 0.31105464696884155,
+        "soft_coverage": 0.9845836758613586,
+        "hard_coverage": 0.9680597186088562,
+        "mean_support": 0.009261381812393665
+      },
+      {
+        "step": 19,
+        "total": 0.011375139467418194,
+        "coverage": 0.008446506224572659,
+        "budget": 0.058572664856910706,
+        "entropy": 0.29025524854660034,
+        "soft_coverage": 0.9916041493415833,
+        "hard_coverage": 0.9613335132598877,
+        "mean_support": 0.008004299364984035
+      },
+      {
+        "step": 20,
+        "total": 0.007978305220603943,
+        "coverage": 0.0050268894992768764,
+        "budget": 0.059028320014476776,
+        "entropy": 0.2724173069000244,
+        "soft_coverage": 0.9949916005134583,
+        "hard_coverage": 0.9618501663208008,
+        "mean_support": 0.00705941766500473
+      },
+      {
+        "step": 21,
+        "total": 0.006178738083690405,
+        "coverage": 0.003209515241906047,
+        "budget": 0.059384457767009735,
+        "entropy": 0.2568751573562622,
+        "soft_coverage": 0.9967980980873108,
+        "hard_coverage": 0.9618493914604187,
+        "mean_support": 0.006323922425508499
+      },
+      {
+        "step": 22,
+        "total": 0.005150669254362583,
+        "coverage": 0.0021671662107110023,
+        "budget": 0.05967005342245102,
+        "entropy": 0.24315759539604187,
+        "soft_coverage": 0.9978362917900085,
+        "hard_coverage": 0.9611873626708984,
+        "mean_support": 0.005735987331718206
+      },
+      {
+        "step": 23,
+        "total": 0.004526618868112564,
+        "coverage": 0.0015313560143113136,
+        "budget": 0.05990525335073471,
+        "entropy": 0.2308240830898285,
+        "soft_coverage": 0.9984703660011292,
+        "hard_coverage": 0.9586769938468933,
+        "mean_support": 0.005253091920167208
+      },
+      {
+        "step": 24,
+        "total": 0.004125397186726332,
+        "coverage": 0.0011202514870092273,
+        "budget": 0.0601029172539711,
+        "entropy": 0.21956166625022888,
+        "soft_coverage": 0.9988806843757629,
+        "hard_coverage": 0.9593782424926758,
+        "mean_support": 0.004848157055675983
+      },
+      {
+        "step": 25,
+        "total": 0.0038548598531633615,
+        "coverage": 0.0008413516916334629,
+        "budget": 0.06027016043663025,
+        "entropy": 0.20925427973270416,
+        "soft_coverage": 0.9991591572761536,
+        "hard_coverage": 0.959378719329834,
+        "mean_support": 0.004506206139922142
+      },
+      {
+        "step": 26,
+        "total": 0.0036660798359662294,
+        "coverage": 0.0006455318070948124,
+        "budget": 0.06041095778346062,
+        "entropy": 0.19991829991340637,
+        "soft_coverage": 0.9993547797203064,
+        "hard_coverage": 0.9602260589599609,
+        "mean_support": 0.004218790680170059
+      },
+      {
+        "step": 27,
+        "total": 0.003531481372192502,
+        "coverage": 0.0005050625186413527,
+        "budget": 0.06052837520837784,
+        "entropy": 0.19159641861915588,
+        "soft_coverage": 0.9994950890541077,
+        "hard_coverage": 0.9602260589599609,
+        "mean_support": 0.003979428671300411
+      },
+      {
+        "step": 28,
+        "total": 0.0034333111252635717,
+        "coverage": 0.0004020361229777336,
+        "budget": 0.06062549725174904,
+        "entropy": 0.18429341912269592,
+        "soft_coverage": 0.9995980858802795,
+        "hard_coverage": 0.9619237780570984,
+        "mean_support": 0.003781660459935665
+      },
+      {
+        "step": 29,
+        "total": 0.0033600814640522003,
+        "coverage": 0.00032480640220455825,
+        "budget": 0.06070549786090851,
+        "entropy": 0.177961066365242,
+        "soft_coverage": 0.9996752738952637,
+        "hard_coverage": 0.9619237780570984,
+        "mean_support": 0.003618901362642646
+      },
+      {
+        "step": 30,
+        "total": 0.0033039632253348827,
+        "coverage": 0.0002653940173331648,
+        "budget": 0.060771383345127106,
+        "entropy": 0.17251357436180115,
+        "soft_coverage": 0.99973464012146,
+        "hard_coverage": 0.9628140330314636,
+        "mean_support": 0.0034849592484533787
+      },
+      {
+        "step": 31,
+        "total": 0.0032602553255856037,
+        "coverage": 0.0002189647639170289,
+        "budget": 0.060825809836387634,
+        "entropy": 0.16784650087356567,
+        "soft_coverage": 0.99978107213974,
+        "hard_coverage": 0.9628140330314636,
+        "mean_support": 0.0033743861131370068
+      },
+      {
+        "step": 32,
+        "total": 0.0032256077975034714,
+        "coverage": 0.0001820580946514383,
+        "budget": 0.06087099015712738,
+        "entropy": 0.16385316848754883,
+        "soft_coverage": 0.9998180270195007,
+        "hard_coverage": 0.9626118540763855,
+        "mean_support": 0.003282639430835843
+      },
+      {
+        "step": 33,
+        "total": 0.003198140999302268,
+        "coverage": 0.0001527051063021645,
+        "budget": 0.0609087198972702,
+        "entropy": 0.16043393313884735,
+        "soft_coverage": 0.9998473525047302,
+        "hard_coverage": 0.9626118540763855,
+        "mean_support": 0.0032060439698398113
+      },
+      {
+        "step": 34,
+        "total": 0.0031759990379214287,
+        "coverage": 0.0001289772626478225,
+        "budget": 0.06094043701887131,
+        "entropy": 0.1575007140636444,
+        "soft_coverage": 0.999871015548706,
+        "hard_coverage": 0.9609279036521912,
+        "mean_support": 0.003141682595014572
+      },
+      {
+        "step": 35,
+        "total": 0.0031584417447447777,
+        "coverage": 0.00011007909051841125,
+        "budget": 0.060967251658439636,
+        "entropy": 0.15497879683971405,
+        "soft_coverage": 0.9998899102210999,
+        "hard_coverage": 0.9610061645507812,
+        "mean_support": 0.003087275195866823
+      },
+      {
+        "step": 36,
+        "total": 0.0031443005427718163,
+        "coverage": 9.479802247369662e-05,
+        "budget": 0.06099005043506622,
+        "entropy": 0.1528053879737854,
+        "soft_coverage": 0.9999051690101624,
+        "hard_coverage": 0.9610209465026855,
+        "mean_support": 0.003041030839085579
+      },
+      {
+        "step": 37,
+        "total": 0.0031330136116594076,
+        "coverage": 8.253768464783207e-05,
+        "budget": 0.06100951507687569,
+        "entropy": 0.15092895925045013,
+        "soft_coverage": 0.9999174475669861,
+        "hard_coverage": 0.9611572623252869,
+        "mean_support": 0.0030015509109944105
+      },
+      {
+        "step": 38,
+        "total": 0.003123772796243429,
+        "coverage": 7.246332097565755e-05,
+        "budget": 0.061026185750961304,
+        "entropy": 0.1493072807788849,
+        "soft_coverage": 0.9999275207519531,
+        "hard_coverage": 0.9610352516174316,
+        "mean_support": 0.0029677394777536392
+      },
+      {
+        "step": 39,
+        "total": 0.003116102423518896,
+        "coverage": 6.407807813957334e-05,
+        "budget": 0.0610404871404171,
+        "entropy": 0.14790670573711395,
+        "soft_coverage": 0.9999359250068665,
+        "hard_coverage": 0.9610350728034973,
+        "mean_support": 0.00293874298222363
+      },
+      {
+        "step": 40,
+        "total": 0.003109940094873309,
+        "coverage": 5.730239718104713e-05,
+        "budget": 0.061052754521369934,
+        "entropy": 0.14669889211654663,
+        "soft_coverage": 0.9999427199363708,
+        "hard_coverage": 0.9610350728034973,
+        "mean_support": 0.0029138734098523855
+      },
+      {
+        "step": 41,
+        "total": 0.0031046434305608273,
+        "coverage": 5.1480543334037066e-05,
+        "budget": 0.0610632598400116,
+        "entropy": 0.1456609070301056,
+        "soft_coverage": 0.9999485015869141,
+        "hard_coverage": 0.9576349258422852,
+        "mean_support": 0.002892579883337021
+      },
+      {
+        "step": 42,
+        "total": 0.003100263187661767,
+        "coverage": 4.665220694732852e-05,
+        "budget": 0.0610722154378891,
+        "entropy": 0.14477434754371643,
+        "soft_coverage": 0.9999533295631409,
+        "hard_coverage": 0.9574552178382874,
+        "mean_support": 0.0028744246810674667
+      },
+      {
+        "step": 43,
+        "total": 0.0030964501202106476,
+        "coverage": 4.245973832439631e-05,
+        "budget": 0.061079807579517365,
+        "entropy": 0.14402300119400024,
+        "soft_coverage": 0.9999575614929199,
+        "hard_coverage": 0.9574552178382874,
+        "mean_support": 0.0028590369038283825
+      },
+      {
+        "step": 44,
+        "total": 0.003093232400715351,
+        "coverage": 3.892297900165431e-05,
+        "budget": 0.06108618527650833,
+        "entropy": 0.14339374005794525,
+        "soft_coverage": 0.9999610781669617,
+        "hard_coverage": 0.9574552178382874,
+        "mean_support": 0.002846113173291087
+      },
+      {
+        "step": 45,
+        "total": 0.0030904763843864202,
+        "coverage": 3.5902838135370985e-05,
+        "budget": 0.06109146773815155,
+        "entropy": 0.14287492632865906,
+        "soft_coverage": 0.9999640583992004,
+        "hard_coverage": 0.9574552178382874,
+        "mean_support": 0.002835392253473401
+      },
+      {
+        "step": 46,
+        "total": 0.003088009776547551,
+        "coverage": 3.322049087728374e-05,
+        "budget": 0.06109578534960747,
+        "entropy": 0.14245641231536865,
+        "soft_coverage": 0.9999668002128601,
+        "hard_coverage": 0.9574552178382874,
+        "mean_support": 0.0028266471344977617
+      },
+      {
+        "step": 47,
+        "total": 0.0030857373494654894,
+        "coverage": 3.077658038819209e-05,
+        "budget": 0.06109921634197235,
+        "entropy": 0.14212976396083832,
+        "soft_coverage": 0.9999692440032959,
+        "hard_coverage": 0.9576349258422852,
+        "mean_support": 0.002819687593728304
+      },
+      {
+        "step": 48,
+        "total": 0.0030839021783322096,
+        "coverage": 2.8809537980123423e-05,
+        "budget": 0.06110185384750366,
+        "entropy": 0.1418866217136383,
+        "soft_coverage": 0.9999712109565735,
+        "hard_coverage": 0.9576349258422852,
+        "mean_support": 0.002814337145537138
+      },
+      {
+        "step": 49,
+        "total": 0.0030822695698589087,
+        "coverage": 2.7080930522060953e-05,
+        "budget": 0.06110377237200737,
+        "entropy": 0.14172014594078064,
+        "soft_coverage": 0.9999728798866272,
+        "hard_coverage": 0.9574646949768066,
+        "mean_support": 0.002810446545481682
+      },
+      {
+        "step": 50,
+        "total": 0.0030807233415544033,
+        "coverage": 2.547153962950688e-05,
+        "budget": 0.06110503524541855,
+        "entropy": 0.14162400364875793,
+        "soft_coverage": 0.9999745488166809,
+        "hard_coverage": 0.9574646949768066,
+        "mean_support": 0.0028078779578208923
+      },
+      {
+        "step": 51,
+        "total": 0.0030793859623372555,
+        "coverage": 2.4100581867969595e-05,
+        "budget": 0.06110570952296257,
+        "entropy": 0.14159221947193146,
+        "soft_coverage": 0.9999759197235107,
+        "hard_coverage": 0.9581310153007507,
+        "mean_support": 0.0028065084479749203
+      },
+      {
+        "step": 52,
+        "total": 0.0030782008543610573,
+        "coverage": 2.2908445316716097e-05,
+        "budget": 0.06110584735870361,
+        "entropy": 0.14161936938762665,
+        "soft_coverage": 0.9999771118164062,
+        "hard_coverage": 0.9583107829093933,
+        "mean_support": 0.002806226722896099
+      },
+      {
+        "step": 53,
+        "total": 0.0030770902521908283,
+        "coverage": 2.1815656509716064e-05,
+        "budget": 0.06110548973083496,
+        "entropy": 0.14170078933238983,
+        "soft_coverage": 0.999978244304657,
+        "hard_coverage": 0.9583107829093933,
+        "mean_support": 0.0028069354593753815
+      },
+      {
+        "step": 54,
+        "total": 0.00307609629817307,
+        "coverage": 2.0861951270489953e-05,
+        "budget": 0.06110468879342079,
+        "entropy": 0.14183209836483002,
+        "soft_coverage": 0.9999791979789734,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028085438534617424
+      },
+      {
+        "step": 55,
+        "total": 0.003075182205066085,
+        "coverage": 2.0007593775517307e-05,
+        "budget": 0.06110348924994469,
+        "entropy": 0.14200931787490845,
+        "soft_coverage": 0.9999799728393555,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028109720442444086
+      },
+      {
+        "step": 56,
+        "total": 0.0030743286479264498,
+        "coverage": 1.9232709746574983e-05,
+        "budget": 0.061101917177438736,
+        "entropy": 0.14222846925258636,
+        "soft_coverage": 0.9999807476997375,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.002814142033457756
+      },
+      {
+        "step": 57,
+        "total": 0.0030735579784959555,
+        "coverage": 1.855717164289672e-05,
+        "budget": 0.06110001727938652,
+        "entropy": 0.1424860656261444,
+        "soft_coverage": 0.9999814033508301,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028179858345538378
+      },
+      {
+        "step": 58,
+        "total": 0.0030728913843631744,
+        "coverage": 1.800084464775864e-05,
+        "budget": 0.06109781190752983,
+        "entropy": 0.1427786946296692,
+        "soft_coverage": 0.9999820590019226,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028224384877830744
+      },
+      {
+        "step": 59,
+        "total": 0.0030721116345375776,
+        "coverage": 1.734517718432471e-05,
+        "budget": 0.06109532713890076,
+        "entropy": 0.143103688955307,
+        "soft_coverage": 0.9999826550483704,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028274483047425747
+      },
+      {
+        "step": 60,
+        "total": 0.003071518149226904,
+        "coverage": 1.6888196114450693e-05,
+        "budget": 0.06109260022640228,
+        "entropy": 0.14345821738243103,
+        "soft_coverage": 0.9999831318855286,
+        "hard_coverage": 0.9616605639457703,
+        "mean_support": 0.0028329631313681602
+      },
+      {
+        "step": 61,
+        "total": 0.003070833859965205,
+        "coverage": 1.6351741578546353e-05,
+        "budget": 0.061089642345905304,
+        "entropy": 0.14383991062641144,
+        "soft_coverage": 0.9999836087226868,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.002838938497006893
+      },
+      {
+        "step": 62,
+        "total": 0.0030701991636306047,
+        "coverage": 1.5874893506406806e-05,
+        "budget": 0.06108648329973221,
+        "entropy": 0.14424645900726318,
+        "soft_coverage": 0.999984085559845,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0028453334234654903
+      },
+      {
+        "step": 63,
+        "total": 0.0030697137117385864,
+        "coverage": 1.5556994185317308e-05,
+        "budget": 0.06108313053846359,
+        "entropy": 0.1446751207113266,
+        "soft_coverage": 0.9999844431877136,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0028521022759377956
+      },
+      {
+        "step": 64,
+        "total": 0.003069140249863267,
+        "coverage": 1.5159620488702785e-05,
+        "budget": 0.061079613864421844,
+        "entropy": 0.14512424170970917,
+        "soft_coverage": 0.9999848008155823,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0028592150192707777
+      },
+      {
+        "step": 65,
+        "total": 0.0030686783138662577,
+        "coverage": 1.488145881012315e-05,
+        "budget": 0.06107593700289726,
+        "entropy": 0.14559206366539001,
+        "soft_coverage": 0.9999851584434509,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0028666420839726925
+      },
+      {
+        "step": 66,
+        "total": 0.0030681099742650986,
+        "coverage": 1.4503955753752962e-05,
+        "budget": 0.06107211858034134,
+        "entropy": 0.14607711136341095,
+        "soft_coverage": 0.9999854564666748,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.002874355996027589
+      },
+      {
+        "step": 67,
+        "total": 0.0030676941387355328,
+        "coverage": 1.4285399629443418e-05,
+        "budget": 0.06106817349791527,
+        "entropy": 0.1465778350830078,
+        "soft_coverage": 0.9999856948852539,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.002882332308217883
+      },
+      {
+        "step": 68,
+        "total": 0.003067192854359746,
+        "coverage": 1.3987370948598254e-05,
+        "budget": 0.061064109206199646,
+        "entropy": 0.1470927745103836,
+        "soft_coverage": 0.9999859929084778,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.002890547038987279
+      },
+      {
+        "step": 69,
+        "total": 0.00306672602891922,
+        "coverage": 1.3729079910262953e-05,
+        "budget": 0.06105993688106537,
+        "entropy": 0.14762082695960999,
+        "soft_coverage": 0.9999862313270569,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.002898983657360077
+      },
+      {
+        "step": 70,
+        "total": 0.003066333243623376,
+        "coverage": 1.3550260518968571e-05,
+        "budget": 0.061055660247802734,
+        "entropy": 0.1481608748435974,
+        "soft_coverage": 0.999986469745636,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0029076237697154284
+      },
+      {
+        "step": 71,
+        "total": 0.003065836848691106,
+        "coverage": 1.3272100659378339e-05,
+        "budget": 0.06105129420757294,
+        "entropy": 0.14871171116828918,
+        "soft_coverage": 0.9999867081642151,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0029164489824324846
+      },
+      {
+        "step": 72,
+        "total": 0.003065455239266157,
+        "coverage": 1.3113150089338887e-05,
+        "budget": 0.06104683876037598,
+        "entropy": 0.14927257597446442,
+        "soft_coverage": 0.9999868869781494,
+        "hard_coverage": 0.961597204208374,
+        "mean_support": 0.0029254481196403503
+      },
+      {
+        "step": 73,
+        "total": 0.0030650696717202663,
+        "coverage": 1.2954202247783542e-05,
+        "budget": 0.06104230880737305,
+        "entropy": 0.14984236657619476,
+        "soft_coverage": 0.9999870657920837,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029346069786697626
+      },
+      {
+        "step": 74,
+        "total": 0.003064680378884077,
+        "coverage": 1.2795254406228196e-05,
+        "budget": 0.06103770062327385,
+        "entropy": 0.15042085945606232,
+        "soft_coverage": 0.9999871850013733,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029439206700772047
+      },
+      {
+        "step": 75,
+        "total": 0.0030642873607575893,
+        "coverage": 1.2636304745683447e-05,
+        "budget": 0.06103301793336868,
+        "entropy": 0.15100699663162231,
+        "soft_coverage": 0.9999873638153076,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029533749911934137
+      },
+      {
+        "step": 76,
+        "total": 0.0030638317111879587,
+        "coverage": 1.2417750440363307e-05,
+        "budget": 0.06102827936410904,
+        "entropy": 0.151600182056427,
+        "soft_coverage": 0.9999876022338867,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029629620257765055
+      },
+      {
+        "step": 77,
+        "total": 0.003063452197238803,
+        "coverage": 1.2278669601073489e-05,
+        "budget": 0.061023470014333725,
+        "entropy": 0.15219992399215698,
+        "soft_coverage": 0.999987781047821,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029726773500442505
+      },
+      {
+        "step": 78,
+        "total": 0.00306308944709599,
+        "coverage": 1.2159459402028006e-05,
+        "budget": 0.061018601059913635,
+        "entropy": 0.1528058499097824,
+        "soft_coverage": 0.9999878406524658,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.0029825163073837757
+      },
+      {
+        "step": 79,
+        "total": 0.003062783507630229,
+        "coverage": 1.209985202876851e-05,
+        "budget": 0.06101367622613907,
+        "entropy": 0.1534174680709839,
+        "soft_coverage": 0.9999879002571106,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.00299247307702899
+      },
+      {
+        "step": 80,
+        "total": 0.0030623755883425474,
+        "coverage": 1.1940904187213164e-05,
+        "budget": 0.06100869178771973,
+        "entropy": 0.15403415262699127,
+        "soft_coverage": 0.9999880790710449,
+        "hard_coverage": 0.9616668224334717,
+        "mean_support": 0.003002540674060583
+      }
+    ],
+    "coverage_decreased": true,
+    "gradient_l1_at_step2": {
+      "scene_projection": 13.757265668362379,
+      "head_projection": 3.5299623482860625,
+      "geometry_projection": 0.017381087876856327,
+      "score_head": 28.74256621301174
+    },
+    "branches_connected": true,
+    "backbone_trainable_parameters": 0,
+    "backbone_parameters_with_grad": 0
+  },
+  "routing_cases": [
+    {
+      "keep_ratio": 0.25,
+      "keep_count": 256,
+      "feature_shape": [
+        2,
+        768,
+        32,
+        32
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 257
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 257
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 257
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 257
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 257
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 257
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "early_exit_fill": {
+        "equal": true,
+        "shape": [
+          1536,
+          768
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    },
+    {
+      "keep_ratio": 0.5,
+      "keep_count": 512,
+      "feature_shape": [
+        2,
+        768,
+        32,
+        32
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 513
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 513
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 513
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 513
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 513
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 513
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "early_exit_fill": {
+        "equal": true,
+        "shape": [
+          1024,
+          768
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    },
+    {
+      "keep_ratio": 1.0,
+      "keep_count": 1024,
+      "feature_shape": [
+        2,
+        768,
+        32,
+        32
+      ],
+      "finite": true,
+      "person_to_image": [
+        0,
+        0,
+        1
+      ],
+      "person_mapping_matches": true,
+      "max_union_matches": true,
+      "fixed_budget": true,
+      "sorted_indices": true,
+      "normalized_support": true,
+      "block_inputs": [
+        {
+          "block": 0,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 1,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 2,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 3,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 4,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 5,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 6,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 7,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 8,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 9,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 10,
+          "batch": 2,
+          "tokens": 1025
+        },
+        {
+          "block": 11,
+          "batch": 2,
+          "tokens": 1025
+        }
+      ],
+      "one_shared_image_suffix": true,
+      "k100_backbone": {
+        "equal": true,
+        "shape": [
+          2,
+          1024,
+          768
+        ],
+        "dtype": "torch.float32",
+        "max_abs_diff": 0.0,
+        "mismatched_values": 0,
+        "finite": true
+      },
+      "passed": true
+    }
+  ],
+  "passed": true
+}

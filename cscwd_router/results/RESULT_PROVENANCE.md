@@ -34,3 +34,10 @@
 - T2 小结果：`cscwd_router/results/t2_local_checks.json`；SHA256：`6798a76b795acda5c6f85b75b410c70d21b064b65a89deaaa48639b2799198c1`。
 - 本机使用官方 DINOv2 源码提交 `7764ea0f912e53c92e82eb78a2a1631e92725fc8` 的随机小模型，T1/T2 共 20/20 结构与 backward 检查通过；未加载真实权重，未执行 support 拟合。完整源码 SHA256 和环境在 JSON。
 - T2 服务器入口 `code/scripts/check_router_dinov2.py` 将读取同一官方 backbone 权重，进行合成 support 拟合与 K25/K50/K100 路由检查。实际结果写 `results/t2_dinov2_support_checks.json`，并自动向本文件追加权重路径、权重 SHA、结果 SHA 和实际 coverage loss。此 smoke 不保存 PT/NPY。
+
+## T2 · 2026-11-21T06:39:24.292574+00:00
+
+- code commit: `3babdbdcc680f54d8d167e4d76e8b582255d06fe`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/t2_dinov2_support_checks.json`; SHA256: `b7f6561e4322311e1b6f8e0937528356080739754609658a8316786a051bfc66`; passed: `True`
+- input: `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth`; SHA256: `0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73`
+- synthetic coverage loss: `3.465735673904419` → `1.1940904187213164e-05`; steps: `80`
