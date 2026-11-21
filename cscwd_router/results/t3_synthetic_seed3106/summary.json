@@ -1,0 +1,529 @@
+{
+  "task": "T3",
+  "protocol": "synthetic",
+  "completed": true,
+  "context": {
+    "created_utc": "2026-11-21T07:16:14.173822+00:00",
+    "argv": [
+      "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/train_router_dinov2.py",
+      "--protocol",
+      "synthetic",
+      "--data-path",
+      "/newhome/fb/dataset/gazefollow_extended",
+      "--decoder-checkpoint",
+      "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt",
+      "--run-dir",
+      "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106",
+      "--report-dir",
+      "/home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106",
+      "--provenance",
+      "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+      "--device",
+      "cuda",
+      "--batch-size",
+      "2",
+      "--eval-batch-size",
+      "2",
+      "--workers",
+      "0",
+      "--router-lr",
+      "0.001",
+      "--decoder-lr",
+      "0.0001",
+      "--weight-decay",
+      "0",
+      "--budget-weight",
+      "0.05",
+      "--seed",
+      "3106",
+      "--split-seed",
+      "3106",
+      "--val-fraction",
+      "0",
+      "--router-hidden-dim",
+      "256",
+      "--router-temperature",
+      "1.0",
+      "--escape-tokens",
+      "8",
+      "--log-every",
+      "1",
+      "--no-augment"
+    ],
+    "git_commit": "658f1742c30576b5fb59402582c9a2e99a3e9387",
+    "train_config": {
+      "protocol": "synthetic",
+      "batch_size": 2,
+      "eval_batch_size": 2,
+      "workers": 0,
+      "router_lr": 0.001,
+      "decoder_lr": 0.0001,
+      "weight_decay": 0.0,
+      "budget_weight": 0.05,
+      "seed": 3106,
+      "split_seed": 3106,
+      "val_fraction": 0.0,
+      "no_augment": true
+    },
+    "synthetic_tests": {
+      "run": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "environment": {
+      "python": "3.10.19",
+      "torch": "2.6.0+cu124",
+      "cuda": "12.4",
+      "device": "cuda",
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "cuda_visible_devices": "1",
+      "precision": "fp32",
+      "tf32": false
+    },
+    "external_weights": {
+      "backbone": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth",
+        "sha256": "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
+      },
+      "official_decoder": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt",
+        "sha256": "525a69495c0db475fa8522b164aba3cfabeaa0dd60adb7be5e13dd73e56d70e1"
+      }
+    },
+    "sources": {
+      "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+      "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/data_splits.py": "8e55af50b7851d3c2ddd6f7a0fd6f60bccf8f49ad2e5a1256c3735eedf0a3cbe",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "cscwd_router/code/stag/backbone_sparse_dinov2.py": "5b1db1ac2f9b15a1aba6a9bbc2d77791c3f0e7700a81515d0878bfcc4bd46072",
+      "cscwd_router/code/stag/router_dinov2.py": "eadef5c7fbde7d3b63a2b825e3a506b91212d583fe03228169f1d90658ac6071",
+      "cscwd_router/code/stag/model_dinov2.py": "3d71133e6f62d71419ac9cae29856769c598427a00e57a4f214b620ea70fe808",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/pipeline.py": "5c3a0101ba80f8eaeaa167f1ffd9361769b5d189b2f94ceac04ffc3fb1a7e78e",
+      "cscwd_router/code/stag/test_training_dinov2.py": "d0fa3fd701ac5fb9e338ddf5f2629e4f6bf4e1ef2d1efff22b92907962d5be76",
+      "cscwd_router/code/data_prep/synthetic_support.py": "f01de8a00ea260dd12c0a540329f368128cea5b4fc58735abff4c465c29a1c26",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/scripts/train_router_dinov2.py": "bb089b03ff57fc10030266dee051b9093f20afaf75c4b7a1dd179139834fb025",
+      "cscwd_router/code/scripts/eval_router_dinov2.py": "43820b4f8457de547ae9c391db8b62182e0c2a33591edff5d5700116ffd8f2a9",
+      "dinov2/dinov2/models/vision_transformer.py": "7799a260f2d7d0fe197331d08502fb8c542f9b7424723650f6a39b64fa2639ea",
+      "dinov2/dinov2/layers/block.py": "2fe017598d6d2ca2af9750ed352a97d5602a13d55c9c4ef246f6bcd68048affb",
+      "dinov2/dinov2/layers/attention.py": "a3223b5c3757d95eb65482b460854af1986e3f815c4b8b4a88dbb165908171fd"
+    },
+    "recipe": {
+      "support_epochs": 3,
+      "support_keep_ratio": 0.25,
+      "sparse_keep_schedule": [
+        1.0,
+        0.75,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "matched_dense_epochs": 5,
+      "router_lr": 0.001,
+      "decoder_lr": 0.0001,
+      "weight_decay": 0.0,
+      "budget_weight": 0.05,
+      "seed": 3106,
+      "selection": "fixed_final_epoch"
+    },
+    "data": {
+      "protocol": "synthetic",
+      "official_test_accessed": false,
+      "seed": 3106,
+      "image_size": 448,
+      "train_persons": 3,
+      "train_images": 2
+    },
+    "signature": "717799ee96477b516300d6c2e4b09b2c0423af511d93f8e8efa006a8cc8236d3"
+  },
+  "baseline_checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/dense_official/final.pt",
+    "sha256": "48ea8e3727385e8109e9389de31252322bd340a3f123b5b15b9797a10ec5e2f4"
+  },
+  "initial_equivalence": {
+    "dense": {
+      "equal": true,
+      "max_abs_diff": 0.0,
+      "mismatched_values": 0,
+      "finite": true
+    },
+    "sparse": {
+      "equal": true,
+      "max_abs_diff": 0.0,
+      "mismatched_values": 0,
+      "finite": true
+    }
+  },
+  "stages": [
+    {
+      "stage": "support",
+      "epochs": 3,
+      "history": [
+        {
+          "epoch": 0,
+          "epoch_seed": 3106,
+          "keep_ratio": 0.25,
+          "learning_rate": 0.001,
+          "losses": {
+            "total": 3.4938607215881348,
+            "coverage": 3.465735673904419,
+            "budget": 0.5625,
+            "entropy": 1.0,
+            "soft_coverage": 0.03125,
+            "hard_coverage": 0.011285764165222645,
+            "mean_support": 1.0
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 1,
+          "epoch_seed": 3107,
+          "keep_ratio": 0.25,
+          "learning_rate": 0.000750025,
+          "losses": {
+            "total": 3.4750008583068848,
+            "coverage": 3.4468815326690674,
+            "budget": 0.5623841881752014,
+            "entropy": 0.9999889135360718,
+            "soft_coverage": 0.03184501454234123,
+            "hard_coverage": 0.8160505294799805,
+            "mean_support": 0.9999227523803711
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 2,
+          "epoch_seed": 3108,
+          "keep_ratio": 0.25,
+          "learning_rate": 0.0002500750000000001,
+          "losses": {
+            "total": 3.4335780143737793,
+            "coverage": 3.405505418777466,
+            "budget": 0.5614516139030457,
+            "entropy": 0.99989914894104,
+            "soft_coverage": 0.0331912599503994,
+            "hard_coverage": 0.9226452708244324,
+            "mean_support": 0.9993007183074951
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        }
+      ],
+      "start_hashes": {
+        "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+        "router": "3c15edd4c369ab275488223a387de0754abd3ad222bd516ffdfbdb1758eb5492"
+      },
+      "end_hashes": {
+        "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+        "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+      },
+      "decoder_changed": false,
+      "router_changed": true,
+      "optimizer_steps": 3,
+      "training_persons_seen": 9,
+      "validation": null,
+      "backbone_trainable_parameters": 0,
+      "backbone_parameters_with_grad": 0,
+      "checkpoint": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/final.pt",
+        "sha256": "f7047379ac0d1087d1417133c238637d02f7676733a3e91c5c79da8b34f8d88e"
+      }
+    },
+    {
+      "stage": "sparse_decoder",
+      "epochs": 5,
+      "history": [
+        {
+          "epoch": 0,
+          "epoch_seed": 13106,
+          "keep_ratio": 1.0,
+          "learning_rate": 0.0001,
+          "losses": {
+            "total": 0.0897340476512909
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 1,
+          "epoch_seed": 13107,
+          "keep_ratio": 0.75,
+          "learning_rate": 9.046039886902862e-05,
+          "losses": {
+            "total": 0.09626564383506775
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 2,
+          "epoch_seed": 13108,
+          "keep_ratio": 0.5,
+          "learning_rate": 6.548539886902863e-05,
+          "losses": {
+            "total": 0.0905081182718277
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 3,
+          "epoch_seed": 13109,
+          "keep_ratio": 0.5,
+          "learning_rate": 3.461460113097138e-05,
+          "losses": {
+            "total": 0.07227849960327148
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 4,
+          "epoch_seed": 13110,
+          "keep_ratio": 0.5,
+          "learning_rate": 9.63960113097138e-06,
+          "losses": {
+            "total": 0.07975439727306366
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        }
+      ],
+      "start_hashes": {
+        "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+        "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+      },
+      "end_hashes": {
+        "decoder": "61870bbd53c389a5f0c37b2a640854e480fa8a7c8b2c25f5217d2f44b408dbee",
+        "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+      },
+      "decoder_changed": true,
+      "router_changed": false,
+      "optimizer_steps": 5,
+      "training_persons_seen": 15,
+      "validation": {
+        "auc": 0.7266856997653249,
+        "avg_l2": 0.39568428578159054,
+        "min_l2": 0.39568428578159054,
+        "persons": 3,
+        "images": 2,
+        "query_unit": "image_with_all_heads",
+        "precision": "fp32",
+        "routing_gt_point_coverage": 1.0,
+        "head_count_strata": {
+          "single": {
+            "auc": 0.8464347817421762,
+            "avg_l2": 0.5060667106469264,
+            "min_l2": 0.5060667106469264,
+            "persons": 1
+          },
+          "two": {
+            "auc": 0.6668111587768992,
+            "avg_l2": 0.34049307334892265,
+            "min_l2": 0.34049307334892265,
+            "persons": 2
+          },
+          "three_plus": {
+            "persons": 0,
+            "auc": null,
+            "avg_l2": null,
+            "min_l2": null
+          }
+        }
+      },
+      "backbone_trainable_parameters": 0,
+      "backbone_parameters_with_grad": 0,
+      "checkpoint": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt",
+        "sha256": "c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7"
+      }
+    },
+    {
+      "stage": "matched_dense",
+      "epochs": 5,
+      "history": [
+        {
+          "epoch": 0,
+          "epoch_seed": 13106,
+          "keep_ratio": 1.0,
+          "learning_rate": 0.0001,
+          "losses": {
+            "total": 0.0897340476512909
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 1,
+          "epoch_seed": 13107,
+          "keep_ratio": 1.0,
+          "learning_rate": 9.046039886902862e-05,
+          "losses": {
+            "total": 0.08036157488822937
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 2,
+          "epoch_seed": 13108,
+          "keep_ratio": 1.0,
+          "learning_rate": 6.548539886902863e-05,
+          "losses": {
+            "total": 0.07786008715629578
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 3,
+          "epoch_seed": 13109,
+          "keep_ratio": 1.0,
+          "learning_rate": 3.461460113097138e-05,
+          "losses": {
+            "total": 0.06706765294075012
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        },
+        {
+          "epoch": 4,
+          "epoch_seed": 13110,
+          "keep_ratio": 1.0,
+          "learning_rate": 9.63960113097138e-06,
+          "losses": {
+            "total": 0.06855282187461853
+          },
+          "persons": 3,
+          "images": 2,
+          "optimizer_steps": 1
+        }
+      ],
+      "start_hashes": {
+        "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+        "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+      },
+      "end_hashes": {
+        "decoder": "255f814011cc59fd222d6cb250ec9e0d9cdd2ec4f0003ec3a34626d25099aa8f",
+        "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+      },
+      "decoder_changed": true,
+      "router_changed": false,
+      "optimizer_steps": 5,
+      "training_persons_seen": 15,
+      "validation": {
+        "auc": 0.4079377654212111,
+        "avg_l2": 0.6722811728709625,
+        "min_l2": 0.6722811728709625,
+        "persons": 3,
+        "images": 2,
+        "query_unit": "image_with_all_heads",
+        "precision": "fp32",
+        "routing_gt_point_coverage": 1.0,
+        "head_count_strata": {
+          "single": {
+            "auc": 0.7005874351653936,
+            "avg_l2": 0.5949822738956179,
+            "min_l2": 0.5949822738956179,
+            "persons": 1
+          },
+          "two": {
+            "auc": 0.2616129305491198,
+            "avg_l2": 0.7109306223586349,
+            "min_l2": 0.7109306223586349,
+            "persons": 2
+          },
+          "three_plus": {
+            "persons": 0,
+            "auc": null,
+            "avg_l2": null,
+            "min_l2": null
+          }
+        }
+      },
+      "backbone_trainable_parameters": 0,
+      "backbone_parameters_with_grad": 0,
+      "checkpoint": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/matched_dense/final.pt",
+        "sha256": "76724916a42f6b52ee37e8693f689e74ad270422f142963b59a78b4758487767"
+      }
+    }
+  ],
+  "checkpoint_roundtrips": [
+    {
+      "stage": "sparse_decoder",
+      "equal": true,
+      "max_abs_diff": 0.0,
+      "finite": true
+    },
+    {
+      "stage": "matched_dense",
+      "equal": true,
+      "max_abs_diff": 0.0,
+      "finite": true
+    }
+  ],
+  "engineering_checks": {
+    "initial_equivalence": true,
+    "support_updates_router_only": true,
+    "sparse_updates_decoder_only": true,
+    "matched_updates_decoder_only": true,
+    "same_official_decoder_start": true,
+    "matched_optimizer_budget": true,
+    "matched_training_sample_budget": true,
+    "matched_epoch_seeds": true,
+    "backbone_frozen": true,
+    "checkpoint_roundtrips": true
+  },
+  "passed": true,
+  "artifacts": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/dense_official/final.pt",
+      "sha256": "48ea8e3727385e8109e9389de31252322bd340a3f123b5b15b9797a10ec5e2f4"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/matched_dense/final.pt",
+      "sha256": "76724916a42f6b52ee37e8693f689e74ad270422f142963b59a78b4758487767"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/matched_dense/last.pt",
+      "sha256": "277a6f7df872fe960ba9a0768110e277e21851247953d8ea9ea6617b5d3707eb"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt",
+      "sha256": "c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/last.pt",
+      "sha256": "fca0277c5d6b117c772a4629bd05ee135260a7a8b14164a2ca02befa1dbde64c"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/final.pt",
+      "sha256": "f7047379ac0d1087d1417133c238637d02f7676733a3e91c5c79da8b34f8d88e"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/last.pt",
+      "sha256": "3b2bca7ef1d965779ce69a6366a052964fa8934a55c2bfd0c44546bf632411d6"
+    }
+  ]
+}

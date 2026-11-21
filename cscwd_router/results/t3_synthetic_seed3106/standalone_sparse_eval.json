@@ -1,0 +1,68 @@
+{
+  "task": "T3_evaluation",
+  "stage": "sparse_decoder",
+  "mode": "sparse",
+  "split": "synthetic",
+  "checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt",
+    "sha256": "c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7"
+  },
+  "data": {
+    "protocol": "synthetic",
+    "official_test_accessed": false
+  },
+  "metrics": {
+    "auc": 0.7266856997653249,
+    "avg_l2": 0.39568428578159054,
+    "min_l2": 0.39568428578159054,
+    "persons": 3,
+    "images": 2,
+    "query_unit": "image_with_all_heads",
+    "precision": "fp32",
+    "routing_gt_point_coverage": 1.0,
+    "head_count_strata": {
+      "single": {
+        "auc": 0.8464347817421762,
+        "avg_l2": 0.5060667106469264,
+        "min_l2": 0.5060667106469264,
+        "persons": 1
+      },
+      "two": {
+        "auc": 0.6668111587768992,
+        "avg_l2": 0.34049307334892265,
+        "min_l2": 0.34049307334892265,
+        "persons": 2
+      },
+      "three_plus": {
+        "persons": 0,
+        "auc": null,
+        "avg_l2": null,
+        "min_l2": null
+      }
+    }
+  },
+  "training_signature": "717799ee96477b516300d6c2e4b09b2c0423af511d93f8e8efa006a8cc8236d3",
+  "git_commit": "658f1742c30576b5fb59402582c9a2e99a3e9387",
+  "argv": [
+    "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/eval_router_dinov2.py",
+    "--checkpoint",
+    "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt",
+    "--split",
+    "synthetic",
+    "--data-path",
+    "/newhome/fb/dataset/gazefollow_extended",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "2",
+    "--workers",
+    "0",
+    "--output",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/standalone_sparse_eval.json",
+    "--provenance",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md"
+  ],
+  "batch_size": 2,
+  "torch": "2.6.0+cu124",
+  "precision": "fp32"
+}

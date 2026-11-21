@@ -1,0 +1,114 @@
+{
+  "stage": "sparse_decoder",
+  "epochs": 5,
+  "history": [
+    {
+      "epoch": 0,
+      "epoch_seed": 13106,
+      "keep_ratio": 1.0,
+      "learning_rate": 0.0001,
+      "losses": {
+        "total": 0.0897340476512909
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 1,
+      "epoch_seed": 13107,
+      "keep_ratio": 0.75,
+      "learning_rate": 9.046039886902862e-05,
+      "losses": {
+        "total": 0.09626564383506775
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 2,
+      "epoch_seed": 13108,
+      "keep_ratio": 0.5,
+      "learning_rate": 6.548539886902863e-05,
+      "losses": {
+        "total": 0.0905081182718277
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 3,
+      "epoch_seed": 13109,
+      "keep_ratio": 0.5,
+      "learning_rate": 3.461460113097138e-05,
+      "losses": {
+        "total": 0.07227849960327148
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 4,
+      "epoch_seed": 13110,
+      "keep_ratio": 0.5,
+      "learning_rate": 9.63960113097138e-06,
+      "losses": {
+        "total": 0.07975439727306366
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    }
+  ],
+  "start_hashes": {
+    "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+    "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+  },
+  "end_hashes": {
+    "decoder": "61870bbd53c389a5f0c37b2a640854e480fa8a7c8b2c25f5217d2f44b408dbee",
+    "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+  },
+  "decoder_changed": true,
+  "router_changed": false,
+  "optimizer_steps": 5,
+  "training_persons_seen": 15,
+  "validation": {
+    "auc": 0.7266856997653249,
+    "avg_l2": 0.39568428578159054,
+    "min_l2": 0.39568428578159054,
+    "persons": 3,
+    "images": 2,
+    "query_unit": "image_with_all_heads",
+    "precision": "fp32",
+    "routing_gt_point_coverage": 1.0,
+    "head_count_strata": {
+      "single": {
+        "auc": 0.8464347817421762,
+        "avg_l2": 0.5060667106469264,
+        "min_l2": 0.5060667106469264,
+        "persons": 1
+      },
+      "two": {
+        "auc": 0.6668111587768992,
+        "avg_l2": 0.34049307334892265,
+        "min_l2": 0.34049307334892265,
+        "persons": 2
+      },
+      "three_plus": {
+        "persons": 0,
+        "auc": null,
+        "avg_l2": null,
+        "min_l2": null
+      }
+    }
+  },
+  "backbone_trainable_parameters": 0,
+  "backbone_parameters_with_grad": 0,
+  "checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt",
+    "sha256": "c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7"
+  }
+}

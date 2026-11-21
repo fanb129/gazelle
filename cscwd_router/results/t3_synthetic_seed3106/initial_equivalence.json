@@ -1,0 +1,14 @@
+{
+  "dense": {
+    "equal": true,
+    "max_abs_diff": 0.0,
+    "mismatched_values": 0,
+    "finite": true
+  },
+  "sparse": {
+    "equal": true,
+    "max_abs_diff": 0.0,
+    "mismatched_values": 0,
+    "finite": true
+  }
+}

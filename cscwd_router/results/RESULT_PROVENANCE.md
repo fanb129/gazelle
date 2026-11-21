@@ -49,3 +49,20 @@
 - 本机 T1/T2/T3 共 34/34 结构、backward、协议与序列化检查通过。随机小模型的 dense/K100 与原版 GazeLLE 逐值一致，最大差值 0.0、不一致元素 0；源码 SHA 与环境在 JSON。本机优化器更新数为 0；恢复调度单测使用临时状态扰动，临时文件已删除。
 - T3 服务器入口为 `code/scripts/train_router_dinov2.py`，实际大文件写到 `experiments/cscwd_router/t3_synthetic_seed3106/`，关键小报告写到 `results/t3_synthetic_seed3106/`。运行后自动登记两份输入权重、四个 final checkpoint、三个 last checkpoint 的完整路径与 SHA256，权重不进 Git。
 - 独立评测入口 `code/scripts/eval_router_dinov2.py` 重新加载 checkpoint，沿用现有 GazeFollow 指标；输出小 JSON 的路径与 SHA256 也由实际运行追加到本文件。
+
+## T3 · 2026-11-21T07:16:14.173822+00:00 · synthetic
+
+- code commit: `658f1742c30576b5fb59402582c9a2e99a3e9387`; precision: `fp32`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/summary.json`; SHA256: `4ffe9e3d342368f0b1b301e932fd9c6ef19a4b00ca9089e9a3f90c36cb91d872`; engineering passed: `True`
+- input backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth`; SHA256: `0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73`
+- input official_decoder: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt`; SHA256: `525a69495c0db475fa8522b164aba3cfabeaa0dd60adb7be5e13dd73e56d70e1`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/dense_official/final.pt`; SHA256: `48ea8e3727385e8109e9389de31252322bd340a3f123b5b15b9797a10ec5e2f4`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/matched_dense/final.pt`; SHA256: `76724916a42f6b52ee37e8693f689e74ad270422f142963b59a78b4758487767`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/matched_dense/last.pt`; SHA256: `277a6f7df872fe960ba9a0768110e277e21851247953d8ea9ea6617b5d3707eb`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt`; SHA256: `c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/last.pt`; SHA256: `fca0277c5d6b117c772a4629bd05ee135260a7a8b14164a2ca02befa1dbde64c`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/final.pt`; SHA256: `f7047379ac0d1087d1417133c238637d02f7676733a3e91c5c79da8b34f8d88e`
+- checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/last.pt`; SHA256: `3b2bca7ef1d965779ce69a6366a052964fa8934a55c2bfd0c44546bf632411d6`
+
+- evaluation (synthetic, sparse_decoder): `/home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/standalone_sparse_eval.json`; SHA256: `ebcf8fc0d0c0d361225b4ccc0c2d3482de9a210209d6d0746b61a7a93bcb3d30`
+- input checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt`; SHA256: `c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7`

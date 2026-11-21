@@ -1,0 +1,62 @@
+[
+  {
+    "epoch": 0,
+    "epoch_seed": 13106,
+    "keep_ratio": 1.0,
+    "learning_rate": 0.0001,
+    "losses": {
+      "total": 0.0897340476512909
+    },
+    "persons": 3,
+    "images": 2,
+    "optimizer_steps": 1
+  },
+  {
+    "epoch": 1,
+    "epoch_seed": 13107,
+    "keep_ratio": 1.0,
+    "learning_rate": 9.046039886902862e-05,
+    "losses": {
+      "total": 0.08036157488822937
+    },
+    "persons": 3,
+    "images": 2,
+    "optimizer_steps": 1
+  },
+  {
+    "epoch": 2,
+    "epoch_seed": 13108,
+    "keep_ratio": 1.0,
+    "learning_rate": 6.548539886902863e-05,
+    "losses": {
+      "total": 0.07786008715629578
+    },
+    "persons": 3,
+    "images": 2,
+    "optimizer_steps": 1
+  },
+  {
+    "epoch": 3,
+    "epoch_seed": 13109,
+    "keep_ratio": 1.0,
+    "learning_rate": 3.461460113097138e-05,
+    "losses": {
+      "total": 0.06706765294075012
+    },
+    "persons": 3,
+    "images": 2,
+    "optimizer_steps": 1
+  },
+  {
+    "epoch": 4,
+    "epoch_seed": 13110,
+    "keep_ratio": 1.0,
+    "learning_rate": 9.63960113097138e-06,
+    "losses": {
+      "total": 0.06855282187461853
+    },
+    "persons": 3,
+    "images": 2,
+    "optimizer_steps": 1
+  }
+]

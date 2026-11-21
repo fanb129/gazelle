@@ -1,0 +1,79 @@
+{
+  "stage": "support",
+  "epochs": 3,
+  "history": [
+    {
+      "epoch": 0,
+      "epoch_seed": 3106,
+      "keep_ratio": 0.25,
+      "learning_rate": 0.001,
+      "losses": {
+        "total": 3.4938607215881348,
+        "coverage": 3.465735673904419,
+        "budget": 0.5625,
+        "entropy": 1.0,
+        "soft_coverage": 0.03125,
+        "hard_coverage": 0.011285764165222645,
+        "mean_support": 1.0
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 1,
+      "epoch_seed": 3107,
+      "keep_ratio": 0.25,
+      "learning_rate": 0.000750025,
+      "losses": {
+        "total": 3.4750008583068848,
+        "coverage": 3.4468815326690674,
+        "budget": 0.5623841881752014,
+        "entropy": 0.9999889135360718,
+        "soft_coverage": 0.03184501454234123,
+        "hard_coverage": 0.8160505294799805,
+        "mean_support": 0.9999227523803711
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    },
+    {
+      "epoch": 2,
+      "epoch_seed": 3108,
+      "keep_ratio": 0.25,
+      "learning_rate": 0.0002500750000000001,
+      "losses": {
+        "total": 3.4335780143737793,
+        "coverage": 3.405505418777466,
+        "budget": 0.5614516139030457,
+        "entropy": 0.99989914894104,
+        "soft_coverage": 0.0331912599503994,
+        "hard_coverage": 0.9226452708244324,
+        "mean_support": 0.9993007183074951
+      },
+      "persons": 3,
+      "images": 2,
+      "optimizer_steps": 1
+    }
+  ],
+  "start_hashes": {
+    "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+    "router": "3c15edd4c369ab275488223a387de0754abd3ad222bd516ffdfbdb1758eb5492"
+  },
+  "end_hashes": {
+    "decoder": "2537d68d8588dd2c2aecdff951b5b1bad844ef98dd3c852134759641d5f022b5",
+    "router": "480f799d5498533de557622aff0f16da94e15ff4c05c013364919f764398bb58"
+  },
+  "decoder_changed": false,
+  "router_changed": true,
+  "optimizer_steps": 3,
+  "training_persons_seen": 9,
+  "validation": null,
+  "backbone_trainable_parameters": 0,
+  "backbone_parameters_with_grad": 0,
+  "checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/support/final.pt",
+    "sha256": "f7047379ac0d1087d1417133c238637d02f7676733a3e91c5c79da8b34f8d88e"
+  }
+}
