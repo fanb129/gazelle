@@ -1,0 +1,29 @@
+# Keep small reports despite the repository-wide JSON ignore rule.
+!/results/**/*.json
+!/results/*.json
+
+# Large artifacts remain on the server.
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.parquet
+*.zip
+code/cache/
+results/cache/
+__pycache__/
+*.pyc
+.DS_Store
+
+# LaTeX build products.
+latex/*.aux
+latex/*.log
+latex/*.out
+latex/*.bbl
+latex/*.blg
+latex/*.fls
+latex/*.fdb_latexmk
+latex/*.synctex.gz
+latex/*.pdf
