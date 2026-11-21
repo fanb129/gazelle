@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | T1/T2 服务器验收通过；T3 训练/评测闭环已实现，本机共 34/34 通过，下一步服务器 3+5+5 smoke |
+| CSCWD 新主线 | `cscwd_router/` | T1–T3 服务器验收通过；T4 完整主实验入口就绪，本机共 44/44 通过，下一步服务器真实 GazeFollow 与效率矩阵 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -43,9 +43,13 @@
 
 **T3 实现与本机检查（2026-11-21）**：新增原版单层 GazeLLE decoder 接口、固定 support 3ep → sparse decoder 5ep / matched dense 5ep pipeline、图像分组数据视图、标准指标和 compact checkpoint。两条 decoder 分支从同一官方权重开始，使用相同 epoch seed 和更新预算，支持从 last epoch 恢复；backbone 始终冻结。T1/T2/T3 共 **34/34 通过**（新增 14 项），随机小模型初始 dense/K100 与原版 GazeLLE 的最大差值 0.0、不一致元素 0。恢复调度用临时状态扰动做控制单测，本机未执行优化器更新；本轮小结果在 `results/t3_local_checks.json`。GPU 1 的训练与独立评测完整命令见执行规格第 11 节。
 
+**T3 服务器验收（2026-11-21）**：已 pull 提交 `de1488d`。实际完成 3/5/5 更新、9/15/15 人次，两条 decoder 分支同起点/seed/预算；backbone 冻结。初始 dense/K100 与原版 GazeLLE、两个 checkpoint 往返最大差值均为 0.0；独立 sparse metrics 与训练报告完全一致。34/34 单测、十项 engineering checks、18 个源码 SHA、两个小报告 SHA 和七个 PT 的登记均核对通过。证据为 `results/t3_synthetic_seed3106/`、`results/T3_REVIEW.md`。T3 已完成。
+
+**T4 实现与本机检查（2026-11-21）**：新增完整主入口 `code/scripts/run_main_experiment.py`、真实 RGB/GT 头框 benchmark 和 gate 汇总模块。固定 full-train/no-eval 后，对 official dense/K50/matched 各 test 一次，再执行 B1/B4/B8 正反序 dense/K100/K50 矩阵；恢复复用已核对的 test 和效率单元。primary gate 按原规格：相对 official dense AUC 掉 ≤0.002，B8 latency speedup ≥1.10x。本机共 **44/44 通过**，没有真实 T4 精度或速度数字；小结果 `results/t4_local_checks.json`，GPU 1 完整启动命令见执行规格第 13 节。
+
 ## 下一步
 
-1. 用户按执行规格第 12 节提交/push T3 文件；服务器 pull 后手动执行第 11.1 节 synthetic 3+5+5 smoke，再执行第 11.2 节独立 checkpoint 评测，回传 `results/t3_synthetic_seed3106/` 和 provenance。
-2. T3 工程验收通过后进入 T4：真实 GazeFollow 的官方 dense/K50/matched 对比及 B1/B4/B8 正反序效率矩阵。
+1. 用户按执行规格第 14 节提交/push T4 文件；服务器 pull 后按第 13.1 节启动完整主实验，回传 `results/t4_gf_fulltrain_seed3106/` 和 provenance。
+2. 审查真实 T4 门槛：通过后进入 T5 多人 union；未通过按已定规则停止本方案。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

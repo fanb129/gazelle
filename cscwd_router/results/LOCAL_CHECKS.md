@@ -82,3 +82,29 @@ T3 检查内容：
 - official-test 请求拒绝 holdout、support 和非 fixed-final checkpoint。
 
 两个入口的 `--help` 和八个新增 Python 文件的编译检查通过。本机未加载真实 checkpoint，也未执行真实优化；T3 的实际 3+5+5 更新、标准指标计算和 GPU checkpoint 往返由服务器 synthetic smoke 运行后记录。
+
+## T4 本机执行图、汇总与命令检查（2026-11-21）
+
+T3 服务器验收已通过，见 [T3_REVIEW.md](T3_REVIEW.md)。本轮本机结果：[t4_local_checks.json](t4_local_checks.json)。
+
+此前 34 项 + T4 新增 10 项，共 **44/44 通过**。未执行本机训练、真实 GazeFollow 推理或 GPU timing。
+
+```bash
+cd /Users/fanb/src/gazelle
+PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle \
+  /private/tmp/gazelle-cscwd-check/bin/python -m unittest -v \
+  cscwd_router.code.stag.test_backbone_sparse_dinov2 \
+  cscwd_router.code.stag.test_router_dinov2 \
+  cscwd_router.code.stag.test_training_dinov2 \
+  cscwd_router.code.stag.test_main_experiment
+```
+
+新增检查：
+
+- 原版 dense、routed K100、routed K50 的实际执行图：随机 24 维/12 blocks 小模型、448 输入、32 维/1 层 decoder；实际保留 1024/1024/512 patches，K50 后六层实际为 513 tokens，dense/K100 输出逐值一致。
+- benchmark 输入从生成的 RGB/头框 annotation 文件选择，转为 RGB，仅用真实头框字段；fixture 不含 gaze 字段，选择可重复，B1 为 B8 的同一前缀样本。
+- 主命令固定 full-train、validation fraction 0；独立 test 指向 final checkpoint；六个 benchmark 子命令固定 FP16 和预声明正反序。
+- 缓存 official test 必须匹配 checkpoint SHA、训练 signature、annotation SHA 和 batch；训练 summary 尚未登记工件哈希时会继续完成登记再进入 test。
+- 正反序比例的几何平均、AUC/latency 两个独立门槛、含等号边界、缺失或混用证据的拒绝路径、percentile 计算通过单测。此处使用的 accuracy/timing 数字只是单测 fixture，没有导出为实验结果。
+
+两个新增脚本的 `--help` 和四个新增 Python 文件的编译检查通过。当前没有真实 T4 AUC、latency 或 speedup 数字，实际结果由服务器主实验生成。

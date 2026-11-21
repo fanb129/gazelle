@@ -120,7 +120,19 @@
 - **完成内容**：新增 `code/stag/model_dinov2.py`，以 feature-grid adapter 直接调用原版 `GazeLLE.forward`，严格加载官方 decoder。新增 `engine.py`、`checkpoint.py`、`pipeline.py` 与 `code/data_prep/gazefollow.py`，实现固定 support 3ep、K100→K75→K50→K50→K50 decoder 5ep、matched dense 5ep；两条 decoder 分支重置到同一官方权重，使用相同 epoch seed、样本与更新预算。支持按 epoch 恢复、图像分组 holdout、full-train/no-eval、原版 AUC/Avg L2/Min L2 和独立 fixed-final 评测；backbone 始终冻结。compact checkpoint 只保存 decoder/Router，外部 DINOv2 路径和 SHA 随文件登记。
 - **产出文件**：上述模型/engine/checkpoint/pipeline/data、`code/scripts/train_router_dinov2.py`、`code/scripts/eval_router_dinov2.py`、`code/stag/test_training_dinov2.py`；小结果 `results/t3_local_checks.json`，说明见 `results/LOCAL_CHECKS.md`。
 - **产出数字**：本机 T1/T2/T3 共 **34/34 通过**，新增 T3 14 项；随机小模型 dense/零初始化 K100 与原版 GazeLLE 的最大差值 0.0、不一致元素 0。阶段梯度、checkpoint 往返、多标注指标、图像分组和恢复调度已检查；本机优化器更新数为 0，调度单测的参数扰动仅发生于临时测试目录。
-- **下一步**：用户按第 11 节手动执行官方权重上的 synthetic 3+5+5 smoke，再运行独立 synthetic checkpoint 评测并回传小报告。通过后登记 T3 验收，再进入 T4 真实 GazeFollow 主实验与效率矩阵。
+- **下一步**：该阶段之后服务器 synthetic 训练与独立评测已通过，见下一条 T3 验收记录。
+
+### 2026-11-21 · T3：服务器验收通过
+
+- **完成内容**：pull 结果提交 `de1488d`，核对 summary/独立评测 SHA、18 个源码 SHA、逐阶段 history、权重变化范围、七个 checkpoint 的路径/SHA 登记与独立评测一致性。
+- **产出文件与数字**：`results/t3_synthetic_seed3106/`、`results/T3_REVIEW.md`。RTX 3090、FP32，实际 support/sparse/matched 更新 3/5/5 次、逐人样本 9/15/15；两条 decoder 分支的起点、epoch seed 和预算相同。初始 dense/K100 与原版 GazeLLE、两个 checkpoint 往返的最大差值均为 0.0；独立 sparse metrics 与总报告逐值一致。34/34 单测和十项 engineering checks 全部通过。
+- **下一步**：T3 完整工程验收通过，进入 T4。
+
+### 2026-11-21 · T4：主实验入口、效率矩阵与判定实现完成
+
+- **完成内容**：新增 `code/scripts/run_main_experiment.py`，顺序执行固定 full-train/no-eval 3+5+5、三个 final checkpoint 的一次 official test、B1/B4/B8 正反序共六个新进程 benchmark。新增 `benchmark_router_dinov2.py`，比较原版 dense、同路径不剪 token 的 K100 与 K50；输入为 train 中真实 RGB 和一个 in-frame GT 头框，数据加载/预处理/传输在计时外，统一 inference mode、FP16、关闭 autocast cache。新增 `code/stag/main_results.py`，按预声明公式汇总并输出 pass/stop；恢复核对并复用已完成 official test。
+- **产出文件与数字**：上述三个文件、`code/stag/test_main_experiment.py`、`results/t4_local_checks.json`、本机检查说明；此前 34 项 + 新增 10 项，**44/44 通过**。随机小模型 448 输入的 dense/K100/K50 执行图实际保留 1024/1024/512 patches，dense/K100 输出逐值一致。未产生真实 T4 精度、时延或加速数字。
+- **下一步**：用户按第 13 节在服务器手动启动完整 T4，回传小报告和 provenance。按 official dense AUC 掉 ≤0.002、B8 latency speedup ≥1.10x 的既定门槛决定继续 T5 或停止本方案。
 
 ## 7. T1 服务器运行与结果回传
 
@@ -244,7 +256,7 @@ git push origin codex/coverage-aware-router
 
 ### 11.1 当前运行：固定 3+5+5 smoke
 
-先按第 12 节提交/push，服务器 pull 后由用户运行。该命令使用官方 ViT-B backbone 和官方 decoder，但只生成合成 RGB/头框/目标；每个 epoch 使用同一批两图三人，共执行规格规定的 3+5+5 个单 batch epoch。`--protocol synthetic` 不读取 `--data-path`。
+本节已执行并验收通过，以下保留复现命令。该命令使用官方 ViT-B backbone 和官方 decoder，但只生成合成 RGB/头框/目标；每个 epoch 使用同一批两图三人，共执行规格规定的 3+5+5 个单 batch epoch。`--protocol synthetic` 不读取 `--data-path`。
 
 ```bash
 cd /home/fb/src/paper/gazelleV1
@@ -308,7 +320,7 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 
 评测直接沿用 `gazelle.utils.gazefollow_auc/gazefollow_l2`：AUC 在原始图像分辨率计算，Avg L2 为预测点到平均标注坐标的距离，Min L2 为到最近标注的距离，最终按人平均。eval loader 按图聚合全部 in-frame 头框。输出文件存在时拒绝覆盖。
 
-真实数据接口已经实现：`--protocol holdout` 对 train 做稳定图像分组，并在各 decoder 阶段末尾读取 holdout；`--protocol full_train --val-fraction 0` 不构造 eval loader，只保存固定 final。`--split official_test` 只接受 full-train 的 fixed-final baseline/K50/matched checkpoint。真实数据运行命令在 T3 验收后随 T4 发布。
+真实数据接口已经实现：`--protocol holdout` 对 train 做稳定图像分组，并在各 decoder 阶段末尾读取 holdout；`--protocol full_train --val-fraction 0` 不构造 eval loader，只保存固定 final。`--split official_test` 只接受 full-train 的 fixed-final baseline/K50/matched checkpoint。T4 真实数据命令见第 13 节。
 
 ### 11.3 回传
 
@@ -339,5 +351,108 @@ git add \
   cscwd_router/implementation_plan.md \
   PROGRESS.md
 git commit -m "Add official DINOv2 decoder recipe and evaluation pipeline"
+git push origin codex/coverage-aware-router
+```
+
+## 13. T4 服务器完整主实验
+
+### 13.1 当前运行命令
+
+本节尚未运行。先按第 14 节提交/push；服务器 pull 后由用户启动这一条入口。它会依次完成训练、独立 official test、效率矩阵和 comparison。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+git pull --ff-only origin codex/coverage-aware-router
+mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
+
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/run_main_experiment.py \
+  --t3-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/summary.json \
+  --data-path /newhome/fb/dataset/gazefollow_extended \
+  --decoder-checkpoint /home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt \
+  --run-dir /home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106 \
+  --report-dir /home/fb/src/paper/gazelleV1/cscwd_router/results/t4_gf_fulltrain_seed3106 \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  --train-batch-size 16 \
+  --eval-batch-size 8 \
+  --workers 8 \
+  --router-lr 0.001 \
+  --decoder-lr 0.0001 \
+  --weight-decay 0 \
+  --budget-weight 0.05 \
+  --router-hidden-dim 256 \
+  --router-temperature 1.0 \
+  --escape-tokens 8 \
+  --log-every 50 \
+  --seed 3106 \
+  --warmup 50 \
+  --latency-iters 200 \
+  --throughput-iters 500 \
+  --repeats 5 \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/t4_gf_fulltrain_seed3106.log 2>&1 &
+```
+
+执行顺序与固定口径：
+
+1. 核对 T3 通过、官方输入权重和未变的训练源码，执行 T4 控制单测。
+2. 沿用 T3 trainer：FP32、448、block 5，support 3ep、K100→K75→K50→K50→K50 decoder 5ep、matched dense 5ep。完整 train，无 validation/test loader；沿用官方训练增强。两条 decoder 分支同起点、同 seed、同更新预算，backbone 冻结。
+3. 训练全部完成后才打开 test annotation；对 `dense_official/final.pt`、`sparse_decoder/final.pt`、`matched_dense/final.pt` 各评测一次，统一 FP32、image-unit、batch 8 和原版 AUC/Avg L2/Min L2。已有输出通过 SHA/signature/annotation/batch 核对后复用。
+4. 效率为 RTX 3090、每图一个 in-frame GT 查询、B1/B4/B8；正序 `dense→K100→K50` 和反序 `K50→K100→dense` 各一个新进程。每 variant 50 warmup、200×5 synchronized latency、500×5 continuous throughput。输入来自 train 的真实 RGB/头框，稳定选择同一组样本，预处理和图像传输在计时外。原版 dense 不含 Router；K100/K50 使用同一个正式 K50 checkpoint。所有 variant 冻结、inference mode、FP16、autocast cache 关闭；记录逐 block token 数与 peak allocated memory。GPU 状态和其他 compute 进程在运行中检查。
+5. 先算每种顺序内的 `dense latency / K50 latency`，再对两种顺序取几何平均。primary gate：K50 相对实际 official dense 的 AUC 掉 ≤0.002，且 B8 synchronized latency speedup ≥1.10x。另报 matched dense 的精度差值、K100 control、throughput 与显存，不将小幅精度/显存收益预先当成结果。阈值和设置在训练前写入 manifest。
+
+退出码 0 表示 T4 门槛通过；2 表示矩阵已完成但门槛未过，按规格停止本方案。脚本出错保留原始日志。
+
+### 13.2 恢复与单独补齐效率单元
+
+中断后使用同一主命令，加 `--resume`，日志改为 `t4_gf_fulltrain_seed3106_resume.log`。它恢复训练的 last epoch，或跳过已完成训练；已存在的 official test 不重跑，已完成的效率单元也复用。源码、数据和参数必须保持与 manifest 一致。
+
+若仅需补齐尚未生成的 B8 forward 单元，可在训练结束后单独执行以下命令，然后对主入口使用 `--resume`。输出已存在时不覆盖。
+
+```bash
+cd /home/fb/src/paper/gazelleV1
+CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/benchmark_router_dinov2.py \
+  --dense-checkpoint /home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/dense_official/final.pt \
+  --sparse-checkpoint /home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/sparse_decoder/final.pt \
+  --data-path /newhome/fb/dataset/gazefollow_extended \
+  --batch-size 8 \
+  --order forward \
+  --precision fp16 \
+  --warmup 50 \
+  --latency-iters 200 \
+  --throughput-iters 500 \
+  --repeats 5 \
+  --seed 3106 \
+  --output /home/fb/src/paper/gazelleV1/cscwd_router/results/t4_gf_fulltrain_seed3106/efficiency/b8_forward.json \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/t4_b8_forward.log 2>&1 &
+```
+
+### 13.3 产物与回传
+
+- 小报告：`results/t4_gf_fulltrain_seed3106/manifest.json`、`training/`、三个 `accuracy/*.json`、六个 `efficiency/*.json`、`comparison.json` 和 `comparison.md`。
+- 大文件：`experiments/cscwd_router/t4_gf_fulltrain_seed3106/` 下的四个 final 和三个 last PT；训练器实际写出后登记路径/SHA，留服务器。
+- comparison 保存全部小证据的路径与 SHA、两个 gate 及总判定。当前没有实际 T4 数字。
+
+```bash
+git add cscwd_router/results/t4_gf_fulltrain_seed3106 cscwd_router/results/RESULT_PROVENANCE.md
+git commit -m "Record T4 GazeFollow main experiment and efficiency matrix"
+git push origin codex/coverage-aware-router
+```
+
+## 14. T4 本机提交范围
+
+```bash
+git add \
+  cscwd_router/code/scripts/run_main_experiment.py \
+  cscwd_router/code/scripts/benchmark_router_dinov2.py \
+  cscwd_router/code/stag/main_results.py \
+  cscwd_router/code/stag/test_main_experiment.py \
+  cscwd_router/results/T3_REVIEW.md \
+  cscwd_router/results/t4_local_checks.json \
+  cscwd_router/results/LOCAL_CHECKS.md \
+  cscwd_router/results/RESULT_PROVENANCE.md \
+  cscwd_router/implementation_plan.md \
+  PROGRESS.md
+git commit -m "Add T4 main experiment and DINOv2 efficiency matrix"
 git push origin codex/coverage-aware-router
 ```

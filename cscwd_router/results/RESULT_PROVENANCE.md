@@ -66,3 +66,10 @@
 
 - evaluation (synthetic, sparse_decoder): `/home/fb/src/paper/gazelleV1/cscwd_router/results/t3_synthetic_seed3106/standalone_sparse_eval.json`; SHA256: `ebcf8fc0d0c0d361225b4ccc0c2d3482de9a210209d6d0746b61a7a93bcb3d30`
 - input checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t3_synthetic_seed3106/sparse_decoder/final.pt`; SHA256: `c63c7c2185d824dca37b7fe60480453661c28afe0ccaf41b5e96b859d9fe4cb7`
+
+## T3 结果审查与 T4 本机检查（2026-11-21）
+
+- 拉取结果提交 `de1488d`。T3 summary 与独立评测 SHA 分别为 `4ffe9e3d342368f0b1b301e932fd9c6ef19a4b00ca9089e9a3f90c36cb91d872`、`ebcf8fc0d0c0d361225b4ccc0c2d3482de9a210209d6d0746b61a7a93bcb3d30`；二者登记、18 个源码 SHA、3/5/5 更新和 checkpoint 往返均核对通过，见 `results/T3_REVIEW.md`。
+- T4 本机小结果 `cscwd_router/results/t4_local_checks.json`，SHA256：`bfa0662c497237f76da482381bf4b029ab10de5e827334dad0bd6469a8e46a2e`。44/44 CPU 结构与规则检查通过，本机优化器更新数 0，未测真实 accuracy 或 GPU timing。
+- T4 当前入口 `code/scripts/run_main_experiment.py` 将把大文件保存到服务器 `experiments/cscwd_router/t4_gf_fulltrain_seed3106/`，训练器实际写出后自动追加七个 PT 的路径与 SHA。小报告集中在 `results/t4_gf_fulltrain_seed3106/`。
+- 主入口记录源码/输入 SHA、预声明 gate、完整子命令与证据链；每个 benchmark JSON 记录实际 checkpoint、真实 train RGB/头框样本 SHA、GPU 状态、token 执行图和计时设置。完成后自动登记 comparison 和所有小证据的路径及 SHA。恢复复用已核对的 official test 结果。
