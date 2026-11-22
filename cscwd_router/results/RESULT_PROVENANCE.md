@@ -107,3 +107,25 @@
 - input backbone vitb: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`。
 - input backbone vitl: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`。
 - 待用户手动运行的命令见 `cscwd_router/RUN_DINOV3_TRAIN_TEST.md`：GPU0 GF-B→L，GPU1 VAT-B→L。新 PT 与压缩逐查询明细留服务器 `experiments/cscwd_router/testselected_k050_seed0/`，实际生成后自动登记路径/SHA；小报告写 `cscwd_router/results/testselected_k050_seed0/`。
+
+## DINOv3 test-selected · vat / b
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitb/summary.json`; SHA256: `ffaf51153d32c8519ea60bdb92dca15f2ce9172841e244499bb7a2e1cdfd86f6`
+- protocol: official train/test, no validation; FP32 accuracy; frozen backbone
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt`; SHA256: `db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- support_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/support/final.pt`; SHA256: `dd3204c41e9b806e97a032132025780d8df50104205aa2280ccc91eb2e4112bc`
+- support_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/support/last.pt`; SHA256: `52f492f3fe459e35197e0ffa9d87f98f7bb0a204975f24f4f5128f4e8e5f280f`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/best_test.pt`; SHA256: `e30cb35b572dc129b766cb2e6d9500345594f312664d71d748393ced8a430261`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/last.pt`; SHA256: `f36e4ecc95cb550b8f7f88152b9c101de84d10e2e82a3b4a208d5edf780d7d28`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/predictions.jsonl.gz`; SHA256: `446b51cdadb3c6319e410180d6e7e88bfb0f8db9a516636a9971e1a6a303da40`
+
+## DINOv3 test-selected · vat / l
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitl/summary.json`; SHA256: `e30a2e445e2daea3b65e610780431d4c727db5a9d8c48f44e428cd6864793e9d`
+- protocol: official train/test, no validation; FP32 accuracy; frozen backbone
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt`; SHA256: `979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`
+- support_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/final.pt`; SHA256: `d31e8212f134945dc17e2d2fa5827f75bd41d784f5e9d14d2b848cb8b97423b8`
+- support_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/last.pt`; SHA256: `76275e9981c0fc26e9c03baa4e3f8cf89838ebc53bfcbecd1ee46dd9b3600ddf`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/best_test.pt`; SHA256: `6e3c799f2a9bb24f5083896e788935b0623e728e69a8a6fa966fb22ccefae1c8`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/last.pt`; SHA256: `8dc27dd226688d3163e73199d86c2334410f1b08853a65b675decb9bb078d922`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/predictions.jsonl.gz`; SHA256: `f7b6d402eba51e802e152cebca9e7a31f4093c11d143828d7d7ccce5f03efa69`

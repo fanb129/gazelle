@@ -1,0 +1,102 @@
+{
+  "completed": true,
+  "format": "cscwd_router_dinov3_testselected_v1",
+  "dataset": "vat",
+  "size": "l",
+  "model_config": {
+    "model": "gazelle_dinov3_vitl16_inout",
+    "router_stage": "backbone_sparse",
+    "route_after_block": 11,
+    "keep_ratio": 0.5,
+    "router_hidden_dim": 256,
+    "router_temperature": 1.0,
+    "escape_tokens": 8,
+    "spatial_prior": "none",
+    "fusion": "raw_concat"
+  },
+  "selection_policy": "test_selected",
+  "selection": {
+    "epoch": 1,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9223492078388027,
+      "l2": 0.09961174367347736,
+      "inout_ap": 0.916862955233345,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9456090651558073,
+      "routing_hard_coverage": 0.8021339594584391,
+      "routing_soft_coverage": 0.3943457027055997
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "selection_test_frame_rate": 6,
+  "final_test_frame_rate": 1,
+  "metrics": {
+    "auc": 0.9230336797806461,
+    "l2": 0.09797018663652333,
+    "inout_ap": 0.9165990962906327,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9492132655531348,
+    "routing_hard_coverage": 0.8020669559352965,
+    "routing_soft_coverage": 0.39611381478326424
+  },
+  "artifacts": {
+    "initialization": {
+      "kind": "decoder",
+      "loaded_tensors": 45,
+      "router_reinitialized": true,
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt",
+      "sha256": "979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+      "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+    },
+    "support_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/final.pt",
+      "sha256": "d31e8212f134945dc17e2d2fa5827f75bd41d784f5e9d14d2b848cb8b97423b8"
+    },
+    "support_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/last.pt",
+      "sha256": "76275e9981c0fc26e9c03baa4e3f8cf89838ebc53bfcbecd1ee46dd9b3600ddf"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/best_test.pt",
+      "sha256": "6e3c799f2a9bb24f5083896e788935b0623e728e69a8a6fa966fb22ccefae1c8"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/last.pt",
+      "sha256": "8dc27dd226688d3163e73199d86c2334410f1b08853a65b675decb9bb078d922"
+    },
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/predictions.jsonl.gz",
+      "sha256": "f7b6d402eba51e802e152cebca9e7a31f4093c11d143828d7d7ccce5f03efa69"
+    }
+  },
+  "context_fingerprint": "bf03de11f459add2962d67e9a7f11b4d61cca72e0baf7308447e25d699bd3410",
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "cuda_version": "12.4",
+    "cuda_visible_devices": "1",
+    "git_commit": "5006bc43e3c507206fa53557c8171dafb9a83dac"
+  },
+  "training_epochs": {
+    "support": 3,
+    "sparse_decoder": 5
+  }
+}
