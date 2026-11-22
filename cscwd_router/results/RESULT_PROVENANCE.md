@@ -94,3 +94,16 @@
 - 计划复用 VAT 初始化：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_splitclean_dense_seed3106/best_val_selection.pt`；既有报告登记 SHA256：`bc946c6a07b230f7e677c15d52d2b984ccb65060f456fbe22ea997f7d234f050`。
 - 上条来源：本地既有 `experiments/coverage_router/vat_splitclean_support_k025_seed3106/run_manifest.json`；该 JSON SHA256：`75987a88c08e5336e9fdea6c6b2257c2bbeb4abd1fcaaceda88fea23307b5617`。
 - 两份 PT 仅作为初始化引用，本轮未在本机加载，运行前由服务器入口核对文件与 SHA。计划 GF 5、VAT 3+5 epochs 是待执行预算，不是新实验成绩。新 run 不划 val，按完整 train/test 及 `test-selected` 协议运行；旧初始化来源与旧 holdout 结果保留原标签。
+
+## E0 · DINOv3 双尺寸 seed0 入口检查（2026-11-22）
+
+- 新入口覆盖 GF/VAT × ViT-B/ViT-L；base seed 0，四组均从旧 raw-concat decoder 重新学习 support 3 + sparse decoder/inout 5 epochs，不新增 dense 训练。W2 的 seed3106 support 复用计划已被本轮要求替代；历史 decoder seed 不改写。
+- 工程报告：`cscwd_router/results/e0_dinov3_train_test_checks.json`；SHA256：`c6a142c5398b50d4dfe78e07ead6b755722d6362d5fb7dad94c32d33ca1aa747`。7 个新源码 SHA、32/32 CPU 检查、两条运行命令的 shell/参数检查、四份数据标注的服务器只读检查均在 JSON 中。
+- 本机只运行合成 CPU 工程闭环，服务器只读检查权重/标注与首张图片存在性；没有新真实数据训练、GPU 推理或测速。decoder 与真实 Router factory 的任务 tensor 匹配 GF-B/GF-L/VAT-B/VAT-L 为 40/40/45/45，缺失、多余、shape mismatch 均为 0。
+- input gazefollow/vitb decoder: `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt`; SHA256: `26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef`。
+- input gazefollow/vitl decoder: `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt`; SHA256: `7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af`。
+- input vat/vitb decoder: `/home/fb/src/paper/gazelleV1/experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt`; SHA256: `db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d`。
+- input vat/vitl decoder: `/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt`; SHA256: `979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673`。
+- input backbone vitb: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`。
+- input backbone vitl: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`。
+- 待用户手动运行的命令见 `cscwd_router/RUN_DINOV3_TRAIN_TEST.md`：GPU0 GF-B→L，GPU1 VAT-B→L。新 PT 与压缩逐查询明细留服务器 `experiments/cscwd_router/testselected_k050_seed0/`，实际生成后自动登记路径/SHA；小报告写 `cscwd_router/results/testselected_k050_seed0/`。

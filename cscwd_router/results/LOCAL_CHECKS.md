@@ -108,3 +108,21 @@ PYTHONPATH=/private/tmp/gazelle-router-t1-dinov2:/Users/fanb/src/gazelle \
 - 正反序比例的几何平均、AUC/latency 两个独立门槛、含等号边界、缺失或混用证据的拒绝路径、percentile 计算通过单测。此处使用的 accuracy/timing 数字只是单测 fixture，没有导出为实验结果。
 
 两个新增脚本的 `--help` 和四个新增 Python 文件的编译检查通过。当前没有真实 T4 AUC、latency 或 speedup 数字，实际结果由服务器主实验生成。
+
+## E0 DINOv3 双尺寸 train/test 入口（2026-11-22）
+
+本轮新增检查与现有 Router 回归检查共 **32/32 通过**，Python 3.10.20、PyTorch 2.12.0、CPU。报告见 [e0_dinov3_train_test_checks.json](e0_dinov3_train_test_checks.json)。
+
+```bash
+cd /Users/fanb/src/gazelle
+/private/tmp/gazelle-cscwd-check/bin/python -m pytest -q \
+  cscwd_router/code/stag/test_dinov3_train_test.py \
+  tests/test_coverage_router.py tests/test_routed_backbone_utils.py
+```
+
+- 验证原有 B/L factory 的四层 projection、路由点及四份初始化注册；四种合成任务完整闭环，base seed 0。
+- 验证无 validation loader、support 仅执行 prefix、backbone 冻结、分阶段梯度、全画外 batch 与末尾累积更新。
+- 新精度计算与原有 GF/VAT evaluator 一致，单一 test checkpoint 选模、逐查询导出与原子 epoch 恢复通过。改变 seed 的恢复请求会拒绝；中断恢复与连续合成运行结果一致。
+- 两条完整 nohup 命令通过 `bash -n`，两个队列与四个子任务的参数解析均通过，seed 均为 0。
+
+服务器另只读核对四个 decoder、两份 backbone 与四份数据标注；GF-B/GF-L/VAT-B/VAT-L 的任务 tensor 匹配为 40/40/45/45，缺失、多余、shape mismatch 均为 0。权重路径/SHA 与标注统计见工程报告，未加载到本机。合成测试的数值不作为论文实验结果；本轮没有新真实数据训练或 GPU timing。

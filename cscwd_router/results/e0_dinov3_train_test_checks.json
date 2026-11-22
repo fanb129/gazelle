@@ -1,0 +1,137 @@
+{
+  "task": "E0_dinov3_train_test",
+  "date": "2026-11-22",
+  "base_seed": 0,
+  "scope": "CPU synthetic engineering tests and read-only server metadata/tensor-shape inspection. No real-data training or GPU inference/timing.",
+  "tests": {
+    "passed": 32,
+    "failed": 0,
+    "command": "/private/tmp/gazelle-cscwd-check/bin/python -m pytest -q cscwd_router/code/stag/test_dinov3_train_test.py tests/test_coverage_router.py tests/test_routed_backbone_utils.py"
+  },
+  "local_runtime": {
+    "python": "3.10.20",
+    "torch": "2.12.0"
+  },
+  "initializers": [
+    {
+      "dataset": "gazefollow",
+      "size": "b",
+      "path": "experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt",
+      "sha256": "26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef",
+      "kind": "decoder",
+      "matched_decoder_tensors": 40,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "shape_mismatches": []
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "l",
+      "path": "experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+      "sha256": "7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af",
+      "kind": "decoder",
+      "matched_decoder_tensors": 40,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "shape_mismatches": []
+    },
+    {
+      "dataset": "vat",
+      "size": "b",
+      "path": "experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt",
+      "sha256": "db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d",
+      "kind": "decoder",
+      "matched_decoder_tensors": 45,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "shape_mismatches": []
+    },
+    {
+      "dataset": "vat",
+      "size": "l",
+      "path": "experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt",
+      "sha256": "979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673",
+      "kind": "decoder",
+      "matched_decoder_tensors": 45,
+      "missing_keys": [],
+      "unexpected_keys": [],
+      "shape_mismatches": []
+    }
+  ],
+  "backbone_sha256": {
+    "b": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c",
+    "l": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+  },
+  "checks": [
+    "native B/L route points and four-level projection",
+    "official train/test views without validation",
+    "prefix-only support and parameter freezing",
+    "out-of-frame batches and tail accumulation",
+    "metric equality with existing evaluator",
+    "one complete tuple selected by Min L2/L2",
+    "per-query export",
+    "four synthetic job combinations and verified resume",
+    "atomic epoch recovery matches uninterrupted CPU result",
+    "queue CLI and seed0 defaults"
+  ],
+  "source_sha256": {
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+    "cscwd_router/code/stag/test_dinov3_train_test.py": "e2d0fe79458e98be6035e72eb8b8613ee37d66cd58a01790c39d1448d9a9c7a9"
+  },
+  "real_data_training_performed": false,
+  "gpu_timing_performed": false,
+  "server_data_preflight": [
+    {
+      "dataset": "gazefollow",
+      "split": "train",
+      "annotation": "/newhome/fb/dataset/gazefollow_extended/train_preprocessed.json",
+      "sha256": "44f1b1e76da9e7acc2b44bd5e1d97b957bea756bd9e1c1c116457b7daa99e0e9",
+      "records": 117727,
+      "frames": 117727,
+      "persons": 124095,
+      "first_image_exists": true
+    },
+    {
+      "dataset": "gazefollow",
+      "split": "test",
+      "annotation": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+      "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab",
+      "records": 4782,
+      "frames": 4782,
+      "persons": 4782,
+      "first_image_exists": true
+    },
+    {
+      "dataset": "vat",
+      "split": "train",
+      "annotation": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+      "sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+      "records": 475,
+      "frames": 58507,
+      "persons": 132563,
+      "first_image_exists": true
+    },
+    {
+      "dataset": "vat",
+      "split": "test",
+      "annotation": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+      "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa",
+      "records": 131,
+      "frames": 13127,
+      "persons": 31978,
+      "first_image_exists": true
+    }
+  ],
+  "server_data_preflight_note": "Annotation record/frame/person counts before GazeFollow in-frame filtering; first referenced image checked, no model inference.",
+  "runbook_checks": {
+    "bash_syntax_passed": 2,
+    "queue_argument_sets_parsed": 2,
+    "child_argument_sets_parsed": 4,
+    "all_base_seeds": 0
+  }
+}

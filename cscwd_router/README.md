@@ -1,6 +1,6 @@
 # CSCWD Router · 人物条件化的深层计算分配
 
-更新：2026-11-22。论文候选完整方法为 **DINOv3 ViT-B/16 + 多层 raw-concat 表示 + gaze-conditioned Router**。既有 DINOv2 单层适配保留为工程与对照路线。
+更新：2026-11-22。论文方法覆盖 **DINOv3 ViT-B/16、ViT-L/16 + 多层 raw-concat + gaze-conditioned Router**，四组新训练均 base seed 0。既有 DINOv2 单层适配保留为工程与对照路线。
 
 ## 当前 story
 
@@ -12,7 +12,8 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
-- [EXPERIMENT_PLAN.md](EXPERIMENT_PLAN.md)：W2 当前限时清单；不新增 dense 训练，GF 5、VAT 3+5 epochs，其他核心比较只推理。
+- [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)：已实现入口的完整 GPU 0/1 命令、输出与恢复；GF-B 与 VAT-B 先并行，各自接 L。
+- [EXPERIMENT_PLAN.md](EXPERIMENT_PLAN.md)：GF/VAT × B/L 当前清单；四组均 support 3 + sparse decoder 5 epochs，不重训 dense。
 - [PAPER_STORY.md](latex/PAPER_STORY.md)：已确定的问题链、DINOv3/多层的引入方式、方法、五段中英文 Introduction 工作稿、图表与实验论证。
 - [PAPER_REVIEW.md](latex/PAPER_REVIEW.md)：被拒 MM、rebuttal、在审 ICASSP 的 15 页复核、重叠边界与 MM 图 2 的复用决定。
 - [WRITING_EVIDENCE_20261122.json](results/WRITING_EVIDENCE_20261122.json)：3 份 PDF、候选图素材及 19 份旧实验 JSON 的来源 SHA 和真实指标。
@@ -25,9 +26,9 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 论文目标是有竞争力的准确率与更低实际成本，不预写尚未测得的“双优”、显存节省、整网计算减半或多人保证无损。
 
-后续新训练按用户选择采用全量 train、逐 epoch test、单一指标选 checkpoint，并标记 `test-selected`。旧 fixed-final / holdout 记录保留；本轮文档更新没有修改训练代码。
+新入口采用全量 train、逐 epoch test、单指标选 checkpoint，标记 `test_selected`。GF 按 Min L2，VAT 按 L2，VAT 最后自动逐帧 test。CPU 32/32 通过；旧 gazelle/ 与历史脚本未改，尚未启动服务器训练。
 
-本轮复用已有 GF support 和 VAT 初始化，只新增 Router 训练；官方 GazeLLE 只做推理评测与测速，不新增 dense/matched dense 训练。跨模型主表据实评价完整系统，旧 matched dense 按原协议保留。
+四组均复用兼容旧 raw-concat decoder，再以 seed0 重学 Router，不直接继承 seed3106 support。VAT B/L 初始化已存在，不需要等本轮 GF。官方 GazeLLE 后续仅推理比较；旧 matched dense 保留原协议。
 
 ## 工作约定
 

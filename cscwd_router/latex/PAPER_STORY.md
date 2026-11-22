@@ -2,7 +2,9 @@
 
 更新：2026-11-22。写作任务 W1。主方法按本轮讨论采用 **DINOv3 ViT-B/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；不把尚未完成的跨模型测速、VAT test 或消融写成结果。
 
-W2 更新：限时实验以 [EXPERIMENT_PLAN.md](../EXPERIMENT_PLAN.md) 为当前执行清单；不新增 dense/matched dense 训练，只训练 Router 模型。已有同表示 dense 证据按旧协议单独保留，当前新主表评价完整系统。
+E0 最新执行：GF/VAT 各跑 ViT-B/16 与 ViT-L/16，所有新训练 base seed 0。四组入口已实现，从兼容旧 decoder 新训 support 3 + sparse decoder 5 epochs；不继承 seed3106 Router、不新增 dense。完整命令见 `../RUN_DINOV3_TRAIN_TEST.md`。
+
+W2 历史写作决定：限时实验以 [EXPERIMENT_PLAN.md](../EXPERIMENT_PLAN.md) 为当前执行清单；不新增 dense/matched dense 训练，只训练 Router 模型。已有同表示 dense 证据按旧协议单独保留，当前新主表评价完整系统。
 
 ## 1. 一句话定位
 
@@ -33,7 +35,7 @@ GazeLLE 已支持一张图只编码一次、供多个人物查询复用。本文
 
 ### 3.1 DINOv3：选择实现载体
 
-在提出“人物条件化计算分配”之后，再说明实现采用冻结的 DINOv3 ViT-B/16。它提供可复用的稠密视觉表示；本轮直接复用仓库中已有的 DINOv3 路由实现和训练基础。DINOv3 的来源是第三方预训练模型，不列为本文贡献。[DINOv3 技术报告](https://arxiv.org/abs/2508.10104)
+在提出“人物条件化计算分配”之后，再说明实现采用冻结的 DINOv3 ViT-B/16 和 ViT-L/16。它提供可复用的稠密视觉表示；本轮直接复用仓库中已有的 DINOv3 路由实现和训练基础。DINOv3 的来源是第三方预训练模型，不列为本文贡献。[DINOv3 技术报告](https://arxiv.org/abs/2508.10104)
 
 不使用“DINOv3 更先进，所以本文天然更准”的推导，也不使用“DINOv3 严重过平滑，所以必须改成多层”的旧动机来承担新论文的核心论证。已有结果没有隔离 backbone、层级表示和训练配置各自的作用。
 
@@ -51,6 +53,8 @@ GazeLLE 已支持一张图只编码一次、供多个人物查询复用。本文
 | Decoder 的多层表示 | blocks 2、5、8、11 的四组特征；后两组按稀疏执行结果重建 | 沿用的表示配置及其稀疏化适配 |
 
 block 编号从 0 开始，分别对应第 3、6、9、12 层。四组特征具有相同的 32×32 patch 网格，是不同深度的表示，不是四种输入分辨率，也不是执行四遍 backbone。
+
+上述是 ViT-B。ViT-L 使用 blocks 5/11/17/23，在 block 11 后路由，前后各 12 blocks；输入仍是 512，网格仍是 32×32，通道由 B 的 768 变为 L 的 1024。两个规模各自使用匹配的初始化。
 
 Router **不需要先取得第 9、12 层特征再决定是否执行这些层**。它只使用路由点之前已计算的特征，避免“先算完再剪枝”。当前 Router 没有额外把四层 decoder 特征全部作为输入。
 
@@ -129,7 +133,7 @@ MM 已拒稿不等于其进入在审 ICASSP 的内容可再次主张为新贡献
 
 **第三段，任务条件。** 通用显著性不能单独确定一个人物正在看哪里。头框提供查询身份和相对几何，头部外观与场景特征提供可学习的关系线索。我们将这些信息结合为中层 support 预测，以固定预算保留与该人物查询相关的位置；同图多人的 support 聚合为一条共享路由。
 
-**第四段，实现选择。** 我们在冻结的 DINOv3 ViT-B/16 上实现该机制，并沿用多层表示解码。Router 位于编码器中部，之后仅对选中 patch 执行深层 blocks。完整早期特征和中层回填维持 decoder 所需的空间网格。DINOv3 与多层访问是采用的表示基础，新增机制是实际稀疏执行及其人物条件化决策。
+**第四段，实现选择。** 我们在冻结的 DINOv3 ViT-B/16 和 ViT-L/16 上实现该机制，并沿用多层表示解码。Router 位于编码器中部，之后仅对选中 patch 执行深层 blocks。完整早期特征和中层回填维持 decoder 所需的空间网格。DINOv3 与多层访问是采用的表示基础，新增机制是实际稀疏执行及其人物条件化决策。
 
 **第五段，验证。** 新主表与官方 GazeLLE 比较完整系统，评价同时报告定位、support 覆盖率、实际延迟和吞吐，并在同一已训练模型上分析预算与多人查询。旧 matched dense 按其原协议单独讨论；本轮不新增 dense 训练，不把新主表差异全部归因于 Router。若余量允许，再补 scene-only Router 的同预算训练。结尾的具体数值及“优于”“保持”用语在统一实测后填写。
 
@@ -141,7 +145,7 @@ Freezing the encoder does not remove its forward computation. In a dense frozen-
 
 This decision requires information about the queried person as well as the scene. A head box identifies the query and defines relative spatial coordinates, while head appearance and intermediate scene features provide evidence for learning query-relevant regions. We predict a person-conditioned support at an intermediate encoder layer and select locations under a fixed token budget. For multiple queries in one image, their supports are aggregated into a shared route.
 
-We instantiate this mechanism with a frozen DINOv3 ViT-B/16 encoder and an existing multi-level decoding configuration. Only selected patch tokens continue through the encoder suffix. Dense early features and an intermediate-feature fallback preserve the spatial grids required for gaze decoding. Our study concerns person-conditioned token selection and sparse execution; the pretrained encoder and multi-level representation form the adopted baseline configuration.
+We instantiate this mechanism with frozen DINOv3 ViT-B/16 and ViT-L/16 encoders and an existing multi-level decoding configuration. Only selected patch tokens continue through the encoder suffix. Dense early features and an intermediate-feature fallback preserve the spatial grids required for gaze decoding. Our study concerns person-conditioned token selection and sparse execution; the pretrained encoder and multi-level representation form the adopted baseline configuration.
 
 We compare the complete system with official Gaze-LLE and report localization, support coverage, model-forward latency, and throughput. Additional analyses examine token budget and multi-person queries. Existing matched-dense results are discussed under their original protocol, separately from the new test-selected experiments. Quantitative outcome statements will be completed after the corresponding measurements.
 
@@ -243,4 +247,4 @@ GazeFollow 官方测试的旧记录为 4,782 个 single-head 图像查询，因�
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
-W2 当前执行顺序见 `../EXPERIMENT_PLAN.md`：先完成 E0 的 train/test-selected 入口，然后 GF 5 epochs、VAT 3+5 epochs；不新增 dense 训练。对各自选中的同一 checkpoint 补统一推理测速与多人分析。服务器脚本届时给完整手动 nohup 命令；本轮只完成实验设计，不生成尚未实现入口的执行命令。旧正式报告保留原协议。
+E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。GPU 0/1 的完整手动 nohup 命令已给出，尚未启动服务器真实训练。实际选中模型产生后，对同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
