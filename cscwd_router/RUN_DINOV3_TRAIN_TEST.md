@@ -4,6 +4,8 @@
 
 2026-11-23 状态：VAT B/L 已正常完成并回传，核验见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)；不用重复启动 VAT 训练。以下保留原运行/恢复命令，GF 尚待审查。
 
+用户现要求提升 VAT；新增的 E2-C 低 LR 固定 K50 续训见 [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)，使用新目录，不修改这里的初始 3+5 epochs。
+
 ## 1. 调度与训练规则
 
 VAT 不依赖本轮 GF，两种尺寸都已有兼容的 VAT decoder 初始化。先同时启动两个 B，再由各自队列顺序接 L：

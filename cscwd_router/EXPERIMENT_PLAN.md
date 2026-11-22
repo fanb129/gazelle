@@ -6,6 +6,8 @@ E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DIN
 
 ## 1. 四组主实验与并行顺序
 
+2026-11-23 新决定 E2-C：GF 继续等待完成；VAT 原始结果保留，先用现有模型做低 LR 固定 K50 续训，各加 8 epochs。旧初始化已确认有 GF→VAT decoder 迁移，Router 未在 GF 预训练；本轮 decoder LR 比旧 VAT 高 10 倍。先测原始初始化 native dense/K100，再续训，不新增 dense 训练。入口及完整 GPU 1 命令见 [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)，当前只有 39 项 CPU 工程检查结果。
+
 | GPU | 顺序 | 数据集 / 模型 | 新增阶段 | 物理 batch / decoder 累积 | 路由点（0-based） |
 |---|---|---|---|---|---|
 | 0 | 1 | GazeFollow / ViT-B | support 3 + sparse decoder 5 | 16 / 2 | block 5 |

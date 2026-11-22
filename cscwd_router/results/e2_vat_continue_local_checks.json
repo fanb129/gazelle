@@ -1,0 +1,37 @@
+{
+  "task": "E2-C_low_lr_constant_k50_continuation",
+  "date": "2026-11-23",
+  "scope": "CPU synthetic engineering checks only; no real-data continuation training or new GPU inference.",
+  "tests": {
+    "passed": 39,
+    "failed": 0,
+    "new_tests": 7,
+    "regression_tests": 32,
+    "command": "/private/tmp/gazelle-cscwd-check/bin/python -m pytest -q cscwd_router/code/stag/test_dinov3_continue.py cscwd_router/code/stag/test_dinov3_train_test.py tests/test_coverage_router.py tests/test_routed_backbone_utils.py"
+  },
+  "runtime": {
+    "python": "3.10.20",
+    "torch": "2.12.0",
+    "device": "cpu"
+  },
+  "source_sha256": {
+    "cscwd_router/code/stag/dinov3_continue.py": "2ab36b8992f03fc9794d48cf56c61ab9defcd7cb2458370d8ed42611cc6e8b76",
+    "cscwd_router/code/scripts/continue_router_dinov3.py": "1a01e8339787cbb589b1abeda98fe2a33d492cfcf5b16834213ef0d2a620acb7",
+    "cscwd_router/code/stag/test_dinov3_continue.py": "50de2b38a92f0535707df2d25e0f8c743511f0be56c6c58168d6c96a65e7784a"
+  },
+  "original_e0_source_hashes_unchanged": true,
+  "bash_syntax_passed": true,
+  "child_arguments_checked": [
+    "b",
+    "l"
+  ],
+  "continuation_budget": {
+    "additional_epochs": 8,
+    "keep_ratio": 0.5,
+    "decoder_lr": 1e-05,
+    "inout_lr": 0.0001,
+    "base_seed": 0
+  },
+  "real_data_training_performed": false,
+  "new_gpu_inference_performed": false
+}

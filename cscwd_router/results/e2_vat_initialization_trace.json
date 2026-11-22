@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-23",
+  "scope": "Read-only extraction from the exact legacy training runs; no inference or retraining.",
+  "models": {
+    "vitb": {
+      "server_source_files": {
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260311_195818-u55kpxgp/files/config.yaml": "743421770aef9366cacdbd7acbdb72d00c0c2058d72b7f1689b2b51a876d23c1",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260311_195818-u55kpxgp/files/wandb-summary.json": "6b1ca5ff6f77e243505dd7c0e183d15c20288a7025518a7fcce71d9d4f5d84b4",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260311_195818-u55kpxgp/files/output.log": "a7f05a1738039567f577e7e67b78bd985bce1ac1f587d5e34857740efb03d35a"
+      },
+      "training_config": {
+        "model": "gazelle_dinov3_vitb16_inout",
+        "exp_name": "train_vat_baseline",
+        "init_ckpt": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt",
+        "max_epochs": 8,
+        "lr_non_inout": "1e-05",
+        "lr_inout": 0.001,
+        "batch_size": 60,
+        "frame_sample_every": 6
+      },
+      "initialization_log": [
+        "Initializing from /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt"
+      ],
+      "final_checkpoint_log": "Saved checkpoint to ./experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt",
+      "final_epoch_sparse_test": {
+        "epoch": 7,
+        "eval/auc": 0.9390974777476927,
+        "eval/l2": 0.10301174771675271,
+        "eval/inout_ap": 0.8936110970938753
+      },
+      "epoch_logs": [
+        "EVAL EPOCH 0: AUC=0.9404, L2=0.1011, Inout AP=0.8613",
+        "EVAL EPOCH 1: AUC=0.9409, L2=0.1014, Inout AP=0.8735",
+        "EVAL EPOCH 2: AUC=0.9402, L2=0.1006, Inout AP=0.8861",
+        "EVAL EPOCH 3: AUC=0.9399, L2=0.1, Inout AP=0.8898",
+        "EVAL EPOCH 4: AUC=0.9396, L2=0.1019, Inout AP=0.8883",
+        "EVAL EPOCH 5: AUC=0.9389, L2=0.1011, Inout AP=0.8887",
+        "EVAL EPOCH 6: AUC=0.9392, L2=0.1017, Inout AP=0.8939",
+        "EVAL EPOCH 7: AUC=0.9391, L2=0.103, Inout AP=0.8936"
+      ]
+    },
+    "vitl": {
+      "server_source_files": {
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/config.yaml": "def0833cbd2884e2ac59c14917c142a1abe756564a2d1bbf74d86d42624b5d06",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/wandb-summary.json": "73345ea4e5088e1186b91b9fb786d81f4403037fd62f8d07d7b36e9489934ee7",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/output.log": "a06ff09a66a23359e6caf6977186a24f566d40b4bcfaf5ad869b049fe0fbf7fb"
+      },
+      "training_config": {
+        "model": "gazelle_dinov3_vitl16_inout",
+        "exp_name": "train_vat_vitl",
+        "init_ckpt": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+        "max_epochs": 8,
+        "lr_non_inout": "1e-05",
+        "lr_inout": 0.0001,
+        "batch_size": 60,
+        "frame_sample_every": 6
+      },
+      "initialization_log": [
+        "Initializing from /home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt"
+      ],
+      "final_checkpoint_log": "Saved checkpoint to ./experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt",
+      "final_epoch_sparse_test": {
+        "epoch": 7,
+        "eval/auc": 0.9454014755981366,
+        "eval/l2": 0.09371566353591418,
+        "eval/inout_ap": 0.9155857280577813
+      },
+      "epoch_logs": [
+        "EVAL EPOCH 0: AUC=0.9473, L2=0.0922, Inout AP=0.8875",
+        "EVAL EPOCH 1: AUC=0.9467, L2=0.0935, Inout AP=0.9026",
+        "EVAL EPOCH 2: AUC=0.9463, L2=0.0932, Inout AP=0.9079",
+        "EVAL EPOCH 3: AUC=0.9456, L2=0.0931, Inout AP=0.9092",
+        "EVAL EPOCH 4: AUC=0.9455, L2=0.0936, Inout AP=0.9089",
+        "EVAL EPOCH 5: AUC=0.9453, L2=0.0936, Inout AP=0.9161",
+        "EVAL EPOCH 6: AUC=0.9452, L2=0.0938, Inout AP=0.9127",
+        "EVAL EPOCH 7: AUC=0.9454, L2=0.0937, Inout AP=0.9156"
+      ]
+    }
+  },
+  "mm_reference": {
+    "path": "rebuttal/2026ACMMM-fanb-final-3.pdf",
+    "sha256": "48fb0bd2bdacd69437442a3765e5a6bb36602137a2fec12164c4a4329d80fdb9",
+    "table": "Table 4, DINOv3 ViT-B/16 multi-layer without SASA/GGSF",
+    "vat_auc": 0.937,
+    "vat_l2": 0.103
+  },
+  "current_router_recipe": {
+    "decoder_lr": 0.0001,
+    "inout_lr": 0.001,
+    "support_epochs": 3,
+    "decoder_epochs": 5,
+    "decoder_keep_ratios": [
+      1,
+      0.75,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "base_seed": 0
+  }
+}

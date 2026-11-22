@@ -62,10 +62,12 @@
 
 **E2 VAT 服务器结果与审查（2026-11-23）**：GPU 1 的 B/L 队列已正常结束，实际各 support 3 + decoder 5 epochs，seed 0，仅 train/test。服务器结果提交 `0fc2844` 已 push 并 pull 到本机。B/L 分别按 rate-6 test L2 选第 4/2 轮，最终 rate-1 test 均为 31,978 个查询（20,655 画内）；AUC/L2/AP 为 B `0.913548/0.110971/0.901738`，L `0.923034/0.097970/0.916599`。14 个大工件 SHA、源码/标注/选模/冻结 state 均核对通过，两组逐查询指标重聚合差值均 0。审查 `results/E2_VAT_SEED0_REVIEW.md`，CPU 工件检查 `results/e2_vat_seed0_server_checks.json`；两组 AUC 低于同规模 GazeLLE 文献参照，尚未测速。
 
+**E2-C 初始化追溯与低 LR 续训入口（2026-11-23）**：服务器精确 W&B config/output 确认 B/L 初始化均为 GF dense→VAT dense 8 epochs，再接本轮新 Router；没有遗漏 decoder 的 GF 迁移，但 Router 未在 GF 预训练。旧 VAT decoder LR 为 `1e-5`，本轮 `1e-4`；旧末轮 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，仅登记历史日志值。新增独立续训入口：原第 5 轮末状态、固定 K50、新低 LR 优化器、旧 best 继续参与选模、原始 dense/K100 推理核对，计划 B/L 各追加 8 epochs。39/39 CPU 通过，旧 E0 源码 SHA 全部不变；`RUN_VAT_CONTINUE.md` 含 GPU 1 B→L 完整命令。新续训尚未运行，无新精度数字。
+
 ## 下一步
 
-1. 收齐并审查 GF-B/L 报告；VAT-B/L 已回传核验，不重复训练。
-2. 对实际选中 checkpoint 推进 E3：对应 B/L 官方 GazeLLE 同口径推理、B1/B8 正反序效率；再做 E4 多人分析。现有 VAT checkpoint 可补 K75/K100 推理观察预算响应。
+1. 用户按 `cscwd_router/RUN_VAT_CONTINUE.md` 手动执行 E2-C 的低 LR 固定 K50 续训；保留原 E2 结果，不重跑初始 support/decoder。GF 继续等待完成并审查。
+2. 根据原始 dense/K100 probe 与续训真实结果判断适配效果；GF 完成后比较完整 GF Router→VAT 迁移。对实际选中 checkpoint 推进 E3 官方 GazeLLE 推理/统一效率，再做 E4 多人分析；不新增 dense 训练。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

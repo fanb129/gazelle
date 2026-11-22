@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)：E2-C，VAT 初始化 GF→VAT 来源与固定 K50 低 LR 续训；39 项 CPU 通过，计划 B/L 各追加 8 epochs，尚未运行。
 - [E2_VAT_SEED0_REVIEW.md](results/E2_VAT_SEED0_REVIEW.md)：VAT B/L 已完成并回传；逐帧精度、选模与 14 个大工件核验。
 - [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)：已实现入口的完整 GPU 0/1 命令、输出与恢复；GF-B 与 VAT-B 先并行，各自接 L。
 - [EXPERIMENT_PLAN.md](EXPERIMENT_PLAN.md)：GF/VAT × B/L 当前清单；四组均 support 3 + sparse decoder 5 epochs，不重训 dense。

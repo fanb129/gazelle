@@ -4,6 +4,7 @@
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
 > 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。GF 尚待审查，效率尚待测量。
+> E2-C 已实现低学习率固定 K50 续训，39 项 CPU 检查通过；计划 B/L 各加 8 epochs，命令见 `RUN_VAT_CONTINUE.md`，尚未运行。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
 ## 0. 当前决定（2026-11-23，E2）
@@ -171,6 +172,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：检查 GPU 1 的 B→L 队列已完成；按用户指示在服务器仅提交 8 份 VAT JSON 与对应 provenance，push `0fc2844` 后本机 pull。只读核对 checkpoint、源码、数据标注、逐查询身份/指标与单 checkpoint 选模，未重新运行模型或启动训练。
 - **产出文件与数字**：`results/testselected_k050_seed0/vat/{vitb,vitl}/`、`results/e2_vat_seed0_server_checks.json`、`results/E2_VAT_SEED0_REVIEW.md`。实际各 3+5 epochs，seed 0；B/L 按 rate-6 test L2 选第 4/2 轮，rate-1 test 各 31,978 人次、20,655 画内，最终 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。14 个大工件 SHA 全匹配，8 份报告本地 SHA 一致；两组逐查询重聚合指标差值均 0。两组 AUC 均低于同规模 GazeLLE 文献参照，尚无正式效率结果。
 - **下一步**：收齐并审查 GF，然后对实际选中模型推进 E3 官方 GazeLLE 对照推理/测速与 E4 多人分析；可用现有 VAT checkpoint 补 K75/K100 推理，不新增 dense 训练。
+
+### 2026-11-23 · E2-C：VAT 迁移来源追溯与低学习率续训
+
+- **完成内容**：从精确 W&B config/output 核实 B/L 都是 GF dense→VAT dense 8 epochs；本轮在此基础重学 VAT Router，没有继承 GF Router。核对 MM Table 4 的 B raw-concat `0.937/0.103`；旧 VAT decoder LR `1e-5`，当前首轮 Router 适配 `1e-4`。新增独立固定 K50 续训入口，不改旧 E0 源码、运行目录或 GF 任务；从原第 5 轮末状态使用新低 LR 优化器，保留旧 best，先做原始初始化 native dense/routed K100 推理核对。
+- **产出文件与数字**：`code/stag/dinov3_continue.py`、`code/scripts/continue_router_dinov3.py`、`code/stag/test_dinov3_continue.py`，`RUN_VAT_CONTINUE.md`、`results/e2_vat_initialization_trace.json`、`results/e2_vat_continue_local_checks.json`。39/39 CPU 通过（7 项新增、32 项回归），含 B/L 合成闭环、原工件不变、固定预算、旧 best 保留、恢复逐值一致与 probe 不符时停止；两组完整 CLI 和 shell 语法通过。旧末轮日志 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，不是当前逐帧复测。计划各加 8 epochs 是预算，尚无续训结果。
+- **下一步**：用户 push/pull 后在 GPU 1 手动执行 B→L 续训，回传 probe/history/summary。GF 继续等待；完成后再比较完整 GF Router→VAT 迁移。以真实结果决定后续预算与 E3，不重训 dense。
 
 ## 7. T1 服务器运行与结果回传
 

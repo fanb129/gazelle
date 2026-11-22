@@ -136,3 +136,11 @@
 - CPU 工件检查：`cscwd_router/results/e2_vat_seed0_server_checks.json`；SHA256：`5139136ad98fca1ee43100521078cfdf55735ffc156635d33a2894611fdb5d9f`。14 个大工件实际 SHA 全部匹配，19 项源码/源码树摘要与数据标注一致；两组各 31,978 条逐查询身份/坐标核对通过，AUC/L2/AP 重聚合差值均 0。
 - 审查：`cscwd_router/results/E2_VAT_SEED0_REVIEW.md`；SHA256：`f34db2e400e8b4b9135354979de6db15f0e8edbd5fd3298158eeb6b44d6b7d85`。B/L 分别选 decoder 第 4/2 轮（从 1 开始），最终 rate-1 test AUC/L2/AP 为 `0.913548/0.110971/0.901738` 与 `0.923034/0.097970/0.916599`。
 - 本轮只执行只读 CPU 工件/数值检查，未新增模型 forward、训练或测速；PT 与逐查询 gzip 留服务器，路径/SHA 已由上述两组实际运行记录登记。
+
+## E2-C · VAT 初始化追溯与续训入口（2026-11-23）
+
+- report: `cscwd_router/results/e2_vat_initialization_trace.json`; SHA256: `3f024dd05448063bb2fa4ac27571c612292ac8555c11ef25ef132c4020c45dfc`。
+- report: `cscwd_router/results/e2_vat_continue_local_checks.json`; SHA256: `02fbe7e4ce6a1ffdc7f3c204de366b28f2360a26cd99bf9e425bf1c936466502`。
+- 追溯只读服务器两组精确 W&B config、summary、output，源文件路径/SHA 与白名单配置写入 trace；确认 GF dense→VAT dense→新 Router。旧末轮 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，不改写为当前逐帧复测。MM Table 4 的 B raw-concat `0.937/0.103` 作为原稿参照。
+- 新入口本机 39/39 CPU 通过（7 项新增、32 项回归），原 E0 七个源码 SHA 未改。三个新源码 SHA 与环境在工程报告；命令见 `RUN_VAT_CONTINUE.md`。本轮未新增真实训练或 GPU 推理，没有新 PT/NPY。
+- 待执行续训从原 VAT last 出发，固定 K50，各加 8 epochs，decoder LR `1e-5`、in/out LR `1e-4`，base seed 0；旧 best 保留参与选模。实际新工件写服务器 `experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/`，实际生成后登记路径/SHA。

@@ -17,6 +17,8 @@
 
 当前论文完整方法采用冻结 DINOv3 ViT-B/16、ViT-L/16 + 多层 raw-concat + Router。DINOv3 和多层表示沿用，不作为相对在审 ICASSP 的新贡献。新增主张是 support、共同预算下的多人 sparse suffix、回填与实测权衡。Router 在 B block 5 / L block 11 后决策（0-based），不依赖尚未计算的深层特征；头框是身份/几何，头部外观不是已标定的 gaze direction。GazeLLE 原生已共享多人场景编码，不能描述成每人重复 backbone。
 
+E2-C 最新：GF 仍在训练，按用户要求等待。服务器 W&B 已核对 VAT B/L 都是 GF dense→VAT dense 8 epochs→本轮新 Router，不是随机初始化；原 decoder LR `1e-5`，本轮用了 `1e-4`。独立低 LR 续训入口已实现，39 项 CPU 通过，原第 5 轮末继续 K50 各加 8 epochs，先测原始初始化 native dense/K100，旧 best 仍参与选模，详见 `RUN_VAT_CONTINUE.md`。尚未运行续训。原 E0 七个源码 SHA 不变；不要改旧目录的 epoch 数后 resume。GF 完成后可比较迁移整个 GF Router + decoder 到 VAT，而非只继承 dense decoder。
+
 旧 DINOv3 GF K50/matched dense AUC 为 `0.956462 / 0.957264`；旧 B8 `1.148545x` 相对自身 dense，且测速与正式准确率 checkpoint 不同。VAT K50/K75 的 source-video holdout 定位损失保留。尚未证明相对官方 GazeLLE 的统一速度优势。
 
 用户已选择后续新训练使用全量官方 train、逐 epoch test、不切 val；GF 以 Min L2、VAT 以 L2 选择单一 checkpoint，全部指标来自该 checkpoint，登记 `test-selected`。VAT 逐轮 test rate 6，选中后最终逐帧评测。旧 fixed-final / validation-selected 的结果保留原标签。新独立入口已实现，CPU 32/32 通过。VAT B/L 已完成并以 `0fc2844` 回传，按 test L2 选第 4/2 轮，逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；GF 尚待审查，效率待测。
