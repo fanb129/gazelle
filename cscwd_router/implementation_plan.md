@@ -1,13 +1,26 @@
-# CSCWD Router · 实现规格与进展（GazeLLE 底座 + gaze-conditioned routing）
+# CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
-> 底座：GazeLLE 官方（DINOv2 单层）。方法：gaze-conditioned spatial routing（多人共享一次稀疏前向）。
+> 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
+> 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
-## 0. 目标（一句话）
+## 0. 当前决定（2026-11-22，写作 W1）
 
-在 GazeLLE（官方 DINOv2 单层，`gazelle/backbone_v0_dinov2.py` + `model_v0_dinov2.py`）之上，加 gaze-conditioned routing：在 DINOv2 中层预测一个高召回 gaze support，只让后段 blocks 处理 support 内的 token，多人 max-union 共享一次稀疏前向。精度几乎不掉，省 backbone 深层计算。
+当前目标：在冻结的 DINOv3 ViT-B/16 多层表示上，利用人物条件决定深层计算位置；与同表示 matched dense 量化 Router 收益，与官方 DINOv2 GazeLLE 比较完整系统。新增贡献是 support、多人共同预算下的 sparse suffix 与回填执行。DINOv3 和多层访问作为复用基础，不再次主张为相对在审 ICASSP 的新贡献。
 
-## 1. 底座（复用，不动）
+论文目标是有竞争力的定位与更低实际推理成本。已有 GF K50 相对自身 matched dense 的 AUC 差为 `-0.000802`；旧 B8 加速 `1.148545x` 来自另一份 split-clean checkpoint，相对自身 dense。尚无统一条件下相对官方 GazeLLE 的速度结论。VAT 旧 source-video holdout 的 K50/K75 定位损失保留，不能写成跨数据集已通过。
+
+本轮确认后续新训练口径为全量官方 train、逐 epoch test、按预定单一指标选一个 checkpoint，登记 `test-selected`；GF 使用 Min L2，VAT 使用 L2，VAT 最终逐帧评测。已有 fixed-final 与 validation-selected 结果保留原协议。**本轮只修改方案与写作文件，训练/评测脚本尚未切换协议。**
+
+GazeLLE 本身已支持多人共享场景编码；多人新主张限定为聚合 support 后共享稀疏 suffix，不能写为原生 GazeLLE 对每个人重复 backbone。MM 图 2 是 last-layer PCA 对比，保留源素材，当前不直接作为 Router 主动机图。详见 `latex/PAPER_STORY.md`。
+
+下一项工作先完成同一最终 checkpoint 的跨模型统一测速入口，再实现新训练协议；旧 DINOv2 T4 单独收口，不因本轮叙事调整重写已有阈值或自动展开 T5/T6。
+
+## 0.1 DINOv2 适配实验的原目标（历史）
+
+在官方 DINOv2 单层 GazeLLE 上适配既有 Router，并验证 K100 等价、真实稀疏执行、训练闭环与精度/效率。原目标和原 gate 保留在下文，用于解释 T1–T4 工件。
+
+## 1. DINOv2 实验底座（历史，复用不动）
 
 - 代码：`gazelle/backbone_v0_dinov2.py`（`DinoV2Backbone`）、`gazelle/model_v0_dinov2.py`（`GazeLLE`）。
 - DINOv2 ViT-B/14，输入 448×448，单层特征 32×32（768 维）。
@@ -15,7 +28,7 @@
 - backbone 权重：服务器 `checkpoints/dinov2_vitb14_pretrain.pth`。
 - GazeLLE decoder checkpoint（GazeFollow 训练）：用户于 2026-11-21 确认主线使用服务器 `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt`。同目录另有 ViT-B inout、ViT-L 和 ViT-L inout 版本；本轮使用 ViT-B、非 inout。
 
-## 2. 方法（routing 适配 DINOv2）
+## 2. DINOv2 实验方法（历史适配规格）
 
 复用 `gazelle/routing/` 的现有 Router（DINOv3 版），把 backbone 从 DINOv3 换成 DINOv2：
 
@@ -37,7 +50,7 @@
 4. **forward 拆分**：`DinoV2Backbone.forward` 现在是 `forward_features(x)['x_norm_patchtokens']` 一次性前向，要改成 prefix/suffix 拆分（前段 dense 出 block-5 特征做 support，后段只算 K 个 token）。
 5. **early-exit fill**：未选 token 用 block-5 浅层特征回填，保持 32×32 完整网格进 decoder。
 
-## 3. 任务清单（按依赖顺序）
+## 3. DINOv2 工程任务清单（原 T1–T6，按依赖顺序）
 
 ### T1 DINOv2 稀疏前向适配（backbone 层）
 - 新增 `cscwd_router/code/stag/backbone_sparse_dinov2.py`（不改 `gazelle/backbone_v0_dinov2.py`）。
@@ -73,7 +86,7 @@
 
 - 纯 RGB、真实头框，不进深度/未来帧/检测框。
 - 严格因果（routing 只用当前帧信息；本任务无跨帧时序，故无时序因果问题）。
-- 复用 GazeLLE 官方 checkpoint，不重训 backbone（dense 阶段）。
+- backbone 保持冻结。官方 GazeLLE checkpoint 用于 DINOv2 基线及已有适配实验；DINOv3 多层分支使用自己的 dense decoder 初始化，分别登记工件，不声称直接加载相同官方 decoder。
 - 所有数字只写真实跑过的；不编数字、不编对照。
 - 新代码全放 `cscwd_router/code/`，旧 `gazelle` 包只 import 不改。
 
@@ -133,6 +146,12 @@
 - **完成内容**：新增 `code/scripts/run_main_experiment.py`，顺序执行固定 full-train/no-eval 3+5+5、三个 final checkpoint 的一次 official test、B1/B4/B8 正反序共六个新进程 benchmark。新增 `benchmark_router_dinov2.py`，比较原版 dense、同路径不剪 token 的 K100 与 K50；输入为 train 中真实 RGB 和一个 in-frame GT 头框，数据加载/预处理/传输在计时外，统一 inference mode、FP16、关闭 autocast cache。新增 `code/stag/main_results.py`，按预声明公式汇总并输出 pass/stop；恢复核对并复用已完成 official test。
 - **产出文件与数字**：上述三个文件、`code/stag/test_main_experiment.py`、`results/t4_local_checks.json`、本机检查说明；此前 34 项 + 新增 10 项，**44/44 通过**。随机小模型 448 输入的 dense/K100/K50 执行图实际保留 1024/1024/512 patches，dense/K100 输出逐值一致。未产生真实 T4 精度、时延或加速数字。
 - **下一步**：用户按第 13 节在服务器手动启动完整 T4，回传小报告和 provenance。按 official dense AUC 掉 ≤0.002、B8 latency speedup ≥1.10x 的既定门槛决定继续 T5 或停止本方案。
+
+### 2026-11-22 · W1：三稿复核、idea 与行文逻辑落盘
+
+- **完成内容**：完整读取被拒 MM、rebuttal 与在审 ICASSP，共 15 页；目视核对 MM 图 2 及候选源素材。将论文主方法定位为 DINOv3 多层表示上的人物条件化深层计算分配，明确多层/软门控/共享场景编码的复用边界。写入五段中英文 Introduction 工作稿、方法执行图、贡献、图表和对照逻辑；记录新 full-train/test-selected 口径与现有脚本的区别。
+- **产出文件与数字**：`latex/PAPER_STORY.md`、`latex/PAPER_REVIEW.md`、`results/WRITING_EVIDENCE_20261122.json`，同步 README、后续会话提示词、provenance 和 `PROGRESS.md`。核对并摘录 19 份已有实验 JSON 的真实指标与 SHA；旧 GF K50 AUC 为 `0.956462`，相对自身 matched dense 差 `-0.000802`；旧 B8 latency speedup 为 `1.148545x`，其 checkpoint 与 GF 正式准确率 checkpoint 不同。VAT K50/K75 的 holdout 退化保留。未执行新的训练、推理或测速。
+- **下一步**：先完成统一跨模型测速入口与同 checkpoint 的测量，再实现本轮选定的全量 train/test-selected 协议。既有 DINOv2 T4 报告另行经 Git 回传收口；多人和消融逐项推进。
 
 ## 7. T1 服务器运行与结果回传
 

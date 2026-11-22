@@ -73,3 +73,15 @@
 - T4 本机小结果 `cscwd_router/results/t4_local_checks.json`，SHA256：`bfa0662c497237f76da482381bf4b029ab10de5e827334dad0bd6469a8e46a2e`。44/44 CPU 结构与规则检查通过，本机优化器更新数 0，未测真实 accuracy 或 GPU timing。
 - T4 当前入口 `code/scripts/run_main_experiment.py` 将把大文件保存到服务器 `experiments/cscwd_router/t4_gf_fulltrain_seed3106/`，训练器实际写出后自动追加七个 PT 的路径与 SHA。小报告集中在 `results/t4_gf_fulltrain_seed3106/`。
 - 主入口记录源码/输入 SHA、预声明 gate、完整子命令与证据链；每个 benchmark JSON 记录实际 checkpoint、真实 train RGB/头框样本 SHA、GPU 状态、token 执行图和计时设置。完成后自动登记 comparison 和所有小证据的路径及 SHA。恢复复用已核对的 official test 结果。
+
+## W1 · 三稿复核与写作证据摘录（2026-11-22）
+
+- 写作文件：`cscwd_router/latex/PAPER_STORY.md`、`cscwd_router/latex/PAPER_REVIEW.md`。完整读取 MM 9 页、rebuttal 1 页、ICASSP 5 页；渲染核对 MM 图 2、rebuttal 和 ICASSP 方法图，未修改这些 PDF。
+- 证据摘录：`cscwd_router/results/WRITING_EVIDENCE_20261122.json`；SHA256：`3bb33508eb926d8301f7d465129f34ee6f3d15d97d9d341cd6e326db5dd7edad`。包含 19 份现有实验 JSON、6 个实现源码、3 份 PDF 与图素材的路径/SHA，摘录真实 GF/VAT 指标并按正反序比值几何均值重算旧效率汇总。
+- PDF：`rebuttal/2026ACMMM-fanb-final-3.pdf`；SHA256：`48fb0bd2bdacd69437442a3765e5a6bb36602137a2fec12164c4a4329d80fdb9`。
+- PDF：`rebuttal/rebuttal.pdf`；SHA256：`983d1d9e36f8f5cd1c88d4f70c345ed5d91d0dc15e563b9d179d0effd831313c`。
+- PDF：`icassp2027/Fan.pdf`；SHA256：`4c5b37bc7409d6cb080e38aa062dc687c41570e86f520e95cb8907c1c94ad26e`。
+- 旧 GF accuracy checkpoint 引用（从既有评测 JSON 读取，本机未加载 PT）：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_sparse_fixedrouter_decoder_k050_seed3106/final.pt`；SHA256：`e2f6af0a2e1668196d28d2f11c4fdb16779e39fa07103b682efd2c2ee9d331ee`。
+- 旧 GF matched dense checkpoint 引用：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_dense_decoder_continue_seed3106/final.pt`；SHA256：`d4dd8c22cfa3824628d67441c5efb702f353a3422ec54be113cecbec577f7612`。
+- 旧效率使用 split-clean `best_val_selection.pt`，并非上述两个 full-train final checkpoint；仅报告相对其自身 DINOv3 dense 的速度，未登记为相对官方 GazeLLE 的加速。
+- 本轮没有训练、模型推理、GPU 测速或新的 PT/NPY。新 `test-selected` 协议仅完成文档决定，现有训练代码未更改。服务器 T4 原始小报告仍待用户经 Git 回传；会话中的只读结果不冒充已归档源报告。

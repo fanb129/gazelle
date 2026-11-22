@@ -1,0 +1,563 @@
+{
+  "format": "cscwd_writing_evidence_v1",
+  "review_date": "2026-11-22",
+  "scope": "Read-only review of existing PDFs and existing local experiment reports; no training, inference, or timing run in this task.",
+  "papers": [
+    {
+      "path": "rebuttal/2026ACMMM-fanb-final-3.pdf",
+      "pages": 9,
+      "sha256": "48fb0bd2bdacd69437442a3765e5a6bb36602137a2fec12164c4a4329d80fdb9"
+    },
+    {
+      "path": "rebuttal/rebuttal.pdf",
+      "pages": 1,
+      "sha256": "983d1d9e36f8f5cd1c88d4f70c345ed5d91d0dc15e563b9d179d0effd831313c"
+    },
+    {
+      "path": "icassp2027/Fan.pdf",
+      "pages": 5,
+      "sha256": "4c5b37bc7409d6cb080e38aa062dc687c41570e86f520e95cb8907c1c94ad26e"
+    }
+  ],
+  "mm_figure2": {
+    "pdf_page": 2,
+    "figure_type": "DINOv2 versus DINOv3 last-layer PCA, five example images",
+    "candidate_source_asset": "icassp2027/2026ACMMM/Figure/dinov2VSdinov3_compressed.pdf",
+    "candidate_source_asset_sha256": "0ec916bbffa3dee12538ba33bb6162f722b3dc06a3e6dc0e032b01f142de0a48",
+    "asset_match": "Visually checked against the rendered MM page; not copied into the new paper."
+  },
+  "gazefollow": {
+    "k50": {
+      "source": "experiments/coverage_router/gf_fulltrain_official_test_seed3106/learned_k50_image_b16_fp32.json",
+      "metrics": {
+        "auc": 0.9564615058199,
+        "avg_l2": 0.1043751888217571,
+        "min_l2": 0.045043661552303986,
+        "routing_gt_point_coverage": 0.9412323776334548,
+        "routing_hard_coverage": 0.8630023767687894
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 0.5,
+        "model": "gazelle_dinov3_vitb16",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "backbone_sparse",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "checkpoint": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_sparse_fixedrouter_decoder_k050_seed3106/final.pt",
+      "checkpoint_sha256": "e2f6af0a2e1668196d28d2f11c4fdb16779e39fa07103b682efd2c2ee9d331ee",
+      "checkpoint_epoch": 4,
+      "annotation_sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab",
+      "evaluation_batch_size": 16,
+      "precision": "fp32",
+      "images": 4782,
+      "selection_protocol": "full_train_no_eval_fixed_final"
+    },
+    "matched_dense": {
+      "source": "experiments/coverage_router/gf_fulltrain_official_test_seed3106/matched_dense_image_b16_fp32.json",
+      "metrics": {
+        "auc": 0.9572635952733678,
+        "avg_l2": 0.10259243758782523,
+        "min_l2": 0.043747751835148986,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 1.0
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 1.0,
+        "model": "gazelle_dinov3_vitb16",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "support_pilot",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "checkpoint": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_dense_decoder_continue_seed3106/final.pt",
+      "checkpoint_sha256": "d4dd8c22cfa3824628d67441c5efb702f353a3422ec54be113cecbec577f7612",
+      "checkpoint_epoch": 4,
+      "annotation_sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab",
+      "evaluation_batch_size": 16,
+      "precision": "fp32",
+      "images": 4782,
+      "selection_protocol": "full_train_no_eval_fixed_final"
+    },
+    "k50_minus_matched_dense": {
+      "auc": -0.0008020894534678247,
+      "avg_l2": 0.001782751233931873,
+      "min_l2": 0.001295909717155
+    }
+  },
+  "old_dinov3_efficiency": {
+    "baseline": "its own DINOv3 multi-level dense model, not official DINOv2 GazeLLE",
+    "accuracy_checkpoint_matches_timing_checkpoint": false,
+    "protocol": {
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "precision": "fp16",
+      "input_size": [
+        512,
+        512
+      ],
+      "input_source": "fixed_seed_dummy_preloaded_on_device",
+      "num_people_per_image": 1,
+      "autocast_weight_cache_enabled": true
+    },
+    "batch_results": [
+      {
+        "batch_size": 1,
+        "within_order_latency_speedup_geomean": 1.0015249493825056,
+        "within_order_throughput_ratio_geomean": 1.002462714881312,
+        "pairs": [
+          {
+            "order": "forward",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b1_forward.json",
+            "dense_ms_per_batch": 20.970714511349797,
+            "k50_ms_per_batch": 21.375369746237993,
+            "latency_speedup": 0.9810690884091297,
+            "throughput_ratio": 0.9829341151350796,
+            "peak_memory_ratio_k50_over_dense": 1.0147515418524116
+          },
+          {
+            "order": "reverse",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b1_reverse.json",
+            "dense_ms_per_batch": 22.236684570088983,
+            "k50_ms_per_batch": 21.749339997768402,
+            "latency_speedup": 1.022407326952017,
+            "throughput_ratio": 1.0223793021866048,
+            "peak_memory_ratio_k50_over_dense": 1.0062354546647856
+          }
+        ]
+      },
+      {
+        "batch_size": 4,
+        "within_order_latency_speedup_geomean": 1.0606755678377446,
+        "within_order_throughput_ratio_geomean": 1.0549437276562565,
+        "pairs": [
+          {
+            "order": "forward",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b4_forward.json",
+            "dense_ms_per_batch": 30.681119533255696,
+            "k50_ms_per_batch": 29.142031678929925,
+            "latency_speedup": 1.0528133340627226,
+            "throughput_ratio": 1.0482945387199045,
+            "peak_memory_ratio_k50_over_dense": 1.0184586435522385
+          },
+          {
+            "order": "reverse",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b4_reverse.json",
+            "dense_ms_per_batch": 30.816797399893403,
+            "k50_ms_per_batch": 28.838571859523654,
+            "latency_speedup": 1.0685965154587382,
+            "throughput_ratio": 1.0616350914889552,
+            "peak_memory_ratio_k50_over_dense": 1.0165548674796023
+          }
+        ]
+      },
+      {
+        "batch_size": 8,
+        "within_order_latency_speedup_geomean": 1.1485452722210405,
+        "within_order_throughput_ratio_geomean": 1.1456470516945796,
+        "pairs": [
+          {
+            "order": "forward",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b8_forward.json",
+            "dense_ms_per_batch": 57.33426404185593,
+            "k50_ms_per_batch": 50.907709868624806,
+            "latency_speedup": 1.1262393101126693,
+            "throughput_ratio": 1.1226963739434175,
+            "peak_memory_ratio_k50_over_dense": 1.0289432996529042
+          },
+          {
+            "order": "reverse",
+            "source": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b8_reverse.json",
+            "dense_ms_per_batch": 57.44670401327312,
+            "k50_ms_per_batch": 49.04554458335042,
+            "latency_speedup": 1.171293019606406,
+            "throughput_ratio": 1.1690668977992364,
+            "peak_memory_ratio_k50_over_dense": 1.0269095996827873
+          }
+        ]
+      }
+    ]
+  },
+  "vat_holdout": {
+    "dense_base": {
+      "source": "experiments/coverage_router/vat_splitclean_dense_seed3106/summary.json",
+      "selected_epoch_zero_based": 0,
+      "selection_metric": "l2",
+      "metrics": {
+        "auc": 0.948849237076985,
+        "l2": 0.10056455682840831,
+        "inout_ap": 0.9208827930219379,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 1.0
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 1.0,
+        "model": "gazelle_dinov3_vitb16_inout",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "support_pilot",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "epochs": 8,
+      "data_split": {
+        "assignment_fingerprint": "42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793",
+        "eval_frame_sample_every": 6,
+        "evaluation_split": "vat_train_source_video_holdout",
+        "group_key": "normalized_source_video_path",
+        "seed": 3106,
+        "selection_is_formal": true,
+        "source_annotation_file": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "source_annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+        "source_group_fingerprint": "a3403b6703942be69f94ae6b448d7d29b87431087de676cfca7278110ca35c4e",
+        "strategy": "stable_sha256_group_holdout_v1",
+        "train_frame_count": 7958,
+        "train_frame_sample_every": 6,
+        "train_group_count": 36,
+        "train_group_fingerprint": "96361899ef2612f86e5f3cedd5f498dbef8a9bb3c245c6da9d619e9ecb02cc8c",
+        "train_head_sample_count": 18607,
+        "train_record_count": 418,
+        "train_sequence_count": 418,
+        "validation_fraction": 0.1,
+        "validation_frame_count": 2051,
+        "validation_group_count": 4,
+        "validation_group_fingerprint": "9b13820d25e2ce8079484dee8212bf0eaa625d9191b5d0c899252cdde446bc65",
+        "validation_head_sample_count": 4034,
+        "validation_record_count": 57,
+        "validation_sequence_count": 57
+      },
+      "sparse_inference": false
+    },
+    "support_k25": {
+      "source": "experiments/coverage_router/vat_splitclean_support_k025_seed3106/summary.json",
+      "selected_epoch_zero_based": 1,
+      "selection_metric": "routing_hard_coverage",
+      "metrics": {
+        "auc": 0.9488492435097866,
+        "l2": 0.10056455682840831,
+        "inout_ap": 0.9208828230634226,
+        "routing_gt_point_coverage": 0.8642640619737285,
+        "routing_hard_coverage": 0.618281810604913
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 0.25,
+        "model": "gazelle_dinov3_vitb16_inout",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "support_pilot",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "epochs": 3,
+      "data_split": {
+        "assignment_fingerprint": "42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793",
+        "eval_frame_sample_every": 6,
+        "evaluation_split": "vat_train_source_video_holdout",
+        "group_key": "normalized_source_video_path",
+        "seed": 3106,
+        "selection_is_formal": true,
+        "source_annotation_file": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "source_annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+        "source_group_fingerprint": "a3403b6703942be69f94ae6b448d7d29b87431087de676cfca7278110ca35c4e",
+        "strategy": "stable_sha256_group_holdout_v1",
+        "train_frame_count": 7958,
+        "train_frame_sample_every": 6,
+        "train_group_count": 36,
+        "train_group_fingerprint": "96361899ef2612f86e5f3cedd5f498dbef8a9bb3c245c6da9d619e9ecb02cc8c",
+        "train_head_sample_count": 18607,
+        "train_record_count": 418,
+        "train_sequence_count": 418,
+        "validation_fraction": 0.1,
+        "validation_frame_count": 2051,
+        "validation_group_count": 4,
+        "validation_group_fingerprint": "9b13820d25e2ce8079484dee8212bf0eaa625d9191b5d0c899252cdde446bc65",
+        "validation_head_sample_count": 4034,
+        "validation_record_count": 57,
+        "validation_sequence_count": 57
+      },
+      "sparse_inference": false
+    },
+    "k50": {
+      "source": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k050_seed3106/summary.json",
+      "selected_epoch_zero_based": 3,
+      "selection_metric": "l2",
+      "metrics": {
+        "auc": 0.9252316569918104,
+        "l2": 0.10817898290629017,
+        "inout_ap": 0.9406443721918638,
+        "routing_gt_point_coverage": 0.9639609296059279,
+        "routing_hard_coverage": 0.8375618955168751
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 0.5,
+        "model": "gazelle_dinov3_vitb16_inout",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "backbone_sparse",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "epochs": 5,
+      "data_split": {
+        "assignment_fingerprint": "42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793",
+        "eval_frame_sample_every": 6,
+        "evaluation_split": "vat_train_source_video_holdout",
+        "group_key": "normalized_source_video_path",
+        "seed": 3106,
+        "selection_is_formal": true,
+        "source_annotation_file": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "source_annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+        "source_group_fingerprint": "a3403b6703942be69f94ae6b448d7d29b87431087de676cfca7278110ca35c4e",
+        "strategy": "stable_sha256_group_holdout_v1",
+        "train_frame_count": 7958,
+        "train_frame_sample_every": 6,
+        "train_group_count": 36,
+        "train_group_fingerprint": "96361899ef2612f86e5f3cedd5f498dbef8a9bb3c245c6da9d619e9ecb02cc8c",
+        "train_head_sample_count": 18607,
+        "train_record_count": 418,
+        "train_sequence_count": 418,
+        "validation_fraction": 0.1,
+        "validation_frame_count": 2051,
+        "validation_group_count": 4,
+        "validation_group_fingerprint": "9b13820d25e2ce8079484dee8212bf0eaa625d9191b5d0c899252cdde446bc65",
+        "validation_head_sample_count": 4034,
+        "validation_record_count": 57,
+        "validation_sequence_count": 57
+      },
+      "sparse_inference": true,
+      "minus_matched_dense": {
+        "auc": -0.021495365543038658,
+        "l2": 0.004410414486295242,
+        "inout_ap": 0.0016488964409844264
+      }
+    },
+    "k75": {
+      "source": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106/summary.json",
+      "selected_epoch_zero_based": 3,
+      "selection_metric": "l2",
+      "metrics": {
+        "auc": 0.9366523123933145,
+        "l2": 0.10702626989755802,
+        "inout_ap": 0.9412601607058952,
+        "routing_gt_point_coverage": 0.9902324014819804,
+        "routing_hard_coverage": 0.9470771629828802
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 0.75,
+        "model": "gazelle_dinov3_vitb16_inout",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "backbone_sparse",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "epochs": 5,
+      "data_split": {
+        "assignment_fingerprint": "42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793",
+        "eval_frame_sample_every": 6,
+        "evaluation_split": "vat_train_source_video_holdout",
+        "group_key": "normalized_source_video_path",
+        "seed": 3106,
+        "selection_is_formal": true,
+        "source_annotation_file": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "source_annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+        "source_group_fingerprint": "a3403b6703942be69f94ae6b448d7d29b87431087de676cfca7278110ca35c4e",
+        "strategy": "stable_sha256_group_holdout_v1",
+        "train_frame_count": 7958,
+        "train_frame_sample_every": 6,
+        "train_group_count": 36,
+        "train_group_fingerprint": "96361899ef2612f86e5f3cedd5f498dbef8a9bb3c245c6da9d619e9ecb02cc8c",
+        "train_head_sample_count": 18607,
+        "train_record_count": 418,
+        "train_sequence_count": 418,
+        "validation_fraction": 0.1,
+        "validation_frame_count": 2051,
+        "validation_group_count": 4,
+        "validation_group_fingerprint": "9b13820d25e2ce8079484dee8212bf0eaa625d9191b5d0c899252cdde446bc65",
+        "validation_head_sample_count": 4034,
+        "validation_record_count": 57,
+        "validation_sequence_count": 57
+      },
+      "sparse_inference": true,
+      "minus_matched_dense": {
+        "auc": -0.010074710141534604,
+        "l2": 0.003257701477563088,
+        "inout_ap": 0.002264684955015861
+      }
+    },
+    "matched_dense": {
+      "source": "experiments/coverage_router/vat_splitclean_dense_decoder_continue_seed3106/summary.json",
+      "selected_epoch_zero_based": 0,
+      "selection_metric": "l2",
+      "metrics": {
+        "auc": 0.9467270225348491,
+        "l2": 0.10376856841999493,
+        "inout_ap": 0.9389954757508794,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 0.9999999996185623
+      },
+      "model_config": {
+        "escape_tokens": 8,
+        "fusion": "raw_concat",
+        "keep_ratio": 1.0,
+        "model": "gazelle_dinov3_vitb16_inout",
+        "route_after_block": 5,
+        "router_hidden_dim": 256,
+        "router_stage": "support_pilot",
+        "router_temperature": 1.0,
+        "spatial_prior": "none"
+      },
+      "epochs": 5,
+      "data_split": {
+        "assignment_fingerprint": "42772300b78bea0cbeb1d288ab0bc9fb209651f2bf898ff9f8ee7abdfefcf793",
+        "eval_frame_sample_every": 6,
+        "evaluation_split": "vat_train_source_video_holdout",
+        "group_key": "normalized_source_video_path",
+        "seed": 3106,
+        "selection_is_formal": true,
+        "source_annotation_file": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "source_annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+        "source_group_fingerprint": "a3403b6703942be69f94ae6b448d7d29b87431087de676cfca7278110ca35c4e",
+        "strategy": "stable_sha256_group_holdout_v1",
+        "train_frame_count": 7958,
+        "train_frame_sample_every": 6,
+        "train_group_count": 36,
+        "train_group_fingerprint": "96361899ef2612f86e5f3cedd5f498dbef8a9bb3c245c6da9d619e9ecb02cc8c",
+        "train_head_sample_count": 18607,
+        "train_record_count": 418,
+        "train_sequence_count": 418,
+        "validation_fraction": 0.1,
+        "validation_frame_count": 2051,
+        "validation_group_count": 4,
+        "validation_group_fingerprint": "9b13820d25e2ce8079484dee8212bf0eaa625d9191b5d0c899252cdde446bc65",
+        "validation_head_sample_count": 4034,
+        "validation_record_count": 57,
+        "validation_sequence_count": 57
+      },
+      "sparse_inference": false
+    }
+  },
+  "unmeasured_claims": [
+    "DINOv3 multi-level Router is faster than official DINOv2 GazeLLE under a common benchmark.",
+    "Multi-level features causally improve pruning tolerance on the same backbone.",
+    "The Router maintains accuracy on VAT official test.",
+    "The final full-train accuracy checkpoint reproduces the old split-clean timing numbers."
+  ],
+  "sources": [
+    {
+      "path": "experiments/coverage_router/gf_fulltrain_official_test_seed3106/comparison.json",
+      "sha256": "9246f56eaa6766545089ca29a2afd1401a1df6a6370daf082125be030f6a08ad"
+    },
+    {
+      "path": "experiments/coverage_router/gf_fulltrain_official_test_seed3106/learned_k50_image_b16_fp32.json",
+      "sha256": "4f7bfbf596bc373848012ae27ce95dbab1af66a17c84e7b98f425df8f039a1ed"
+    },
+    {
+      "path": "experiments/coverage_router/gf_fulltrain_official_test_seed3106/matched_dense_image_b16_fp32.json",
+      "sha256": "0774891c1af1e14d3ef27345990e23b75f1eb7bd1272b424d59bf94299ae0797"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b1_forward.json",
+      "sha256": "f24ee8c91dc421f37164541ec7f250fa7f56c4a5fff374e3b3136ed4cd7946cc"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b1_reverse.json",
+      "sha256": "1c195f82bb5a05f1f71263aee959200b9812f0bd817b4348efa0e0a2e8e01694"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b4_forward.json",
+      "sha256": "1474aa7bad2761af7f7e87ca57d53bf6ae278e8ec37a925eb660aca266015375"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b4_reverse.json",
+      "sha256": "3af752813b31b4a671dc6987ec434da6fcdc70dfcc08496aa2f66f65da63dd71"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b8_forward.json",
+      "sha256": "df252d26ced16a8ea7f7e6bb961e8ee1a400a91172684ca14d6a61c735900c23"
+    },
+    {
+      "path": "experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/formal_efficiency/benchmark_formal_b8_reverse.json",
+      "sha256": "b0f2ddece4c6a975d01f5ff892bd55d57c2f0ade266da18180530adcf2ca43dc"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_dense_seed3106/summary.json",
+      "sha256": "03e2839175bf51373f2335b0940d1a86b5173c374bf297614ddbddb90ce1b502"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_dense_seed3106/run_manifest.json",
+      "sha256": "12550d2759922595661a423cadc175a6267d6646023064ab6206de60aca8d109"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_support_k025_seed3106/summary.json",
+      "sha256": "9210cdd7ed9301d0cf3dd11532b851d76bcb1932f5b739627806186eca48bbb5"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_support_k025_seed3106/run_manifest.json",
+      "sha256": "75987a88c08e5336e9fdea6c6b2257c2bbeb4abd1fcaaceda88fea23307b5617"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k050_seed3106/summary.json",
+      "sha256": "bddbcb0824c870b94012d8b5e2836c87fc02113acefa138da47f58422d5bc248"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k050_seed3106/run_manifest.json",
+      "sha256": "0bee437b983b2af319b33c267e86e16538bc917fbe99109dce63deecbd118639"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106/summary.json",
+      "sha256": "f147a3061995295c6c85545726cc252201b9f882ea72413f026be4ba4e21d73f"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_sparse_fixedrouter_decoder_k075_seed3106/run_manifest.json",
+      "sha256": "4d35b5c113c70250b6aaba7c351a47a8e8f87022b59be0970aaa3f2d500b158c"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_dense_decoder_continue_seed3106/summary.json",
+      "sha256": "f6998f11798ea9ab0dc9ddc62cb38128dac996058ce94ac10325cbb02cd24e4a"
+    },
+    {
+      "path": "experiments/coverage_router/vat_splitclean_dense_decoder_continue_seed3106/run_manifest.json",
+      "sha256": "7871bdc6ef60e713132733d13578eb742eda4047eda5cf686733c9348b4f3df0"
+    }
+  ],
+  "implementation_sources": [
+    {
+      "path": "gazelle/backbone.py",
+      "sha256": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a"
+    },
+    {
+      "path": "gazelle/model.py",
+      "sha256": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56"
+    },
+    {
+      "path": "gazelle/routing/backbone.py",
+      "sha256": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28"
+    },
+    {
+      "path": "gazelle/routing/router.py",
+      "sha256": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9"
+    },
+    {
+      "path": "gazelle/routing/model.py",
+      "sha256": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa"
+    },
+    {
+      "path": "gazelle/routing/losses.py",
+      "sha256": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993"
+    }
+  ]
+}
