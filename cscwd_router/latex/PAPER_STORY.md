@@ -1,6 +1,6 @@
 # CSCWD Router：问题定义、方法边界与行文逻辑
 
-更新：2026-11-22。写作任务 W1。主方法按本轮讨论采用 **DINOv3 ViT-B/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；不把尚未完成的跨模型测速、VAT test 或消融写成结果。
+更新：2026-11-23，E2；写作始于 W1。主方法采用 **DINOv3 ViT-B/16、ViT-L/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；VAT full-test 结果见第 9.3 节，不把尚未完成的跨模型测速或消融写成结果。
 
 E0 最新执行：GF/VAT 各跑 ViT-B/16 与 ViT-L/16，所有新训练 base seed 0。四组入口已实现，从兼容旧 decoder 新训 support 3 + sparse decoder 5 epochs；不继承 seed3106 Router、不新增 dense。完整命令见 `../RUN_DINOV3_TRAIN_TEST.md`。
 
@@ -182,7 +182,7 @@ MM 图 2 若最终保留，只作为注明来源的辅助特征观察；其旧�
 | A | 官方 GazeLLE，DINOv2-B/14，单层 dense，448 输入 | 外部系统基线；列明官方 checkpoint |
 | B | DINOv3-B/16，最后一层 dense，512 输入 | 同 backbone 的层级表示对照；新协议结果待补，不能直接搬 ICASSP 行充当本轮结果 |
 | C | DINOv3-B/16，四层 raw-concat matched dense，512 输入 | 已有旧协议 GF 机制对照；本轮不新增训练，与新表分开 |
-| D | DINOv3-B/16，四层 raw-concat + Router K50，512 输入 | 候选完整方法；已有旧协议 GF 与 VAT holdout 结果 |
+| D | DINOv3-B/16，四层 raw-concat + Router K50，512 输入 | 完整方法；旧 GF/VAT holdout 保留，新协议 VAT B/L 见第 9.3 节 |
 | E（用于层级耐受性主张） | DINOv3-B/16，最后一层 + 相同 Router | 与 B/C/D 共同检验多层是否降低剪枝损失；尚未完成 |
 
 严格归因 Router 收益需要 C 与 D 使用相同表示、dense 初始化、decoder 适配预算和选模规则，并独立登记 Router support 训练成本。本轮不新增 C，旧 C/D 配对按旧协议保留；新 D 与 A 的差异作为完整系统比较。K100 是同路径无剪枝 control，不替代 C 的原生 dense 执行时间。
@@ -210,11 +210,11 @@ GazeFollow 官方测试的旧记录为 4,782 个 single-head 图像查询，因�
 
 新 run 明确登记为 `test-selected`，dense 与 Router 使用相同选择规则。已有 `full_train_no_eval / fixed_final` 和 `source_video_holdout / validation_selected` 记录保留原标签；不改名、不与新 run 混拼成一个协议。官方已发布 checkpoint 的选择信息与自行重训模型的选择信息分别列明。
 
-这项是本轮文档决定，**现有训练/评测入口尚未改为新协议**。本轮未启动训练、推理或测速。
+该协议已在 E0 独立入口实现；E2 的 VAT B/L 已完成训练与逐帧 test，并按该规则选模。原历史入口和旧结果保持原协议。
 
 ## 9. 已有证据与目前能写的结果
 
-原始小报告的指标、来源 SHA、PDF SHA 和旧效率汇总已登记到 [WRITING_EVIDENCE_20261122.json](../results/WRITING_EVIDENCE_20261122.json)，本轮只读取和汇总旧文件。
+原始小报告的指标、来源 SHA、PDF SHA 和旧效率汇总已登记到 [WRITING_EVIDENCE_20261122.json](../results/WRITING_EVIDENCE_20261122.json)，该文件保留旧证据；新 E2 原始结果与核验见第 9.3 节。
 
 ### 9.1 GazeFollow：旧 fixed-final 实验
 
@@ -241,10 +241,23 @@ GazeFollow 官方测试的旧记录为 4,782 个 single-head 图像查询，因�
 
 四个验证源视频、2,051 帧、4,034 个人物查询，其中 2,969 个画内。K50/K75 的注视点保留率分别为 96.40%/99.02%，但定位仍退化。扩大 K 同时改变上下文和深层表示，当前支持“仅保住目标位置并不足够”的观察，尚未分离各退化原因。
 
-尚无这条 Router 的 VAT full-train official-test 与正式效率结果。旧 holdout 结论保留；新全量 train/test 实验可以检验不同数据预算与选模口径下的结果，不能预设它会消除相对 dense 的差距。
+旧 holdout 结论单独保留。新的官方 train/test 结果如下，正式效率仍待测量。
+
+### 9.3 VAT：seed0 full-train / test-selected（2026-11-23）
+
+GPU 1 的 B/L 队列均完成，各 support 3 + sparse decoder/inout 5 epochs。结果提交 `0fc2844` 已经 Git 回传本机，详见 [E2 审查](../results/E2_VAT_SEED0_REVIEW.md)。
+
+| K50 模型 | AUC ↑ | L2 ↓ | In-out AP ↑ | 所选 decoder epoch（从 1 开始） |
+|---|---:|---:|---:|---:|
+| ViT-B raw-concat + Router | 0.913548 | 0.110971 | 0.901738 | 4 |
+| ViT-L raw-concat + Router | 0.923034 | 0.097970 | 0.916599 | 2 |
+
+逐轮 test rate 6，以 L2 最小选定一个模型，最终 rate-1 test 各 31,978 个查询、20,655 画内。14 个大工件 SHA、选模/冻结 state 和两组逐查询明细核验通过；导出指标重聚合与原报告差值均 0，没有新增模型 forward 或测速。
+
+相对计划中同规模 GazeLLE 文献参照，B 的 AP 较高但 AUC/L2 较差；L 的 L2/AP 较好但 AUC 较差。不能写成 VAT 全面优于 GazeLLE。L 的选择来自 K75 训练轮，实际评测仍为 K50；不将后续轮更高 AUC 与较早轮较低 L2 混拼。尚未做同口径官方 checkpoint 推理和效率比较，差距也未被分解为 backbone、表示和 Router 的各自作用。
 
 ## 10. 论文组织与下一步
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
-E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。GPU 0/1 的完整手动 nohup 命令已给出，尚未启动服务器真实训练。实际选中模型产生后，对同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
+E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。VAT B/L 已完成并回传核验，GF 尚待审查；GPU 0/1 命令保留供复现/恢复，不重复训练已完成 VAT。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。

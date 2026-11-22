@@ -1,8 +1,8 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
-更新：2026-11-22，E0。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
+更新：2026-11-23，E2。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
 
-E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。本轮未启动服务器训练，没有新的真实模型精度或 GPU 效率成绩。
+E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 已完成并经 Git 回传（`0fc2844`），两组各 3+5 epochs，seed 0；逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。工件/指标核验通过，见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)。GF 尚待审查，尚无新的 GPU 效率成绩。
 
 ## 1. 四组主实验与并行顺序
 

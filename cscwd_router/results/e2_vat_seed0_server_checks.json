@@ -1,0 +1,234 @@
+{
+  "date": "2026-11-23",
+  "scope": "Read-only CPU checks of completed VAT reports, checkpoints and exported query metrics; no model forward or GPU timing.",
+  "server": "fb@3090.lab",
+  "queue_complete": true,
+  "log": {
+    "path": "/home/fb/src/paper/gazelleV1/logs/cscwd_router/vat_bl_seed0_gpu1.log",
+    "sha256": "c0b7a05ab901fa4bd2a1f58274a17a89fdf59f2d05f939da6e3a758f679487a5"
+  },
+  "models": {
+    "vitb": {
+      "passed": true,
+      "summary": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitb/summary.json",
+      "report_sha256": {
+        "cscwd_router/results/testselected_k050_seed0/vat/vitb/manifest.json": "18b146d815aa3eb2933f86d04bf93ea9dec602662b61eb4bbbe4af023f96d985",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitb/sparse_decoder_history.json": "1b7f4b521b49668741aad4f446d68dc1a293737f25dc0326a9cc2cc64a657241",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitb/summary.json": "ffaf51153d32c8519ea60bdb92dca15f2ce9172841e244499bb7a2e1cdfd86f6",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitb/support_history.json": "b70b531e49cd4dbbed293cc2efd792a189adccc03b9edd55c319628d19f370fd"
+      },
+      "source_sha256": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+        "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+        "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+        "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+        "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+        "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+        "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+        "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+        "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+        "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+        "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+        "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039"
+      },
+      "artifacts": {
+        "initialization": {
+          "kind": "decoder",
+          "loaded_tensors": 45,
+          "router_reinitialized": true,
+          "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt",
+          "sha256": "db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d"
+        },
+        "backbone": {
+          "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+          "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+        },
+        "support_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/support/final.pt",
+          "sha256": "dd3204c41e9b806e97a032132025780d8df50104205aa2280ccc91eb2e4112bc"
+        },
+        "support_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/support/last.pt",
+          "sha256": "52f492f3fe459e35197e0ffa9d87f98f7bb0a204975f24f4f5128f4e8e5f280f"
+        },
+        "best_test_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/best_test.pt",
+          "sha256": "e30cb35b572dc129b766cb2e6d9500345594f312664d71d748393ced8a430261"
+        },
+        "decoder_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/last.pt",
+          "sha256": "f36e4ecc95cb550b8f7f88152b9c101de84d10e2e82a3b4a208d5edf780d7d28"
+        },
+        "per_query_predictions": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/predictions.jsonl.gz",
+          "sha256": "446b51cdadb3c6319e410180d6e7e88bfb0f8db9a516636a9971e1a6a303da40"
+        }
+      },
+      "context_fingerprint": "b088e830785e4aa207a82d7c7993c085a79938934913f6f4bf086543d58acf93",
+      "selected_epoch_zero_based": 3,
+      "selected_epoch_one_based": 4,
+      "final_metrics": {
+        "auc": 0.913547582115387,
+        "l2": 0.11097111689305349,
+        "inout_ap": 0.9017375480030396,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9375938029532801,
+        "routing_hard_coverage": 0.756200951283707,
+        "routing_soft_coverage": 0.3672394179957622
+      },
+      "per_query_aggregated": {
+        "auc": 0.913547582115387,
+        "l2": 0.11097111689305349,
+        "inout_ap": 0.9017375480030396,
+        "persons": 31978,
+        "inframe_persons": 20655
+      },
+      "aggregate_differences": {
+        "auc": 0.0,
+        "l2": 0.0,
+        "inout_ap": 0.0,
+        "persons": 0,
+        "inframe_persons": 0
+      },
+      "query_identity_and_annotation_matches": 31978,
+      "checks": [
+        "base seed 0, physical GPU 1, full train/test with no val",
+        "3 support + 5 decoder epochs and optimizer counts",
+        "sampling and K100/K75/K50 curriculum",
+        "minimum test L2 selection and single checkpoint tuple",
+        "source, annotation, report and artifact SHA256",
+        "checkpoint metadata and embedded best state",
+        "frozen Router/decoder state across respective stages",
+        "no backbone tensors in compact checkpoint",
+        "all 31978 final-test query identities and annotations",
+        "exported per-query metric aggregation"
+      ]
+    },
+    "vitl": {
+      "passed": true,
+      "summary": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitl/summary.json",
+      "report_sha256": {
+        "cscwd_router/results/testselected_k050_seed0/vat/vitl/manifest.json": "62581c6aa4f67268cc58eafa3178da8f40f02635dbfaf1d61433e730df7d778c",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitl/sparse_decoder_history.json": "35a6027a9ebbd2180ccc5bf7bfc7d9b73fb8758e65fa89ca41cadb6e9e5704fa",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitl/summary.json": "e30a2e445e2daea3b65e610780431d4c727db5a9d8c48f44e428cd6864793e9d",
+        "cscwd_router/results/testselected_k050_seed0/vat/vitl/support_history.json": "97f65a220894d032406962d1a2ef63218f6744af1d553285408cf87ebabe059f"
+      },
+      "source_sha256": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+        "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+        "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+        "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+        "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+        "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+        "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+        "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+        "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+        "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+        "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+        "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039"
+      },
+      "artifacts": {
+        "initialization": {
+          "kind": "decoder",
+          "loaded_tensors": 45,
+          "router_reinitialized": true,
+          "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt",
+          "sha256": "979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673"
+        },
+        "backbone": {
+          "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+          "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+        },
+        "support_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/final.pt",
+          "sha256": "d31e8212f134945dc17e2d2fa5827f75bd41d784f5e9d14d2b848cb8b97423b8"
+        },
+        "support_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/support/last.pt",
+          "sha256": "76275e9981c0fc26e9c03baa4e3f8cf89838ebc53bfcbecd1ee46dd9b3600ddf"
+        },
+        "best_test_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/best_test.pt",
+          "sha256": "6e3c799f2a9bb24f5083896e788935b0623e728e69a8a6fa966fb22ccefae1c8"
+        },
+        "decoder_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/last.pt",
+          "sha256": "8dc27dd226688d3163e73199d86c2334410f1b08853a65b675decb9bb078d922"
+        },
+        "per_query_predictions": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/predictions.jsonl.gz",
+          "sha256": "f7b6d402eba51e802e152cebca9e7a31f4093c11d143828d7d7ccce5f03efa69"
+        }
+      },
+      "context_fingerprint": "bf03de11f459add2962d67e9a7f11b4d61cca72e0baf7308447e25d699bd3410",
+      "selected_epoch_zero_based": 1,
+      "selected_epoch_one_based": 2,
+      "final_metrics": {
+        "auc": 0.9230336797806461,
+        "l2": 0.09797018663652333,
+        "inout_ap": 0.9165990962906327,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9492132655531348,
+        "routing_hard_coverage": 0.8020669559352965,
+        "routing_soft_coverage": 0.39611381478326424
+      },
+      "per_query_aggregated": {
+        "auc": 0.9230336797806461,
+        "l2": 0.09797018663652333,
+        "inout_ap": 0.9165990962906327,
+        "persons": 31978,
+        "inframe_persons": 20655
+      },
+      "aggregate_differences": {
+        "auc": 0.0,
+        "l2": 0.0,
+        "inout_ap": 0.0,
+        "persons": 0,
+        "inframe_persons": 0
+      },
+      "query_identity_and_annotation_matches": 31978,
+      "checks": [
+        "base seed 0, physical GPU 1, full train/test with no val",
+        "3 support + 5 decoder epochs and optimizer counts",
+        "sampling and K100/K75/K50 curriculum",
+        "minimum test L2 selection and single checkpoint tuple",
+        "source, annotation, report and artifact SHA256",
+        "checkpoint metadata and embedded best state",
+        "frozen Router/decoder state across respective stages",
+        "no backbone tensors in compact checkpoint",
+        "all 31978 final-test query identities and annotations",
+        "exported per-query metric aggregation"
+      ]
+    }
+  },
+  "unique_artifacts_sha256_verified": 14,
+  "result_git_commit": "0fc284430297d38244f4583c4adae17a486a0bf7",
+  "local_verification": {
+    "reports_sha256_verified": 8,
+    "named_sources_sha256_verified": 18,
+    "all_artifact_paths_and_sha_present_in_provenance": true,
+    "native_dinov3_tree_verified_on_server": true
+  }
+}

@@ -3,13 +3,14 @@
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
+> 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。GF 尚待审查，效率尚待测量。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
-## 0. 当前决定（2026-11-22，E0）
+## 0. 当前决定（2026-11-23，E2）
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
-按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。新入口已实现，本轮尚未启动服务器真实训练。
+按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。VAT 两组已完成并回传核验，GF 尚待审查。
 
 VAT 的 B/L 初始化都已核对存在，因此不用等本轮 GF。GPU 0 顺序 GF-B→GF-L，GPU 1 顺序 VAT-B→VAT-L；详细配置与完整 nohup 命令见 `EXPERIMENT_PLAN.md`、`RUN_DINOV3_TRAIN_TEST.md`。官方 GazeLLE 后续仅做推理比较；旧 DINOv2 T4 按原阈值单独收口。
 
@@ -164,6 +165,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：新增 full train/test 数据入口、prefix-only support、稀疏 decoder/inout 更新、单 checkpoint test 选模、原子 epoch 恢复、VAT rate-1 最终评测和逐查询压缩导出。复用现有 DINOv3 Router 与指标，旧 `gazelle/`、历史脚本未改。新增单 GPU B→L 队列；用户指定新 seed 0 后，四组均重学 Router，不新增 dense。
 - **产出文件与数字**：7 个新 Python 文件（data_prep 1、stag 4、scripts 2），`RUN_DINOV3_TRAIN_TEST.md`、`results/e0_dinov3_train_test_checks.json`。CPU 32/32 通过，覆盖 B/L factory、梯度冻结、指标一致性、4 种合成闭环与中断恢复；服务器只读确认 GF-B/GF-L/VAT-B/VAT-L 匹配 40/40/45/45 个 tensors，缺失、多余、shape mismatch 均为 0，并核对两份骨干及四份标注 SHA。未进行新真实数据训练或 GPU 测速。
 - **下一步**：用户 push/pull 后手动启动 GPU0 GF-B→L 与 GPU1 VAT-B→L；回传小报告后对实际选中模型推进 E3 效率和 E4 多人分析。
+
+### 2026-11-23 · E2：VAT B/L 完成、Git 回传与结果审查
+
+- **完成内容**：检查 GPU 1 的 B→L 队列已完成；按用户指示在服务器仅提交 8 份 VAT JSON 与对应 provenance，push `0fc2844` 后本机 pull。只读核对 checkpoint、源码、数据标注、逐查询身份/指标与单 checkpoint 选模，未重新运行模型或启动训练。
+- **产出文件与数字**：`results/testselected_k050_seed0/vat/{vitb,vitl}/`、`results/e2_vat_seed0_server_checks.json`、`results/E2_VAT_SEED0_REVIEW.md`。实际各 3+5 epochs，seed 0；B/L 按 rate-6 test L2 选第 4/2 轮，rate-1 test 各 31,978 人次、20,655 画内，最终 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。14 个大工件 SHA 全匹配，8 份报告本地 SHA 一致；两组逐查询重聚合指标差值均 0。两组 AUC 均低于同规模 GazeLLE 文献参照，尚无正式效率结果。
+- **下一步**：收齐并审查 GF，然后对实际选中模型推进 E3 官方 GazeLLE 对照推理/测速与 E4 多人分析；可用现有 VAT checkpoint 补 K75/K100 推理，不新增 dense 训练。
 
 ## 7. T1 服务器运行与结果回传
 

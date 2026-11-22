@@ -1,12 +1,12 @@
 # 小论文 · 当前进度
 
-分支：`codex/coverage-aware-router`。更新：2026-11-22。
+分支：`codex/coverage-aware-router`。更新：2026-11-23。
 
 | 投稿线 | 目录 | 状态 |
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | E0 双尺寸入口已实现，32/32 CPU 通过；GF/VAT × B/L 均 seed0、3+5 epochs，不重训 dense。GPU0 GF-B→L，GPU1 VAT-B→L，待用户手动运行 |
+| CSCWD 新主线 | `cscwd_router/` | E2 VAT-B/L 已完成并经 Git 回传、核验通过；K50 AUC/L2/AP：B 0.913548/0.110971/0.901738，L 0.923034/0.097970/0.916599；GF 待审查，统一效率待测 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -60,10 +60,12 @@
 
 **E0 双尺寸实现（2026-11-22）**：GF/VAT × B/L 的新训练统一 base seed=0。新增 7 个 Python 文件与独立 B→L 队列；四组从兼容旧 decoder 重学 support 3 epochs，再训 sparse decoder/inout 5 epochs，不继承 seed3106 Router、不重训 dense。GF 选 test Min L2、VAT 选 test L2，VAT 选中后自动逐帧 test。CPU 32/32 通过，含四种合成闭环、冻结梯度、官方指标一致性、原子恢复与错误 seed 拒绝；只读服务器核对四份初始化、两份骨干和四份数据标注。工程报告 `results/e0_dinov3_train_test_checks.json`，完整命令 `RUN_DINOV3_TRAIN_TEST.md`；未启动真实训练或 GPU 推理。
 
+**E2 VAT 服务器结果与审查（2026-11-23）**：GPU 1 的 B/L 队列已正常结束，实际各 support 3 + decoder 5 epochs，seed 0，仅 train/test。服务器结果提交 `0fc2844` 已 push 并 pull 到本机。B/L 分别按 rate-6 test L2 选第 4/2 轮，最终 rate-1 test 均为 31,978 个查询（20,655 画内）；AUC/L2/AP 为 B `0.913548/0.110971/0.901738`，L `0.923034/0.097970/0.916599`。14 个大工件 SHA、源码/标注/选模/冻结 state 均核对通过，两组逐查询指标重聚合差值均 0。审查 `results/E2_VAT_SEED0_REVIEW.md`，CPU 工件检查 `results/e2_vat_seed0_server_checks.json`；两组 AUC 低于同规模 GazeLLE 文献参照，尚未测速。
+
 ## 下一步
 
-1. 本机 push、服务器 pull 后，用户按运行说明启动 GPU0 GF-B→L 和 GPU1 VAT-B→L；四组均 seed0、3+5 epochs，仅 train/test。
-2. 回传四组小报告，对实际选中 checkpoint 做对应 B/L 官方 GazeLLE 推理、B1/B8 正反序效率与多人分析。
+1. 收齐并审查 GF-B/L 报告；VAT-B/L 已回传核验，不重复训练。
+2. 对实际选中 checkpoint 推进 E3：对应 B/L 官方 GazeLLE 同口径推理、B1/B8 正反序效率；再做 E4 多人分析。现有 VAT checkpoint 可补 K75/K100 推理观察预算响应。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

@@ -2,6 +2,8 @@
 
 更新：2026-11-22。E0 入口已实现，32 项 CPU 工程检查通过。以下命令由用户在服务器手动执行；助手没有启动服务器训练。
 
+2026-11-23 状态：VAT B/L 已正常完成并回传，核验见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)；不用重复启动 VAT 训练。以下保留原运行/恢复命令，GF 尚待审查。
+
 ## 1. 调度与训练规则
 
 VAT 不依赖本轮 GF，两种尺寸都已有兼容的 VAT decoder 初始化。先同时启动两个 B，再由各自队列顺序接 L：
@@ -155,4 +157,4 @@ git push origin codex/coverage-aware-router
 
 历史 decoder 是初始化，不将其训练 seed 反写为 0；本轮不继承 seed3106 的已训练 Router，四组 Router 都重新初始化。各新阶段以 base seed 0 复现，epoch 子 seed 为 `0 + epoch`。
 
-工程记录见 `results/e0_dinov3_train_test_checks.json`。本轮仅执行 CPU 合成闭环与只读工件检查，尚无新的真实数据精度或 GPU 效率数字。E3 效率比较在这四组实际选中模型产生后再运行。
+工程记录见 `results/e0_dinov3_train_test_checks.json`。E0 当时仅执行 CPU 合成闭环与只读工件检查；E2 已回传真实 VAT 逐帧精度，见上述审查。尚无新的 GPU 效率数字，E3 将对实际选中 checkpoint 测量。

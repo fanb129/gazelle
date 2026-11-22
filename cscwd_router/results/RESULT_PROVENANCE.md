@@ -129,3 +129,10 @@
 - best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/best_test.pt`; SHA256: `6e3c799f2a9bb24f5083896e788935b0623e728e69a8a6fa966fb22ccefae1c8`
 - decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/last.pt`; SHA256: `8dc27dd226688d3163e73199d86c2334410f1b08853a65b675decb9bb078d922`
 - per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/predictions.jsonl.gz`; SHA256: `f7b6d402eba51e802e152cebca9e7a31f4093c11d143828d7d7ccce5f03efa69`
+
+## E2 · VAT seed0 B/L 回传核验（2026-11-23）
+
+- 服务器结果提交 `0fc284430297d38244f4583c4adae17a486a0bf7` 已 push，本机已 pull；8 份原始 JSON 的 SHA 与服务器核验记录一致。
+- CPU 工件检查：`cscwd_router/results/e2_vat_seed0_server_checks.json`；SHA256：`5139136ad98fca1ee43100521078cfdf55735ffc156635d33a2894611fdb5d9f`。14 个大工件实际 SHA 全部匹配，19 项源码/源码树摘要与数据标注一致；两组各 31,978 条逐查询身份/坐标核对通过，AUC/L2/AP 重聚合差值均 0。
+- 审查：`cscwd_router/results/E2_VAT_SEED0_REVIEW.md`；SHA256：`f34db2e400e8b4b9135354979de6db15f0e8edbd5fd3298158eeb6b44d6b7d85`。B/L 分别选 decoder 第 4/2 轮（从 1 开始），最终 rate-1 test AUC/L2/AP 为 `0.913548/0.110971/0.901738` 与 `0.923034/0.097970/0.916599`。
+- 本轮只执行只读 CPU 工件/数值检查，未新增模型 forward、训练或测速；PT 与逐查询 gzip 留服务器，路径/SHA 已由上述两组实际运行记录登记。
