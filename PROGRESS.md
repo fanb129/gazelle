@@ -6,14 +6,16 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | W1 三稿复核与行文落盘；论文方法采用 DINOv3 多层 + Router，新增贡献定位于计算分配。DINOv2 T1–T3 验收通过，T4 工件单独收口；跨模型统一速度优势待测 |
+| CSCWD 新主线 | `cscwd_router/` | W1 本地提交 `2a3bcaf`；W2 限时实验清单落盘：不新增 dense 训练，GF 5、VAT 3+5 epochs，仅 train/test 逐轮选模；统一效率与多人只做推理，入口待实现 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
 
-在冻结的 DINOv3 ViT-B/16 多层表示上做 gaze-conditioned spatial routing：中层联合场景、头部外观和相对几何预测 support，后段只处理选中 patch，多人 max-union 共享 sparse suffix，未选位置回填以维持完整解码网格。**新贡献是人物条件化计算分配；DINOv3 和多层表示作为沿用的基础配置。** 与自身 matched dense 验证路由收益，与官方 DINOv2 GazeLLE 比较完整系统；精度与速度是否同时超过由实测决定。
+在冻结的 DINOv3 ViT-B/16 多层表示上做 gaze-conditioned spatial routing：中层联合场景、头部外观和相对几何预测 support，后段只处理选中 patch，多人 max-union 共享 sparse suffix，未选位置回填以维持完整解码网格。**新贡献是人物条件化计算分配；DINOv3 和多层表示作为沿用的基础配置。** 本轮不新增 dense 训练，与官方 DINOv2 GazeLLE 比较完整系统，旧 matched dense 证据保留原协议；精度与速度是否同时超过由实测决定。
 
 执行状态见 `cscwd_router/implementation_plan.md`；行文逻辑与三稿边界见 `cscwd_router/latex/PAPER_STORY.md`、`PAPER_REVIEW.md`；后续会话提示词为 `cscwd_router/codex_prompt.md`。旧 DINOv2 T1–T6 记录保留，不自动变成 DINOv3 的新命令。
+
+当前限时实验以 `cscwd_router/EXPERIMENT_PLAN.md` 为执行清单：E0 入口 → E1 GF → E2 VAT → E3 官方 checkpoint 对照推理/测速 → E4 多人分析。
 
 ## 工作约定
 
@@ -21,6 +23,7 @@
 - 本机实现/必要检查；服务器 `fb@3090.lab` 由用户手动跑。仓库 `/home/fb/src/paper/gazelleV1`，Python `/home/fb/anaconda3/envs/py310/bin/python`。
 - backbone 冻结；GazeLLE 官方 checkpoint 用于 DINOv2 基线和已有适配，DINOv3 分支分别登记自身 dense 初始化。纯 RGB、真实头框；routing 是单帧计算分配，无跨帧时序。
 - 小 JSON/MD 经 Git 回传；大 NPY/PT 只留服务器，在 `cscwd_router/results/RESULT_PROVENANCE.md` 记路径和 SHA。只记录真实跑过的数字。
+- 本机授权工作完成后由助手自动创建本地 Git commit，只 stage 本任务文件；push 与服务器运行不自动执行。
 
 ## 进展
 
@@ -53,10 +56,12 @@
 
 **后续新训练协议（2026-11-22）**：按用户选择，全量官方 train、逐 epoch test、不另切 val；GF 按 Min L2、VAT 按 L2 选择单一 checkpoint，再报告其完整指标，登记 `test-selected`。旧 fixed-final 与 holdout 结果保留原标签。协议已写入文档，现有训练脚本尚未修改。
 
+**W2 限时实验设计（2026-11-22）**：按用户要求完成 W1 本地提交 `2a3bcaf`（8 文件，未包含已有目录迁移）。新增 `EXPERIMENT_PLAN.md`，复用 GF 全量 support 和已有 VAT 初始化，不新增 dense/matched dense；计划新增 GF 5、VAT 3+5 个训练 epoch，其余核心对照只推理。核对 Mi et al. 公开指标 GF `0.961/0.094/0.038`、VAT `0.948/0.095/0.923` 与 ViT-L/16、离线 object-mask 设置，作为文献目标。本轮只完成计划与来源核对，没有新模型指标或测速。
+
 ## 下一步
 
-1. 完成官方 GazeLLE / DINOv3 多层 matched dense / DINOv3 Router 的统一测速入口，在同一最终 checkpoint 上闭合精度与速度；本机写代码，服务器由用户手动运行。
-2. 实现已写明的新 full-train/test-selected 协议，固定每个模型的选择指标和预算；VAT 旧 holdout 保留作诊断。
-3. 已有 DINOv2 T4 小报告另行经 Git 回传，按其原阈值收口；多人 union 与消融逐项推进。
+1. 完成 E0：最小 DINOv3 train/test-selected 入口、初始化/恢复与本机检查，给出 E1/E2 的完整 nohup 命令。
+2. 用户手动执行 GF 5 epochs 和 VAT support 3 + sparse decoder 5 epochs，不重训 dense；对实际选中 checkpoint 做官方 GazeLLE 对照推理、B1/B8 正反序效率与多人分析。
+3. 旧 DINOv2 T4 小报告另行经 Git 回传按原阈值收口；旧 matched dense / VAT holdout 不混入新协议。余量优先加 scene-only Router 对照。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

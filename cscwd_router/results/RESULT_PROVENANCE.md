@@ -85,3 +85,12 @@
 - 旧 GF matched dense checkpoint 引用：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_dense_decoder_continue_seed3106/final.pt`；SHA256：`d4dd8c22cfa3824628d67441c5efb702f353a3422ec54be113cecbec577f7612`。
 - 旧效率使用 split-clean `best_val_selection.pt`，并非上述两个 full-train final checkpoint；仅报告相对其自身 DINOv3 dense 的速度，未登记为相对官方 GazeLLE 的加速。
 - 本轮没有训练、模型推理、GPU 测速或新的 PT/NPY。新 `test-selected` 协议仅完成文档决定，现有训练代码未更改。服务器 T4 原始小报告仍待用户经 Git 回传；会话中的只读结果不冒充已归档源报告。
+
+## W2 · 限时实验计划的初始化引用（2026-11-22）
+
+- W1 写作与证据文件已提交到本地 Git：`2a3bcaf`。W2 仅新增 `cscwd_router/EXPERIMENT_PLAN.md` 并同步当前文档，没有训练/推理/测速产物。
+- 计划复用 GF support：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_fulltrain_support_k025_seed3106/final.pt`；既有报告登记 SHA256：`3668596eb5e927c6a9e7144f3be23cfecd6231a591ce5678a29769d1595133d6`。
+- 上条来源：本地既有 `experiments/coverage_router/gf_fulltrain_official_test_seed3106/pipeline_complete.json`；该 JSON SHA256：`76543cefd6dbeee9723eab3902ba9c2c22133462b5be0c32bafa63dede3bf6aa`。
+- 计划复用 VAT 初始化：`/home/fb/src/paper/gazelleV1/experiments/coverage_router/vat_splitclean_dense_seed3106/best_val_selection.pt`；既有报告登记 SHA256：`bc946c6a07b230f7e677c15d52d2b984ccb65060f456fbe22ea997f7d234f050`。
+- 上条来源：本地既有 `experiments/coverage_router/vat_splitclean_support_k025_seed3106/run_manifest.json`；该 JSON SHA256：`75987a88c08e5336e9fdea6c6b2257c2bbeb4abd1fcaaceda88fea23307b5617`。
+- 两份 PT 仅作为初始化引用，本轮未在本机加载，运行前由服务器入口核对文件与 SHA。计划 GF 5、VAT 3+5 epochs 是待执行预算，不是新实验成绩。新 run 不划 val，按完整 train/test 及 `test-selected` 协议运行；旧初始化来源与旧 holdout 结果保留原标签。

@@ -2,11 +2,12 @@
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
+> 本轮 W2 限时实验执行清单见 `EXPERIMENT_PLAN.md`：不新增 dense 训练，只训练 Router 后模型；全量 train/test，逐 epoch test 选模。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
 ## 0. 当前决定（2026-11-22，写作 W1）
 
-当前目标：在冻结的 DINOv3 ViT-B/16 多层表示上，利用人物条件决定深层计算位置；与同表示 matched dense 量化 Router 收益，与官方 DINOv2 GazeLLE 比较完整系统。新增贡献是 support、多人共同预算下的 sparse suffix 与回填执行。DINOv3 和多层访问作为复用基础，不再次主张为相对在审 ICASSP 的新贡献。
+当前目标：在冻结的 DINOv3 ViT-B/16 多层表示上，利用人物条件决定深层计算位置，与官方 DINOv2 GazeLLE 比较完整系统。新增贡献是 support、多人共同预算下的 sparse suffix 与回填执行。DINOv3 和多层访问作为复用基础，不再次主张为相对在审 ICASSP 的新贡献。本轮按用户限时决定不新增 dense/matched dense 训练；旧 matched dense 证据保留独立协议，不与新的 test-selected 行混成因果消融。
 
 论文目标是有竞争力的定位与更低实际推理成本。已有 GF K50 相对自身 matched dense 的 AUC 差为 `-0.000802`；旧 B8 加速 `1.148545x` 来自另一份 split-clean checkpoint，相对自身 dense。尚无统一条件下相对官方 GazeLLE 的速度结论。VAT 旧 source-video holdout 的 K50/K75 定位损失保留，不能写成跨数据集已通过。
 
@@ -14,7 +15,7 @@
 
 GazeLLE 本身已支持多人共享场景编码；多人新主张限定为聚合 support 后共享稀疏 suffix，不能写为原生 GazeLLE 对每个人重复 backbone。MM 图 2 是 last-layer PCA 对比，保留源素材，当前不直接作为 Router 主动机图。详见 `latex/PAPER_STORY.md`。
 
-下一项工作先完成同一最终 checkpoint 的跨模型统一测速入口，再实现新训练协议；旧 DINOv2 T4 单独收口，不因本轮叙事调整重写已有阈值或自动展开 T5/T6。
+本轮固定新增训练预算为 GF sparse decoder 5 epochs（复用全量 support）、VAT support 3 + sparse decoder 5 epochs（复用既有 VAT 初始化）；官方 GazeLLE 只做推理评测与测速。下一项先完成 E0 的 train/test-selected 入口，再按 E1–E4 执行；详细配置见 `EXPERIMENT_PLAN.md`。旧 DINOv2 T4 单独收口，不因本轮叙事调整重写已有阈值或重跑 dense。
 
 ## 0.1 DINOv2 适配实验的原目标（历史）
 
@@ -96,6 +97,7 @@ GazeLLE 本身已支持多人共享场景编码；多人新主张限定为聚合
 - 服务器代码仓库：`/home/fb/src/paper/gazelleV1`。
 - Python：`/home/fb/anaconda3/envs/py310/bin/python`。
 - git 双向：本地写码 → push → 服务器 pull → nohup 手动跑 → 小结果（JSON/MD）git 回传；大文件（.npy/.pt）不进 git，只在 RESULT_PROVENANCE.md 记路径+SHA。
+- 2026-11-22 用户更新：本机完成的授权文件由助手自动创建本地 Git commit，明确 stage 范围；push 与服务器执行仍分别处理，不自动启动训练。
 - nohup 模板：`CUDA_VISIBLE_DEVICES=<gpu> setsid nohup <python> -u <script> --args > <run>.log 2>&1 &`。
 
 ## 6. 进展记录（codex 逐项写回）
@@ -152,6 +154,12 @@ GazeLLE 本身已支持多人共享场景编码；多人新主张限定为聚合
 - **完成内容**：完整读取被拒 MM、rebuttal 与在审 ICASSP，共 15 页；目视核对 MM 图 2 及候选源素材。将论文主方法定位为 DINOv3 多层表示上的人物条件化深层计算分配，明确多层/软门控/共享场景编码的复用边界。写入五段中英文 Introduction 工作稿、方法执行图、贡献、图表和对照逻辑；记录新 full-train/test-selected 口径与现有脚本的区别。
 - **产出文件与数字**：`latex/PAPER_STORY.md`、`latex/PAPER_REVIEW.md`、`results/WRITING_EVIDENCE_20261122.json`，同步 README、后续会话提示词、provenance 和 `PROGRESS.md`。核对并摘录 19 份已有实验 JSON 的真实指标与 SHA；旧 GF K50 AUC 为 `0.956462`，相对自身 matched dense 差 `-0.000802`；旧 B8 latency speedup 为 `1.148545x`，其 checkpoint 与 GF 正式准确率 checkpoint 不同。VAT K50/K75 的 holdout 退化保留。未执行新的训练、推理或测速。
 - **下一步**：先完成统一跨模型测速入口与同 checkpoint 的测量，再实现本轮选定的全量 train/test-selected 协议。既有 DINOv2 T4 报告另行经 Git 回传收口；多人和消融逐项推进。
+
+### 2026-11-22 · W2：限时实验清单与自动本地提交
+
+- **完成内容**：按用户要求自动创建 W1 本地提交 `2a3bcaf`，仅包含 8 个写作/证据文件，保留已有目录迁移。将下一轮改为不新增 dense/matched dense 训练的 E0–E4 清单；固定 full train/test、逐 epoch test 与单 checkpoint 选模。核对可复用 GF support/VAT 初始化和 Mi et al. 原论文的指标、模型规模及辅助处理。
+- **产出文件与数字**：新增 `EXPERIMENT_PLAN.md`，同步当前行文、README、会话提示词、provenance 和 `PROGRESS.md`。计划训练预算是 GF 5、VAT 3+5 epochs（预算，不是已跑结果）；其他核心比较仅推理。Mi et al. 的公开 GF/VAT AUC `0.961 / 0.948` 作为文献目标，不登记为本文成绩。本轮没有新训练或 GPU 评测。
+- **下一步**：完成 E0 的最小 DINOv3 train/test-selected 入口与本机工程检查，给出用户手动运行 E1/E2 的完整 nohup 命令；随后对实际选中模型执行 E3/E4。
 
 ## 7. T1 服务器运行与结果回传
 

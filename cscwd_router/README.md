@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [EXPERIMENT_PLAN.md](EXPERIMENT_PLAN.md)：W2 当前限时清单；不新增 dense 训练，GF 5、VAT 3+5 epochs，其他核心比较只推理。
 - [PAPER_STORY.md](latex/PAPER_STORY.md)：已确定的问题链、DINOv3/多层的引入方式、方法、五段中英文 Introduction 工作稿、图表与实验论证。
 - [PAPER_REVIEW.md](latex/PAPER_REVIEW.md)：被拒 MM、rebuttal、在审 ICASSP 的 15 页复核、重叠边界与 MM 图 2 的复用决定。
 - [WRITING_EVIDENCE_20261122.json](results/WRITING_EVIDENCE_20261122.json)：3 份 PDF、候选图素材及 19 份旧实验 JSON 的来源 SHA 和真实指标。
@@ -26,6 +27,10 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 后续新训练按用户选择采用全量 train、逐 epoch test、单一指标选 checkpoint，并标记 `test-selected`。旧 fixed-final / holdout 记录保留；本轮文档更新没有修改训练代码。
 
+本轮复用已有 GF support 和 VAT 初始化，只新增 Router 训练；官方 GazeLLE 只做推理评测与测速，不新增 dense/matched dense 训练。跨模型主表据实评价完整系统，旧 matched dense 按原协议保留。
+
 ## 工作约定
 
 新代码只放 `code/{data_prep,stag,scripts}/`，旧 `gazelle/` 只 import 不改。论文材料放 `latex/`，关键小 JSON/MD 放 `results/`，大型 PT/NPY 不进 Git。只在本机写代码；服务器训练和评测由用户手动运行，代码和正式小报告通过 Git 传递。
+
+用户已授权本机工作完成后由助手自动创建本地 Git commit，仅提交本任务明确文件；不自动 push 或启动服务器实验。

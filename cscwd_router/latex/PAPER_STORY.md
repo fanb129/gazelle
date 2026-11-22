@@ -2,6 +2,8 @@
 
 更新：2026-11-22。写作任务 W1。主方法按本轮讨论采用 **DINOv3 ViT-B/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；不把尚未完成的跨模型测速、VAT test 或消融写成结果。
 
+W2 更新：限时实验以 [EXPERIMENT_PLAN.md](../EXPERIMENT_PLAN.md) 为当前执行清单；不新增 dense/matched dense 训练，只训练 Router 模型。已有同表示 dense 证据按旧协议单独保留，当前新主表评价完整系统。
+
 ## 1. 一句话定位
 
 **利用人物条件决定哪些图像位置值得继续执行深层视觉计算，在注视定位精度和实际推理成本之间取得更好的权衡。**
@@ -21,7 +23,7 @@
 | 3 | 同图不同人物需要的证据不同；头框确定查询身份和相对几何，人物外观及场景提供可学习的注视线索 | 需要预测与查询相关、具有高目标召回率的 support，而非仅按通用显著性选 token |
 | 4 | 在编码器中层做出决策，仅让选中位置继续执行深层 blocks | Router 直接改变实际执行的 token 数 |
 | 5 | decoder 仍需完整空间网格，多人还需共享图像计算 | 用中层特征回填未选位置；多人 support 聚合后执行一次稀疏 suffix |
-| 6 | 完整系统与机制贡献是两个不同问题 | 与官方 GazeLLE 比系统表现；与相同表示的 matched dense 比 Router 增量 |
+| 6 | 完整系统与机制贡献是两个不同问题 | 新主表与官方 GazeLLE 比系统表现；旧 matched dense 证据单独保留，只有同协议对照才能归因 Router 增量 |
 
 “全图完整计算”是执行方式，不等于已经证明未选区域全部无用。VAT 旧结果提示，目标以外的关系上下文也可能影响定位。
 
@@ -105,7 +107,7 @@ K50 表示后六个 blocks 保留一半 patch；前六个 blocks、Router、回�
 
 1. 基于场景、头部外观与相对几何的高召回 gaze support，使深层计算选择依赖人物查询。
 2. 将多人需求聚合到共同 token 预算，并通过稀疏 suffix 与中层回填保留完整解码网格的执行机制。
-3. 以相同表示的 dense 对照和官方 GazeLLE 为两类基线，实测定位、覆盖率及模型前向效率，建立计算收益与精度代价之间的关系。
+3. 以官方 GazeLLE 的实测和公开文献为系统对照，报告定位、覆盖率及模型前向效率；已有相同表示 dense 结果按其原协议讨论计算收益与精度代价。
 
 这些是本文要验证和论证的贡献，不表示所有组件在整个领域内首次出现。通用 token sparsification 已有 DynamicViT 等工作；需要说明任务条件与多人执行的区别，并用相同预算的通用/无条件路由对照支撑它。[DynamicViT](https://proceedings.neurips.cc/paper_files/paper/2021/hash/747d3443e319a22747fbb873e8b2f9f2-Abstract.html)
 
@@ -129,7 +131,7 @@ MM 已拒稿不等于其进入在审 ICASSP 的内容可再次主张为新贡献
 
 **第四段，实现选择。** 我们在冻结的 DINOv3 ViT-B/16 上实现该机制，并沿用多层表示解码。Router 位于编码器中部，之后仅对选中 patch 执行深层 blocks。完整早期特征和中层回填维持 decoder 所需的空间网格。DINOv3 与多层访问是采用的表示基础，新增机制是实际稀疏执行及其人物条件化决策。
 
-**第五段，验证。** 实验分别比较相同表示的 matched dense 与官方 GazeLLE，前者量化路由贡献，后者评价完整系统。评价同时报告定位、support 覆盖率、实际延迟和吞吐，并通过预算、人物条件和多人查询实验检验设计。结尾的具体数值及“优于”“保持”用语在统一实测后填写。
+**第五段，验证。** 新主表与官方 GazeLLE 比较完整系统，评价同时报告定位、support 覆盖率、实际延迟和吞吐，并在同一已训练模型上分析预算与多人查询。旧 matched dense 按其原协议单独讨论；本轮不新增 dense 训练，不把新主表差异全部归因于 Router。若余量允许，再补 scene-only Router 的同预算训练。结尾的具体数值及“优于”“保持”用语在统一实测后填写。
 
 ### 英文工作稿
 
@@ -141,7 +143,7 @@ This decision requires information about the queried person as well as the scene
 
 We instantiate this mechanism with a frozen DINOv3 ViT-B/16 encoder and an existing multi-level decoding configuration. Only selected patch tokens continue through the encoder suffix. Dense early features and an intermediate-feature fallback preserve the spatial grids required for gaze decoding. Our study concerns person-conditioned token selection and sparse execution; the pretrained encoder and multi-level representation form the adopted baseline configuration.
 
-We evaluate routing against a matched dense model with the same representation and compare the complete system with official Gaze-LLE. The evaluation measures localization, support coverage, model-forward latency, and throughput, together with controls for token budget, person conditioning, and multi-person queries. Quantitative outcome statements will be completed after the corresponding measurements.
+We compare the complete system with official Gaze-LLE and report localization, support coverage, model-forward latency, and throughput. Additional analyses examine token budget and multi-person queries. Existing matched-dense results are discussed under their original protocol, separately from the new test-selected experiments. Quantitative outcome statements will be completed after the corresponding measurements.
 
 最后一句是写作占位说明，正式投稿时替换为真实结果；不得把未来实验写为已经完成。
 
@@ -175,17 +177,17 @@ MM 图 2 若最终保留，只作为注明来源的辅助特征观察；其旧�
 |---|---|---|
 | A | 官方 GazeLLE，DINOv2-B/14，单层 dense，448 输入 | 外部系统基线；列明官方 checkpoint |
 | B | DINOv3-B/16，最后一层 dense，512 输入 | 同 backbone 的层级表示对照；新协议结果待补，不能直接搬 ICASSP 行充当本轮结果 |
-| C | DINOv3-B/16，四层 raw-concat matched dense，512 输入 | Router 的主要机制对照；已有旧协议 GF 结果 |
+| C | DINOv3-B/16，四层 raw-concat matched dense，512 输入 | 已有旧协议 GF 机制对照；本轮不新增训练，与新表分开 |
 | D | DINOv3-B/16，四层 raw-concat + Router K50，512 输入 | 候选完整方法；已有旧协议 GF 与 VAT holdout 结果 |
 | E（用于层级耐受性主张） | DINOv3-B/16，最后一层 + 相同 Router | 与 B/C/D 共同检验多层是否降低剪枝损失；尚未完成 |
 
-C 与 D 使用相同表示、dense 初始化和 decoder 适配预算，独立登记 Router support 训练成本。K100 是同路径无剪枝 control，不替代 C 的原生 dense 执行时间。
+严格归因 Router 收益需要 C 与 D 使用相同表示、dense 初始化、decoder 适配预算和选模规则，并独立登记 Router support 训练成本。本轮不新增 C，旧 C/D 配对按旧协议保留；新 D 与 A 的差异作为完整系统比较。K100 是同路径无剪枝 control，不替代 C 的原生 dense 执行时间。
 
 A 与 D 比较完整系统，不能把其差异全部归因于 Router。若 D 只在 AUC 略高而 Avg L2 更差，按指标分别报告或描述为相近精度。若 D 仅快于 C，结论就是加速自身 dense；只有同条件直接测速优于 A 后，才能写相对 GazeLLE 加速。B/14 与 B/16 的区别、448/512 输入均列入表格；不能将 B/14 的结果泛称所有 GazeLLE，包括 L/14。
 
 ### 8.2 效率与多人
 
-统一同一 GPU、精度、计时范围、batch 和输入样本来源，保留各模型被评估的输入尺寸。数据加载、预处理和 H2D 在计时外时，表头写 model-forward latency。forward 包含 Router、gather/scatter、融合和 decoder。报告 B1/B4/B8、正反序、warmup、重复次数和显存；准确率使用哪个 checkpoint，新的主表效率就测哪个 checkpoint。
+统一同一 GPU、精度、计时范围、batch 和输入样本来源，保留各模型被评估的输入尺寸。数据加载、预处理和 H2D 在计时外时，表头写 model-forward latency。forward 包含 Router、gather/scatter、融合和 decoder。按 W2 限时清单必做 B1/B8，B4 可选，报告正反序、warmup、重复次数和显存；准确率使用哪个 checkpoint，新的主表效率就测哪个 checkpoint。
 
 多人主对照是 **GazeLLE 的共享 dense 编码、DINOv3 的共享 dense 编码、共享 sparse union**。per-person repeat 只作为查询独立执行的控制组；比它更快不能单独证明优于原生 GazeLLE。按人数报告定位与 coverage，避免把“图上有多人”和“同时查询多个人”混为一谈。
 
@@ -241,4 +243,4 @@ GazeFollow 官方测试的旧记录为 4,782 个 single-head 图像查询，因�
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
-下一步先完成同一最终 checkpoint 的统一跨模型测速入口，并把旧正式小报告纳入可复现证据；再实现已选定的新 full-train/test-selected 协议。服务器脚本届时给完整手动 nohup 命令，本轮不生成执行命令、不启动服务器任务。多人和消融按依赖逐项推进，不同时铺开半成品。
+W2 当前执行顺序见 `../EXPERIMENT_PLAN.md`：先完成 E0 的 train/test-selected 入口，然后 GF 5 epochs、VAT 3+5 epochs；不新增 dense 训练。对各自选中的同一 checkpoint 补统一推理测速与多人分析。服务器脚本届时给完整手动 nohup 命令；本轮只完成实验设计，不生成尚未实现入口的执行命令。旧正式报告保留原协议。
