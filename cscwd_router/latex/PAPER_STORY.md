@@ -37,6 +37,8 @@ GazeLLE 已支持一张图只编码一次、供多个人物查询复用。本文
 
 ### 3.1 DINOv3：选择实现载体
 
+SOTA-2架构核对见 [文献架构表](../results/SOTA_LANDSCAPE_20261124.md) 第7–9节。PaGE明确以GazeLLE为起点，GazeCoT中的GazeLLE-v3明确替换为DINOv3；两者未采用我们这种四层backbone map融合。Mi使用DINOv3多层表示，但未核实为官方GazeLLE decoder。DINOv3/多层本身均已有先例，本文仍将新增贡献限定为实际改变后段token执行的人物条件计算分配；不把其他论文里的head-aware attention一律称作同一稀疏机制。
+
 在提出“人物条件化计算分配”之后，再说明实现采用冻结的 DINOv3 ViT-B/16 和 ViT-L/16。它提供可复用的稠密视觉表示；本轮直接复用仓库中已有的 DINOv3 路由实现和训练基础。DINOv3 的来源是第三方预训练模型，不列为本文贡献。[DINOv3 技术报告](https://arxiv.org/abs/2508.10104)
 
 不使用“DINOv3 更先进，所以本文天然更准”的推导，也不使用“DINOv3 严重过平滑，所以必须改成多层”的旧动机来承担新论文的核心论证。已有结果没有隔离 backbone、层级表示和训练配置各自的作用。

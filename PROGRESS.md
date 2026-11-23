@@ -88,6 +88,8 @@
 
 **SOTA-1 近期方法与目标调整（2026-11-24）**：核对8行公开指标与4项单独标注线索，Mi/TextGaze/OmniGF/GazeVLM原表已渲染复核。GF-L三项接近Mi，均优于TextGaze-L公开值；当前B的GF/VAT六项优于TextGaze-B。Mi未找到官方代码/权重，TextGaze四个PT发布资产与OmniGF GF/VAT safetensors已由官方API确认；完整GF-L→VAT-L最终summary本轮只读未见，不填结果。表与公开链接 `cscwd_router/results/SOTA_LANDSCAPE_20261124.md`，来源/版本/SHA `sota_landscape_20261124.json`。主目标改为近期强方法的精度—成本，保留GazeLLE参照与ICASSP贡献边界；本轮没有训练、权重下载或GPU评测。
 
+**SOTA-2 架构与框架关系（2026-11-24）**：`SOTA_LANDSCAPE_20261124.md` 第7–9节已补16项架构（含官方/本方法），9仓库29份固定commit源码的SHA与判据在 `architecture_lineage_20261124.json`。明确DINOv3多层配置的外部参照是Mi；PaGE论文明确从GazeLLE发展且有公开B/H+任务权重，但两分支各取最后一层。TextGaze、GazeHRNet、GazeLoom沿用相似解码骨架而非四层DINO融合。补入上一轮遗漏的PaGE强结果及联合训练/SFT/蒸馏范围；不预写我们胜出，未改当前配方或运行实验。
+
 ## 下一步
 
 1. 优先准备TextGaze官方B/L任务权重的推理比较，核对同数据精度并在同硬件测core/完整RGB流程；不新增dense训练。之后检查OmniGF官方评测的3090显存与数据条件。GF-L/VAT-L按原任务接续并回传审查；阶段profile、native full-token控制和等价快路径保留为后续优化。

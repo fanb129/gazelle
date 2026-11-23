@@ -1,0 +1,568 @@
+{
+  "research_date": "2026-11-24",
+  "task": "SOTA-2 architecture and GazeLLE lineage",
+  "new_training_or_gpu_inference": false,
+  "definition": {
+    "gazelle_style": "Shared scene encoder, per-person head-position conditioning, lightweight spatial decoder. Structural similarity is distinguished from explicit author-acknowledged derivation or checkpoint reuse.",
+    "multi_layer_features": "Fuse outputs/attention from multiple backbone depths; not simply a multi-block decoder, multiple input branches or layer-wise losses."
+  },
+  "models": [
+    {
+      "id": "gazelle_official",
+      "lineage": "original",
+      "backbone": "DINOv2 ViT-B/14 or ViT-L/14",
+      "backbone_depth_fusion": false,
+      "flow": "RGB -> final patch map -> 1x1 projection 256 -> head-region embedding + 2D position -> 3 ViT blocks -> heatmap / in-out",
+      "sources": [
+        "https://github.com/fkryan/gazelle"
+      ],
+      "evidence": "Local official model_v0_dinov2.py and backbone_v0_dinov2.py; official repository."
+    },
+    {
+      "id": "ours",
+      "lineage": "local_extension",
+      "backbone": "Frozen DINOv3 ViT-B/16 or ViT-L/16",
+      "backbone_depth_fusion": true,
+      "feature_blocks_zero_based": {
+        "b": [
+          2,
+          5,
+          8,
+          11
+        ],
+        "l": [
+          5,
+          11,
+          17,
+          23
+        ]
+      },
+      "flow": "Dense prefix -> head-conditioned support + max-union -> TopK -> sparse suffix -> early-exit fill -> four-map concat/project -> GazeLLE-style per-person decoder",
+      "sources": [
+        "gazelle/routing/model.py",
+        "gazelle/routing/backbone.py",
+        "gazelle/model.py"
+      ],
+      "evidence": "Local source, already reviewed selected checkpoints."
+    },
+    {
+      "id": "mi2026objectaware",
+      "lineage": "similar_frozen_backbone_paradigm_not_verified_GazeLLE_decoder",
+      "backbone": "Frozen DINOv3 ViT-L/16",
+      "backbone_depth_fusion": true,
+      "feature_blocks_zero_based": null,
+      "flow": "RGB + offline YOLO11x/SAM2 masks -> image/object token interaction -> enhanced representation -> DINOv3 shallow/middle/deep maps -> deep-dominant residual fusion; head appearance + eye position -> direction/FOV -> guided decoder -> heatmap/in-out",
+      "sources": [
+        "https://arxiv.org/html/2606.29334v1"
+      ],
+      "evidence": "Paper Sections 3.2-3.4 and 4.1. Exact block indices and GazeLLE decoder reuse not verified; no official code located."
+    },
+    {
+      "id": "textgaze",
+      "lineage": "GazeLLE_style_structural_extension",
+      "backbone": "Frozen DINOv2 ViT-B/14 or ViT-L/14",
+      "backbone_depth_fusion": false,
+      "flow": "Final patch map -> project 256 + head embedding; Qwen2.5-VL captions -> frozen BERT -> 64 text tokens -> 3-layer vision-text Transformer -> visual residual -> heatmap/in-out",
+      "sources": [
+        "https://arxiv.org/html/2607.10130v2",
+        "idremo/TextGaze-IJCAI2026:gazefuze/model.py",
+        "idremo/TextGaze-IJCAI2026:gazefuze/backbone.py"
+      ],
+      "evidence": "forward_features x_norm_patchtokens, original GAZELLE-style API aliases, head-map prompt and shared scene features. Layer-wise text supervision is decoder supervision, not multi-depth DINO fusion."
+    },
+    {
+      "id": "gazehrnet",
+      "lineage": "GazeLLE_style_structural_extension_not_checkpoint_reuse_proof",
+      "backbone": "DINOv2 final patch map",
+      "backbone_depth_fusion": false,
+      "flow": "Final map -> project 256 -> GRSP -> per-person repeat -> head-centric polar encoding + head prompt + GAZE token -> 3 HAAR blocks -> heatmap/in-out plus patch-distribution head",
+      "sources": [
+        "Zhikanyoumai/gazehrnet:models/backbone.py",
+        "Zhikanyoumai/gazehrnet:models/gazehrnet.py",
+        "Zhikanyoumai/gazehrnet:models/grsp.py",
+        "Zhikanyoumai/gazehrnet:models/haar.py"
+      ],
+      "evidence": "Code computes dense similarity/attention with biases; does not shorten DINO token sequence or implement sparse backbone suffix. Contrastive loss and anisotropic supervision are training components."
+    },
+    {
+      "id": "gazeloom",
+      "lineage": "GazeLLE_style_structural_extension_not_verified_paper_checkpoint",
+      "backbone": "Code has DINOv2, DINOv3 and SimDINOv2 factories; README recipes emphasize SimDINOv2",
+      "backbone_depth_fusion": false,
+      "flow": "One final semantic map -> project 256; depth map -> project -> channel/spatial/pixel gating fusion -> depth-guided position + head prompt -> 6 default ViT blocks -> heatmap/in-out",
+      "sources": [
+        "Pjj0417/GAZELOOM:gazeloom/model.py",
+        "Pjj0417/GAZELOOM:gazeloom/backbone.py"
+      ],
+      "evidence": "One forward_features map for each backbone. DINOv3 factory availability does not identify the reported-paper checkpoint configuration."
+    },
+    {
+      "id": "page",
+      "lineage": "explicit_paper_and_code_acknowledgement_GazeLLE_derivative",
+      "backbone": "Separate scene and head DINOv3 backbones, S/S+/B/L/H+ variants",
+      "backbone_depth_fusion": false,
+      "flow": "Scene 512 and head crops 256 -> separate last-layer maps -> project 256 -> per-branch self-attention -> five bidirectional cross-attention SIM layers with 2D RoPE/GEGLU/registers -> heatmap and paired in-out tokens",
+      "sources": [
+        "https://arxiv.org/html/2607.04860v1",
+        "https://page-26.github.io/",
+        "OctopusWen/PaGE:page/page_model.py",
+        "OctopusWen/PaGE:page/backbone.py",
+        "OctopusWen/PaGE:page/model_factory.py"
+      ],
+      "evidence": "Paper Section 3.2 explicitly starts from Gaze-LLE; README credits adapted Gaze-LLE code. Backbone reads last_hidden_state. Five SIM layers are decoder layers, not five DINO taps.",
+      "training_scope": "Joint labeled GF+VAT+ChildPlay; decoder training then full-model finetuning. Distilled students also use MPII/OpenImages unlabeled head data. Not same frozen-backbone training as ours."
+    },
+    {
+      "id": "gazelle_v3_gazecot",
+      "lineage": "explicit_paper_GazeLLE_backbone_replacement",
+      "backbone": "DINOv3 ViT-L/16 or ViT-H+/16",
+      "backbone_depth_fusion": "not_reported",
+      "flow": "RGB 512 -> DINOv3 scene representation -> GazeLLE-style head-prompt decoder -> heatmap; optional subsequent visual/text prompts to a separate MLLM agent",
+      "sources": [
+        "https://pi.cs.tsinghua.edu.cn/wp-content/uploads/2026/04/3772318.3790922.pdf"
+      ],
+      "evidence": "GazeCoT Section 3.2 / Table 1 states backbone, input size and training time changed. No multi-depth fusion reported; code implementation not verified. Distinguish standalone gaze estimator from full GazeCoT social reasoning pipeline."
+    },
+    {
+      "id": "pinto_gazelle_dinov3",
+      "lineage": "explicit_author_GazeLLE_engineering_fork",
+      "backbone": "DINOv3 teacher plus smaller CNN/ViT distilled variants",
+      "backbone_depth_fusion": false,
+      "flow": "Final DINOv3 map -> 1x1 256 -> position + head prompt -> 3 ViT blocks -> heatmap/in-out; ONNX export",
+      "sources": [
+        "https://github.com/PINTO0309/gazelle-dinov3",
+        "PINTO0309/gazelle-dinov3:gazelle/model.py",
+        "PINTO0309/gazelle-dinov3:gazelle/backbone.py"
+      ],
+      "evidence": "Inspected backbone forward returns one final map. Author describes original GazeLLE origin. Engineering implementation, not a verified new SOTA paper; progressive backbone unfreezing/distillation differs from our constraints."
+    },
+    {
+      "id": "gazeanywhere",
+      "lineage": "related_frozen_encoder_light_decoder_structure_with_different_prompted_task",
+      "backbone": "DINOv3-L + text encoder (also CLIP/SigLIP alternatives)",
+      "backbone_depth_fusion": false,
+      "flow": "Scene + person-description prompt -> vision/text token encoders -> 256 projection -> text-conditioned head query + image-conditioned presence token + image/text tokens -> 3 blocks -> head box, heatmap, in-out",
+      "sources": [
+        "IrohXu/GazeAnywhere:modeling/models/anygaze_modeling_mapper.py",
+        "IrohXu/GazeAnywhere:modeling/backbone/dinotxt.py",
+        "IrohXu/GazeAnywhere:modeling/backbone/dinotxt_modules/vision_tower.py"
+      ],
+      "evidence": "vision_model_patch_token_layer=1 selects last patch layer; image/text heads are not multi-depth DINO map fusion. Prompted Gaze-Co benchmark differs from GT headbox task."
+    },
+    {
+      "id": "omnigf",
+      "lineage": "independent_VLM_architecture",
+      "backbone": "Qwen3-VL-4B plus ResNet-18 head encoder",
+      "backbone_depth_fusion": false,
+      "flow": "Scene + head boxes/crops -> gaze-token injection into VLM -> generated person tokens and last-layer visual hidden states -> 256 convolutional heatmap decoder / in-out; parallel structured language output",
+      "sources": [
+        "https://arxiv.org/html/2605.26399v2",
+        "cvlab-stonybrook/omnigf:omnigf/vlm/models_ge.py",
+        "cvlab-stonybrook/omnigf:omnigf/vlm/decoders.py"
+      ],
+      "evidence": "Selected decoder NEEDS_MULTI_LAYER=False. Four-layer DPT is an ablation, not final design. Dual branches are language/spatial outputs, not DINOv3 multi-depth features."
+    },
+    {
+      "id": "gazevlm_cvprw2026",
+      "lineage": "independent_VLM_architecture",
+      "backbone": "Qwen2.5-VL-3B",
+      "backbone_depth_fusion": "not_DINOv3",
+      "flow": "RGB + HHA depth + task prompt -> visual encodings / language decoder -> generated person boxes, gaze points and object identity",
+      "sources": [
+        "https://openaccess.thecvf.com/content/CVPR2026W/AI4RWC/papers/Mathew_GazeVLM_A_Vision-Language_Model_for_Multi-Task_Gaze_Understanding_CVPRW_2026_paper.pdf"
+      ],
+      "evidence": "Conference paper Sections 4.1-4.4. Not GazeLLE's head-map-conditioned 256-dim decoder; no verified official code."
+    },
+    {
+      "id": "vitgaze",
+      "lineage": "independent_pre_GazeLLE_architecture",
+      "backbone": "DINOv2 ViT-S/14 in inspected GF-518 config",
+      "backbone_depth_fusion": "multi_layer_attention_maps_not_DINOv3_patch_feature_fusion",
+      "flow": "Scene -> ViT attention maps at [2,5,8,11] -> head patch guidance aggregates head-to-scene interactions -> heatmap; final feature pooled with head mask -> in-out",
+      "sources": [
+        "hustvl/ViTGaze:configs/gazefollow_518.py",
+        "hustvl/ViTGaze:modeling/backbone/vit.py",
+        "hustvl/ViTGaze:modeling/meta_arch/gaze_attention_mapper.py"
+      ],
+      "evidence": "Four attention-map taps are genuinely multi-depth interaction information, but not raw-concat DINOv3 feature pyramid."
+    },
+    {
+      "id": "sharingan",
+      "lineage": "independent_pre_GazeLLE_architecture",
+      "backbone": "MultiMAE-initialized ViT-B plus Gaze360-initialized ResNet-18 head encoder",
+      "backbone_depth_fusion": true,
+      "flow": "Scene patch tokens + per-person appearance/bbox gaze tokens -> joint ViT -> [2,5,8,11] outputs -> person-conditioned DPT heatmap decoder; final gaze tokens + input tokens -> in-out",
+      "sources": [
+        "idiap/sharingan:src/modeling/sharingan.py"
+      ],
+      "evidence": "Uses return_all_layers=True and decoder_hooks [2,5,8,11]; multi-layer yes, DINOv3 no; head is a separate encoder."
+    },
+    {
+      "id": "geodistillgaze",
+      "lineage": "related_distillation_paradigm_decoder_lineage_unverified",
+      "backbone": "Frozen DINOv2 teacher and lightweight DeiT student",
+      "backbone_depth_fusion": "unverified",
+      "flow": "Training: feature-map softmax distillation teacher -> student; inference: student scene features + relative-coordinate encoder/adaptive gate -> gaze prediction",
+      "sources": [
+        "https://www.sciencedirect.com/science/article/pii/S0167865526003533"
+      ],
+      "evidence": "Publisher abstract and method overview only; exact decoder/block taps not verified. Teacher-student structure is not necessarily two inference branches."
+    },
+    {
+      "id": "fgi_gaze",
+      "lineage": "unverified",
+      "backbone": "unverified from accessible abstract",
+      "backbone_depth_fusion": "unverified",
+      "flow": "Image-based human-environment gaze interaction -> filtering for spatial detail -> gaze prediction; separate global semantic features for out-of-frame prediction",
+      "sources": [
+        "https://link.springer.com/chapter/10.1007/978-981-95-5676-2_32"
+      ],
+      "evidence": "Publisher abstract only, full paper table/architecture behind subscription. Do not infer DINOv3 or GazeLLE lineage from method name."
+    }
+  ],
+  "new_literature_metrics": {
+    "kind": "Published rounded project/paper values, not our reproduction",
+    "page": {
+      "source": "https://page-26.github.io/",
+      "training_scope": "Joint GF/VAT/ChildPlay labels, full-model SFT; distilled variants additionally use unlabeled MPII/OpenImages.",
+      "vitb_distill": {
+        "gazefollow": {
+          "auc": 0.966,
+          "avg_l2": 0.081,
+          "min_l2": 0.029
+        },
+        "vat": {
+          "auc": 0.969,
+          "l2": 0.068,
+          "inout_ap": 0.945
+        }
+      },
+      "vithplus": {
+        "gazefollow": {
+          "auc": 0.966,
+          "avg_l2": 0.08,
+          "min_l2": 0.029
+        },
+        "vat": {
+          "auc": 0.972,
+          "l2": 0.064,
+          "inout_ap": 0.951
+        }
+      }
+    },
+    "gazelle_v3_gazecot": {
+      "source": "https://pi.cs.tsinghua.edu.cn/wp-content/uploads/2026/04/3772318.3790922.pdf",
+      "location": "Section 3.2, Table 1",
+      "vitl": {
+        "gazefollow": {
+          "auc": 0.959,
+          "avg_l2": 0.097,
+          "min_l2": 0.04
+        }
+      },
+      "vithplus": {
+        "gazefollow": {
+          "auc": 0.96,
+          "avg_l2": 0.093,
+          "min_l2": 0.038
+        }
+      },
+      "vat": null
+    }
+  },
+  "code_sources": [
+    {
+      "repo": "idremo/TextGaze-IJCAI2026",
+      "commit": "2cede002c4a865bbbdaadf29dfc6f960b693db2c",
+      "path": "gazefuze/model.py",
+      "bytes": 15801,
+      "sha256": "10b6bd6923a0d15eb5eb2836b8d00cf16e82b36c84bc993e06d2b1d703b62740",
+      "url": "https://raw.githubusercontent.com/idremo/TextGaze-IJCAI2026/2cede002c4a865bbbdaadf29dfc6f960b693db2c/gazefuze/model.py"
+    },
+    {
+      "repo": "idremo/TextGaze-IJCAI2026",
+      "commit": "2cede002c4a865bbbdaadf29dfc6f960b693db2c",
+      "path": "gazefuze/backbone.py",
+      "bytes": 1882,
+      "sha256": "3b6917981c332d40c4e670ac06670534cd93a83ee69fcef6c5ad53a272811d0d",
+      "url": "https://raw.githubusercontent.com/idremo/TextGaze-IJCAI2026/2cede002c4a865bbbdaadf29dfc6f960b693db2c/gazefuze/backbone.py"
+    },
+    {
+      "repo": "Zhikanyoumai/gazehrnet",
+      "commit": "144273307cd7b97150447d6fc876f1360f9b2cd8",
+      "path": "models/gazehrnet.py",
+      "bytes": 8493,
+      "sha256": "b8f122bbe71eedc0973659a2e719ec1bea866d4ab7bb914db8fd393a0a3f43f2",
+      "url": "https://raw.githubusercontent.com/Zhikanyoumai/gazehrnet/144273307cd7b97150447d6fc876f1360f9b2cd8/models/gazehrnet.py"
+    },
+    {
+      "repo": "Zhikanyoumai/gazehrnet",
+      "commit": "144273307cd7b97150447d6fc876f1360f9b2cd8",
+      "path": "models/backbone.py",
+      "bytes": 1570,
+      "sha256": "858491e9c4d0cbcef00e257fdb04416c5efe40d0bb49df71842733477285af03",
+      "url": "https://raw.githubusercontent.com/Zhikanyoumai/gazehrnet/144273307cd7b97150447d6fc876f1360f9b2cd8/models/backbone.py"
+    },
+    {
+      "repo": "Zhikanyoumai/gazehrnet",
+      "commit": "144273307cd7b97150447d6fc876f1360f9b2cd8",
+      "path": "models/grsp.py",
+      "bytes": 936,
+      "sha256": "352bcd66c80d197612cd71f88f44a175238f073eafab4b9012959858d1dc66b7",
+      "url": "https://raw.githubusercontent.com/Zhikanyoumai/gazehrnet/144273307cd7b97150447d6fc876f1360f9b2cd8/models/grsp.py"
+    },
+    {
+      "repo": "Zhikanyoumai/gazehrnet",
+      "commit": "144273307cd7b97150447d6fc876f1360f9b2cd8",
+      "path": "models/haar.py",
+      "bytes": 4534,
+      "sha256": "c33e0b42341b34d9e9887e03564448b37f85235fc54a61e5412db007d368f80f",
+      "url": "https://raw.githubusercontent.com/Zhikanyoumai/gazehrnet/144273307cd7b97150447d6fc876f1360f9b2cd8/models/haar.py"
+    },
+    {
+      "repo": "Pjj0417/GAZELOOM",
+      "commit": "d12d5dbd0c69be29315c30f49eb778d5f5c18ae6",
+      "path": "gazeloom/model.py",
+      "bytes": 18767,
+      "sha256": "cfacc509df5bbfefdbb825aee35d1d5215c0e5ba7275500b7e0f17ca25e66efb",
+      "url": "https://raw.githubusercontent.com/Pjj0417/GAZELOOM/d12d5dbd0c69be29315c30f49eb778d5f5c18ae6/gazeloom/model.py"
+    },
+    {
+      "repo": "Pjj0417/GAZELOOM",
+      "commit": "d12d5dbd0c69be29315c30f49eb778d5f5c18ae6",
+      "path": "gazeloom/backbone.py",
+      "bytes": 13860,
+      "sha256": "ed50b007ebdf773376ad48f8e52cacdadac4e22b2b33f499f63784407e25ec62",
+      "url": "https://raw.githubusercontent.com/Pjj0417/GAZELOOM/d12d5dbd0c69be29315c30f49eb778d5f5c18ae6/gazeloom/backbone.py"
+    },
+    {
+      "repo": "IrohXu/GazeAnywhere",
+      "commit": "9616d17405f39ae1f4e03db2e30e1919ae1e8485",
+      "path": "modeling/models/anygaze_modeling_mapper.py",
+      "bytes": 10227,
+      "sha256": "c0b2e64fa15d5040656aa1d4f58179bddc75d5c7f26de1b9c0c18448d6cb6a18",
+      "url": "https://raw.githubusercontent.com/IrohXu/GazeAnywhere/9616d17405f39ae1f4e03db2e30e1919ae1e8485/modeling/models/anygaze_modeling_mapper.py"
+    },
+    {
+      "repo": "IrohXu/GazeAnywhere",
+      "commit": "9616d17405f39ae1f4e03db2e30e1919ae1e8485",
+      "path": "modeling/backbone/backbones.py",
+      "bytes": 17234,
+      "sha256": "5b422f85a3c2568fac1e303ad9dd98f011938898a6a9e691e5d984beeec36df3",
+      "url": "https://raw.githubusercontent.com/IrohXu/GazeAnywhere/9616d17405f39ae1f4e03db2e30e1919ae1e8485/modeling/backbone/backbones.py"
+    },
+    {
+      "repo": "IrohXu/GazeAnywhere",
+      "commit": "9616d17405f39ae1f4e03db2e30e1919ae1e8485",
+      "path": "modeling/backbone/dinov3.py",
+      "bytes": 15960,
+      "sha256": "65d15747a1f1218bc5d53e7cfee858fa30574bf25b3f8b75c274e5f963e782c6",
+      "url": "https://raw.githubusercontent.com/IrohXu/GazeAnywhere/9616d17405f39ae1f4e03db2e30e1919ae1e8485/modeling/backbone/dinov3.py"
+    },
+    {
+      "repo": "IrohXu/GazeAnywhere",
+      "commit": "9616d17405f39ae1f4e03db2e30e1919ae1e8485",
+      "path": "modeling/backbone/dinotxt.py",
+      "bytes": 9216,
+      "sha256": "37626ba6f86172cfe60a7681adc18909cba758600935ca56dd30058bc8469405",
+      "url": "https://raw.githubusercontent.com/IrohXu/GazeAnywhere/9616d17405f39ae1f4e03db2e30e1919ae1e8485/modeling/backbone/dinotxt.py"
+    },
+    {
+      "repo": "hustvl/ViTGaze",
+      "commit": "4bf2f07e18599baa6e385f8133cdfd7ae7e88dea",
+      "path": "configs/common/model.py",
+      "bytes": 1172,
+      "sha256": "c2d5b4e6a50129c32529ad2757b480c2351e73f5568a193ec88d3d7c72f40fa2",
+      "url": "https://raw.githubusercontent.com/hustvl/ViTGaze/4bf2f07e18599baa6e385f8133cdfd7ae7e88dea/configs/common/model.py"
+    },
+    {
+      "repo": "hustvl/ViTGaze",
+      "commit": "4bf2f07e18599baa6e385f8133cdfd7ae7e88dea",
+      "path": "configs/gazefollow_518.py",
+      "bytes": 2626,
+      "sha256": "237e050246a6808dec19b72dc4bbd7a048d0e9e7b9d4ecf12eb12190b57b4510",
+      "url": "https://raw.githubusercontent.com/hustvl/ViTGaze/4bf2f07e18599baa6e385f8133cdfd7ae7e88dea/configs/gazefollow_518.py"
+    },
+    {
+      "repo": "hustvl/ViTGaze",
+      "commit": "4bf2f07e18599baa6e385f8133cdfd7ae7e88dea",
+      "path": "modeling/backbone/vit.py",
+      "bytes": 15552,
+      "sha256": "07c097d7cafbe5a7c27b90edf151131ba3cf1f761e0c035bcfc9ba6719e620d5",
+      "url": "https://raw.githubusercontent.com/hustvl/ViTGaze/4bf2f07e18599baa6e385f8133cdfd7ae7e88dea/modeling/backbone/vit.py"
+    },
+    {
+      "repo": "hustvl/ViTGaze",
+      "commit": "4bf2f07e18599baa6e385f8133cdfd7ae7e88dea",
+      "path": "modeling/meta_arch/gaze_attention_mapper.py",
+      "bytes": 2944,
+      "sha256": "c6358e59e606326d71adf28e6b4490aed2503330f82ee85f6ed73588a1f547b5",
+      "url": "https://raw.githubusercontent.com/hustvl/ViTGaze/4bf2f07e18599baa6e385f8133cdfd7ae7e88dea/modeling/meta_arch/gaze_attention_mapper.py"
+    },
+    {
+      "repo": "hustvl/ViTGaze",
+      "commit": "4bf2f07e18599baa6e385f8133cdfd7ae7e88dea",
+      "path": "modeling/patch_attention/patch_attention.py",
+      "bytes": 3487,
+      "sha256": "11472f8eef92f63f39c8bfbcdfbb72a64cde6341a6b4e83fd1ccdb368a9110a6",
+      "url": "https://raw.githubusercontent.com/hustvl/ViTGaze/4bf2f07e18599baa6e385f8133cdfd7ae7e88dea/modeling/patch_attention/patch_attention.py"
+    },
+    {
+      "repo": "idiap/sharingan",
+      "commit": "006b69dfb70e83aa8b073d0a8ead10325022f687",
+      "path": "src/modeling/sharingan.py",
+      "bytes": 48521,
+      "sha256": "b025d50dcb48e219b434f6585fc755316d7bd28598b4fcc1d705706122efa2a5",
+      "url": "https://raw.githubusercontent.com/idiap/sharingan/006b69dfb70e83aa8b073d0a8ead10325022f687/src/modeling/sharingan.py"
+    },
+    {
+      "repo": "cvlab-stonybrook/omnigf",
+      "commit": "b5554f13233b7ff6690499935e887fbd08c88c17",
+      "path": "omnigf/vlm/models_ge.py",
+      "bytes": 82028,
+      "sha256": "dc673e8fa1ca3a063880851526041010a4881bd5f16e9fee86834234d05ed34e",
+      "url": "https://raw.githubusercontent.com/cvlab-stonybrook/omnigf/b5554f13233b7ff6690499935e887fbd08c88c17/omnigf/vlm/models_ge.py"
+    },
+    {
+      "repo": "cvlab-stonybrook/omnigf",
+      "commit": "b5554f13233b7ff6690499935e887fbd08c88c17",
+      "path": "omnigf/vlm/decoders.py",
+      "bytes": 6145,
+      "sha256": "7193d2c76d615731a500f9bb9e4c5dd3cfb6549831c4a71480bc02cf132474cd",
+      "url": "https://raw.githubusercontent.com/cvlab-stonybrook/omnigf/b5554f13233b7ff6690499935e887fbd08c88c17/omnigf/vlm/decoders.py"
+    },
+    {
+      "repo": "cvlab-stonybrook/omnigf",
+      "commit": "b5554f13233b7ff6690499935e887fbd08c88c17",
+      "path": "omnigf/config/vlm_config.yaml",
+      "bytes": 23096,
+      "sha256": "ae3807a83b646085fd5344328e9c966f090391e835f2e91b8043dab3a3c4f3d3",
+      "url": "https://raw.githubusercontent.com/cvlab-stonybrook/omnigf/b5554f13233b7ff6690499935e887fbd08c88c17/omnigf/config/vlm_config.yaml"
+    },
+    {
+      "repo": "OctopusWen/PaGE",
+      "commit": "4352beaddbd8d2942a6b0152f4d83ac7090f5f5c",
+      "path": "README.md",
+      "bytes": 16948,
+      "sha256": "c8c54b2036ada8f12d7df0e6cb5e780af8303df4003b59f4e0c6cef632c6e413",
+      "url": "https://raw.githubusercontent.com/OctopusWen/PaGE/4352beaddbd8d2942a6b0152f4d83ac7090f5f5c/README.md"
+    },
+    {
+      "repo": "OctopusWen/PaGE",
+      "commit": "4352beaddbd8d2942a6b0152f4d83ac7090f5f5c",
+      "path": "page/model_factory.py",
+      "bytes": 11757,
+      "sha256": "45eea4f87be474bda9eeb92bee0d252f47e81aef30380361870084b2dbd254ce",
+      "url": "https://raw.githubusercontent.com/OctopusWen/PaGE/4352beaddbd8d2942a6b0152f4d83ac7090f5f5c/page/model_factory.py"
+    },
+    {
+      "repo": "PINTO0309/gazelle-dinov3",
+      "commit": "0c67fb720feb6d2b8178bfba31f00ecca2a2e35d",
+      "path": "README.md",
+      "bytes": 43190,
+      "sha256": "5c2bde10c30cd22e176a4628f9fff1641d04147345d375399d9861785d547cec",
+      "url": "https://raw.githubusercontent.com/PINTO0309/gazelle-dinov3/0c67fb720feb6d2b8178bfba31f00ecca2a2e35d/README.md"
+    },
+    {
+      "repo": "PINTO0309/gazelle-dinov3",
+      "commit": "0c67fb720feb6d2b8178bfba31f00ecca2a2e35d",
+      "path": "gazelle/model.py",
+      "bytes": 38845,
+      "sha256": "28277538a25070eabb06ec77af814821d4350077972db25c5131905ce254521a",
+      "url": "https://raw.githubusercontent.com/PINTO0309/gazelle-dinov3/0c67fb720feb6d2b8178bfba31f00ecca2a2e35d/gazelle/model.py"
+    },
+    {
+      "repo": "PINTO0309/gazelle-dinov3",
+      "commit": "0c67fb720feb6d2b8178bfba31f00ecca2a2e35d",
+      "path": "gazelle/backbone.py",
+      "bytes": 47394,
+      "sha256": "00c70750565008a2894d326a8311dce1b17b96ff1a7d013fa1cd1056e611683c",
+      "url": "https://raw.githubusercontent.com/PINTO0309/gazelle-dinov3/0c67fb720feb6d2b8178bfba31f00ecca2a2e35d/gazelle/backbone.py"
+    },
+    {
+      "repo": "OctopusWen/PaGE",
+      "commit": "4352beaddbd8d2942a6b0152f4d83ac7090f5f5c",
+      "path": "page/backbone.py",
+      "bytes": 12176,
+      "sha256": "d7058246b20812906433032ec6e4af95522f242d161dc579027e92f13f85db77",
+      "url": "https://raw.githubusercontent.com/OctopusWen/PaGE/4352beaddbd8d2942a6b0152f4d83ac7090f5f5c/page/backbone.py"
+    },
+    {
+      "repo": "OctopusWen/PaGE",
+      "commit": "4352beaddbd8d2942a6b0152f4d83ac7090f5f5c",
+      "path": "page/page_model.py",
+      "bytes": 26529,
+      "sha256": "e8fa3600aa1ba190cd8aeafcf97cc35d3f1abc4d8d5a7cf0b0f4f192fd9e1b57",
+      "url": "https://raw.githubusercontent.com/OctopusWen/PaGE/4352beaddbd8d2942a6b0152f4d83ac7090f5f5c/page/page_model.py"
+    },
+    {
+      "repo": "IrohXu/GazeAnywhere",
+      "commit": "9616d17405f39ae1f4e03db2e30e1919ae1e8485",
+      "path": "modeling/backbone/dinotxt_modules/vision_tower.py",
+      "bytes": 7104,
+      "sha256": "3de0e9c48e5063973d72e5a1df4e4e85efe849683fdbf4aae0c7d6ab8cc8ab18",
+      "url": "https://raw.githubusercontent.com/IrohXu/GazeAnywhere/9616d17405f39ae1f4e03db2e30e1919ae1e8485/modeling/backbone/dinotxt_modules/vision_tower.py"
+    }
+  ],
+  "page_weight_metadata": [
+    {
+      "model_id": "Octopus1/page-vitb",
+      "revision": "b991d8bcb2890a97db611a2080ca250ecd943952",
+      "files": [
+        ".gitattributes",
+        "DINOv3_LICENSE.md",
+        "LICENSE",
+        "README.md",
+        "config.json",
+        "model.safetensors",
+        "preprocessor_config.json"
+      ],
+      "api_url": "https://huggingface.co/api/models/Octopus1/page-vitb"
+    },
+    {
+      "model_id": "Octopus1/page-vithplus",
+      "revision": "4433e4dbc7ff4267c0f20ad8b9ab0a69048c3992",
+      "files": [
+        ".gitattributes",
+        "DINOv3_LICENSE.md",
+        "LICENSE",
+        "README.md",
+        "config.json",
+        "model-00001-of-00004.safetensors",
+        "model-00002-of-00004.safetensors",
+        "model-00003-of-00004.safetensors",
+        "model-00004-of-00004.safetensors",
+        "model.safetensors.index.json",
+        "preprocessor_config.json"
+      ],
+      "api_url": "https://huggingface.co/api/models/Octopus1/page-vithplus"
+    }
+  ],
+  "local_sources": [
+    {
+      "path": "gazelle/model_v0_dinov2.py",
+      "sha256": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143"
+    },
+    {
+      "path": "gazelle/backbone_v0_dinov2.py",
+      "sha256": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf"
+    },
+    {
+      "path": "gazelle/routing/backbone.py",
+      "sha256": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28"
+    },
+    {
+      "path": "gazelle/routing/router.py",
+      "sha256": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9"
+    },
+    {
+      "path": "gazelle/routing/model.py",
+      "sha256": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa"
+    },
+    {
+      "path": "gazelle/model.py",
+      "sha256": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56"
+    }
+  ],
+  "gazecot_pdf_sha256": "8120e419859cd2340aa663d9c9af26a65bf19223b4336ec7c0ccf48e97b5e393"
+}

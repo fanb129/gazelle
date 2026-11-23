@@ -2,6 +2,8 @@
 
 SOTA-1 最新决定（2026-11-24）：重点转为与近期强方法比较精度—成本，GazeLLE 保留参照。已核8行公开指标，Mi ECCV2026为接近底座的精度参照但未找到公开权重；TextGaze GF/VAT×B/L四个任务权重与OmniGF的GF/VAT权重已通过官方发布API核实。下一项先准备TextGaze官方权重的推理评测/测速，不新增dense训练，随后检查OmniGF。详细表、输入差异和出处见 [近期方法核对](results/SOTA_LANDSCAPE_20261124.md)。原seed0、train/test选模不变。
 
+SOTA-2补充：架构核对见该文件第7–9节。新增PaGE为明确GazeLLE派生的公开DINOv3对照候选；其两套场景/头部编码器取最后一层，不能称多层特征融合；公开结果采用联合数据、全模型微调和额外蒸馏，比较时分列。Mi仍是已核实DINOv3多层的外部参照，尚未找到公开任务权重。本轮只补文档/来源，不启动或改动训练。
+
 E3-B 正式结果已通过 `85210b5` 回传：GF-B B1/B8 相对官方 latency speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`；相对同路径 K100 的 B8 为 `1.2519/1.2559×`，B8峰值显存约高59.5%。[审查与表格](results/E3_B_EFFICIENCY_REVIEW.md)记录完整口径，作为已完成基线保留；阶段profile/等价快路径后移，当前优先SOTA-1外部推理比较，不新增dense训练。
 
 当前 E3-F1：GPU0/2 已启动；VAT-B 的序列/frames 采样修复已经 Git 部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按 [修复运行说明](RUN_VAT_EFFICIENCY_FIX.md) 重启。GF 矩阵结束前保持原目录源码版本。

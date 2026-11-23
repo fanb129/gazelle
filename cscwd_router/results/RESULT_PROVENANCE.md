@@ -319,3 +319,11 @@
 - TextGaze官方 `checkpoints-v1.0` release于2026-11-11列出GF/VAT×B/L四个PT；API的文件大小与发布方digest已登记，未下载大权重、未独立校验二进制。OmniGF官方HF模型库revision `28d4c78343028573149cc04a1d3b0ac1423732ae`列出GF/VAT safetensors；仍需单独Qwen3-VL底座，未下载/执行。
 - Mi ECCV2026论文与共同作者主页未找到官方实现/权重；GitHub标题检索0项，不作为“绝无开源”的证明。FGI原表受订阅限制、GazeLoom GF距离标签有歧义、GeoDistill未核完整原表，均留在单独线索区；GazeAnywhere任务/测试子集不同，不混入标准GF/VAT。
 - 本轮只读网页/发布API/原文和本地结果，服务器仅检查VAT-L最终summary是否存在，结果未见；没有启动或停止任务、没有新训练/GPU forward/计时。目标转为近期强方法精度—成本，保留GazeLLE既有证据，下一项优先TextGaze官方权重推理对照。
+
+## SOTA-2 · 架构与GazeLLE关系（2026-11-24）
+
+- updated review: `cscwd_router/results/SOTA_LANDSCAPE_20261124.md`; SHA256: `59c42c6fa088808a8a037e5d2b43bae3a2279656f7888225eec73b3fcc9bb34c`。新增第7–9节：框架关系表、16项模型/参照的结构、backbone多深度融合判据及PaGE/GazeLLE-v3补查。上一条SOTA-1的review SHA为提交9186de4时的历史版本。
+- evidence: `cscwd_router/results/architecture_lineage_20261124.json`; SHA256: `ad45841f7e8829691631abb51eda561d1f6af30006632200fae230660cad3d87`。含9个官方/作者仓库的29份固定commit源码路径/URL/SHA、6份本地只读源码SHA、架构分类及证据范围；只存元数据和归纳，不复制外部实现。
+- GazeCoT作者PDF: `https://pi.cs.tsinghua.edu.cn/wp-content/uploads/2026/04/3772318.3790922.pdf`; SHA256: `8120e419859cd2340aa663d9c9af26a65bf19223b4336ec7c0ccf48e97b5e393`。§3.2/Table1核对GazeLLE-v3替换DINOv3及GF公开结果；完整agent与独立gaze estimator分开，不认定已核实对应checkpoint。
+- PaGE官方HF：`Octopus1/page-vitb` revision `b991d8bcb2890a97db611a2080ca250ecd943952`、`Octopus1/page-vithplus` revision `4433e4dbc7ff4267c0f20ad8b9ab0a69048c3992`，API确认task safetensors及config文件存在；未下载大权重/执行模型。论文从GazeLLE出发，场景/头部DINOv3各取最终map；SFT与蒸馏的联合数据范围已标注。
+- 本轮仅本机文献/源码核对与文档更新，无服务器操作、模型forward、训练或测速。未修改旧gazelle代码、训练配方或选中checkpoint；PaGE公开强结果补入，不提前声称当前模型全面SOTA。
