@@ -233,3 +233,10 @@
 - support_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/support/last.pt`; SHA256: `cd147b2a8feeb88400c0f4547c40955e6c4b6feeedd35adb27c5d996505b2933`
 - best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt`; SHA256: `0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf`
 - decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/last.pt`; SHA256: `589417842fffe946a17eb99dc7ad8b8b5da8141a471b2c6496fda99548c916ca`
+
+## L 初始化语义补充（2026-11-23）
+
+- checks: `cscwd_router/results/l_initializer_semantics_20261123.json`; SHA256: `d244cf0615c2dda69d50e97f5934a19aa0358bc358a5006c1617da4d0159a7ee`。只读服务器 archived PT、W&B config/output 与记录 Git 源码；GF-L/VAT-L 首末轮投影均 `[256,4096,1,1]`，无 SASA/GGSF，参数数与日志相符。运行记录指向 DINOv3-L，普通 1024 通道单层 decoder 不匹配现存权重结构。
+- decision: `cscwd_router/results/L_INITIALIZER_DECISION.md`; SHA256: `ec704574d5bfdfb130dcaf1bdcde320dae0a7f45d23b35bf9f697e51da785bda`。GF 记录提交的 last-layer/448 代码与 checkpoint 不一致，VAT 记录层号 `[4,11,17,23]` 与当前 `[5,11,17,23]` 不同；无 runtime 源码快照，精确历史层号未闭合。原 E0 keys/shape 检查不改写，但不再当作历史同配置认证。
+- PT 路径/SHA 与以往登记一致：GF-L `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt` / `7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af`；VAT-L `/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt` / `979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673`。工件留服务器，未下载权重到本机。
+- 本轮未修改 trainer/初始化注册、未停止进程、未新增训练或 model forward。GF-B→VAT-B 已由用户启动并继续优先；L 暂保留 warm-start 补充线，不新开两个 L dense，不切换 GazeSpot 主线。相关投稿政策来源链接与访问日期记录在报告中。

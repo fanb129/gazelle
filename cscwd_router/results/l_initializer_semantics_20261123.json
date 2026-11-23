@@ -1,0 +1,219 @@
+{
+  "date": "2026-11-23",
+  "scope": "Read-only CPU inspection of archived L checkpoint structure, W&B metadata and recorded Git source. No model forward or process changes.",
+  "models": {
+    "gf_l": {
+      "checkpoint": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+        "sha256": "7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af"
+      },
+      "linear_weight_shape": [
+        256,
+        4096,
+        1,
+        1
+      ],
+      "pos_embed_shape": [
+        256,
+        32,
+        32
+      ],
+      "epoch0_linear_shape": [
+        256,
+        4096,
+        1,
+        1
+      ],
+      "epoch0_pos_embed_shape": [
+        256,
+        32,
+        32
+      ],
+      "task_tensor_count": 40,
+      "learned_tensor_elements_excluding_pos_embed": 3678720,
+      "logged_learnable_parameters": [
+        "Learnable parameters: 3678720"
+      ],
+      "projection_chunk_max_difference_to_first": [
+        0.0,
+        0.896166205406189,
+        0.8685920238494873,
+        1.0341947078704834
+      ],
+      "sasa_ggsf_keys": [],
+      "config": {
+        "model": "gazelle_dinov3_vitl16",
+        "exp_name": "train_gazefollow_vitl",
+        "max_epochs": 15
+      },
+      "source_files": {
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260130_131413-ftwijjt1/files/config.yaml": "f55ddaa3d08e0dd1ebf0f25994f4be368e6c637247b6417fd0a5afc7aab81908",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260130_131413-ftwijjt1/files/output.log": "74c83cb4d1ddd0b7e77469ec49bb13505587cf98532ec838daf514e74da66887",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260130_131413-ftwijjt1/files/wandb-metadata.json": "4d6b24caf51c6bdd5e471c18bcccf99844fda7f0f0a064f0e112342ef00c9815"
+      },
+      "recorded_git_commit": "c516de35e4fdb212642052a7ab2a020ee7f5c487",
+      "recorded_sources": {
+        "gazelle/backbone.py": {
+          "sha256": "c51156b333deb1d99e28c0921957aae12dbc537ecf4b0d5907119f4927a03956",
+          "relevant_lines": [
+            "27: class DinoV3Backbone(Backbone):",
+            "30:         self.model = torch.hub.load('dinov3', model_name, source='local', pretrained=False)",
+            "36:         x = self.model.forward_features(x)['x_norm_patchtokens']",
+            "41:         return self.model.embed_dim"
+          ]
+        },
+        "gazelle/model.py": {
+          "sha256": "e06bc6571e2c7c75fdd20ae08c9138c4fc30b22917ad6a0305fbb394bf3ca227",
+          "relevant_lines": [
+            "22:         self.linear = nn.Conv2d(backbone.get_dimension(), self.dim, 1)",
+            "168:     backbone = DinoV3Backbone('dinov3_vitb16')",
+            "169:     transform = backbone.get_transform((448, 448))",
+            "174:     backbone = DinoV3Backbone('dinov3_vitl16')",
+            "175:     transform = backbone.get_transform((448, 448))",
+            "180:     backbone = DinoV3Backbone('dinov3_vitb16')",
+            "181:     transform = backbone.get_transform((448, 448))",
+            "186:     backbone = DinoV3Backbone('dinov3_vitl16')",
+            "187:     transform = backbone.get_transform((448, 448))"
+          ]
+        },
+        "scripts/train_gazefollow.py": {
+          "sha256": "a0b758d2510bc05896d676fc5c2dce22d5525fe5e2e1cbfadbb75850f76c1f87",
+          "relevant_lines": []
+        }
+      },
+      "runtime_code_snapshot_or_diff_saved": false,
+      "actual_runtime_selected_layers": null
+    },
+    "vat_l": {
+      "checkpoint": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt",
+        "sha256": "979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673"
+      },
+      "linear_weight_shape": [
+        256,
+        4096,
+        1,
+        1
+      ],
+      "pos_embed_shape": [
+        256,
+        32,
+        32
+      ],
+      "epoch0_linear_shape": [
+        256,
+        4096,
+        1,
+        1
+      ],
+      "epoch0_pos_embed_shape": [
+        256,
+        32,
+        32
+      ],
+      "task_tensor_count": 45,
+      "learned_tensor_elements_excluding_pos_embed": 3712001,
+      "logged_learnable_parameters": [
+        "Learnable parameters: 3712001"
+      ],
+      "projection_chunk_max_difference_to_first": [
+        0.0,
+        0.8884176015853882,
+        0.8602412939071655,
+        1.03061842918396
+      ],
+      "sasa_ggsf_keys": [],
+      "config": {
+        "model": "gazelle_dinov3_vitl16_inout",
+        "exp_name": "train_vat_vitl",
+        "init_ckpt": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+        "max_epochs": 8
+      },
+      "source_files": {
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/config.yaml": "def0833cbd2884e2ac59c14917c142a1abe756564a2d1bbf74d86d42624b5d06",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/output.log": "a06ff09a66a23359e6caf6977186a24f566d40b4bcfaf5ad869b049fe0fbf7fb",
+        "/home/fb/src/paper/gazelleV1/wandb/run-20260202_094447-nt1cadko/files/wandb-metadata.json": "503d8d64b1c71451fc75a72a10e969fa6ac5128126d78b97090244fa0964a381"
+      },
+      "recorded_git_commit": "3ff2907922ee73d338d1a31b0707d3f9f7ab0fa9",
+      "recorded_sources": {
+        "gazelle/backbone.py": {
+          "sha256": "5c50b9291544922ac05fca2538e2ee88c5b3b1ab2f3b7982f3246732cb86ae03",
+          "relevant_lines": [
+            "27: class DinoV3Backbone(Backbone):",
+            "30:         self.model = torch.hub.load('dinov3', model_name, source='local', pretrained=False)",
+            "35:             self.out_indices = [4, 11, 17, 23] # 官方推荐的 ViT-L 用于密集任务的层",
+            "37:             self.out_indices = [2, 5, 8, 11] # 示例，可以取最后4层或者均匀分布",
+            "39:             self.out_indices = [len(self.model.blocks) - 1] # 默认只取最后一层",
+            "44:         # x = self.model.forward_features(x)['x_norm_patchtokens']",
+            "47:         # 3. 使用 get_intermediate_layers 获取多层特征",
+            "49:         features = self.model.get_intermediate_layers(",
+            "51:             n=self.out_indices, ",
+            "58:         return torch.cat(features, dim=1) ",
+            "67:         # return self.model.embed_dim",
+            "70:         return self.model.embed_dim * len(self.out_indices)"
+          ]
+        },
+        "gazelle/model.py": {
+          "sha256": "dd5ffcccbaadef4bdee19c305bab949acf385fe75b914f2ac745f79084fc0a8a",
+          "relevant_lines": [
+            "22:         self.linear = nn.Conv2d(backbone.get_dimension(), self.dim, 1)",
+            "168:     backbone = DinoV3Backbone('dinov3_vitb16')",
+            "169:     transform = backbone.get_transform((512, 512))",
+            "174:     backbone = DinoV3Backbone('dinov3_vitl16')",
+            "175:     transform = backbone.get_transform((512, 512))",
+            "180:     backbone = DinoV3Backbone('dinov3_vitb16')",
+            "181:     transform = backbone.get_transform((512, 512))",
+            "186:     backbone = DinoV3Backbone('dinov3_vitl16')",
+            "187:     transform = backbone.get_transform((512, 512))"
+          ]
+        },
+        "scripts/train_vat.py": {
+          "sha256": "a9a9f56db7b2ed2294ef990f09ab97ad581a00cd39a61d899b725389d8ad6e31",
+          "relevant_lines": []
+        }
+      },
+      "runtime_code_snapshot_or_diff_saved": false,
+      "actual_runtime_selected_layers": null
+    }
+  },
+  "current_L_recipe": {
+    "model": "gazelle_dinov3_vitl16",
+    "input_size": 512,
+    "selected_layers": [
+      5,
+      11,
+      17,
+      23
+    ],
+    "route_after_block": 11,
+    "fusion": "raw_concat",
+    "source": "gazelle/backbone.py and gazelle/routing/model.py",
+    "manifest_path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/manifest.json"
+  },
+  "recorded_VAT_commit_selected_layers": [
+    4,
+    11,
+    17,
+    23
+  ],
+  "findings": [
+    "Both epoch0 and final decoder projections accept 4096 channels; the normal 1024-channel single-layer L decoder is not a structural match.",
+    "W&B model names and recorded factories point to DINOv3-L, not DINOv2.",
+    "No SASA/GGSF task tensors were found.",
+    "The GF recorded commit is last-layer/448 code, inconsistent with the saved 4096-channel projection and 32x32 grid; no actual runtime source snapshot/diff was found.",
+    "The VAT recorded commit uses four concatenated layers [4,11,17,23], while the current Router uses [5,11,17,23]; runtime worktree identity was not archived.",
+    "Key/shape compatibility does not establish identical historical feature semantics. The exact GF runtime layer configuration remains unresolved."
+  ],
+  "decision": {
+    "B_transfer": "continue existing GF-B Router to VAT-B run",
+    "L_process_action": "none; do not label it a confirmed single-layer initialization or terminate on that assumption",
+    "new_L_dense_jobs": "do not launch two new dense baselines now",
+    "paper_priority": "complete B on GF/VAT; keep L as a secondary warm-start experiment until initialization semantics are clarified",
+    "GazeSpot": "do not switch the main branch now; requires explicit SASA/GGSF-compatible model loading and dense-versus-sparse controls"
+  },
+  "policy_reference": {
+    "url": "https://conferences.ieeeauthorcenter.ieee.org/author-ethics/guidelines-and-policies/submission-policies/",
+    "checked_date": "2026-11-23",
+    "scope": "Related submissions and reused foundations must be disclosed and differences explained; no submission clearance is inferred."
+  }
+}

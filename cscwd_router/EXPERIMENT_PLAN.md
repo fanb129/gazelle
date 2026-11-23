@@ -6,7 +6,7 @@ E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DIN
 
 ## 1. 四组主实验与并行顺序
 
-当前优先级 E2-T：用户要求先提升 VAT，正式效率等待空闲卡。完整 GF-B Router/heatmap decoder 迁移到 VAT，仅新增 in/out，固定 K50、冻结 backbone，8 epochs 中首轮固定 Router，后 7 轮联合适配；Router/decoder/inout LR `1e-4/1e-5/1e-3`，seed 0。入口已实现、51 项 CPU 检查通过，尚未跑真实训练；完整命令见 [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)。这一顺序覆盖上一轮先做预算响应/测速的建议。
+当前优先级 E2-T：用户要求先提升 VAT，正式效率等待空闲卡。完整 GF-B Router/heatmap decoder 迁移到 VAT，仅新增 in/out，固定 K50、冻结 backbone，8 epochs 中首轮固定 Router，后 7 轮联合适配；Router/decoder/inout LR `1e-4/1e-5/1e-3`，seed 0。入口已实现、51 项 CPU 检查通过，用户已启动 GF-B→VAT-B 迁移，等待完整结果；完整命令见 [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)。这一顺序覆盖上一轮先做预算响应/测速的建议。
 
 2026-11-23 E2-C 实际结果：原始 VAT dense 与 routed K100 的精度差为 0；两组低 LR 固定 K50 各加 8 epochs 后，均未超过旧 best L2，不继续原样加轮数。GF-B 已完成，GF-L 继续等待。下一项优先现有 VAT checkpoint 的预算响应、完整 GF-B Router→VAT 迁移及 GF-B 的 E3 测速。详见 [审查分析](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
@@ -25,7 +25,9 @@ VAT 的 B/L 都已有可用 decoder，因此不依赖本轮 GF 产物。先并�
 
 ## 2. 初始化、结构与数据
 
-四份初始化均已在服务器只读核对存在、SHA、任务 tensor key/shape，均为纯四层 raw-concat，不含 SASA/GGSF/Router。GF 的 B/L 各 40 个 decoder tensors，VAT 的 B/L 各 45 个，缺失/多余/形状不符为 0。具体路径和 SHA 固定在 `code/stag/dinov3_initializers.py`，来源检查见 `results/e0_dinov3_train_test_checks.json`。
+四份初始化均已在服务器只读核对存在、SHA、任务 tensor key/shape，不含 SASA/GGSF/Router。GF 的 B/L 各 40 个 decoder tensors，VAT 的 B/L 各 45 个，缺失/多余/形状不符为 0。具体路径和 SHA 固定在 `code/stag/dinov3_initializers.py`，兼容性检查见 `results/e0_dinov3_train_test_checks.json`。
+
+最新 L 语义补充见 [L_INITIALIZER_DECISION.md](results/L_INITIALIZER_DECISION.md)：首末轮投影均为 4096 通道，与四路 1024 拼接兼容，不能据此再推断精确历史层号；GF 记录提交与实物矛盾，VAT 记录源码 `[4,11,17,23]` 与当前 `[5,11,17,23]` 不同，runtime 源码未封存。L 暂作 warm-start 补充，不称为历史同配置已认证；不新开两个 L dense，不替换 B 当前已启动的 GF Router→VAT 主线。
 
 本轮不直接复用 seed3106 的已训练 Router；B 和 L 都重新初始化并训练 seed0 Router。历史 decoder 是预训练初始化，不把其原始训练 seed 改写为 0。
 

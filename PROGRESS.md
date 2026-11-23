@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | 优先 E2-T：完整 GF-B Router→VAT 迁移入口已实现，51/51 CPU 通过，8 epochs 固定 K50 待手动运行；旧 VAT 续训未改善 L2，GF-L 继续，效率等待空闲卡 |
+| CSCWD 新主线 | `cscwd_router/` | 优先 E2-T：完整 GF-B Router→VAT 已由用户启动；L 历史层号未闭合，现存权重并非通常单层形状，当前作 warm-start 补充线；不新开两套 L dense、不切 GazeSpot 主线，效率待空闲卡 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -68,10 +68,12 @@
 
 **E2-T 完整 GF Router→VAT 实现（2026-11-23）**：按用户要求先提升 VAT，效率等空闲卡再测。新增 3 个 Python 文件，严格继承完整 GF Router/heatmap decoder，仅新建 5 个 in/out tensors。固定 K50、冻结 backbone，8 epochs（首轮固定 Router，后 7 轮 coverage/BCE 联合适配），LR `1e-4/1e-5/1e-3`、seed 0、完整 train/test；逐轮选 test L2 最低模型，最终 rate-1 test，保存每轮 checkpoint。51/51 CPU 通过，原 E0 与续训源码 SHA 不变；报告 `results/e2t_gf_to_vat_local_checks.json`，完整 GPU 1 命令 `RUN_GF_ROUTER_TO_VAT.md`。尚未启动真实训练，没有新 VAT 指标。
 
+**L 来源与预算决定（2026-11-23）**：两组 L 的 epoch 0/末轮投影都是 `[256,4096,1,1]`，无 SASA/GGSF，W&B 配置指向 DINOv3；不能归为普通 1024 维单层 decoder。但 GF 记录 Git 源码为 last-layer/448，与实际结构矛盾；VAT 记录选层 `[4,11,17,23]` 不同于当前 `[5,11,17,23]`，没有 runtime 源码快照，精确历史语义未闭合。此前仅凭 keys/shape 认证同配置的表述已修正。证据 `results/l_initializer_semantics_20261123.json`，取舍 `results/L_INITIALIZER_DECISION.md`。GF-B→VAT-B 已启动，优先继续；L 暂保留 warm-start 实验，看当前 K75 test，不新增两个 dense，不直接替换 GazeSpot；本轮未停止任何进程。
+
 ## 下一步
 
-1. 用户按 `cscwd_router/RUN_GF_ROUTER_TO_VAT.md` 手动启动 E2-T，优先完整 GF-B Router/decoder→VAT，回传真实结果；不重跑旧 VAT 续训或新增 dense 训练。
-2. GF-L 继续原任务。正式效率等待空闲卡；VAT 预算响应和 E3/E4 后续按真实精度结果安排。
+1. 等已启动的 E2-T 完整 GF-B Router→VAT 结果并回传；B 主线优先，不重跑旧 VAT 续训。
+2. 当前 GF-L 作独立 warm-start 补充线，先看 K75 test 再决定后续预算；不新开两个 L dense，也不因尚未还原的旧层号擅停进程。正式效率等待空闲卡，GazeSpot 分支暂不切换。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。
