@@ -20,6 +20,7 @@ from cscwd_router.code.stag import dinov3_run as original
 from cscwd_router.code.stag.checkpoint import sha256, state_sha256
 from cscwd_router.code.stag.dinov3_engine import evaluate
 from cscwd_router.code.stag.engine import seed_everything
+from cscwd_router.code.stag.dinov3_sources import load_source
 
 ROOT = original.ROOT
 FORMAT = "cscwd_router_gf_to_vat_v1"
@@ -122,19 +123,19 @@ def train_epoch(model, loader, optimizer, device, args, *, router_active):
 
 def source_hashes():
     return {**original.source_hashes(), **{name: sha256(ROOT / name) for name in (
-        "cscwd_router/code/stag/dinov3_transfer.py", "cscwd_router/code/scripts/transfer_gf_router_to_vat.py")}}
+        "cscwd_router/code/stag/dinov3_transfer.py", "cscwd_router/code/scripts/transfer_gf_router_to_vat.py",
+        "cscwd_router/code/stag/dinov3_sources.py")}}
 
 
 def run(args, *, model_factory=get_coverage_router_model):
     if Path.cwd().resolve() != ROOT:
         raise RuntimeError(f"run from the repository root: {ROOT}")
     gf_path = Path(args.gf_summary)
-    gf = json.loads(gf_path.read_text())
+    gf, gf_manifest, payload = load_source(gf_path, allow_closed_gf=args.allow_closed_gf)
     gf_manifest_path = gf_path.with_name("manifest.json")
-    gf_manifest = json.loads(gf_manifest_path.read_text())
-    if (not gf["completed"] or gf["dataset"] != "gazefollow" or gf["model_config"]["keep_ratio"] != 0.5
+    if (gf["dataset"] != "gazefollow" or gf["model_config"]["keep_ratio"] != 0.5
             or gf["model_config"]["router_stage"] != "backbone_sparse"):
-        raise ValueError("source must be a completed K50 GF Router experiment")
+        raise ValueError("source must be an evaluated K50 GF Router experiment")
     if gf_manifest["fingerprint"] != gf["context_fingerprint"] or gf_manifest["model_config"] != gf["model_config"]:
         raise ValueError("GF manifest and summary disagree")
     size = gf["size"]
@@ -152,7 +153,6 @@ def run(args, *, model_factory=get_coverage_router_model):
         raise ValueError("transfer must use new output/report directories")
     if not args.resume and any(path.exists() and any(path.iterdir()) for path in (run_dir, report_dir)):
         raise FileExistsError("transfer outputs are not empty; use --resume or new directories")
-    payload = torch.load(checkpoint["path"], map_location="cpu", weights_only=False)
     if payload["selection"] != gf["selection"] or payload["context_fingerprint"] != gf["context_fingerprint"]:
         raise ValueError("GF source checkpoint and summary disagree")
     seed_everything(args.seed)
@@ -168,6 +168,8 @@ def run(args, *, model_factory=get_coverage_router_model):
     context = {"gf_summary": {"path": str(gf_path.resolve()), "sha256": sha256(gf_path)},
         "gf_manifest": {"path": str(gf_manifest_path.resolve()), "sha256": sha256(gf_manifest_path)},
         "gf_checkpoint": checkpoint, "backbone": backbone, "initialization": initialization,
+        "gf_source_status": {"completed": gf["completed"], "closed_by_user": gf.get("closed_by_user", False),
+                             "training_epochs": gf["training_epochs"]},
         "data": data, "sources": source_hashes(), "torch_version": torch.__version__,
         "recipe": {key: value for key, value in vars(args).items() if key not in ("resume", "run_dir", "report_dir", "provenance")}}
     context["fingerprint"] = hashlib.sha256(json.dumps(context, sort_keys=True).encode()).hexdigest()
@@ -255,7 +257,7 @@ def run(args, *, model_factory=get_coverage_router_model):
         "selection_test_frame_rate": args.test_frame_rate, "final_test_frame_rate": 1, "metrics": metrics,
         "epochs": len(last["history"]), "router_warmup_epochs": args.router_warmup_epochs,
         "initialization": initialization, "artifacts": artifacts, "runtime": runtime,
-        "context_fingerprint": context["fingerprint"]}
+        "context_fingerprint": context["fingerprint"], "gf_source_status": context["gf_source_status"]}
     original.atomic_json(summary_path, summary)
     with Path(args.provenance).open("a") as handle:
         fcntl.flock(handle, fcntl.LOCK_EX)

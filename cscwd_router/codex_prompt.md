@@ -1,6 +1,6 @@
 # 后续会话提示词：CSCWD Router
 
-更新：2026-11-23。复制以下任务上下文即可，不要重新从 T1 开始，也不要重新询问已确认的 checkpoint 路径。
+更新：2026-11-24。复制以下任务上下文即可，不要重新从 T1 开始，也不要重新询问已确认的 checkpoint 路径。
 
 ---
 
@@ -8,15 +8,19 @@
 
 先读：
 
+2026-11-24 最新先读 `RUN_EFFICIENCY_VATL.md` 与 `results/e3_efficiency_vatl_local_checks.json`。E3 效率及 GF-L→VAT-L 来源接入已完成，68/68 CPU 通过；尚未运行真实 GPU 任务。GPU0 顺序测 GF-B/GF-L，GPU1 测当前 `vat_from_gfb_router_k050_joint_seed0/summary.json`（不是旧较低精度 VAT-B），GPU2 完整 GF-L→VAT-L，batch4×累积8、8 epochs、seed0。效率 official/K100/K50、B1/B8 正反序、FP16、50/200/500/5；每单元新进程并检查目标 GPU 其他 PID，完成单元 request 一致才复用。完整命令由用户手动执行。
+
+新 `dinov3_sources.load_source` 用显式 `--allow-closed-gf` 接受 GF-L，核对 history/last/exported-best，不修改 completed=false。源真实预算写进新 VAT-L manifest。旧 E0/Gazelle 源码未改；`dinov3_transfer.py` 为本次接入已更新，旧 VAT-B 报告保留原源码 SHA，不用新代码 resume 旧已完成 B 迁移。
+
 L 来源更新先读 `results/L_INITIALIZER_DECISION.md` 与 `results/l_initializer_semantics_20261123.json`。两组首末轮投影均 4096、无 SASA/GGSF，W&B 指向 DINOv3，但 GF 记录提交是 last-layer/448 与实物矛盾，VAT 记录源码 `[4,11,17,23]` 不同于当前 `[5,11,17,23]`；继续保留 warm-start 标签，不把 shape 兼容当作精确历史配置认证。当前 GF-L 训练已由服务器关机中断，用户决定不补最后一轮，下面收口状态优先于旧的等待/恢复建议；未由助手启动或停止 GPU 进程。
 
 最新先读 `results/E2T_GF_TO_VAT_REVIEW.md` 与 `results/e2t_gfb_to_vatb_server_checks.json`。E2-T 完整 GF-B Router/decoder→VAT-B 已完成并经 `170ace8` push/pull：最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。实际 8 epochs K50，首轮固定 Router、后 7 轮 coverage/BCE 联合适配；按 test L2 选第 1 轮，选中 Router 与 GF 逐值一致，不能宣称联合 VAT Router 适配提升。52 个共享 tensors、20 个工件 SHA、8 轮真实更新和全部 31,978 条逐查询记录核验通过，重聚合指标差均 0。原命令 `RUN_GF_ROUTER_TO_VAT.md` 保留供复现，不重复运行。
 
 最新先读 `results/E1L_GF_INTERRUPTED_REVIEW.md` 与 `results/e1l_interrupted_server_checks.json`。GF-L 按实际 support 3 + decoder 4 收口，原计划 3+5 manifest 不改，partial 第 5 轮不计入完成训练。结果提交 `459651a` 已 push/pull，按 Min L2 选第 2 轮 K50 `0.960007/0.094061/0.037721`；第 4 轮 `0.960678/0.093370/0.037724`，不能拼指标。已从 last 内嵌 best 导出 52 tensors 逐值一致的 `experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt`，SHA `0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf`。原 last 未改；6 个 PT/PTH、2 份标注、18 个源码与原生树 SHA、已提交更新 85,095/14,184 核对通过。指标来自已完成 epoch test，无独立复评或逐查询导出。
 
-收口报告为 `results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json`，明确 completed=false、closed_by_user=true、checkpoint_export_complete=true；没有伪造完整训练的 summary.json。当前精度可接 E3 同硬件效率和完整 GF-L→VAT-L，暂不新训 GF-L dense、不补第 5 轮、不重启原队列。原 transfer 入口要求 completed=true，需显式实现用户收口来源接入并保留真实预算/SHA 校验，不能修改 JSON 布尔值绕过。DINOv3 评测/效率入口也尚需实现；完整命令交给用户手动运行。B 结果接受，E2-H 分类头适配后移。
+收口报告为 `results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json`，明确 completed=false、closed_by_user=true、checkpoint_export_complete=true；没有伪造完整训练的 summary.json。当前精度可接 E3 同硬件效率和完整 GF-L→VAT-L，暂不新训 GF-L dense、不补第 5 轮、不重启原队列。新 transfer 入口使用 --allow-closed-gf 显式支持收口来源并保留真实预算/SHA 校验。DINOv3 效率入口已实现；完整命令见 RUN_EFFICIENCY_VATL.md，由用户手动运行。B 结果接受，E2-H 分类头适配后移。
 
-等待期实验优先级见 `EXPERIMENT_PLAN.md` 第 5 节：B 预算扫描 K25/K50/K75/K100、GF-B scene-only 同起点同预算重训对照、真实 VAT 同帧多人 union 精度/选区。GPU 精度与训练只需可用显存，正式效率需空闲卡；GF official test 全部单头，不可冒充多人证据。DINOv3 独立预算/benchmark/scene-only 入口还需实现，不复用 DINOv2 checkpoint 入口硬跑。
+等待期实验优先级见 `EXPERIMENT_PLAN.md` 第 5 节：B 预算扫描 K25/K50/K75/K100、GF-B scene-only 同起点同预算重训对照、真实 VAT 同帧多人 union 精度/选区。GPU 精度与训练只需可用显存，正式效率需空闲卡；GF official test 全部单头，不可冒充多人证据。DINOv3 benchmark 已实现；独立预算/scene-only 入口接续，不直接用 DINOv2 checkpoint 入口加载 DINOv3。
 
 若以后恢复 E2-H，只训练 post-transformer 的 `inout_head` MLP，冻结 backbone、Router、heatmap decoder 和 `inout_token`。现有 inout 参数组包含 `inout_token`，不能直接用 router/decoder LR=0 实现；需独立参数范围和热图一致性检查，再给用户完整命令手动跑。旧 trainer 源码不改。
 

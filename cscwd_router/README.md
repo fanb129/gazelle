@@ -1,6 +1,6 @@
 # CSCWD Router · 人物条件化的深层计算分配
 
-更新：2026-11-23。论文方法覆盖 **DINOv3 ViT-B/16、ViT-L/16 + 多层 raw-concat + gaze-conditioned Router**，四组新训练均 base seed 0。既有 DINOv2 单层适配保留为工程与对照路线。
+更新：2026-11-24。论文方法覆盖 **DINOv3 ViT-B/16、ViT-L/16 + 多层 raw-concat + gaze-conditioned Router**，四组新训练均 base seed 0。既有 DINOv2 单层适配保留为工程与对照路线。
 
 ## 当前 story
 
@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [RUN_EFFICIENCY_VATL.md](RUN_EFFICIENCY_VATL.md)：当前三卡完整命令。GPU0 GF-B/GF-L 效率、GPU1 当前 VAT-B 效率、GPU2 完整 GF-L→VAT-L；入口已实现，68 项 CPU 通过，尚未执行真实 GPU 任务。
 - [E1L_GF_INTERRUPTED_REVIEW.md](results/E1L_GF_INTERRUPTED_REVIEW.md)：GF-L 关机后以实际 3+4 轮收口，选第 2 轮 K50，`0.960007/0.094061/0.037721`；best 已导出并回传核验，接效率与完整 VAT-L 迁移，不先新训 GF-L dense。
 - [L_INITIALIZER_DECISION.md](results/L_INITIALIZER_DECISION.md)：L 权重的四路投影与历史源码矛盾；keys/shape 兼容不作为历史同配置认证。B 优先，L 作 warm-start 补充线，暂不重训两个 dense 或切 GazeSpot。
 - [E2T_GF_TO_VAT_REVIEW.md](results/E2T_GF_TO_VAT_REVIEW.md)：完整 GF-B→VAT-B 已回传，逐帧 `0.940033/0.100131/0.883183`；best 为 Router 冻结首轮，定位恢复、AP 待提升。用户接受当前结果，分类头适配后移。

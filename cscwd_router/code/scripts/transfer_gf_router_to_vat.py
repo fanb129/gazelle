@@ -33,6 +33,8 @@ def parse_args(argv=None):
     parser.add_argument("--log-every", type=int, default=50)
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--allow-closed-gf", action="store_true",
+                        help="accept a user-closed GF run only after checking its committed history and best weights")
     args = parser.parse_args(argv)
     if min(args.epochs, args.batch_size, args.eval_batch_size, args.grad_accumulation,
            args.train_frame_rate, args.test_frame_rate, args.log_every) < 1:

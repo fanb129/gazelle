@@ -260,3 +260,10 @@
 - checks: `cscwd_router/results/e1l_interrupted_server_checks.json`; SHA256: `c870c2d4af0051fa9ecd5466cfd6c19167e019fc0e1c7056c54f5e0588ed80ad`。6 个 PT/PTH、2 份标注、18 个源码及原生树 SHA 均核对；support/decoder 已提交更新 85,095/14,184，选模与冻结状态一致。52 个导出 best tensors 与 last 内嵌 best 逐值一致，原 last SHA 未变。没有新增 GPU forward、独立 test 或逐查询重聚合。
 - review: `cscwd_router/results/E1L_GF_INTERRUPTED_REVIEW.md`; SHA256: `78255235b08317bd13e57541779dda4caf66a11382b5ebe02d410314f7e178d6`。用户决定不补最后一轮，实际 support 3 + decoder 4 收口，按 Min L2 选第 2 轮 K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。收口报告明确 completed=false / user-closed，原 3+5 manifest 保留；第 5 轮局部状态不计入完成预算。
 - best PT 路径/SHA 见上方 `DINOv3 GF-L interrupted closure`，留服务器未入 Git。当前精度可接效率与完整 GF-L→VAT-L，不先新增 GF-L dense；新入口需显式支持收口来源，再由用户手动运行。
+
+## E3 / E2-TL · 三卡效率与 GF-L→VAT-L 入口（2026-11-24）
+
+- local checks: `cscwd_router/results/e3_efficiency_vatl_local_checks.json`; SHA256: `d4fa9d5511782f3ae4aa95cae06ef51d4bd5736a9b8d002966b57c98feb86802`。68/68 CPU 工程检查通过（16 项效率、1 项收口迁移新增，51 项旧回归）；8 个相关源码 SHA、三条完整 CLI 解析与 bash 语法在报告内。数值为工程合成检查，不是模型效率/迁移成绩。
+- runbook: `cscwd_router/RUN_EFFICIENCY_VATL.md`; SHA256: `2dd2c8c534db48ade31a3fc0977a245cef7c77331d986e45f78b2995db67cd1f`。GPU0 顺序 GF-B/GF-L，GPU1 当前 GF→VAT-B，GPU2 完整 GF-L→VAT-L；B1/B8 正反序，official/K100/K50、FP16、50/200/500/5，实际训练为新 L 目录 8 epochs K50、batch4×累积8、seed0。
+- GF-L 收口原 JSON 和原权重不改，显式 --allow-closed-gf 核对完整 history/last/best 后接受；源 completed=false 与实际3+4写入新 VAT manifest/summary。官方 B/L/B-inout decoder 与两份 DINOv2 backbone 已服务器只读核对；旧 gazelle/ 未改。
+- 本轮没有启动真实 GPU forward/训练/测速，无新速度或 VAT-L 精度数字。效率小报告将写 results/efficiency_dinov3_seed0_20261124/；新大型 VAT-L PT/gzip 将留服务器 experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/，运行时自动登记路径/SHA。

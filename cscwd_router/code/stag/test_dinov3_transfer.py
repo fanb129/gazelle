@@ -175,3 +175,20 @@ def test_default_recipe_uses_seed0_low_lr_and_fixed_router_warmup():
                        "--report-dir", "/reports", "--provenance", "/p.md"])
     assert args.seed == 0 and args.epochs == 8 and args.router_warmup_epochs == 1
     assert (args.router_lr, args.decoder_lr, args.inout_lr) == (1e-4, 1e-5, 1e-3)
+
+
+def test_user_closed_gf_l_transfers_without_claiming_complete_source(tmp_path, monkeypatch):
+    import json
+    args, gf = setup_transfer(tmp_path, monkeypatch, "l")
+    gf.update(completed=False, closed_by_user=True, checkpoint_export_complete=True,
+              format="cscwd_router_dinov3_interrupted_v1")
+    path = Path(args.gf_summary).with_name("interrupted_summary.json")
+    path.write_text(json.dumps(gf))
+    args.gf_summary = str(path)
+    with pytest.raises(ValueError, match="allow-closed-gf"):
+        transfer.run(args, model_factory=model_factory)
+    args.allow_closed_gf = True
+    result = transfer.run(args, model_factory=model_factory)
+    assert result["completed"] and result["size"] == "l"
+    assert not result["gf_source_status"]["completed"] and result["gf_source_status"]["closed_by_user"]
+    assert json.loads(path.read_text()) == gf

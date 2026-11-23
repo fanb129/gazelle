@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 E3 / E2-TL 已实现：68/68 CPU 通过。三卡完整命令见 `RUN_EFFICIENCY_VATL.md`：GPU0 GF-B/GF-L 效率，GPU1 当前 GF→VAT-B 效率，GPU2 完整 GF-L→VAT-L。保留 GF-L 收口状态；用户手动启动，尚无真实效率或新 VAT-L 指标。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
 > 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。最新 GF 与续训状态见下一条，效率尚待测量。
@@ -10,7 +11,7 @@
 > L 来源补充：现存 GF-L/VAT-L 投影从 epoch 0 起均为 4096 通道，W&B 指向 DINOv3，但历史精确选层未闭合；不能当作已证实单层，也不能继续称同配置初始化已完全认证。详见 `results/L_INITIALIZER_DECISION.md`。GF-L 已收口，后续用当前 best 接效率和迁移，暂不新增 L dense。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
-## 0. 当前决定（2026-11-23，E1-L 收口）
+## 0. 当前决定（2026-11-24，E3 / E2-TL）
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
@@ -221,6 +222,18 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：按用户决定不补最后一轮。只读核验 GF-L 完整 history/原子 last，导出内嵌 best；服务器仅提交当前 4 份小 JSON 和对应 provenance，push `459651a`，本地 pull/rebase 保留 3 条本地提交与目录迁移。未新增训练、GPU forward 或测速。
 - **产出文件与数字**：`results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json`、`results/E1L_GF_INTERRUPTED_REVIEW.md`、`results/e1l_interrupted_server_checks.json`。实际 support 3 + decoder 4，按 Min L2 选第 2 轮 K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 4 轮为 `0.960678/0.093370/0.037724`，不拼指标。52 个 best tensors 导出逐值一致，原 last SHA 不变；6 个 PT/PTH、2 份标注、18 个源码与原生树 SHA 匹配，已提交 optimizer steps 85,095/14,184。保留原 3+5 manifest，报告明确 completed=false / user-closed / 实际 3+4，无独立复评与逐查询重聚合。
 - **下一步**：按当前精度进入 E3 同硬件效率与完整 GF-L→VAT-L，暂不新训 GF-L dense。先实现 DINOv3 评测/效率和收口来源接入，再给用户完整命令手动运行；不修改布尔值绕过原 transfer 对 completed 来源的检查。
+
+### 2026-11-24 · E3：DINOv3 与官方 GazeLLE 效率矩阵实现
+
+- **完成内容**：新增 source reader、完整系统 benchmark、单 GPU 顺序队列与矩阵汇总；复用旧 GPU guard/稳定计时器，official/K100/K50 每单元新进程，真实 train RGB/GT 框、B1/B8 正反序、FP16、50/200/500/5，计入完整 forward。复用精度对应 checkpoint，逐 block token trace，源码/权重/输入/GPU 记录，request 一致才恢复复用。
+- **产出文件与数字**：`code/stag/dinov3_sources.py`、`dinov3_efficiency.py`、`test_dinov3_efficiency.py`，`code/scripts/benchmark_router_dinov3.py`、`run_router_efficiency.py`，`RUN_EFFICIENCY_VATL.md`、`results/e3_efficiency_vatl_local_checks.json`。新增效率 16 项 CPU 通过，覆盖 B/L 真实 Router prefix/suffix/多层 decoder、收口来源、矩阵/恢复。服务器只读核对三张 RTX3090 均 15 MiB/0%（观察时），官方 B/L/B-inout 权重分别 40/40/45 tensors，两份 DINOv2 backbone 存在。没有 GPU forward 或速度数字。
+- **下一步**：用户更新代码后，在 GPU0 测 GF-B→GF-L，在 GPU1 测当前 GF→VAT-B；四单元完整后汇总同卡正反序几何平均，不预写加速。
+
+### 2026-11-24 · E2-TL：GF-L 收口来源迁移接入
+
+- **完成内容**：迁移入口新增显式 `--allow-closed-gf`，读取 committed history/last/best 核对选模与逐值权重，保留 GF-L completed=false、实际3+4。源状态写进新 VAT manifest/summary，不改变旧 GF 工件。L 沿用 B 的 8 轮 K50，首轮固定 Router、后7轮联合适配，batch4×累积8、seed0。
+- **产出文件与数字**：更新 `code/stag/dinov3_transfer.py`、`code/scripts/transfer_gf_router_to_vat.py`、`code/stag/test_dinov3_transfer.py`；新增闭环 1 项，与 E3/旧回归合计 **68/68** CPU 通过。旧 `gazelle/` 未改，无真实 VAT-L 训练结果。GPU2 全参数命令、日志与输出在 `RUN_EFFICIENCY_VATL.md`，大型工件将留服务器自动登记 SHA。
+- **下一步**：用户手动启动 GPU2 完整 GF-L Router/heatmap decoder→VAT-L；只 train/test、每轮 test L2 单模型选模，最后逐帧 test，回传小报告审查。当前不新增 dense。
 
 ## 7. T1 服务器运行与结果回传
 

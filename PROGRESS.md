@@ -1,12 +1,12 @@
 # 小论文 · 当前进度
 
-分支：`codex/coverage-aware-router`。更新：2026-11-23。
+分支：`codex/coverage-aware-router`。更新：2026-11-24。
 
 | 投稿线 | 目录 | 状态 |
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | GF-L 关机中断，用户决定以实际 3+4 轮收口；第 2 轮 K50 best `0.960007/0.094061/0.037721` 已导出并回传核验。下一步效率与完整 GF-L→VAT-L，不新增 GF-L dense |
+| CSCWD 新主线 | `cscwd_router/` | 三卡入口就绪：GPU0 GF-B/GF-L 效率、GPU1 当前 VAT-B 效率、GPU2 完整 GF-L→VAT-L。68 项 CPU 通过，用户手动启动；尚无正式速度或新 VAT-L 数字 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -76,9 +76,13 @@
 
 **E1-L 中断收口与审查（2026-11-23）**：用户决定不补 GF-L 最后一轮。服务器结果 `459651a` 已 push 并 pull，实际 support 3 + decoder 4 epochs，第 5 轮途中关机，按 test Min L2 仍选第 2 轮；AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。从 last 内嵌 best 导出 52 个 tensors 逐值一致的 `best_test.pt`，原 last SHA 不变；原 manifest 3+5 不改，收口报告明确 `completed=false`、实际 3+4，无独立复评或逐查询导出。6 个 PT/PTH、2 份标注、18 个源码及原生树 SHA 和实际 optimizer steps（85,095/14,184）核对通过。报告 `results/E1L_GF_INTERRUPTED_REVIEW.md`、检查 `results/e1l_interrupted_server_checks.json`。当前精度可继续效率与 VAT-L 迁移，不先新训 GF-L dense；未启动新 GPU 任务。
 
+**E3 效率实现（2026-11-24）**：新增 DINOv3 对官方 GazeLLE 的单元/队列入口，共享旧稳定计时器；每单元新进程，official/K100/K50，B1/B8 正反序，FP16、448/512 原配置、真实 train RGB/GT 单查询，50 warmup、200×5 latency、500×5 throughput。记录逐 block tokens、实际速度/FPS/显存、GPU UUID 和源码/权重 SHA；恢复核对全部 request 后复用。效率新增 16 项 CPU 检查通过，未执行 GPU 测速。
+
+**E2-TL 迁移接入（2026-11-24）**：共享 source reader 显式接入 GF-L 用户收口状态，核对原 last/history 与导出 best 逐值一致，保留 completed=false 和实际 3+4。VAT-L 使用原 B 配方 8 epochs K50，batch4×累积8、seed0，首轮固定 Router、后7轮联合适配，逐轮 test L2 选模、最后逐帧 test。新增合成闭环通过，含旧训练/续训/迁移回归合计 **68/68**；旧 gazelle/ 未改。完整 GPU0/1/2 命令 `cscwd_router/RUN_EFFICIENCY_VATL.md`，工程报告 `results/e3_efficiency_vatl_local_checks.json`。本轮仅本机实现/CPU 检查和服务器只读权重/GPU 核对，未启动真实训练或测速。
+
 ## 下一步
 
-1. 实现 DINOv3 正式评测/效率入口和完整 GF-L→VAT-L 的用户收口来源接入；统一使用已导出的第 2 轮 best，不补最后一轮、不修改 completed 布尔值冒充全程完成。给完整命令后用户手动跑，正式效率需空闲卡。
+1. 按 `RUN_EFFICIENCY_VATL.md` 更新代码并由用户手动启动三卡：GPU0 GF-B/GF-L、GPU1 当前 GF→VAT-B 的正式效率，GPU2 完整 GF-L→VAT-L；回传各自小报告，速度与迁移精度依实测。GF-L 统一用第 2 轮 best，不补旧轮次。
 2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 

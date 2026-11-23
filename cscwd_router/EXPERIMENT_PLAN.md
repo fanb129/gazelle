@@ -1,6 +1,8 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
-更新：2026-11-23，E2。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
+更新：2026-11-24，E3 / E2-TL。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
+
+2026-11-24 E3/E2-TL 入口已实现，68/68 CPU 通过，完整命令见 [RUN_EFFICIENCY_VATL.md](RUN_EFFICIENCY_VATL.md)。GPU0 顺序测 GF-B/GF-L，GPU1 测已接受的 GF→VAT-B，GPU2 完整 GF-L→VAT-L；用户手动运行，尚无正式速度或新 VAT-L 指标。显式支持 GF-L 的用户收口来源，保持真实 3+4，不改 completed 标记。
 
 E0 已实现，32 项 CPU 工程检查通过。完整历史命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 初轮及续训、GF-B 均已回传核验。GF-L 已按用户决定在实际 support 3 + decoder 4 轮收口（最后一轮关机中断，不补跑），以 `459651a` 回传；按 Min L2 选第 2 轮，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。详见 [E1-L 审查](results/E1L_GF_INTERRUPTED_REVIEW.md)。尚无新的 GPU 效率成绩。
 
@@ -8,7 +10,7 @@ E0 已实现，32 项 CPU 工程检查通过。完整历史命令见 [RUN_DINOV3
 
 E2-T 已完成并通过 `170ace8` 回传：完整 GF-B Router/heatmap decoder→VAT-B，最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，用户接受，E2-H 分类头适配后移。GF-L 收口精度可用，当前接续同硬件效率与完整 GF-L Router→VAT-L，不先新增 GF-L dense。详见 [E2-T 审查](results/E2T_GF_TO_VAT_REVIEW.md)，[原运行命令](RUN_GF_ROUTER_TO_VAT.md)保留供复现。
 
-等待期 [旧快照](results/gfl_interim_20261123.json) 保留；当前以 [interrupted_summary.json](results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json) 为准。原 3+5 manifest 不变，报告明确 completed=false、user-closed、实际 3+4；指标来自选中完整 epoch 的 test，无独立复评或逐查询导出。已从 last 内嵌 best 导出标准 `best_test.pt`；下一实现需显式支持该收口来源，不能把本 JSON 直接传给要求 completed=true 的现有 transfer 命令。
+等待期 [旧快照](results/gfl_interim_20261123.json) 保留；当前以 [interrupted_summary.json](results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json) 为准。原 3+5 manifest 不变，报告明确 completed=false、user-closed、实际 3+4；指标来自选中完整 epoch 的 test，无独立复评或逐查询导出。已从 last 内嵌 best 导出标准 `best_test.pt`；新入口使用 --allow-closed-gf 显式接受该收口来源，核对 history/last/best 后继续，不修改 completed 标记。
 
 2026-11-23 E2-C 历史结果：原始 VAT dense 与 routed K100 精度差为 0；两组低 LR 固定 K50 各加 8 epochs 未超过旧 best，不继续原样加轮数。完整 GF-B Router→VAT 此后已恢复定位，GF-L 收口后接效率与完整 VAT-L 迁移。详见 [历史审查](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
@@ -77,7 +79,7 @@ VAT 的 B/L 都已有可用 decoder，因此不依赖本轮 GF 产物。先并�
 
 GF official test 的 4,782 张图均为单头查询，多人实验应使用 VAT test 中同一真实帧的多头标注，不从 train 挑样本充当 test 或伪造头框。union 与 repeat 都报告质量，固定 K 下不保证等价。现有官方 GF 精度报告没有逐查询预测，做配对统计前需补齐同查询 baseline 输出。
 
-DINOv3 独立预算评测、scene-only 与正式 benchmark 入口尚未实现；原 `benchmark_router_dinov2.py` 不能直接用于本轮 DINOv3 checkpoint。等待期间可先在本机完成入口和数据分组，服务器运行仍由用户手动执行，提供完整 nohup 命令后再跑。
+DINOv3 正式 benchmark 已实现，使用 `benchmark_router_dinov3.py` 与 `run_router_efficiency.py`；原 DINOv2 入口仅复用其计时器，不直接加载 DINOv3 权重。独立预算评测和 scene-only 入口接续，服务器仍由用户手动运行。
 
 使用已训练模型，在真实多人帧上按同时查询 1/2/3 人分层，比较 GazeLLE 的共享 dense 与 Router 的共享 sparse union；per-person repeat 仅作额外控制。导出真实 support、选中 patch、GT 与热图，保留定位退化样例。它们均不新增训练。
 
