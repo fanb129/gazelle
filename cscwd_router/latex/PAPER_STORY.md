@@ -262,9 +262,15 @@ GPU 1 的 B/L 队列均完成，各 support 3 + sparse decoder/inout 5 epochs。
 
 VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次没有改善 L2，仍保留旧 best，最终逐帧指标不变。原始 VAT dense 初始化/routed K100 的 rate-6 AUC 为 B `0.939097`、L `0.944592`，三项精度路径差均为 0；同口径选中 K50 的 AUC 为 `0.913401/0.922349`，下降仍在。当前不再用原样追加 decoder epochs 作为提升依据，接续预算响应与完整 GF Router→VAT 迁移；GF-L 继续训练，GF-B 可先测 E3。
 
+### 9.5 完整 GF-B Router→VAT-B（2026-11-23）
+
+结果提交 `170ace8` 已回传，详见 [E2-T 审查](../results/E2T_GF_TO_VAT_REVIEW.md)。继承 GF-B 的完整 Router 与热图 decoder，仅新增 in/out，K50、seed 0、冻结 backbone；8 epochs 中首轮固定 Router、后 7 轮联合适配。按 rate-6 test L2 选第 1 轮，最终 rate-1 AUC/L2/AP `0.940033/0.100131/0.883183`。相对旧 VAT-B 差 `+0.026485/-0.010840/-0.018555`，L2 相对降低 9.77%。选中模型的 Router 与 GF 来源逐值相同，因此证据支持完整 GF 迁移恢复定位，不能写成联合 VAT Router 更新改善定位。
+
+后续联合阶段提高 soft coverage 和 GT point coverage，但 hard Gaussian mass coverage 下降，L2 没有改善。Router、decoder 和 in/out token 同时更新，尚不能单独归因；AP 仍较低，主表应保留同一选中模型的三项指标。下一项优先仅适配分类头、保护定位；尚无同硬件正式效率结果，也不能将完整系统改善全部归因于人物条件化机制。
+
 ## 10. 论文组织与下一步
 
-用户当前优先提升 VAT，正式效率等待空闲卡。E2-T 已实现完整 GF-B Router/heatmap decoder→VAT：仅新建 in/out 分支，固定 K50，首轮固定 Router、后 7 轮以 coverage/BCE 联合适配，backbone 冻结。51 项 CPU 工程检查通过，尚无新真实数据结果；该训练配置是迁移适配，不扩展方法贡献或预写精度改善。命令见 `../RUN_GF_ROUTER_TO_VAT.md`，覆盖此前先安排预算响应/测速的顺序。
+用户当前优先提升 VAT，正式效率等待空闲卡。E2-T 已完成并恢复定位，当前优先 E2-H：从其 best 仅适配 `inout_head`，冻结共享 decoder 和 `inout_token`，改善 AP。该任务尚未实现或运行；迁移/分类适配属于训练配置，不扩展方法贡献。原迁移命令见 `../RUN_GF_ROUTER_TO_VAT.md`，不重复启动。
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 

@@ -240,3 +240,10 @@
 - decision: `cscwd_router/results/L_INITIALIZER_DECISION.md`; SHA256: `ec704574d5bfdfb130dcaf1bdcde320dae0a7f45d23b35bf9f697e51da785bda`。GF 记录提交的 last-layer/448 代码与 checkpoint 不一致，VAT 记录层号 `[4,11,17,23]` 与当前 `[5,11,17,23]` 不同；无 runtime 源码快照，精确历史层号未闭合。原 E0 keys/shape 检查不改写，但不再当作历史同配置认证。
 - PT 路径/SHA 与以往登记一致：GF-L `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt` / `7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af`；VAT-L `/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt` / `979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673`。工件留服务器，未下载权重到本机。
 - 本轮未修改 trainer/初始化注册、未停止进程、未新增训练或 model forward。GF-B→VAT-B 已由用户启动并继续优先；L 暂保留 warm-start 补充线，不新开两个 L dense，不切换 GazeSpot 主线。相关投稿政策来源链接与访问日期记录在报告中。
+
+## E2-T · GF-B→VAT-B 结果回传与审查（2026-11-23）
+
+- 服务器原始结果提交 `170ace87b6e0f80062d85fddf80b55439085e688` 已 push/pull；仅包含 5 份当前迁移 JSON 与对应 provenance block。5 份报告 SHA、本地 20 个源码 SHA 与服务器记录一致；本地 L 文档已 rebase 保留，原有目录迁移未纳入提交。
+- checks: `cscwd_router/results/e2t_gfb_to_vatb_server_checks.json`; SHA256: `98c4afe5ac4a142ab1939cde14e740cb041157c604f39801bc49dc10320352b2`。服务器只读 CPU 核对 20 个工件路径/SHA（14 个 PT/PTH/gzip）、52 个 GF 共享 tensors、8 轮真实更新和单 checkpoint 选模；31,978 条逐查询身份/标注一致，AUC/L2/AP 重聚合差值均 0。大工件路径与 SHA 见上方 `GF Router to VAT · vitb`，未下载或入 Git。
+- review: `cscwd_router/results/E2T_GF_TO_VAT_REVIEW.md`; SHA256: `584cd910b09fa0836cbf9ce361e7620b53cb8ab76feb6d066ca273466392a25b`。最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B 差 `+0.026485/-0.010840/-0.018555`，L2 相对降低 9.77%。选中第 1 轮，Router 仍为 GF 权重；后 7 轮联合适配未改善 L2。
+- 本轮未新增训练、模型 forward 或测速。下一任务 E2-H 优先仅适配 `inout_head`，冻结 Router、共享 decoder 与 `inout_token`，尚未实现或运行；效率等空闲卡。

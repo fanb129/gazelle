@@ -1,6 +1,6 @@
 # 完整 GF-B Router → VAT（E2-T）
 
-更新：2026-11-23。当前优先提升 VAT 精度，正式效率测试等待显卡空闲。此入口已实现，本机 51/51 CPU 检查通过；用户已在服务器启动 GF-B→VAT-B 迁移，当前不要重复启动。等待完整结果后再回传。
+更新：2026-11-23。E2-T 已完成，原始结果提交 `170ace8` 已 push/pull。逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`；按 test L2 选第 1 轮，Router 仍为 GF 权重，后 7 轮联合适配未超过它。详见 [结果审查](results/E2T_GF_TO_VAT_REVIEW.md)。以下命令保留供复现，不重复启动；下一项优先保护定位、仅适配分类头，尚未实现。正式效率等空闲卡。
 
 ## 1. 这轮迁移什么
 
@@ -28,7 +28,7 @@ AdamW：Router/decoder/in-out 初始 LR 分别为 `1e-4/1e-5/1e-3`，weight deca
 
 使用完整官方 train/test 序列，不划 val；train 与逐轮 test 都每 6 帧采样。按 test L2 最小选一个 checkpoint，并列按 AUC、更早 epoch；全部最终指标来自该模型，再自动 rate-1 全 test。初始化阶段另记一次 K50 test，in/out 尚为随机分支，仅诊断，不参与 checkpoint 选择。
 
-本次允许 Router 适配 VAT，与先前“冻结 VAT Router 继续训 decoder”的实验分开登记。当前不重复原续训，也不预写这次一定提升。
+本次允许 Router 适配 VAT，与先前“冻结 VAT Router 继续训 decoder”的实验分开登记。实际后 7 轮确有 Router 更新，但最佳来自冻结首轮，不将其写成 VAT 联合 Router 训练提升。
 
 ## 3. 更新代码
 

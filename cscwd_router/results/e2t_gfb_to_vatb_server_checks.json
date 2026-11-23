@@ -1,0 +1,246 @@
+{
+  "date": "2026-11-23",
+  "task": "E2-T_server_review",
+  "scope": "Read-only CPU artifact/tensor/protocol/export checks. No new model forward, training or GPU timing.",
+  "passed": true,
+  "context_fingerprint": "b4087e30ede8703e99108ed1999a2fc77b15179df002f89d7e4662ccd0191d49",
+  "report_sha256": {
+    "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/history.json": "81f4dfa37c1194eafccb2506196a119135181e8a78b1c3ceea18f7c61a0a9d57",
+    "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initial_test.json": "70ea02421a6800e7e043bf12522b0efd01285085675b30311b07f7fd1cf037b7",
+    "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initialization.json": "1f9d5661b2e511d6a81bd8849eed90bc8d13fb43f49f3e20cf558dab22c1be3b",
+    "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/manifest.json": "3cd3f27e3cebffe92bce50ad2470e73c1aaf0a963d2b203a92323baa4e70c405",
+    "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+  },
+  "source_sha256": {
+    "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+    "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+    "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+    "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+    "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+    "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+    "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+    "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+    "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/dinov3_transfer.py": "762c6ef8adc619d2020a2ddc1c5670b883dd6497992afd470a61866c3c52dcf6",
+    "cscwd_router/code/scripts/transfer_gf_router_to_vat.py": "7381e4cd9ae6fdb96d16c6f3b871d927994a9bf2663dca4535e3faf6d7e6acaa"
+  },
+  "artifacts": {
+    "gf_summary": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+      "sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0"
+    },
+    "gf_manifest": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/manifest.json",
+      "sha256": "edda71a597986a348c0eb95c2194086f753f83bdfbfbe0ee60a0914703c7ee66"
+    },
+    "gf_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt",
+      "sha256": "8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "initial_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/initial.pt",
+      "sha256": "55f377fa92e9eb69fccb08d786aa5acb26894490a61aa21b8a0b8fe43c99ae22"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+      "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/last.pt",
+      "sha256": "ddb893ed4bd634350efa907d05bc16a82d1d104f8585dde0457aa9d4314b3d8a"
+    },
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/predictions.jsonl.gz",
+      "sha256": "69902091898a541651604366e9b9b3d3a7570d4fd91fae023d403dba785bba49"
+    },
+    "manifest": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/manifest.json",
+      "sha256": "3cd3f27e3cebffe92bce50ad2470e73c1aaf0a963d2b203a92323baa4e70c405"
+    },
+    "history": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/history.json",
+      "sha256": "81f4dfa37c1194eafccb2506196a119135181e8a78b1c3ceea18f7c61a0a9d57"
+    },
+    "initialization_report": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initialization.json",
+      "sha256": "1f9d5661b2e511d6a81bd8849eed90bc8d13fb43f49f3e20cf558dab22c1be3b"
+    },
+    "initial_test_report": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initial_test.json",
+      "sha256": "70ea02421a6800e7e043bf12522b0efd01285085675b30311b07f7fd1cf037b7"
+    },
+    "epoch_0": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_0.pt",
+      "sha256": "f7a14b65f2d194a82fb279bc4b6f6dc39a188b0c22f82ae18e25377789daad3b"
+    },
+    "epoch_1": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_1.pt",
+      "sha256": "be2bd1ef12ed9def898f810b479b72a227460620877dae2d0e748e0fa6522dc2"
+    },
+    "epoch_2": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_2.pt",
+      "sha256": "f1cd1c8e566322afff5cca7d17886851e4c66403c8494f75331e4f16275c5e9b"
+    },
+    "epoch_3": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_3.pt",
+      "sha256": "1e22cdf626afb3573baa8bb6a39896f7d2aa186a82739ef0682150de07ff700f"
+    },
+    "epoch_4": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_4.pt",
+      "sha256": "0654c3cdb09530bb4e0e3a9491c11fcc318ecb6615c16f4e1b545afeeff9a912"
+    },
+    "epoch_5": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_5.pt",
+      "sha256": "17c81564c684c181ca382a9a78649dee3423b7b57024a4715d9593af322fd3dd"
+    },
+    "epoch_6": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_6.pt",
+      "sha256": "866750b1165ff18c3dcaf179fb9c0522ae1e6e9c00ec8907fd92d193f763ca20"
+    },
+    "epoch_7": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_7.pt",
+      "sha256": "45e9bd166acbb82eb2981b02b2a0fcd6ec80829f60cc0b540861cdde996cd1c8"
+    }
+  },
+  "artifact_paths_sha256_verified": 20,
+  "large_artifact_paths_sha256_verified": 14,
+  "shared_GF_tensors_identical": 52,
+  "new_inout_tensors": 5,
+  "epoch_tensor_checks": [
+    {
+      "epoch_one_based": 1,
+      "changed_tensors_vs_initial": {
+        "router": 0,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.1479177474975586
+    },
+    {
+      "epoch_one_based": 2,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.20956364274024963
+    },
+    {
+      "epoch_one_based": 3,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.22934022545814514
+    },
+    {
+      "epoch_one_based": 4,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.24459922313690186
+    },
+    {
+      "epoch_one_based": 5,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.2698137164115906
+    },
+    {
+      "epoch_one_based": 6,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.27234947681427
+    },
+    {
+      "epoch_one_based": 7,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.27624887228012085
+    },
+    {
+      "epoch_one_based": 8,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      },
+      "max_abs_change": 0.2750363349914551
+    }
+  ],
+  "optimizer_internal_steps": {
+    "router": [
+      4956
+    ],
+    "decoder": [
+      5664
+    ],
+    "inout": [
+      5664
+    ]
+  },
+  "selected_epoch_one_based": 1,
+  "selected_router_unchanged_from_GF": true,
+  "metrics": {
+    "auc": 0.9400325583571667,
+    "l2": 0.10013119593217963,
+    "inout_ap": 0.8831826381014405,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9632534495279593,
+    "routing_hard_coverage": 0.8694837984447039,
+    "routing_soft_coverage": 0.3591852730892633
+  },
+  "query_identity_and_annotation_matches": 31978,
+  "aggregate_differences": {
+    "auc": 0.0,
+    "l2": 0.0,
+    "inout_ap": 0.0,
+    "persons": 0,
+    "inframe_persons": 0
+  },
+  "checks": [
+    "full GF transfer",
+    "new inout initialization",
+    "8 epochs at K50",
+    "frozen backbone",
+    "warmup then joint parameter updates",
+    "per-epoch checkpoints and actual optimizer steps",
+    "test L2 single-checkpoint selection",
+    "final rate-1 test queries",
+    "source, annotation and artifact SHA256",
+    "exact aggregation of exported per-query metrics"
+  ],
+  "result_commit": "170ace87b6e0f80062d85fddf80b55439085e688",
+  "local_git_report_hash_matches": 5,
+  "local_source_file_hash_matches": 20
+}

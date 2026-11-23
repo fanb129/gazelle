@@ -8,9 +8,11 @@
 
 先读：
 
-L 来源更新先读 `results/L_INITIALIZER_DECISION.md` 与 `results/l_initializer_semantics_20261123.json`。用户怀疑 L 是旧单层；实际两组首末轮投影均 4096、无 SASA/GGSF，W&B 指向 DINOv3，但 GF 记录提交是 last-layer/448 与实物矛盾，VAT 记录源码的 `[4,11,17,23]` 也不同于当前 `[5,11,17,23]`。没有 runtime 快照，不能将 shape 兼容写成历史同配置认证，也不能直接判成单层。未改旧代码、未停止进程。GF-B→VAT-B 已启动，继续优先；L 暂保留 warm-start 补充，看 K75 test，不新开两个 L dense，不切 GazeSpot 主线。用户尚未下达停止 L 的明确指令。
+L 来源更新先读 `results/L_INITIALIZER_DECISION.md` 与 `results/l_initializer_semantics_20261123.json`。用户怀疑 L 是旧单层；实际两组首末轮投影均 4096、无 SASA/GGSF，W&B 指向 DINOv3，但 GF 记录提交是 last-layer/448 与实物矛盾，VAT 记录源码的 `[4,11,17,23]` 也不同于当前 `[5,11,17,23]`。没有 runtime 快照，不能将 shape 兼容写成历史同配置认证，也不能直接判成单层。未改旧代码、未停止进程。GF-B→VAT-B 已完成并恢复定位，B 继续优先；L 暂保留 warm-start 补充，不新开两个 L dense，不切 GazeSpot 主线。用户尚未下达停止 L 的明确指令。
 
-当前优先任务 E2-T 先读 `RUN_GF_ROUTER_TO_VAT.md` 与 `results/e2t_gf_to_vat_local_checks.json`。用户要求先提升 VAT，正式效率等待空闲卡。完整 GF-B Router/decoder→VAT 入口已实现，51/51 CPU 通过；8 epochs 固定 K50，首轮固定 Router、后 7 轮 coverage/BCE 联合适配，backbone 始终冻结，只有 in/out 新初始化。Router/decoder/inout LR 为 `1e-4/1e-5/1e-3`，seed 0。用户已启动真实 GF-B→VAT-B 迁移，等待完整结果，不重复启动。后续服务器任务仍由用户手动执行。此优先级覆盖旧预算响应/测速建议，原 GF-L 继续，不改旧 trainer 源码。
+最新先读 `results/E2T_GF_TO_VAT_REVIEW.md` 与 `results/e2t_gfb_to_vatb_server_checks.json`。E2-T 完整 GF-B Router/decoder→VAT-B 已完成并经 `170ace8` push/pull：最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。实际 8 epochs K50，首轮固定 Router、后 7 轮 coverage/BCE 联合适配；按 test L2 选第 1 轮，选中 Router 与 GF 逐值一致，不能宣称联合 VAT Router 适配提升。52 个共享 tensors、20 个工件 SHA、8 轮真实更新和全部 31,978 条逐查询记录核验通过，重聚合指标差均 0。原命令 `RUN_GF_ROUTER_TO_VAT.md` 保留供复现，不重复运行。
+
+下一任务优先 E2-H：从该 best 仅训练 post-transformer 的 `inout_head` MLP，冻结 backbone、Router、heatmap decoder 和 `inout_token`，保护定位、改善 AP。尚未实现或运行。现有 inout 参数组包含 `inout_token`，不能直接用 router/decoder LR=0 实现此控制；需独立参数范围和逐查询热图一致性检查，再给用户完整命令手动跑。正式效率等待空闲卡，原 GF-L 不擅停，旧 trainer 源码不改。
 
 0. `cscwd_router/EXPERIMENT_PLAN.md` 与 `RUN_DINOV3_TRAIN_TEST.md`：E0 四组配置、GPU 0/1 命令、输出与恢复。最新 GF-B/VAT 续训结果先读 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`，优先于 W1/W2 的历史预算。
 1. `cscwd_router/latex/PAPER_STORY.md`：当前 idea、行文与贡献边界。
@@ -21,7 +23,7 @@ L 来源更新先读 `results/L_INITIALIZER_DECISION.md` 与 `results/l_initiali
 
 当前论文完整方法采用冻结 DINOv3 ViT-B/16、ViT-L/16 + 多层 raw-concat + Router。DINOv3 和多层表示沿用，不作为相对在审 ICASSP 的新贡献。新增主张是 support、共同预算下的多人 sparse suffix、回填与实测权衡。Router 在 B block 5 / L block 11 后决策（0-based），不依赖尚未计算的深层特征；头框是身份/几何，头部外观不是已标定的 gaze direction。GazeLLE 原生已共享多人场景编码，不能描述成每人重复 backbone。
 
-E1-B / E2-C 最新结果先读 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`。GF-B 完成，GF-L 继续等待。服务器 W&B 已核对 VAT B/L 都是 GF dense→VAT dense 8 epochs→本轮新 Router，不是随机初始化；原 decoder LR `1e-5`，本轮用了 `1e-4`。独立低 LR 续训入口已实现，39 项 CPU 通过，原第 5 轮末继续 K50 各加 8 epochs，先测原始初始化 native dense/K100，旧 best 仍参与选模，详见 `RUN_VAT_CONTINUE.md`。续训已完成，各新增 8 epochs、5,664 次更新，但最低新 L2 未超过旧 best；最终指标不变。原始 dense/K100 三项精度差均 0。GF-B 第 5 轮 AUC/Avg/Min L2 为 `0.956236/0.101550/0.043420`，定位好于已回传的官方 B 报告，AUC 基本持平。结果提交 `8f2ae9c` 已 pull，13 份原始 JSON 与 29 个工件/标注路径已核验。下一步不再原样延长 VAT decoder，优先预算响应、完整 GF-B Router→VAT 迁移及 GF-B 的 E3 测速。原 E0 七个源码 SHA 不变；不要改旧目录的 epoch 数后 resume。GF 完成后可比较迁移整个 GF Router + decoder 到 VAT，而非只继承 dense decoder。
+E1-B / E2-C 历史结果见 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`。服务器 W&B 已核对 VAT B/L 都是 GF dense→VAT dense 8 epochs→本轮新 Router，不是随机初始化；原 decoder LR `1e-5`，本轮用了 `1e-4`。独立低 LR 续训已完成，各新增 8 epochs、5,664 次更新，但最低新 L2 未超过旧 best；最终指标不变。原始 dense/K100 三项精度差均 0。GF-B 第 5 轮 AUC/Avg/Min L2 为 `0.956236/0.101550/0.043420`，定位好于已回传的官方 B 报告，AUC 基本持平。结果提交 `8f2ae9c` 已 pull，13 份原始 JSON 与 29 个工件/标注路径已核验。原 E0 七个源码 SHA 不变；不要改旧目录的 epoch 数后 resume。完整 GF Router→VAT 迁移此后已完成，以最上方 E2-T 审查和 E2-H 下一步为准。
 
 旧 DINOv3 GF K50/matched dense AUC 为 `0.956462 / 0.957264`；旧 B8 `1.148545x` 相对自身 dense，且测速与正式准确率 checkpoint 不同。VAT K50/K75 的 source-video holdout 定位损失保留。尚未证明相对官方 GazeLLE 的统一速度优势。
 
