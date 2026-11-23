@@ -197,3 +197,27 @@
 - 已有 GF-B source checkpoint：`/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`。来源 summary：`cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json`; SHA256: `9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0`。沿用该完整 Router/heatmap decoder，不加载旧 VAT task weights；backbone 仍使用原 SHA 固定的 DINOv3。
 - 当前计划固定 K50、seed 0、8 epochs（1 轮固定 Router + 7 轮联合适配），LR `1e-4/1e-5/1e-3`。实际命令见 `RUN_GF_ROUTER_TO_VAT.md`；尚未执行真实 VAT 迁移训练，未生成新 PT/NPY 或精度/效率结果。
 - 实际新大工件将留服务器 `experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/`，含 initial、每轮、last/best PT 和逐查询 gzip；生成后自动登记路径/SHA。小报告写 `cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/`，由用户经 Git 回传。
+
+## GF Router to VAT · vitb
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json`; SHA256: `c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99`
+- gf_summary: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json`; SHA256: `9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0`
+- gf_manifest: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/manifest.json`; SHA256: `edda71a597986a348c0eb95c2194086f753f83bdfbfbe0ee60a0914703c7ee66`
+- gf_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- initial_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/initial.pt`; SHA256: `55f377fa92e9eb69fccb08d786aa5acb26894490a61aa21b8a0b8fe43c99ae22`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt`; SHA256: `c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/last.pt`; SHA256: `ddb893ed4bd634350efa907d05bc16a82d1d104f8585dde0457aa9d4314b3d8a`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/predictions.jsonl.gz`; SHA256: `69902091898a541651604366e9b9b3d3a7570d4fd91fae023d403dba785bba49`
+- manifest: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/manifest.json`; SHA256: `3cd3f27e3cebffe92bce50ad2470e73c1aaf0a963d2b203a92323baa4e70c405`
+- history: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/history.json`; SHA256: `81f4dfa37c1194eafccb2506196a119135181e8a78b1c3ceea18f7c61a0a9d57`
+- initialization_report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initialization.json`; SHA256: `1f9d5661b2e511d6a81bd8849eed90bc8d13fb43f49f3e20cf558dab22c1be3b`
+- initial_test_report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/initial_test.json`; SHA256: `70ea02421a6800e7e043bf12522b0efd01285085675b30311b07f7fd1cf037b7`
+- epoch_0: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_0.pt`; SHA256: `f7a14b65f2d194a82fb279bc4b6f6dc39a188b0c22f82ae18e25377789daad3b`
+- epoch_1: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_1.pt`; SHA256: `be2bd1ef12ed9def898f810b479b72a227460620877dae2d0e748e0fa6522dc2`
+- epoch_2: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_2.pt`; SHA256: `f1cd1c8e566322afff5cca7d17886851e4c66403c8494f75331e4f16275c5e9b`
+- epoch_3: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_3.pt`; SHA256: `1e22cdf626afb3573baa8bb6a39896f7d2aa186a82739ef0682150de07ff700f`
+- epoch_4: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_4.pt`; SHA256: `0654c3cdb09530bb4e0e3a9491c11fcc318ecb6615c16f4e1b545afeeff9a912`
+- epoch_5: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_5.pt`; SHA256: `17c81564c684c181ca382a9a78649dee3423b7b57024a4715d9593af322fd3dd`
+- epoch_6: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_6.pt`; SHA256: `866750b1165ff18c3dcaf179fb9c0522ae1e6e9c00ec8907fd92d193f763ca20`
+- epoch_7: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_7.pt`; SHA256: `45e9bd166acbb82eb2981b02b2a0fcd6ec80829f60cc0b540861cdde996cd1c8`
