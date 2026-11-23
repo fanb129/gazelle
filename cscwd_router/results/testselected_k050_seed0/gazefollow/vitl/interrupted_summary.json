@@ -1,0 +1,110 @@
+{
+  "completed": false,
+  "closed_by_user": true,
+  "checkpoint_export_complete": true,
+  "format": "cscwd_router_dinov3_interrupted_v1",
+  "dataset": "gazefollow",
+  "size": "l",
+  "termination": "server_shutdown_user_declined_last_epoch",
+  "model_config": {
+    "model": "gazelle_dinov3_vitl16",
+    "router_stage": "backbone_sparse",
+    "route_after_block": 11,
+    "keep_ratio": 0.5,
+    "router_hidden_dim": 256,
+    "router_temperature": 1.0,
+    "escape_tokens": 8,
+    "spatial_prior": "none",
+    "fusion": "raw_concat"
+  },
+  "selection_policy": "test_selected",
+  "selection": {
+    "epoch": 1,
+    "metric": "min_l2",
+    "metrics": {
+      "auc": 0.9600070985647116,
+      "avg_l2": 0.0940614169133612,
+      "min_l2": 0.03772149181701388,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9353261976420538,
+      "routing_hard_coverage": 0.8528800056799343,
+      "routing_soft_coverage": 0.4841950970469335
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "metrics": {
+    "auc": 0.9600070985647116,
+    "avg_l2": 0.0940614169133612,
+    "min_l2": 0.03772149181701388,
+    "persons": 4782,
+    "inframe_persons": 4782,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9353261976420538,
+    "routing_hard_coverage": 0.8528800056799343,
+    "routing_soft_coverage": 0.4841950970469335
+  },
+  "metrics_source": "selected_completed_epoch_test_history",
+  "independent_re_evaluation": false,
+  "per_query_predictions_available": false,
+  "selection_test_frame_rate": 1,
+  "training_epochs": {
+    "support": 3,
+    "sparse_decoder": 4
+  },
+  "planned_training_epochs": {
+    "support": 3,
+    "sparse_decoder": 5
+  },
+  "discarded_partial_epoch_one_based": 5,
+  "context_fingerprint": "40bbf83ebc5ed9b37bb300f35c4046fdc5d7b3e2d26c4a6411f9130f81cca0b4",
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "cuda_version": "12.4",
+    "cuda_visible_devices": "0",
+    "git_commit": "d1bbc380af4accd87bf2a76ad7acfc61e5eaadaf"
+  },
+  "artifacts": {
+    "initialization": {
+      "kind": "decoder",
+      "loaded_tensors": 40,
+      "router_reinitialized": true,
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+      "sha256": "7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+      "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+    },
+    "support_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/support/final.pt",
+      "sha256": "62d979a6d68753835ea14c704c95044094fb1947b47d340dfacd3fdb2b9f9832"
+    },
+    "support_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/support/last.pt",
+      "sha256": "cd147b2a8feeb88400c0f4547c40955e6c4b6feeedd35adb27c5d996505b2933"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt",
+      "sha256": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/last.pt",
+      "sha256": "589417842fffe946a17eb99dc7ad8b8b5da8141a471b2c6496fda99548c916ca"
+    }
+  },
+  "historical_initializer_semantics": "warm_start_exact_historical_layers_unresolved",
+  "closed_at_utc": "2026-11-23T13:48:13.579461+00:00"
+}

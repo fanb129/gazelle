@@ -221,3 +221,15 @@
 - epoch_5: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_5.pt`; SHA256: `17c81564c684c181ca382a9a78649dee3423b7b57024a4715d9593af322fd3dd`
 - epoch_6: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_6.pt`; SHA256: `866750b1165ff18c3dcaf179fb9c0522ae1e6e9c00ec8907fd92d193f763ca20`
 - epoch_7: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/epoch_7.pt`; SHA256: `45e9bd166acbb82eb2981b02b2a0fcd6ec80829f60cc0b540861cdde996cd1c8`
+
+## DINOv3 GF-L interrupted closure · 3 support + 4 decoder epochs
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json`; SHA256: `fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1`
+- protocol: seed 0; test-selected by Min L2 among 4 committed decoder epochs; K50, FP32, 4782 queries. Epoch 5 partial state discarded after server shutdown; user declined resuming. Original 3+5 manifest and last checkpoint unchanged.
+- metrics: AUC/Avg/Min L2 0.960007098565/0.094061416913/0.037721491817; selected decoder epoch 2. Values read from completed epoch test; no new forward or per-query export. Training is not marked complete.
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt`; SHA256: `7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`
+- support_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/support/final.pt`; SHA256: `62d979a6d68753835ea14c704c95044094fb1947b47d340dfacd3fdb2b9f9832`
+- support_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/support/last.pt`; SHA256: `cd147b2a8feeb88400c0f4547c40955e6c4b6feeedd35adb27c5d996505b2933`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt`; SHA256: `0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/last.pt`; SHA256: `589417842fffe946a17eb99dc7ad8b8b5da8141a471b2c6496fda99548c916ca`
