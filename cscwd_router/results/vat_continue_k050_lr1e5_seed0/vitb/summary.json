@@ -1,0 +1,108 @@
+{
+  "completed": true,
+  "format": "cscwd_router_dinov3_continuation_v1",
+  "dataset": "vat",
+  "size": "b",
+  "model_config": {
+    "model": "gazelle_dinov3_vitb16_inout",
+    "router_stage": "backbone_sparse",
+    "route_after_block": 5,
+    "keep_ratio": 0.5,
+    "router_hidden_dim": 256,
+    "router_temperature": 1.0,
+    "escape_tokens": 8,
+    "spatial_prior": "none",
+    "fusion": "raw_concat"
+  },
+  "selection_policy": "test_selected",
+  "selection": {
+    "epoch": 3,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9134005690300706,
+      "l2": 0.1108420357773689,
+      "inout_ap": 0.9006302000511006,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9379603399433428,
+      "routing_hard_coverage": 0.7579903640169597,
+      "routing_soft_coverage": 0.36741238791659137
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ],
+    "origin": "parent"
+  },
+  "selection_test_frame_rate": 6,
+  "final_test_frame_rate": 1,
+  "metrics": {
+    "auc": 0.913547582115387,
+    "l2": 0.11097111689305349,
+    "inout_ap": 0.9017375480030396,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9375938029532801,
+    "routing_hard_coverage": 0.756200951283707,
+    "routing_soft_coverage": 0.3672394179957622
+  },
+  "additional_epochs": 8,
+  "parent_decoder_epochs": 5,
+  "optimizer_policy": "fresh_low_lr_from_parent_last",
+  "parent_best_included_in_selection": true,
+  "context_fingerprint": "1c2fc8812bcbb84054e470c347d92f48c708496a6f6ebec243f1179a529f9d3f",
+  "artifacts": {
+    "parent_summary": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitb/summary.json",
+      "sha256": "ffaf51153d32c8519ea60bdb92dca15f2ce9172841e244499bb7a2e1cdfd86f6"
+    },
+    "parent_last": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/last.pt",
+      "sha256": "f36e4ecc95cb550b8f7f88152b9c101de84d10e2e82a3b4a208d5edf780d7d28"
+    },
+    "parent_best": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/best_test.pt",
+      "sha256": "e30cb35b572dc129b766cb2e6d9500345594f312664d71d748393ced8a430261"
+    },
+    "initialization": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt",
+      "sha256": "db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/best_test.pt",
+      "sha256": "fb71bae80105fba1d825df7d027cbe428eb93b13765b2c4255470102fb361136"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/last.pt",
+      "sha256": "8199198372bf754162191cf0bff39450481174184f2605dbc00401071d04b8fb"
+    },
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/predictions.jsonl.gz",
+      "sha256": "37a3514a1d02b7b2322e251824eb1be0daba299bf456b38a150be78886cf91fb"
+    },
+    "probes": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitb/probes.json",
+      "sha256": "7f9a890cb727bdc3447adbe461d212538272c35a441dc601582e1e609f0221fe"
+    }
+  },
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "cuda_version": "12.4",
+    "cuda_visible_devices": "1",
+    "git_commit": "d1bbc380af4accd87bf2a76ad7acfc61e5eaadaf"
+  }
+}

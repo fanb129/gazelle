@@ -1,0 +1,86 @@
+[
+  {
+    "epoch": 0,
+    "train": {
+      "loss": 2.055083934280142,
+      "persons": 113458,
+      "optimizer_steps": 7092,
+      "seconds": 2561.089939952013,
+      "train_keep_ratio": 0.25,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 463105,
+        "decoder_and_inout": 0
+      }
+    },
+    "test": {
+      "auc": 0.8948792200103105,
+      "avg_l2": 0.22429134861167235,
+      "min_l2": 0.16122306838800501,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9316602928198049,
+      "routing_hard_coverage": 0.8455780216312369,
+      "routing_soft_coverage": 0.39628759528841745
+    }
+  },
+  {
+    "epoch": 1,
+    "train": {
+      "loss": 1.8657458157955358,
+      "persons": 113458,
+      "optimizer_steps": 7092,
+      "seconds": 2056.931046721991,
+      "train_keep_ratio": 0.25,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 463105,
+        "decoder_and_inout": 0
+      }
+    },
+    "test": {
+      "auc": 0.8956777946764699,
+      "avg_l2": 0.22624755144944297,
+      "min_l2": 0.16190110310169814,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9395351994750062,
+      "routing_hard_coverage": 0.8558403984217003,
+      "routing_soft_coverage": 0.3806676492437764
+    }
+  },
+  {
+    "epoch": 2,
+    "train": {
+      "loss": 1.763126338042437,
+      "persons": 113458,
+      "optimizer_steps": 7092,
+      "seconds": 1642.9353381280089,
+      "train_keep_ratio": 0.25,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 463105,
+        "decoder_and_inout": 0
+      }
+    },
+    "test": {
+      "auc": 0.8934536154184768,
+      "avg_l2": 0.23690179086619473,
+      "min_l2": 0.17201954770062136,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9457808150980969,
+      "routing_hard_coverage": 0.871910231201183,
+      "routing_soft_coverage": 0.46733457956888447
+    }
+  }
+]

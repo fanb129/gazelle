@@ -144,3 +144,40 @@
 - 追溯只读服务器两组精确 W&B config、summary、output，源文件路径/SHA 与白名单配置写入 trace；确认 GF dense→VAT dense→新 Router。旧末轮 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，不改写为当前逐帧复测。MM Table 4 的 B raw-concat `0.937/0.103` 作为原稿参照。
 - 新入口本机 39/39 CPU 通过（7 项新增、32 项回归），原 E0 七个源码 SHA 未改。三个新源码 SHA 与环境在工程报告；命令见 `RUN_VAT_CONTINUE.md`。本轮未新增真实训练或 GPU 推理，没有新 PT/NPY。
 - 待执行续训从原 VAT last 出发，固定 K50，各加 8 epochs，decoder LR `1e-5`、in/out LR `1e-4`，base seed 0；旧 best 保留参与选模。实际新工件写服务器 `experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/`，实际生成后登记路径/SHA。
+
+## DINOv3 test-selected · gazefollow / b
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json`; SHA256: `9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0`
+- protocol: official train/test, no validation; FP32 accuracy; frozen backbone
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt`; SHA256: `26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- support_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/support/final.pt`; SHA256: `7b76f7901b2a9df359e28700b5205cb962251aa7d8c44a4f8e9663a2851fd4dd`
+- support_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/support/last.pt`; SHA256: `25fb2a77961a27e15c47f9db733815f346c4f8813837b3d5f5003c33379b5e35`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/last.pt`; SHA256: `f1d1bdef1288299c03cb437494336bbf7fcfe8db60a47c904c857e4bd7facd5e`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/predictions.jsonl.gz`; SHA256: `4de860fbf3a1458299725764f0299783b0f2ea5d4818456a186c5144526bafe9`
+
+## DINOv3 K50 continuation · vat / b
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitb/summary.json`; SHA256: `b5ec2cb26d85e3af5304a95e9f8e6965bfe5c49ac50ef227abcfc7d12abadd6f`
+- parent_summary: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitb/summary.json`; SHA256: `ffaf51153d32c8519ea60bdb92dca15f2ce9172841e244499bb7a2e1cdfd86f6`
+- parent_last: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/last.pt`; SHA256: `f36e4ecc95cb550b8f7f88152b9c101de84d10e2e82a3b4a208d5edf780d7d28`
+- parent_best: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitb/sparse_decoder/best_test.pt`; SHA256: `e30cb35b572dc129b766cb2e6d9500345594f312664d71d748393ced8a430261`
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_vat_baseline/2026-03-11_19-58-20/epoch_7.pt`; SHA256: `db09c5605300cd31c5ff7030d8e2f468aafb1e215f556c1a05daf8fb034bff0d`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/best_test.pt`; SHA256: `fb71bae80105fba1d825df7d027cbe428eb93b13765b2c4255470102fb361136`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/last.pt`; SHA256: `8199198372bf754162191cf0bff39450481174184f2605dbc00401071d04b8fb`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitb/predictions.jsonl.gz`; SHA256: `37a3514a1d02b7b2322e251824eb1be0daba299bf456b38a150be78886cf91fb`
+- probes: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitb/probes.json`; SHA256: `7f9a890cb727bdc3447adbe461d212538272c35a441dc601582e1e609f0221fe`
+
+## DINOv3 K50 continuation · vat / l
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitl/summary.json`; SHA256: `bfc810c6891875d1b4d40590c5fb4fca98f52aa719a8b8bf50080bac3d82fb23`
+- parent_summary: `/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/vat/vitl/summary.json`; SHA256: `e30a2e445e2daea3b65e610780431d4c727db5a9d8c48f44e428cd6864793e9d`
+- parent_last: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/last.pt`; SHA256: `8dc27dd226688d3163e73199d86c2334410f1b08853a65b675decb9bb078d922`
+- parent_best: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/vat/vitl/sparse_decoder/best_test.pt`; SHA256: `6e3c799f2a9bb24f5083896e788935b0623e728e69a8a6fa966fb22ccefae1c8`
+- initialization: `/home/fb/src/paper/gazelleV1/experiments/train_vat_vitl/2026-02-02_09-44-48/epoch_7.pt`; SHA256: `979ddf804cc6b91821e2899c5bb9f1e92dec6a1136f25b26cb3d62a41d25b673`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitl/best_test.pt`; SHA256: `917827fa57c93a3a3cc0941888feb328c54d389cfbe37d7809a6a6af131de704`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitl/last.pt`; SHA256: `ebc9fac2fa0864e366f789ee22aea9540512ef82ee31f0840d5aa3e6cbd88c61`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitl/predictions.jsonl.gz`; SHA256: `3d846164c55ff72568a77b9f6509c7fb6fae0c7e19960ccc824fdb6b04f9a152`
+- probes: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitl/probes.json`; SHA256: `c8ff5ea247e283aec0a9e694dca951dc61922fc0748d76f93d3222938ac7cdf1`

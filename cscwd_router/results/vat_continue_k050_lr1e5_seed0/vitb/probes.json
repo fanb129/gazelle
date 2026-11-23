@@ -1,0 +1,35 @@
+{
+  "context_fingerprint": "1c2fc8812bcbb84054e470c347d92f48c708496a6f6ebec243f1179a529f9d3f",
+  "test_frame_rate": 6,
+  "initialization_native_dense": {
+    "auc": 0.9390974756461016,
+    "l2": 0.10301174771675299,
+    "inout_ap": 0.8936109924690934,
+    "persons": 5461,
+    "inframe_persons": 3530,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 1.0,
+    "routing_gt_point_coverage": 1.0,
+    "routing_hard_coverage": 0.9999999999831148,
+    "routing_soft_coverage": 0.36741238791659137
+  },
+  "initialization_routed_k100": {
+    "auc": 0.9390974756461016,
+    "l2": 0.10301174771675299,
+    "inout_ap": 0.8936109924690934,
+    "persons": 5461,
+    "inframe_persons": 3530,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 1.0,
+    "routing_gt_point_coverage": 1.0,
+    "routing_hard_coverage": 0.9999999999831148,
+    "routing_soft_coverage": 0.36741238791659137
+  },
+  "routed_minus_dense": {
+    "auc": 0.0,
+    "l2": 0.0,
+    "inout_ap": 0.0
+  }
+}

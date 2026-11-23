@@ -1,0 +1,70 @@
+{
+  "task": "T3_evaluation",
+  "stage": "dense_official",
+  "mode": "dense",
+  "split": "official_test",
+  "checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/dense_official/final.pt",
+    "sha256": "26d1c421689ad827c5bd633392cc31896a6593834d67ea122fbd134b776ec851"
+  },
+  "data": {
+    "protocol": "official_test",
+    "official_test_accessed": true,
+    "annotation_path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+    "annotation_sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+  },
+  "metrics": {
+    "auc": 0.9561412871482122,
+    "avg_l2": 0.10413584813688277,
+    "min_l2": 0.04533155385889593,
+    "persons": 4782,
+    "images": 4782,
+    "query_unit": "image_with_all_heads",
+    "precision": "fp32",
+    "routing_gt_point_coverage": 1.0,
+    "head_count_strata": {
+      "single": {
+        "auc": 0.9561412871482122,
+        "avg_l2": 0.10413584813688277,
+        "min_l2": 0.04533155385889593,
+        "persons": 4782
+      },
+      "two": {
+        "persons": 0,
+        "auc": null,
+        "avg_l2": null,
+        "min_l2": null
+      },
+      "three_plus": {
+        "persons": 0,
+        "auc": null,
+        "avg_l2": null,
+        "min_l2": null
+      }
+    }
+  },
+  "training_signature": "cc84e12f89134300b83f93ecc319495ce696d0e0c53f62bd39130712d978eae6",
+  "git_commit": "1ef15203ab158aab4a0a8f5e1e7e85cb824422a4",
+  "argv": [
+    "/home/fb/src/paper/gazelleV1/cscwd_router/code/scripts/eval_router_dinov2.py",
+    "--checkpoint",
+    "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/dense_official/final.pt",
+    "--split",
+    "official_test",
+    "--data-path",
+    "/newhome/fb/dataset/gazefollow_extended",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "8",
+    "--workers",
+    "8",
+    "--output",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/t4_gf_fulltrain_seed3106/accuracy/dense_official.json",
+    "--provenance",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md"
+  ],
+  "batch_size": 8,
+  "torch": "2.6.0+cu124",
+  "precision": "fp32"
+}
