@@ -84,6 +84,8 @@
 
 **E3-B 两组 B 正式效率审查（2026-11-24）**：已完成 GF-B/VAT-B 各 B1/B8 正反序，12 份 JSON/MD 经隔离 worktree 提交 `85210b5` push/pull，本机原始报告 SHA 与 50 个版本化源码检查通过。8 个单元/24 组 token trace、权重/输入/源码/GPU 和汇总核验一致，原目录 HEAD/代码保持不变。相对官方 GazeLLE 的 latency speedup 为 GF B1/B8 `0.7822/0.9918×`，VAT `0.8255/1.0251×`；B1 延迟增加27.84%/21.13%，B8 GF基本持平、VAT小幅快2.5%。相对同一路由 K100，B8为1.2519/1.2559×；B8峰值 allocated memory约857MiB，官方约538MiB，高59.5%。报告 `results/E3_B_EFFICIENCY_REVIEW.md`、检查 `results/e3_b_efficiency_server_checks.json`；本轮未新增 GPU forward 或训练。当前不支持 B 完整系统明显更快/更省显存的表述。
 
+**E3-P0 推理与效率说明（2026-11-24）**：完整推理流程、算术缩减与硬件耗时的区别、历史B1阶段证据和优化顺序已写入 `cscwd_router/results/E3_INFERENCE_AND_OPTIMIZATION.md`，来源/SHA与推导在 `results/e3_efficiency_explanation_evidence.json`。GF-B B8的K100额外路径差额14.00ms与K50节省13.56ms相抵，解释了相对官方基本持平；旧B1中Router约占插桩时间13–14%，suffix缩短未兑现等比例时间收益。优先当前checkpoint分段profile和同权重native控制，再做保持语义的融合/复制/全一门快路径；本轮仅源码与既有报告分析，没有新GPU测量或优化结果。
+
 ## 下一步
 
 1. 在独立目录为 GPU1 准备同 checkpoint 的阶段 profile、native DINOv3 full-token 推理控制与等价快路径验证，定位 prefix/Router/suffix/回填/融合/decoder 成本。静态候选包括 none 门控乘全一、四层 repeat/cat；先验证输出和精度，再测收益，不新增 dense 训练。GF-L/VAT-L 按原任务接续并回传审查。

@@ -303,3 +303,11 @@
 - benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth`; SHA256: `0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73`。留服务器，未入Git。
 - benchmark weight: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt`; SHA256: `c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b`。留服务器，未入Git。
 - benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14_inout.pt`; SHA256: `451f76e5a1fa14429283d8612785d9aa94362f4754cb8a27d650482e3a2ac00e`。留服务器，未入Git。
+
+## E3-P0 · 推理流程与效率解释（2026-11-24）
+
+- explanation: `cscwd_router/results/E3_INFERENCE_AND_OPTIMIZATION.md`; SHA256: `6d661935acec7312a127acbf64c1edc4f00cbd7ac5c609b42855de0fd720668b`。
+- evidence: `cscwd_router/results/e3_efficiency_explanation_evidence.json`; SHA256: `994d19df83f06f1f4e81fe6577439b3aca49d45e6099bab4b047a2d68e3475d4`。包含既有B矩阵的延迟差额重算、两份历史B1诊断的元数据/median/源路径/SHA，以及明确标成非实测的blocks主要MACs公式推导。
+- historical source: `/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.json`; SHA256: `37bc4231fb47fab40c5af85c80cfe7aaea30295cf6676a012a972f08ba037118`。
+- historical source: `/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.json`; SHA256: `c883f2445bbd211d20ff6fecf9769d01968f1fb9af3140993d6bd062d7148cfa`。
+- 本轮仅CPU源码/既有结果分析，无新GPU forward、训练或计时。历史profile是旧seed3106、dummy输入、B1、AMP cache开启；当前正式矩阵是seed0真实输入、cache关闭。历史阶段不替代当前checkpoint分段结果。优化尚未实施，不填写收益。

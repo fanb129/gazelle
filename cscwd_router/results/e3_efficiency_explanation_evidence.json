@@ -1,0 +1,273 @@
+{
+  "date": "2026-11-24",
+  "kind": "explanation_of_existing_measurements_and_analytical_estimates",
+  "new_gpu_measurements": false,
+  "historical_stage_profiles": [
+    {
+      "server_path": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.json",
+      "sha256": "37bc4231fb47fab40c5af85c80cfe7aaea30295cf6676a012a972f08ba037118",
+      "metadata": {
+        "amp": true,
+        "amp_dtype": "float16",
+        "autocast_weight_cache_enabled": true,
+        "batch_size": 1,
+        "checkpoint": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt",
+        "checkpoint_epoch": 4,
+        "checkpoint_git_commit": "188fd423c5fe21898a05e8ca25d5f79bd8028860",
+        "checkpoint_loading_and_image_h2d_excluded": true,
+        "cuda_version": "12.4",
+        "cudnn_version": 90100,
+        "device": "cuda",
+        "device_name": "NVIDIA GeForce RTX 3090",
+        "e2e_iters": 100,
+        "image_size": [
+          512,
+          512
+        ],
+        "input_source": "fixed_seed_dummy_preloaded_on_device",
+        "instrumented_stage_times_are_diagnostic_only": true,
+        "num_people_per_image": 1,
+        "parameter_requires_grad_equalized_for_autocast_cache": true,
+        "profile_iters": 100,
+        "profiled_forward_output_checked_against_normal": true,
+        "repeats": 5,
+        "script": "scripts/profile_coverage_router_stages.py",
+        "stage_events_synchronize_only_after_complete_forward": true,
+        "torch_version": "2.6.0+cu124",
+        "warmup_iters": 50
+      },
+      "variants": [
+        {
+          "variant": "k100",
+          "keep_ratio": 1,
+          "tokens": {
+            "dense_patch_tokens": 1024,
+            "kept_patch_tokens": 1024,
+            "patch_grid": [
+              32,
+              32
+            ],
+            "route_after_block": 5,
+            "special_tokens": 5,
+            "suffix_sequence_tokens": 1029
+          },
+          "e2e_uninstrumented_median_ms": 21.189073100686073,
+          "diagnostic_stage_medians_ms": {
+            "decoder": 3.063264012336731,
+            "instrumented_full_cuda": 22.42959976196289,
+            "phase_sum": 21.91502394154668,
+            "prefix_blocks": 7.171087980270386,
+            "prefix_maps": 0.19046399742364883,
+            "route_map": 0.11059200018644333,
+            "router": 2.9961599111557007,
+            "scatter_norm": 0.3513760045170784,
+            "sparse_prepare": 0.15039999783039093,
+            "suffix_blocks": 7.183440029621124,
+            "token_prepare_rope": 0.6749280095100403,
+            "unattributed": 0.5051038824021816
+          }
+        },
+        {
+          "variant": "k50",
+          "keep_ratio": 0.5,
+          "tokens": {
+            "dense_patch_tokens": 1024,
+            "kept_patch_tokens": 512,
+            "patch_grid": [
+              32,
+              32
+            ],
+            "route_after_block": 5,
+            "special_tokens": 5,
+            "suffix_sequence_tokens": 517
+          },
+          "e2e_uninstrumented_median_ms": 20.62631002627313,
+          "diagnostic_stage_medians_ms": {
+            "decoder": 3.0295679569244385,
+            "instrumented_full_cuda": 22.185471534729004,
+            "phase_sum": 21.422255927696824,
+            "prefix_blocks": 7.150319993495941,
+            "prefix_maps": 0.11574399843811989,
+            "route_map": 0.11059200018644333,
+            "router": 2.964479923248291,
+            "scatter_norm": 0.3866880014538765,
+            "sparse_prepare": 0.14697600156068802,
+            "suffix_blocks": 6.7899839878082275,
+            "token_prepare_rope": 0.6650879979133606,
+            "unattributed": 0.7758077066391706
+          }
+        }
+      ]
+    },
+    {
+      "server_path": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.json",
+      "sha256": "c883f2445bbd211d20ff6fecf9769d01968f1fb9af3140993d6bd062d7148cfa",
+      "metadata": {
+        "amp": true,
+        "amp_dtype": "float16",
+        "autocast_weight_cache_enabled": true,
+        "batch_size": 1,
+        "checkpoint": "/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/best_val_selection.pt",
+        "checkpoint_epoch": 4,
+        "checkpoint_git_commit": "188fd423c5fe21898a05e8ca25d5f79bd8028860",
+        "checkpoint_loading_and_image_h2d_excluded": true,
+        "cuda_version": "12.4",
+        "cudnn_version": 90100,
+        "device": "cuda",
+        "device_name": "NVIDIA GeForce RTX 3090",
+        "e2e_iters": 100,
+        "image_size": [
+          512,
+          512
+        ],
+        "input_source": "fixed_seed_dummy_preloaded_on_device",
+        "instrumented_stage_times_are_diagnostic_only": true,
+        "num_people_per_image": 1,
+        "parameter_requires_grad_equalized_for_autocast_cache": true,
+        "profile_iters": 100,
+        "profiled_forward_output_checked_against_normal": true,
+        "repeats": 5,
+        "script": "scripts/profile_coverage_router_stages.py",
+        "stage_events_synchronize_only_after_complete_forward": true,
+        "torch_version": "2.6.0+cu124",
+        "warmup_iters": 50
+      },
+      "variants": [
+        {
+          "variant": "k50",
+          "keep_ratio": 0.5,
+          "tokens": {
+            "dense_patch_tokens": 1024,
+            "kept_patch_tokens": 512,
+            "patch_grid": [
+              32,
+              32
+            ],
+            "route_after_block": 5,
+            "special_tokens": 5,
+            "suffix_sequence_tokens": 517
+          },
+          "e2e_uninstrumented_median_ms": 26.76674211397767,
+          "diagnostic_stage_medians_ms": {
+            "decoder": 3.783023953437805,
+            "instrumented_full_cuda": 28.284415245056152,
+            "phase_sum": 27.361456159502268,
+            "prefix_blocks": 9.004831969738007,
+            "prefix_maps": 0.27291199564933777,
+            "route_map": 0.1361279934644699,
+            "router": 3.9552000761032104,
+            "scatter_norm": 0.4824959933757782,
+            "sparse_prepare": 0.19548799842596054,
+            "suffix_blocks": 8.731552064418793,
+            "token_prepare_rope": 0.8648799955844879,
+            "unattributed": 0.9307519607245922
+          }
+        },
+        {
+          "variant": "k100",
+          "keep_ratio": 1,
+          "tokens": {
+            "dense_patch_tokens": 1024,
+            "kept_patch_tokens": 1024,
+            "patch_grid": [
+              32,
+              32
+            ],
+            "route_after_block": 5,
+            "special_tokens": 5,
+            "suffix_sequence_tokens": 1029
+          },
+          "e2e_uninstrumented_median_ms": 26.150451507419348,
+          "diagnostic_stage_medians_ms": {
+            "decoder": 3.6771841049194336,
+            "instrumented_full_cuda": 27.56716823577881,
+            "phase_sum": 26.996288131922483,
+            "prefix_blocks": 8.774672031402588,
+            "prefix_maps": 0.25406400486826897,
+            "route_map": 0.13209599256515503,
+            "router": 3.8181920051574707,
+            "scatter_norm": 0.44603199511766434,
+            "sparse_prepare": 0.187391996383667,
+            "suffix_blocks": 8.807503998279572,
+            "token_prepare_rope": 0.8180799782276154,
+            "unattributed": 0.5918398275971413
+          }
+        }
+      ]
+    }
+  ],
+  "historical_stage_scope": "Old seed3106 split-clean checkpoint, dummy input, B1, AMP cache enabled. Diagnostic only; not stage measurements for the current seed0 selected checkpoints.",
+  "analytical_compute": {
+    "kind": "derived_estimate_not_measured_whole_model_FLOPs",
+    "comparison": "Same DINOv3 Transformer blocks, routed K50 versus full-token K100; excludes Router, patch embedding, norms, RoPE, gather/scatter, four-map reconstruction/fusion and decoder.",
+    "full_sequence_tokens": 1029,
+    "sparse_sequence_tokens": 517,
+    "fraction_blocks_sparse": 0.5,
+    "linear_token_scaled_ratio": 0.7512147716229349,
+    "quadratic_attention_ratio": 0.6262177229631266,
+    "dominant_block_MAC_formula": "C(N,D) = 12*N*D^2 + 2*N^2*D; MLP expansion ratio 4",
+    "architecture_source": "Read-only server inspection: /home/fb/src/paper/gazelleV1/dinov3/dinov3/hub/backbones.py, dinov3_vitb16 and dinov3_vitl16: ffn_layer=mlp, ffn_ratio=4, dimensions 768/1024, depths 12/24.",
+    "dominant_block_MAC_ratios": {
+      "768": 0.7283973220804579,
+      "1024": 0.7332833673191649
+    }
+  },
+  "measured_total_latency_accounting": [
+    {
+      "dataset": "gazefollow",
+      "batch_size": 1,
+      "summary_path": "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/summary.json",
+      "summary_sha256": "e1291a857968c3e4336feecbad1c0ba41f428b23d1b1d83f1b81844687b7479e",
+      "batch_latency_ms": {
+        "official": 17.930878345720416,
+        "k100": 23.31707197121724,
+        "k50": 22.923391578615817
+      },
+      "aggregate_fulltoken_architecture_and_implementation_difference_ms": 5.386193625496823,
+      "k100_to_k50_saved_ms": 0.3936803926014214,
+      "net_k50_minus_official_ms": 4.992513232895401
+    },
+    {
+      "dataset": "gazefollow",
+      "batch_size": 8,
+      "summary_path": "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/summary.json",
+      "summary_sha256": "e1291a857968c3e4336feecbad1c0ba41f428b23d1b1d83f1b81844687b7479e",
+      "batch_latency_ms": {
+        "official": 53.37572544664251,
+        "k100": 67.3776652790526,
+        "k50": 53.818400323971694
+      },
+      "aggregate_fulltoken_architecture_and_implementation_difference_ms": 14.00193983241008,
+      "k100_to_k50_saved_ms": 13.559264955080899,
+      "net_k50_minus_official_ms": 0.442674877329182
+    },
+    {
+      "dataset": "vat",
+      "batch_size": 1,
+      "summary_path": "cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/summary.json",
+      "summary_sha256": "b16a417d4c5a8a5882161e8d1f7a3efc819bebc85f54714e4629fbd1f60916cb",
+      "batch_latency_ms": {
+        "official": 17.940777255434654,
+        "k100": 21.859976954624248,
+        "k50": 21.73228811345656
+      },
+      "aggregate_fulltoken_architecture_and_implementation_difference_ms": 3.919199699189594,
+      "k100_to_k50_saved_ms": 0.1276888411676893,
+      "net_k50_minus_official_ms": 3.791510858021905
+    },
+    {
+      "dataset": "vat",
+      "batch_size": 8,
+      "summary_path": "cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/summary.json",
+      "summary_sha256": "b16a417d4c5a8a5882161e8d1f7a3efc819bebc85f54714e4629fbd1f60916cb",
+      "batch_latency_ms": {
+        "official": 51.60116208218987,
+        "k100": 63.21722899122793,
+        "k50": 50.33692525145739
+      },
+      "aggregate_fulltoken_architecture_and_implementation_difference_ms": 11.616066909038054,
+      "k100_to_k50_saved_ms": 12.88030373977054,
+      "net_k50_minus_official_ms": -1.2642368307324858
+    }
+  ]
+}

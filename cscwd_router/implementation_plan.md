@@ -249,6 +249,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：两组 `results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/`、`results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/`，审查 `results/E3_B_EFFICIENCY_REVIEW.md`，检查 `results/e3_b_efficiency_server_checks.json`。GF官方/K50批次延迟 B1 `17.9309/22.9234ms`、B8 `53.3757/53.8184ms`；VAT B1 `17.9408/21.7323ms`、B8 `51.6012/50.3369ms`。对应speedup `0.7822/0.9918×` 和 `0.8255/1.0251×`；相对K100 B8为 `1.2519/1.2559×`。B8峰值显存约857 vs538MiB，高59.5%。12报告SHA、50个版本化源码、8个source/weight路径（6个PT/PTH）、2份标注、16个RGB与24组token trace核对通过。
 - **下一步**：B 当前不写成相对 GazeLLE 明显更快或更省显存。优先GPU1分阶段profile及同权重native full-token控制；检查 none 全一乘法、四层 repeat/cat 等具体开销，在新代码目录验证原版/快路径的输出、精度和实测效率，不新增 dense 训练。GF-L/VAT-L按原任务接续，旧DINOv2 gate不套用本轮。
 
+### 2026-11-24 · E3-P0：推理流程与效率解释落盘
+
+- **完成内容**：逐段核对当前 RGB→dense prefix→人物 support/max-union→TopK→sparse suffix→early-exit fill→四层融合→完整 decoder 的执行路径，只读取得两份旧 B1 阶段报告，区分当前整网实测、历史分段诊断与理论 MACs 推导。明确原生 DINOv3 full-token 推理控制不需要新增 dense 训练。
+- **产出文件与数字**：`results/E3_INFERENCE_AND_OPTIMIZATION.md`、`results/e3_efficiency_explanation_evidence.json`。既有 GF-B B8 的额外全 token 路径差额 14.00ms，被 K100→K50 节省的13.56ms抵消；VAT-B对应11.62/12.88ms。旧B1 Router约占插桩时间13–14%，suffix减半patch后的时间并未减半。约27%的blocks主要MACs缩减仅为公式估计，不作为整网FLOPs实测。没有新GPU运行或优化收益。
+- **下一步**：只开当前checkpoint的阶段profile/native full-token控制；其后先做none全一门、单人repeat、多层先融合后按人展开和固定网格缓存的等价快路径，核对FP32/FP16与多人输出后再测速度/显存。暂不改预算或重训backbone，原服务器任务不变。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。
