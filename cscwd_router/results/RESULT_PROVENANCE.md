@@ -311,3 +311,11 @@
 - historical source: `/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_forward_k100_k50_b1_amp.json`; SHA256: `37bc4231fb47fab40c5af85c80cfe7aaea30295cf6676a012a972f08ba037118`。
 - historical source: `/home/fb/src/paper/gazelleV1/experiments/coverage_router/gf_splitclean_sparse_fixedrouter_decoder_k050_seed3106/stage_profile_reverse_k50_k100_b1_amp.json`; SHA256: `c883f2445bbd211d20ff6fecf9769d01968f1fb9af3140993d6bd062d7148cfa`。
 - 本轮仅CPU源码/既有结果分析，无新GPU forward、训练或计时。历史profile是旧seed3106、dummy输入、B1、AMP cache开启；当前正式矩阵是seed0真实输入、cache关闭。历史阶段不替代当前checkpoint分段结果。优化尚未实施，不填写收益。
+
+## SOTA-1 · 近期方法与比较目标（2026-11-24）
+
+- review: `cscwd_router/results/SOTA_LANDSCAPE_20261124.md`; SHA256: `d65cf2f124a70eb07e290c66bd11d70e3e29c76c39e82cd214034ff52c32f812`。
+- evidence: `cscwd_router/results/sota_landscape_20261124.json`; SHA256: `cb9fe1a385b68b0283ba9cf3ef76502472aa942f2024fecc0f89ce8d2f2e4729`。8行原文/官方公开指标、4项单独标注线索、3份本地选中报告SHA，含论文版本/PDF SHA、官方checkpoint发布元数据、基于公开舍入值的差额；不作统一复测或显著性判断。
+- TextGaze官方 `checkpoints-v1.0` release于2026-11-11列出GF/VAT×B/L四个PT；API的文件大小与发布方digest已登记，未下载大权重、未独立校验二进制。OmniGF官方HF模型库revision `28d4c78343028573149cc04a1d3b0ac1423732ae`列出GF/VAT safetensors；仍需单独Qwen3-VL底座，未下载/执行。
+- Mi ECCV2026论文与共同作者主页未找到官方实现/权重；GitHub标题检索0项，不作为“绝无开源”的证明。FGI原表受订阅限制、GazeLoom GF距离标签有歧义、GeoDistill未核完整原表，均留在单独线索区；GazeAnywhere任务/测试子集不同，不混入标准GF/VAT。
+- 本轮只读网页/发布API/原文和本地结果，服务器仅检查VAT-L最终summary是否存在，结果未见；没有启动或停止任务、没有新训练/GPU forward/计时。目标转为近期强方法精度—成本，保留GazeLLE既有证据，下一项优先TextGaze官方权重推理对照。

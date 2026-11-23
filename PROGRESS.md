@@ -6,12 +6,12 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | 两组 B 效率已回传：GF B1/B8 speedup 0.7822/0.9918×，VAT 0.8255/1.0251×；相对自身 K100 的 B8 约1.25×，峰值显存高约59.5%。接阶段profile/等价推理优化；L 任务按原版本接续 |
+| CSCWD 新主线 | `cscwd_router/` | 重点转为近期强方法精度—成本，TextGaze/OmniGF有公开任务权重；保留已测GazeLLE结果：GF B1/B8 speedup 0.7822/0.9918×、VAT 0.8255/1.0251×。L任务按原版本接续 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
 
-在冻结的 DINOv3 ViT-B/16、ViT-L/16 多层表示上做 gaze-conditioned spatial routing：中层联合场景、头部外观和相对几何预测 support，后段只处理选中 patch，多人 max-union 共享 sparse suffix，未选位置回填以维持完整解码网格。**新贡献是人物条件化计算分配；DINOv3 和多层表示作为沿用的基础配置。** 本轮不新增 dense 训练，与官方 DINOv2 GazeLLE 比较完整系统，旧 matched dense 证据保留原协议；精度与速度是否同时超过由实测决定。
+在冻结的 DINOv3 ViT-B/16、ViT-L/16 多层表示上做 gaze-conditioned spatial routing：中层联合场景、头部外观和相对几何预测 support，后段只处理选中 patch，多人 max-union 共享 sparse suffix，未选位置回填以维持完整解码网格。**新贡献是人物条件化计算分配；DINOv3 和多层表示作为沿用的基础配置。** 2026-11-24按用户决定，将重点改为近期强方法的精度—成本比较，Mi ECCV2026为精度参照，TextGaze/OmniGF为可获取官方权重的推理对照；保留GazeLLE既有结果，不新增dense训练，旧matched dense保留原协议。
 
 执行状态见 `cscwd_router/implementation_plan.md`；行文逻辑与三稿边界见 `cscwd_router/latex/PAPER_STORY.md`、`PAPER_REVIEW.md`；后续会话提示词为 `cscwd_router/codex_prompt.md`。旧 DINOv2 T1–T6 记录保留，不自动变成 DINOv3 的新命令。
 
@@ -86,9 +86,11 @@
 
 **E3-P0 推理与效率说明（2026-11-24）**：完整推理流程、算术缩减与硬件耗时的区别、历史B1阶段证据和优化顺序已写入 `cscwd_router/results/E3_INFERENCE_AND_OPTIMIZATION.md`，来源/SHA与推导在 `results/e3_efficiency_explanation_evidence.json`。GF-B B8的K100额外路径差额14.00ms与K50节省13.56ms相抵，解释了相对官方基本持平；旧B1中Router约占插桩时间13–14%，suffix缩短未兑现等比例时间收益。优先当前checkpoint分段profile和同权重native控制，再做保持语义的融合/复制/全一门快路径；本轮仅源码与既有报告分析，没有新GPU测量或优化结果。
 
+**SOTA-1 近期方法与目标调整（2026-11-24）**：核对8行公开指标与4项单独标注线索，Mi/TextGaze/OmniGF/GazeVLM原表已渲染复核。GF-L三项接近Mi，均优于TextGaze-L公开值；当前B的GF/VAT六项优于TextGaze-B。Mi未找到官方代码/权重，TextGaze四个PT发布资产与OmniGF GF/VAT safetensors已由官方API确认；完整GF-L→VAT-L最终summary本轮只读未见，不填结果。表与公开链接 `cscwd_router/results/SOTA_LANDSCAPE_20261124.md`，来源/版本/SHA `sota_landscape_20261124.json`。主目标改为近期强方法的精度—成本，保留GazeLLE参照与ICASSP贡献边界；本轮没有训练、权重下载或GPU评测。
+
 ## 下一步
 
-1. 在独立目录为 GPU1 准备同 checkpoint 的阶段 profile、native DINOv3 full-token 推理控制与等价快路径验证，定位 prefix/Router/suffix/回填/融合/decoder 成本。静态候选包括 none 门控乘全一、四层 repeat/cat；先验证输出和精度，再测收益，不新增 dense 训练。GF-L/VAT-L 按原任务接续并回传审查。
+1. 优先准备TextGaze官方B/L任务权重的推理比较，核对同数据精度并在同硬件测core/完整RGB流程；不新增dense训练。之后检查OmniGF官方评测的3090显存与数据条件。GF-L/VAT-L按原任务接续并回传审查；阶段profile、native full-token控制和等价快路径保留为后续优化。
 2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 

@@ -1,0 +1,563 @@
+{
+  "research_date": "2026-11-24",
+  "new_training_or_gpu_evaluation": false,
+  "comparison_policy": "Published metrics versus already selected local checkpoints, not same-protocol reproduction. Preserve train/test and seed0, no new dense training. Keep official GazeLLE evidence.",
+  "papers": [
+    {
+      "id": "mi2026objectaware",
+      "title": "Multi-scale Object-Aware Gaze Estimation via Geometric Reasoning",
+      "venue": "ECCV 2026",
+      "paper_url": "https://arxiv.org/html/2606.29334v1",
+      "pdf_url": "https://arxiv.org/pdf/2606.29334",
+      "metric_location": "Table 1, PDF page 10, visually checked",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.961,
+          "avg_l2": 0.094,
+          "min_l2": 0.038
+        },
+        "vat": {
+          "auc": 0.948,
+          "l2": 0.095,
+          "inout_ap": 0.923
+        }
+      },
+      "input": "RGB-derived object masks plus head appearance/eye position; offline YOLO11x and SAM2-hiera-large masks",
+      "backbone": "Frozen DINOv3 ViT-L/16, 512 input, hierarchical features",
+      "code_url": null,
+      "weights_status": "No official code or checkpoint located on paper, coauthor homepage or title search as of research date; absence not proved.",
+      "published_runtime": null,
+      "pdf_sha256": "3f6c7945e5016496d104c6aeb4beb46f9d5650848b8920bf08e7525be261c055"
+    },
+    {
+      "id": "textgaze_b",
+      "title": "TextGaze: Prompting Gaze Target Estimation with Textual Scene Cues",
+      "venue": "IJCAI-ECAI 2026",
+      "paper_url": "https://arxiv.org/html/2607.10130v2",
+      "pdf_url": "https://arxiv.org/pdf/2607.10130v2",
+      "metric_location": "Table 1, PDF page 5, visually checked; matches official README",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.953,
+          "avg_l2": 0.105,
+          "min_l2": 0.047
+        },
+        "vat": {
+          "auc": 0.932,
+          "l2": 0.113,
+          "inout_ap": 0.879
+        }
+      },
+      "input": "RGB, GT head boxes and Qwen2.5-VL-generated textual scene cues",
+      "backbone": "Frozen DINOv2 ViT-B/14 and BERT, 448 input",
+      "code_url": "https://github.com/idremo/TextGaze-IJCAI2026",
+      "weights_status": "Release API confirms GF and VAT B/L PT assets; not downloaded or executed.",
+      "release_url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/tag/checkpoints-v1.0",
+      "pdf_sha256": "d09e1d749bc841902db67cd9d6541ed5f21ffae38d8832dcc5debc457824d6e4"
+    },
+    {
+      "id": "textgaze_l",
+      "title": "TextGaze: Prompting Gaze Target Estimation with Textual Scene Cues",
+      "venue": "IJCAI-ECAI 2026",
+      "paper_url": "https://arxiv.org/html/2607.10130v2",
+      "metric_location": "Table 1, PDF page 5, visually checked; matches official README",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.956,
+          "avg_l2": 0.099,
+          "min_l2": 0.043
+        },
+        "vat": {
+          "auc": 0.941,
+          "l2": 0.102,
+          "inout_ap": 0.911
+        }
+      },
+      "input": "RGB, GT head boxes and Qwen2.5-VL-generated textual scene cues",
+      "backbone": "Frozen DINOv2 ViT-L/14 and BERT, 448 input",
+      "code_url": "https://github.com/idremo/TextGaze-IJCAI2026",
+      "weights_status": "Same verified release as TextGaze-B; no weight download or model run."
+    },
+    {
+      "id": "omnigf",
+      "title": "OmniGF: A Dual-Branch Vision-Language Framework for Unified Gaze Following",
+      "venue": "NeurIPS 2026 (official repository labels Spotlight)",
+      "paper_url": "https://arxiv.org/html/2605.26399v2",
+      "pdf_url": "https://arxiv.org/pdf/2605.26399v2",
+      "metric_location": "Table 9, PDF page 16, visually checked; main Table 1",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.941,
+          "avg_l2": 0.091,
+          "min_l2": 0.04
+        },
+        "vat": {
+          "auc": 0.917,
+          "l2": 0.096,
+          "inout_ap": 0.923
+        }
+      },
+      "input": "RGB, head boxes and head crops; frame-level",
+      "backbone": "Qwen3-VL-4B-Instruct plus Gaze360-initialized ResNet-18 head encoder",
+      "code_url": "https://github.com/cvlab-stonybrook/omnigf",
+      "weights_status": "Hugging Face API confirms GF/VAT safetensors. Trained weights need separate Qwen3-VL backbone. No weight download or model run.",
+      "weights_repo": "https://huggingface.co/StonyBrook-CVLab/omnigf",
+      "weights_revision": "28d4c78343028573149cc04a1d3b0ac1423732ae",
+      "weights_files": [
+        "omnigf_gazefollow.safetensors",
+        "omnigf_vat.safetensors"
+      ],
+      "reported_eval_memory_gb": [
+        20,
+        30
+      ],
+      "published_runtime": {
+        "location": "Appendix H, Table 15",
+        "gpu": "RTX PRO 6000 Blackwell",
+        "batch_size": 64,
+        "precision": "bfloat16",
+        "people_per_image": 1,
+        "generated_tokens_per_person": 25,
+        "boxes": "synthetic head boxes on a real image",
+        "runtime_ms_per_image": 53.62,
+        "reported_tflops_per_image": 7.28,
+        "direct_speedup_comparison_to_our_3090_results_valid": false
+      },
+      "pdf_sha256": "d2242dbee3710f67d2799713471202f13f79736d2492fbb4457669ecf4d4433b"
+    },
+    {
+      "id": "gazehrnet",
+      "title": "GazeHRNet: Head-Centric Spatial Encoding and Gaze-Aware Feature Interaction for Gaze Target Detection",
+      "venue": "Sensors 2026",
+      "paper_url": "https://www.mdpi.com/1424-8220/26/15/4799",
+      "metric_location": "Publisher full-text result table indexed by web search",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.952,
+          "avg_l2": 0.102,
+          "min_l2": 0.055
+        },
+        "vat": {
+          "auc": 0.929,
+          "l2": 0.103,
+          "inout_ap": 0.909
+        }
+      },
+      "input": "RGB and head boxes",
+      "backbone": "Frozen DINOv2",
+      "code_url": "https://github.com/Zhikanyoumai/gazehrnet",
+      "code_revision_checked": "144273307cd7b97150447d6fc876f1360f9b2cd8",
+      "weights_status": "Paper claims pretrained release. Inspected README/tree contains code but no identified task checkpoint download."
+    },
+    {
+      "id": "gazevlm_cvprw2026",
+      "title": "GazeVLM: A Vision-Language Model for Multi-Task Gaze Understanding",
+      "venue": "CVPR Workshops 2026",
+      "paper_url": "https://openaccess.thecvf.com/content/CVPR2026W/AI4RWC/html/Mathew_GazeVLM_A_Vision-Language_Model_for_Multi-Task_Gaze_Understanding_CVPRW_2026_paper.html",
+      "pdf_url": "https://openaccess.thecvf.com/content/CVPR2026W/AI4RWC/papers/Mathew_GazeVLM_A_Vision-Language_Model_for_Multi-Task_Gaze_Understanding_CVPRW_2026_paper.pdf",
+      "metric_location": "Table 1, PDF page 8, visually checked. Conference version; not older arXiv numbers copied by Mi.",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.936,
+          "avg_l2": 0.123,
+          "min_l2": 0.061
+        },
+        "vat": {
+          "auc": 0.948,
+          "l2": 0.102,
+          "inout_ap": 0.898
+        }
+      },
+      "input": "RGB and HHA-encoded depth plus task prompt",
+      "backbone": "Qwen2.5-VL-3B-Instruct",
+      "code_url": null,
+      "weights_status": "No matching official code/checkpoint verified; unrelated projects share the name.",
+      "pdf_sha256": "d152b42bbf7188ce84a9149e295ebbab962c92e7880b480944bfb33235ae228e"
+    },
+    {
+      "id": "vitgaze",
+      "title": "ViTGaze: Gaze Following with Interaction Features in Vision Transformers",
+      "venue": "Visual Intelligence 2024",
+      "paper_url": "https://doi.org/10.1007/s44267-024-00064-9",
+      "metric_location": "Official repository result table",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.949,
+          "avg_l2": 0.105,
+          "min_l2": 0.047
+        },
+        "vat": {
+          "auc": 0.938,
+          "l2": 0.102,
+          "inout_ap": 0.905
+        }
+      },
+      "code_url": "https://github.com/hustvl/ViTGaze",
+      "weights_status": "Official README links GF/VAT Google Drive checkpoints; download not executed."
+    },
+    {
+      "id": "sharingan",
+      "title": "Sharingan: A Transformer Architecture for Multi-Person Gaze Following",
+      "venue": "CVPR 2024",
+      "paper_url": "https://openaccess.thecvf.com/content/CVPR2024/html/Tafasca_Sharingan_A_Transformer_Architecture_for_Multi-Person_Gaze_Following_CVPR_2024_paper.html",
+      "metric_location": "Official paper, also OmniGF Table 9. VAT AUC intentionally unreported.",
+      "metrics": {
+        "gazefollow": {
+          "auc": 0.944,
+          "avg_l2": 0.113,
+          "min_l2": 0.057
+        },
+        "vat": {
+          "auc": null,
+          "l2": 0.107,
+          "inout_ap": 0.891
+        }
+      },
+      "code_url": "https://github.com/idiap/sharingan",
+      "weights_status": "Official README provides GF/VAT/ChildPlay checkpoint links; not downloaded."
+    }
+  ],
+  "vat_l_status": "Read-only server check found no final summary.json under cscwd_router/results/vat_from_gfl_router_k050_joint_seed0. No final VAT-L metrics inferred.",
+  "additional_candidates": [
+    {
+      "title": "Gaze Target Estimation Anywhere with Concepts",
+      "venue": "CVPR 2026",
+      "paper_url": "https://openaccess.thecvf.com/content/CVPR2026/papers/Cao_Gaze_Target_Estimation_Anywhere_with_Concepts_CVPR_2026_paper.pdf",
+      "code_url": "https://github.com/IrohXu/GazeAnywhere",
+      "treatment": "Different concept-prompted task and filtered Gaze-Co benchmark; exclude from standard GF/VAT main-table comparison."
+    },
+    {
+      "title": "FGI-Gaze: Gaze Target Detection via Filtered Human-Environment Gaze Interaction",
+      "venue": "PRCV 2025, proceedings published 2026",
+      "paper_url": "https://link.springer.com/chapter/10.1007/978-981-95-5676-2_32",
+      "status": "Publisher abstract verified; full metric table behind subscription. Mi Table 1 quotes GF .950/.099/.044 and VAT .958/.091/.911. Secondary lead only, not independently verified FGI metrics."
+    },
+    {
+      "title": "GeoDistillGaze: A knowledge distillation framework for efficient gaze target prediction",
+      "venue": "Pattern Recognition Letters, online 2026; December 2026 issue",
+      "paper_url": "https://www.sciencedirect.com/science/article/pii/S0167865526003533",
+      "status": "Publisher abstract describes DINOv2 teacher to DeiT student and reports parameter/FLOPs reductions. No verified full metric table or code/weights located; retain as related efficiency work."
+    },
+    {
+      "title": "A geometry-guided multimodal framework for train driver gaze target estimation",
+      "venue": "Engineering Applications of Artificial Intelligence 2026",
+      "paper_url": "https://www.sciencedirect.com/science/article/pii/S0952197626014399",
+      "code_url": "https://github.com/Pjj0417/GAZELOOM",
+      "status": "Publisher abstract reports GF AUC .967 / distance .079 and VAT AP .942. README has inconsistent GF distance labels: example Avg .112 / Min .079, result row L2 .079. Do not assign .079 to GF Avg L2 or merge into verified six-metric table. No task checkpoint download verified."
+    }
+  ],
+  "mi_code_search": {
+    "coauthor_homepage": "https://liuxy1005.github.io/",
+    "paper_code_link_found": false,
+    "coauthor_homepage_code_link_found": false,
+    "github_title_repository_search_count": 0,
+    "interpretation": "No located public implementation/checkpoint, not proof none exists."
+  },
+  "our_selected_models": {
+    "gf_b": {
+      "path": "cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+      "sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0",
+      "metrics": {
+        "auc": 0.9562363141489932,
+        "avg_l2": 0.10155011492840525,
+        "min_l2": 0.043419549755201764,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9457808150980969,
+        "routing_hard_coverage": 0.871910231201183,
+        "routing_soft_coverage": 0.46733457956888447
+      },
+      "selection": {
+        "epoch": 4,
+        "metric": "min_l2",
+        "metrics": {
+          "auc": 0.9562363141489932,
+          "avg_l2": 0.10155011492840525,
+          "min_l2": 0.043419549755201764,
+          "persons": 4782,
+          "inframe_persons": 4782,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9457808150980969,
+          "routing_hard_coverage": 0.871910231201183,
+          "routing_soft_coverage": 0.46733457956888447
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "completed": true,
+      "closed_by_user": false
+    },
+    "gf_l": {
+      "path": "cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+      "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1",
+      "metrics": {
+        "auc": 0.9600070985647116,
+        "avg_l2": 0.0940614169133612,
+        "min_l2": 0.03772149181701388,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9353261976420538,
+        "routing_hard_coverage": 0.8528800056799343,
+        "routing_soft_coverage": 0.4841950970469335
+      },
+      "selection": {
+        "epoch": 1,
+        "metric": "min_l2",
+        "metrics": {
+          "auc": 0.9600070985647116,
+          "avg_l2": 0.0940614169133612,
+          "min_l2": 0.03772149181701388,
+          "persons": 4782,
+          "inframe_persons": 4782,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9353261976420538,
+          "routing_hard_coverage": 0.8528800056799343,
+          "routing_soft_coverage": 0.4841950970469335
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "completed": false,
+      "closed_by_user": true
+    },
+    "vat_b": {
+      "path": "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99",
+      "metrics": {
+        "auc": 0.9400325583571667,
+        "l2": 0.10013119593217963,
+        "inout_ap": 0.8831826381014405,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9632534495279593,
+        "routing_hard_coverage": 0.8694837984447039,
+        "routing_soft_coverage": 0.3591852730892633
+      },
+      "selection": {
+        "epoch": 0,
+        "metric": "l2",
+        "metrics": {
+          "auc": 0.9398997273428248,
+          "l2": 0.10047474718421423,
+          "inout_ap": 0.8844164890656381,
+          "persons": 5461,
+          "inframe_persons": 3530,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9626062322946176,
+          "routing_hard_coverage": 0.8691891679345042,
+          "routing_soft_coverage": 0.359505552549981
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "completed": true,
+      "closed_by_user": false
+    }
+  },
+  "textgaze_release": {
+    "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/tag/checkpoints-v1.0",
+    "published_at": "2026-11-11T10:49:41Z",
+    "assets": [
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 380,
+        "publisher_reported_digest": "sha256:ab7ad271c77c683c842ebda00a07d31181991e15c0d4e0e21b56943368e93dc4",
+        "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/download/checkpoints-v1.0/SHA256SUMS.txt"
+      },
+      {
+        "name": "TextGaze_GF_ViT-B_epoch20.pt",
+        "bytes": 459905083,
+        "publisher_reported_digest": "sha256:e07e90f4416228b6b2b65d824393d2f6fa3a2a44bf938c5a8a58ed4f3df8ce56",
+        "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/download/checkpoints-v1.0/TextGaze_GF_ViT-B_epoch20.pt"
+      },
+      {
+        "name": "TextGaze_GF_ViT-L_epoch23.pt",
+        "bytes": 460167227,
+        "publisher_reported_digest": "sha256:177a26b3204aa7612d9c1d46785481fc209b59417cb02df9db18f05eed118c7b",
+        "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/download/checkpoints-v1.0/TextGaze_GF_ViT-L_epoch23.pt"
+      },
+      {
+        "name": "TextGaze_VAT_ViT-B_epoch6.pt",
+        "bytes": 460038898,
+        "publisher_reported_digest": "sha256:d678d2f481297f7dd75b2838247bdab4eb1e5c80043412caefdefadbc30a9902",
+        "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/download/checkpoints-v1.0/TextGaze_VAT_ViT-B_epoch6.pt"
+      },
+      {
+        "name": "TextGaze_VAT_ViT-L_epoch7.pt",
+        "bytes": 460301042,
+        "publisher_reported_digest": "sha256:723fcd8227c2066c6dac27741421998263bb5fd1c2296713aa01fb522b53201d",
+        "url": "https://github.com/idremo/TextGaze-IJCAI2026/releases/download/checkpoints-v1.0/TextGaze_VAT_ViT-L_epoch7.pt"
+      }
+    ],
+    "downloaded": false
+  },
+  "arithmetic_comparisons": {
+    "scope": "Difference to rounded published numbers, not independent reproduction or significance test.",
+    "rows": [
+      {
+        "ours": "gf_l",
+        "external": "mi2026objectaware",
+        "dataset": "gazefollow",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9600070985647116,
+            "published_rounded_value": 0.961,
+            "our_minus_published": -0.000992901435288407,
+            "better_by_reported_values": false
+          },
+          {
+            "metric": "avg_l2",
+            "our_value": 0.0940614169133612,
+            "published_rounded_value": 0.094,
+            "our_minus_published": 6.141691336120081e-05,
+            "better_by_reported_values": false
+          },
+          {
+            "metric": "min_l2",
+            "our_value": 0.03772149181701388,
+            "published_rounded_value": 0.038,
+            "our_minus_published": -0.00027850818298611607,
+            "better_by_reported_values": true
+          }
+        ]
+      },
+      {
+        "ours": "vat_b",
+        "external": "mi2026objectaware",
+        "dataset": "vat",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9400325583571667,
+            "published_rounded_value": 0.948,
+            "our_minus_published": -0.00796744164283325,
+            "better_by_reported_values": false
+          },
+          {
+            "metric": "l2",
+            "our_value": 0.10013119593217963,
+            "published_rounded_value": 0.095,
+            "our_minus_published": 0.00513119593217963,
+            "better_by_reported_values": false
+          },
+          {
+            "metric": "inout_ap",
+            "our_value": 0.8831826381014405,
+            "published_rounded_value": 0.923,
+            "our_minus_published": -0.039817361898559556,
+            "better_by_reported_values": false
+          }
+        ]
+      },
+      {
+        "ours": "gf_l",
+        "external": "textgaze_l",
+        "dataset": "gazefollow",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9600070985647116,
+            "published_rounded_value": 0.956,
+            "our_minus_published": 0.0040070985647115975,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "avg_l2",
+            "our_value": 0.0940614169133612,
+            "published_rounded_value": 0.099,
+            "our_minus_published": -0.004938583086638804,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "min_l2",
+            "our_value": 0.03772149181701388,
+            "published_rounded_value": 0.043,
+            "our_minus_published": -0.005278508182986114,
+            "better_by_reported_values": true
+          }
+        ]
+      },
+      {
+        "ours": "gf_b",
+        "external": "textgaze_b",
+        "dataset": "gazefollow",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9562363141489932,
+            "published_rounded_value": 0.953,
+            "our_minus_published": 0.00323631414899328,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "avg_l2",
+            "our_value": 0.10155011492840525,
+            "published_rounded_value": 0.105,
+            "our_minus_published": -0.0034498850715947438,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "min_l2",
+            "our_value": 0.043419549755201764,
+            "published_rounded_value": 0.047,
+            "our_minus_published": -0.003580450244798236,
+            "better_by_reported_values": true
+          }
+        ]
+      },
+      {
+        "ours": "vat_b",
+        "external": "textgaze_b",
+        "dataset": "vat",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9400325583571667,
+            "published_rounded_value": 0.932,
+            "our_minus_published": 0.008032558357166653,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "l2",
+            "our_value": 0.10013119593217963,
+            "published_rounded_value": 0.113,
+            "our_minus_published": -0.012868804067820372,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "inout_ap",
+            "our_value": 0.8831826381014405,
+            "published_rounded_value": 0.879,
+            "our_minus_published": 0.004182638101440483,
+            "better_by_reported_values": true
+          }
+        ]
+      }
+    ]
+  }
+}

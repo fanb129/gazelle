@@ -1,6 +1,8 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
-E3-B 正式结果已通过 `85210b5` 回传：GF-B B1/B8 相对官方 latency speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`；相对同路径 K100 的 B8 为 `1.2519/1.2559×`，B8峰值显存约高59.5%。[审查与表格](results/E3_B_EFFICIENCY_REVIEW.md)记录完整口径，当前不写 B 完整系统明显更快；优先阶段profile/等价快路径验证，不新增 dense 训练。
+SOTA-1 最新决定（2026-11-24）：重点转为与近期强方法比较精度—成本，GazeLLE 保留参照。已核8行公开指标，Mi ECCV2026为接近底座的精度参照但未找到公开权重；TextGaze GF/VAT×B/L四个任务权重与OmniGF的GF/VAT权重已通过官方发布API核实。下一项先准备TextGaze官方权重的推理评测/测速，不新增dense训练，随后检查OmniGF。详细表、输入差异和出处见 [近期方法核对](results/SOTA_LANDSCAPE_20261124.md)。原seed0、train/test选模不变。
+
+E3-B 正式结果已通过 `85210b5` 回传：GF-B B1/B8 相对官方 latency speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`；相对同路径 K100 的 B8 为 `1.2519/1.2559×`，B8峰值显存约高59.5%。[审查与表格](results/E3_B_EFFICIENCY_REVIEW.md)记录完整口径，作为已完成基线保留；阶段profile/等价快路径后移，当前优先SOTA-1外部推理比较，不新增dense训练。
 
 当前 E3-F1：GPU0/2 已启动；VAT-B 的序列/frames 采样修复已经 Git 部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按 [修复运行说明](RUN_VAT_EFFICIENCY_FIX.md) 重启。GF 矩阵结束前保持原目录源码版本。
 
@@ -99,7 +101,7 @@ DINOv3 正式 benchmark 已实现，使用 `benchmark_router_dinov3.py` 与 `run
 
 来源：[GazeLLE 原论文](https://arxiv.org/html/2412.09586v2)、[Mi et al. Table 1，PDF 第 10 页](https://arxiv.org/pdf/2606.29334)。Mi et al. 使用 DINOv3 ViT-L/16、RTX 5090，并离线使用 YOLO11x/SAM2 产生 object masks，比较时标明这些差异。
 
-达到或超过 GazeLLE 的精度与效率是待验证目标，超过 2026 方法作为进取目标；不预写双优，不用其可训练参数量推断同硬件推理速度。旧 VAT holdout 负结果和 GF fixed-final 数字保留原标签。
+本节原三行参照保留，最新比较范围以 [SOTA-1](results/SOTA_LANDSCAPE_20261124.md) 为准：近期高精度方法是重点，GazeLLE不作为唯一推进门槛；公开精度表与同硬件效率分别报告。可获取官方checkpoint的TextGaze优先接推理对照，OmniGF接续；Mi暂作精度参照。旧VAT holdout与GF fixed-final保留原标签，不预写跨模型双优。
 
 ## 7. 实现与输出
 

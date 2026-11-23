@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 SOTA-1：按用户决定，重点转为与近期 object-aware / vision-language 强方法比较精度—成本，保留 GazeLLE 对照。8行公开指标和4个单独标注线索已核对，TextGaze与OmniGF的官方任务权重入口已验证；下一项优先TextGaze推理比较，不新增dense训练。详见 `results/SOTA_LANDSCAPE_20261124.md`。
 > 2026-11-24 E3-B 已回传审查：GF-B B1/B8 相对官方 speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`，B8相对K100约1.25×，峰值显存高约59.5%。详见 `results/E3_B_EFFICIENCY_REVIEW.md`；当前优先阶段profile与等价推理优化，L 任务保持原版本。
 > 2026-11-24 E3-F1：VAT 效率的嵌套标注修复 `29c6607` 已部署到独立服务器 worktree，70 项 CPU 与真实 475 序列/58,507 帧预检通过。GPU0/2 保持原运行代码；GPU1 新完整命令见 `RUN_VAT_EFFICIENCY_FIX.md`，尚未由助手启动测速。
 > 2026-11-24 E3 / E2-TL 已实现：68/68 CPU 通过。三卡完整命令见 `RUN_EFFICIENCY_VATL.md`：GPU0 GF-B/GF-L 效率，GPU1 当前 GF→VAT-B 效率，GPU2 完整 GF-L→VAT-L。保留 GF-L 收口状态；用户手动启动，尚无真实效率或新 VAT-L 指标。
@@ -14,6 +15,8 @@
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
 ## 0. 当前决定（2026-11-24，E3 / E2-TL）
+
+SOTA-1 最新目标：与近期强方法比较完整系统的精度—成本，不以全面超过 GazeLLE 作为推进前提。Mi et al. ECCV2026 为接近底座的精度参照，暂未找到官方代码/权重；先准备可获取四组任务权重的 TextGaze B/L 推理对照，再接 OmniGF。当前训练seed0、train/test与单一checkpoint选模不变，不新增dense训练；已测GazeLLE结果保留。
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
@@ -254,6 +257,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：逐段核对当前 RGB→dense prefix→人物 support/max-union→TopK→sparse suffix→early-exit fill→四层融合→完整 decoder 的执行路径，只读取得两份旧 B1 阶段报告，区分当前整网实测、历史分段诊断与理论 MACs 推导。明确原生 DINOv3 full-token 推理控制不需要新增 dense 训练。
 - **产出文件与数字**：`results/E3_INFERENCE_AND_OPTIMIZATION.md`、`results/e3_efficiency_explanation_evidence.json`。既有 GF-B B8 的额外全 token 路径差额 14.00ms，被 K100→K50 节省的13.56ms抵消；VAT-B对应11.62/12.88ms。旧B1 Router约占插桩时间13–14%，suffix减半patch后的时间并未减半。约27%的blocks主要MACs缩减仅为公式估计，不作为整网FLOPs实测。没有新GPU运行或优化收益。
 - **下一步**：只开当前checkpoint的阶段profile/native full-token控制；其后先做none全一门、单人repeat、多层先融合后按人展开和固定网格缓存的等价快路径，核对FP32/FP16与多人输出后再测速度/显存。暂不改预算或重训backbone，原服务器任务不变。
+
+### 2026-11-24 · SOTA-1：近期方法核对与比较目标调整
+
+- **完成内容**：读取近期原文、渲染核对Mi/TextGaze/OmniGF/GazeVLM原表，核实官方代码/权重发布；主目标转为近期强方法的精度—成本比较，保留既有GazeLLE对照和机制控制，不新增dense训练。
+- **产出文件与数字**：`results/SOTA_LANDSCAPE_20261124.md`、`results/sota_landscape_20261124.json`；8行公开指标、4项分别标注的线索、3份本地选中结果SHA。GF-L `.960007/.094061/.037721` 接近Mi `.961/.094/.038`，三项优于TextGaze-L `.956/.099/.043`；当前B的GF/VAT六项优于TextGaze-B公开值。Mi未找到公开实现/权重，TextGaze release API确认GF/VAT×B/L四个PT，OmniGF官方HF API确认GF/VAT权重。服务器只读未见完整GF-L→VAT-L最终summary，没有填VAT-L数字或新效率倍数。
+- **下一步**：只开TextGaze官方权重推理比较准备，覆盖同数据精度与同硬件效率，区分给定文本后的core与RGB生成文本的完整流程；之后检查OmniGF的3090运行条件。原服务器任务不变，阶段profile/快路径保留为后续优化项。
 
 ## 7. T1 服务器运行与结果回传
 

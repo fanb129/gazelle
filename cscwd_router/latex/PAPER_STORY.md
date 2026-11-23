@@ -1,5 +1,7 @@
 # CSCWD Router：问题定义、方法边界与行文逻辑
 
+SOTA-1 更新（2026-11-24）：按用户决定，主目标转为近期强方法的精度—成本比较，保留GazeLLE参照。公开指标/权重与比较范围见 [近期方法核对](../results/SOTA_LANDSCAPE_20261124.md)；不以全面超过GazeLLE作为推进前提，不改变train/test、seed0或ICASSP贡献边界。
+
 更新：2026-11-23，E2；写作始于 W1。主方法采用 **DINOv3 ViT-B/16、ViT-L/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；VAT full-test 结果见第 9.3 节，不把尚未完成的跨模型测速或消融写成结果。
 
 E0 最新执行：GF/VAT 各跑 ViT-B/16 与 ViT-L/16，所有新训练 base seed 0。四组入口已实现，从兼容旧 decoder 新训 support 3 + sparse decoder 5 epochs；不继承 seed3106 Router、不新增 dense。完整命令见 `../RUN_DINOV3_TRAIN_TEST.md`。
@@ -12,20 +14,20 @@ W2 历史写作决定：限时实验以 [EXPERIMENT_PLAN.md](../EXPERIMENT_PLAN.
 
 工作标题：**Gaze-Conditioned Spatial Routing for Efficient Gaze Target Estimation**。
 
-完整方法可以由 DINOv3、多层解码和 Router 组成；新增贡献集中在条件化计算分配。DINOv3 是已有编码器，多层表示是沿用的基础配置。最终目标是相对官方 GazeLLE 同时获得有竞争力的精度与更低延迟；是否达到由统一实验决定，不预写为“双优”。
+完整方法可以由 DINOv3、多层解码和 Router 组成；新增贡献集中在条件化计算分配。DINOv3 是已有编码器，多层表示是沿用的基础配置。目标是在纯RGB、真实头框、单帧设置下，取得接近近期高精度方法的定位表现，并验证人物条件化计算分配能否带来更好的完整推理成本。Mi et al.的object-aware方法、TextGaze和OmniGF进入重点比较，GazeLLE保留为直接相关基线；速度结论使用统一硬件实测。
 
-## 2. 从 GazeLLE 自然引出问题
+## 2. 从近期方法的计算需求引出问题
 
 行文依次回答六个问题：
 
 | 段落 | 要建立的事实或问题 | 如何接到下一步 |
 |---|---|---|
-| 1 | GazeLLE 等方法用冻结视觉编码器和轻量解码器，降低了任务训练的参数量 | 可训练参数少，不等于推理时编码器计算少 |
+| 1 | 近期方法通过对象语义、多层特征或视觉语言推理提高精度；GazeLLE提供冻结编码器加轻量解码器的直接基础 | 比较重点是完整推理成本及精度，可训练参数少不等于编码器计算少 |
 | 2 | 冻结编码器仍对所有图像位置执行完整深度的前向；人物条件主要在注视解码时使用 | 能否把人物条件提前引入编码过程？ |
 | 3 | 同图不同人物需要的证据不同；头框确定查询身份和相对几何，人物外观及场景提供可学习的注视线索 | 需要预测与查询相关、具有高目标召回率的 support，而非仅按通用显著性选 token |
 | 4 | 在编码器中层做出决策，仅让选中位置继续执行深层 blocks | Router 直接改变实际执行的 token 数 |
 | 5 | decoder 仍需完整空间网格，多人还需共享图像计算 | 用中层特征回填未选位置；多人 support 聚合后执行一次稀疏 suffix |
-| 6 | 完整系统与机制贡献是两个不同问题 | 新主表与官方 GazeLLE 比系统表现；旧 matched dense 证据单独保留，只有同协议对照才能归因 Router 增量 |
+| 6 | 完整系统与机制贡献是两个不同问题 | 主表比较近期强方法并保留GazeLLE；统一硬件验证成本，同表示控制/预算响应/条件化消融解释Router增量，旧matched dense保留原协议 |
 
 “全图完整计算”是执行方式，不等于已经证明未选区域全部无用。VAT 旧结果提示，目标以外的关系上下文也可能影响定位。
 
@@ -282,7 +284,7 @@ VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次�
 
 ## 10. 论文组织与下一步
 
-用户接受当前 VAT-B，分类头适配后移。GF-L 按实际3+4收口，效率与完整GF-L→VAT-L已按原版本接续；B效率完成后，GPU1优先阶段profile、同权重native full-token控制与等价推理快路径验证。已有代码存在none全一乘法、投影前四层repeat/cat等具体测量对象；先核对原版/快路径输出与精度，再测完整效率，不预写收益、不新增dense训练。预算响应、人物条件化对照与真实多人union接续。
+用户接受当前VAT-B，分类头适配后移。GF-L按实际3+4收口，效率与完整GF-L→VAT-L按原版本接续。SOTA-1后优先准备TextGaze官方B/L权重推理比较，再检查OmniGF；Mi暂无公开权重，先保留论文精度参照。阶段profile、同权重native full-token控制及none全一门/高维repeat等价快路径保留为后续优化，不新增dense训练。预算响应、人物条件化对照与真实多人union接续。
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
