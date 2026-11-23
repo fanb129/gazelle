@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | GF-B 已验收：0.956236/0.101550/0.043420，定位优于已有官方 B 报告；VAT B/L 各续训 8 轮未改善 L2，保留旧 best；GF-L 仍训练，效率待测 |
+| CSCWD 新主线 | `cscwd_router/` | 优先 E2-T：完整 GF-B Router→VAT 迁移入口已实现，51/51 CPU 通过，8 epochs 固定 K50 待手动运行；旧 VAT 续训未改善 L2，GF-L 继续，效率等待空闲卡 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -66,10 +66,12 @@
 
 **E1-B / E2-C 结果回传与审查（2026-11-23）**：结果提交 `8f2ae9c` 已从服务器 push 并 pull 本地，回传 GF-B 4 份、VAT 续训 B/L 8 份及官方 GF baseline 1 份 JSON。GF-B 完成 3+5 epochs，以 Min L2 选第 5 轮；AUC/Avg/Min L2 为 `0.956236/0.101550/0.043420`，相对已有官方 GazeLLE-B 报告差 `+0.000095/-0.002586/-0.001912`，定位误差相对降低 2.48%/4.22%，AUC 基本持平。VAT 各实际新增 8 epochs、5,664 次更新、44 个 decoder tensors 改变，但最低新 rate-6 L2 `0.111874/0.102485` 未超过旧 best `0.110842/0.099612`；最终逐帧指标保持原值。原始 VAT dense 与 routed K100 的 AUC/L2/AP 差均 0。29 个工件/标注路径（21 个大型 PT/PTH/gzip）SHA 核验通过，三组逐查询重聚合差值均 0；未新增 GPU forward。详见 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`。GF-L 继续训练，不再原样延长 VAT decoder。
 
+**E2-T 完整 GF Router→VAT 实现（2026-11-23）**：按用户要求先提升 VAT，效率等空闲卡再测。新增 3 个 Python 文件，严格继承完整 GF Router/heatmap decoder，仅新建 5 个 in/out tensors。固定 K50、冻结 backbone，8 epochs（首轮固定 Router，后 7 轮 coverage/BCE 联合适配），LR `1e-4/1e-5/1e-3`、seed 0、完整 train/test；逐轮选 test L2 最低模型，最终 rate-1 test，保存每轮 checkpoint。51/51 CPU 通过，原 E0 与续训源码 SHA 不变；报告 `results/e2t_gf_to_vat_local_checks.json`，完整 GPU 1 命令 `RUN_GF_ROUTER_TO_VAT.md`。尚未启动真实训练，没有新 VAT 指标。
+
 ## 下一步
 
-1. GF-L 继续等待；已完成的 GF-B 不重训，准备 E3 官方 GazeLLE 同硬件 B1/B8 测速。
-2. VAT 不再原样续训固定 Router 的 decoder。先做现有 checkpoint 的 K50/K75/K100 预算响应，并实现 GF-B Router + decoder→VAT 的迁移路线，新增 in/out head 在 VAT 学习。随后按真实结果推进效率与 E4；不新增 dense 训练。
+1. 用户按 `cscwd_router/RUN_GF_ROUTER_TO_VAT.md` 手动启动 E2-T，优先完整 GF-B Router/decoder→VAT，回传真实结果；不重跑旧 VAT 续训或新增 dense 训练。
+2. GF-L 继续原任务。正式效率等待空闲卡；VAT 预算响应和 E3/E4 后续按真实精度结果安排。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

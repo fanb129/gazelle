@@ -1,5 +1,7 @@
 # DINOv3 Router：两个数据集 × ViT-B/ViT-L，seed 0
 
+当前 VAT 提升优先执行 [完整 GF Router→VAT](RUN_GF_ROUTER_TO_VAT.md)，使用新目录；不要重跑本页已完成的旧 VAT B/L 或续训。正式效率等待空闲卡。
+
 更新：2026-11-22。E0 入口已实现，32 项 CPU 工程检查通过。以下命令由用户在服务器手动执行；助手没有启动服务器训练。
 
 2026-11-23 状态：VAT B/L 已正常完成并回传，核验见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)；不用重复启动 VAT 训练。GF-B 现已回传核验（`0.956236/0.101550/0.043420`），GF-L 仍训练；VAT 续训也已完成并保留旧 best，详见 [最新审查](results/E1_GFB_E2C_REVIEW.md)。以下保留原运行/恢复命令。

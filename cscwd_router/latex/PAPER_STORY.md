@@ -264,6 +264,8 @@ VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次�
 
 ## 10. 论文组织与下一步
 
+用户当前优先提升 VAT，正式效率等待空闲卡。E2-T 已实现完整 GF-B Router/heatmap decoder→VAT：仅新建 in/out 分支，固定 K50，首轮固定 Router、后 7 轮以 coverage/BCE 联合适配，backbone 冻结。51 项 CPU 工程检查通过，尚无新真实数据结果；该训练配置是迁移适配，不扩展方法贡献或预写精度改善。命令见 `../RUN_GF_ROUTER_TO_VAT.md`，覆盖此前先安排预算响应/测速的顺序。
+
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
 E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。VAT B/L 及额外 8 轮续训已回传核验，GF-B 已审查、GF-L 继续训练；GPU 0/1 命令保留供复现/恢复，不重复训练已完成 VAT。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。

@@ -190,3 +190,10 @@
 - 既有官方 GF-B 精度报告已归档：`cscwd_router/results/t4_gf_fulltrain_seed3106/accuracy/dense_official.json`; SHA256: `0a4a9b3c8ead1907aae746c57e5496d02af1d0c434c0292496e148b059d9e4d4`。只回传这一份 T4 baseline accuracy，不作为 T4 总验收。
 - baseline compact checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/dense_official/final.pt`; SHA256: `26d1c421689ad827c5bd633392cc31896a6593834d67ea122fbd134b776ec851`。decoder tensors 与官方原始权重逐值一致。
 - official decoder: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt`; SHA256: `525a69495c0db475fa8522b164aba3cfabeaa0dd60adb7be5e13dd73e56d70e1`，与 T1 登记一致。大文件留服务器，未下载到本机。
+
+## E2-T · 完整 GF Router→VAT 实现（2026-11-23）
+
+- 本机工程报告：`cscwd_router/results/e2t_gf_to_vat_local_checks.json`; SHA256: `a19f716389105a20d2016bab7638715fb43f21f9ec5c86539f68756d8d8c98e6`。51/51 CPU 通过（12 项新增、39 项回归），B/L 共享 tensors 逐值继承、仅新增 5 个 in/out tensors、分阶段梯度与恢复通过。三个新源码 SHA、环境和完整命令验证在 JSON 中；旧 E0/续训源码未改。
+- 已有 GF-B source checkpoint：`/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`。来源 summary：`cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json`; SHA256: `9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0`。沿用该完整 Router/heatmap decoder，不加载旧 VAT task weights；backbone 仍使用原 SHA 固定的 DINOv3。
+- 当前计划固定 K50、seed 0、8 epochs（1 轮固定 Router + 7 轮联合适配），LR `1e-4/1e-5/1e-3`。实际命令见 `RUN_GF_ROUTER_TO_VAT.md`；尚未执行真实 VAT 迁移训练，未生成新 PT/NPY 或精度/效率结果。
+- 实际新大工件将留服务器 `experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/`，含 initial、每轮、last/best PT 和逐查询 gzip；生成后自动登记路径/SHA。小报告写 `cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/`，由用户经 Git 回传。

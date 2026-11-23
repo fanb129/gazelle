@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)：当前优先 E2-T，完整 GF-B Router/decoder→VAT，8 epochs K50、低 LR 联合适配；51 项 CPU 通过，尚未真实训练，效率等空闲卡。
 - [E1_GFB_E2C_REVIEW.md](results/E1_GFB_E2C_REVIEW.md)：GF-B 精度、VAT 续训失败原因分析与后续实验；结果已回传并核验。
 - [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)：E2-C，VAT 初始化 GF→VAT 来源与固定 K50 低 LR 续训；续训已完成，各追加 8 epochs 未改善 L2，保留旧 best；命令保留供复现。
 - [E2_VAT_SEED0_REVIEW.md](results/E2_VAT_SEED0_REVIEW.md)：VAT B/L 已完成并回传；逐帧精度、选模与 14 个大工件核验。

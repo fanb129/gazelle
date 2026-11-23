@@ -8,6 +8,8 @@
 
 先读：
 
+当前优先任务 E2-T 先读 `RUN_GF_ROUTER_TO_VAT.md` 与 `results/e2t_gf_to_vat_local_checks.json`。用户要求先提升 VAT，正式效率等待空闲卡。完整 GF-B Router/decoder→VAT 入口已实现，51/51 CPU 通过；8 epochs 固定 K50，首轮固定 Router、后 7 轮 coverage/BCE 联合适配，backbone 始终冻结，只有 in/out 新初始化。Router/decoder/inout LR 为 `1e-4/1e-5/1e-3`，seed 0。尚未启动真实训练；由用户手动执行完整 GPU 1 命令，不直接启动服务器任务。此优先级覆盖旧预算响应/测速建议，原 GF-L 继续，不改旧 trainer 源码。
+
 0. `cscwd_router/EXPERIMENT_PLAN.md` 与 `RUN_DINOV3_TRAIN_TEST.md`：E0 四组配置、GPU 0/1 命令、输出与恢复。最新 GF-B/VAT 续训结果先读 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`，优先于 W1/W2 的历史预算。
 1. `cscwd_router/latex/PAPER_STORY.md`：当前 idea、行文与贡献边界。
 2. `cscwd_router/latex/PAPER_REVIEW.md`：MM/rebuttal/ICASSP 的复核及图 2 处理。

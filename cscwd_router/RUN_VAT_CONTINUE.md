@@ -2,6 +2,8 @@
 
 最新状态：B/L 各追加 8 轮已完成，经 `8f2ae9c` 回传核验。新 L2 均未超过旧 best，因此最终保留原第 4/2 轮；不要继续原样追加。分析见 [E1_GFB_E2C_REVIEW.md](results/E1_GFB_E2C_REVIEW.md)，下列命令保留供复现/恢复。
 
+当前提升实验已转为完整 GF-B Router/decoder→VAT，见 [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)；本页的固定 Router 续训不再重跑。
+
 ## 1. 当前起点与判断
 
 本轮 VAT 的初始化确实有 GF 迁移，不是随机 decoder：

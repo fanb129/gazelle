@@ -1,0 +1,72 @@
+{
+  "task": "E2-T_complete_GF_Router_to_VAT",
+  "date": "2026-11-23",
+  "scope": "CPU engineering tests using generated data and shape-only native B/L factories. No new real-data training or GPU inference.",
+  "tests": {
+    "passed": 51,
+    "failed": 0,
+    "new_tests": 12,
+    "regression_tests": 39,
+    "command": "/private/tmp/gazelle-cscwd-check/bin/python -m pytest -q cscwd_router/code/stag/test_dinov3_transfer.py cscwd_router/code/stag/test_dinov3_continue.py cscwd_router/code/stag/test_dinov3_train_test.py tests/test_coverage_router.py tests/test_routed_backbone_utils.py"
+  },
+  "runtime": {
+    "python": "3.10.20",
+    "torch": "2.12.0",
+    "device": "cpu"
+  },
+  "source_sha256": {
+    "cscwd_router/code/stag/dinov3_transfer.py": "762c6ef8adc619d2020a2ddc1c5670b883dd6497992afd470a61866c3c52dcf6",
+    "cscwd_router/code/scripts/transfer_gf_router_to_vat.py": "7381e4cd9ae6fdb96d16c6f3b871d927994a9bf2663dca4535e3faf6d7e6acaa",
+    "cscwd_router/code/stag/test_dinov3_transfer.py": "f1ee48749a4509dcab38deaadbfdebd8dadbc00dac323f2bb2450bb41c80017d"
+  },
+  "previous_GF_and_VAT_trainer_sources_unchanged": true,
+  "native_factory_shared_tensors_equal_after_transfer": [
+    "b",
+    "l"
+  ],
+  "native_factory_new_inout_tensors_per_model": 5,
+  "checks": [
+    "all GF shared tensors retained",
+    "no old VAT tensors accepted as GF source",
+    "Router frozen during warmup and updated during joint phase",
+    "backbone unchanged with no gradients",
+    "coverage loss is required for hard-TopK Router updates",
+    "finite all-out-of-frame loss",
+    "B/L synthetic end-to-end runs and verified resume",
+    "epoch checkpoints retained",
+    "atomic epoch recovery matches uninterrupted training",
+    "source checkpoint corruption rejected",
+    "seed0 CLI defaults and complete nohup command parsed"
+  ],
+  "runbook": {
+    "bash_syntax_passed": true,
+    "all_arguments_parsed": true
+  },
+  "GF_source": {
+    "summary": "cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+    "summary_sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0",
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt",
+      "sha256": "8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    }
+  },
+  "planned_recipe": {
+    "epochs": 8,
+    "router_frozen_epochs": 1,
+    "joint_epochs": 7,
+    "keep_ratio": 0.5,
+    "router_lr": 0.0001,
+    "decoder_lr": 1e-05,
+    "inout_lr": 0.001,
+    "base_seed": 0,
+    "train_test_only": true,
+    "selection": "test_l2_min",
+    "final_test_frame_rate": 1
+  },
+  "real_data_transfer_training_performed": false,
+  "GPU_timing_performed": false
+}

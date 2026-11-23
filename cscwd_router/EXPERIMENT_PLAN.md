@@ -6,6 +6,8 @@ E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DIN
 
 ## 1. 四组主实验与并行顺序
 
+当前优先级 E2-T：用户要求先提升 VAT，正式效率等待空闲卡。完整 GF-B Router/heatmap decoder 迁移到 VAT，仅新增 in/out，固定 K50、冻结 backbone，8 epochs 中首轮固定 Router，后 7 轮联合适配；Router/decoder/inout LR `1e-4/1e-5/1e-3`，seed 0。入口已实现、51 项 CPU 检查通过，尚未跑真实训练；完整命令见 [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)。这一顺序覆盖上一轮先做预算响应/测速的建议。
+
 2026-11-23 E2-C 实际结果：原始 VAT dense 与 routed K100 的精度差为 0；两组低 LR 固定 K50 各加 8 epochs 后，均未超过旧 best L2，不继续原样加轮数。GF-B 已完成，GF-L 继续等待。下一项优先现有 VAT checkpoint 的预算响应、完整 GF-B Router→VAT 迁移及 GF-B 的 E3 测速。详见 [审查分析](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
 | GPU | 顺序 | 数据集 / 模型 | 新增阶段 | 物理 batch / decoder 累积 | 路由点（0-based） |

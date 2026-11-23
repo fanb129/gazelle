@@ -5,15 +5,18 @@
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
 > 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。最新 GF 与续训状态见下一条，效率尚待测量。
 > E1-B / E2-C 最新：GF-B 与 VAT 续训结果已通过 `8f2ae9c` 回传并核验。GF-B 为 `0.956236/0.101550/0.043420`；VAT 各新增 8 epochs 未超过旧 best L2，最终指标不变。GF-L 仍训练；详见 `results/E1_GFB_E2C_REVIEW.md`。
+> 当前 E2-T：用户优先完整 GF-B Router→VAT；入口已实现，51 项 CPU 检查通过。8 epochs 固定 K50，首轮固定 Router、后 7 轮联合适配；命令见 `RUN_GF_ROUTER_TO_VAT.md`，尚未启动真实训练。效率等待显卡空闲。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
-## 0. 当前决定（2026-11-23，E2）
+## 0. 当前决定（2026-11-23，E2-T）
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
 按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。GF-B 已完成并核验，GF-L 继续训练。VAT 两组及各新增 8 轮低 LR 续训已核验；新 L2 未改善，保留原 best，不再原样加轮数。
 
 VAT 的 B/L 初始化都已核对存在，因此不用等本轮 GF。GPU 0 顺序 GF-B→GF-L，GPU 1 顺序 VAT-B→VAT-L；详细配置与完整 nohup 命令见 `EXPERIMENT_PLAN.md`、`RUN_DINOV3_TRAIN_TEST.md`。官方 GazeLLE 后续仅做推理比较；旧 DINOv2 T4 按原阈值单独收口。
+
+用户当前优先提升 VAT，暂不做拥挤 GPU 上的正式效率测试。E2-T 完整继承已验收 GF-B K50 的 Router 与 heatmap decoder，相同 backbone 保持冻结，仅新增 5 个 in/out tensors。VAT 全程 K50，8 epochs：第 1 轮固定 Router、更新 decoder/inout；第 2–8 轮以原 coverage loss 适配 Router，同时用 BCE 适配 decoder/inout。Router/decoder/inout 初始 LR 为 `1e-4/1e-5/1e-3`，seed 0，仍仅 train/test、逐轮按 L2 选一个模型、最终逐帧 test。该入口已实现但未跑真实训练；此决定优先于上一轮先做预算响应/测速的顺序。
 
 GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffix。MM 图 2 是 last-layer PCA，保留素材但当前不直接作为 Router 主动机图。已有 GF K50 相对自身 matched dense AUC 差 `-0.000802`，旧 B8 `1.148545x` 使用不同 split-clean checkpoint，不能据此预写相对官方 GazeLLE 的速度优势。VAT 旧负结果保留。
 
@@ -184,6 +187,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：服务器提交并 push `8f2ae9c`，本地 pull GF-B、VAT 续训 B/L 及既有官方 GF-B 精度报告，共 13 份原始 JSON。按既定规则核对单 checkpoint 选模、真实参数变化、native dense/K100 probe 与逐查询记录；保留 GF-L 运行任务和旧 T4 其他产物。
 - **产出文件与数字**：`results/E1_GFB_E2C_REVIEW.md`、`results/e1_gfb_e2c_server_checks.json`。GF-B 第 5 轮 AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，已有官方 B 报告为 `0.956141/0.104136/0.045332`；相对 Avg/Min L2 降低 2.48%/4.22%，AUC 基本持平。VAT B/L 各新增 8 轮、5,664 次更新，44 个 decoder tensors 改变；最低新 rate-6 L2 `0.111874/0.102485` 未超过旧 best，最终逐帧指标保持不变。原始 dense/routed K100 三项精度差均 0。29 个工件/标注路径（其中 21 个 PT/PTH/gzip）SHA 全匹配，三组逐查询重聚合差值均 0；本轮未新增 GPU forward 或测速。
 - **下一步**：GF-L 继续等待；GF-B 可先做 E3 同硬件测速。VAT 先测预算响应、再做完整 GF-B Router→VAT 迁移，不原样延长固定 Router 的 decoder，不新增 dense 训练。
+
+### 2026-11-23 · E2-T：完整 GF Router→VAT 入口完成
+
+- **完成内容**：按用户最新优先级暂停安排正式效率测试，新增完整 GF Router/decoder 的 VAT 迁移入口；校验共享配置/权重逐值继承，仅新增 in/out。全程 K50、冻结 backbone，首轮固定 Router、后续 coverage/BCE 联合适配，保存每轮 compact checkpoint、原子恢复与标准 test 选模；旧 Gazelle/GF/VAT trainer 源码均未改。
+- **产出文件与数字**：`code/stag/dinov3_transfer.py`、`code/scripts/transfer_gf_router_to_vat.py`、`code/stag/test_dinov3_transfer.py`、`RUN_GF_ROUTER_TO_VAT.md`、`results/e2t_gf_to_vat_local_checks.json`。51/51 CPU 通过（12 项新增、39 项回归），涵盖真实 B/L factory 的全部共享 tensors 继承与仅新增 5 个 in/out tensors、分阶段梯度、hard Top-K 的梯度来源、全画外 batch、合成闭环、父 GF 工件不变及恢复逐值一致；完整 nohup 命令解析/语法通过。GF-B 来源 SHA `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`。8 epochs 是新实验预算，尚无新 VAT 精度。
+- **下一步**：用户 push/pull 后在可安排 GPU 1 时手动运行 E2-T；回传初始化诊断、history、summary 与 provenance，比较 GF Router 迁移前后 VAT 精度/coverage。GF-L 继续原任务，效率等空闲卡再测。
 
 ## 7. T1 服务器运行与结果回传
 

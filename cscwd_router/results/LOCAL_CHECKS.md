@@ -126,3 +126,18 @@ cd /Users/fanb/src/gazelle
 - 两条完整 nohup 命令通过 `bash -n`，两个队列与四个子任务的参数解析均通过，seed 均为 0。
 
 服务器另只读核对四个 decoder、两份 backbone 与四份数据标注；GF-B/GF-L/VAT-B/VAT-L 的任务 tensor 匹配为 40/40/45/45，缺失、多余、shape mismatch 均为 0。权重路径/SHA 与标注统计见工程报告，未加载到本机。合成测试的数值不作为论文实验结果；本轮没有新真实数据训练或 GPU timing。
+
+## E2-T 完整 GF Router→VAT（2026-11-23）
+
+新增 12 项与此前 39 项，共 **51/51 通过**，Python 3.10.20、PyTorch 2.12.0、CPU。报告为 [e2t_gf_to_vat_local_checks.json](e2t_gf_to_vat_local_checks.json)。
+
+```bash
+cd /Users/fanb/src/gazelle
+/private/tmp/gazelle-cscwd-check/bin/python -m pytest -q \
+  cscwd_router/code/stag/test_dinov3_transfer.py \
+  cscwd_router/code/stag/test_dinov3_continue.py \
+  cscwd_router/code/stag/test_dinov3_train_test.py \
+  tests/test_coverage_router.py tests/test_routed_backbone_utils.py
+```
+
+验证真实 B/L factory 的全部共享 tensors 逐值继承、仅新增 5 个 in/out tensors；Router 在首轮冻结、联合阶段经 coverage loss 更新，decoder/inout 更新、backbone 不变；关闭 coverage 项不会把 hard Top-K 当成 heatmap 的可微选择器。全画外 batch、B/L 合成闭环、原 GF 工件不变、逐轮 checkpoint、严格来源 SHA 与中断恢复均通过。完整 nohup 命令通过 shell 与 CLI 解析；旧 E0/续训源码 SHA 不变。未在本机加载真实权重或数据，没有新的真实 VAT 训练或 GPU timing。
