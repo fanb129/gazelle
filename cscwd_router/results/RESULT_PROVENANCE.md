@@ -247,3 +247,9 @@
 - checks: `cscwd_router/results/e2t_gfb_to_vatb_server_checks.json`; SHA256: `98c4afe5ac4a142ab1939cde14e740cb041157c604f39801bc49dc10320352b2`。服务器只读 CPU 核对 20 个工件路径/SHA（14 个 PT/PTH/gzip）、52 个 GF 共享 tensors、8 轮真实更新和单 checkpoint 选模；31,978 条逐查询身份/标注一致，AUC/L2/AP 重聚合差值均 0。大工件路径与 SHA 见上方 `GF Router to VAT · vitb`，未下载或入 Git。
 - review: `cscwd_router/results/E2T_GF_TO_VAT_REVIEW.md`; SHA256: `584cd910b09fa0836cbf9ce361e7620b53cb8ab76feb6d066ca273466392a25b`。最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B 差 `+0.026485/-0.010840/-0.018555`，L2 相对降低 9.77%。选中第 1 轮，Router 仍为 GF 权重；后 7 轮联合适配未改善 L2。
 - 本轮未新增训练、模型 forward 或测速。下一任务 E2-H 优先仅适配 `inout_head`，冻结 Router、共享 decoder 与 `inout_token`，尚未实现或运行；效率等空闲卡。
+
+## E2-W · GF-L 等待期快照与后续顺序（2026-11-23）
+
+- snapshot: `cscwd_router/results/gfl_interim_20261123.json`; SHA256: `b2b70e8366c2281c0c78dcbfe2bbc4bed77f5f0c50c1109bf97481ba8515bf81`。观察时间 `2026-11-23T06:39:26.130300+00:00`，只读服务器三个小报告和日志；原始报告路径、SHA 与内容均在快照中，无新增训练/推理/测速。
+- GF-L 已提交 2 个 decoder epochs，第 2 轮 train K75、test K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，尚无最终 summary，不当作最终成绩。
+- 用户接受当前 VAT-B，将分类头适配后移。等 GF-L 完成，可用则正式效率与完整 Router→VAT-L；不理想则先训练来源明确的 DINOv3-L 多层 GF 底座。等待期预算扫描、scene-only 与真实多人 union 的顺序记录在 `EXPERIMENT_PLAN.md`，尚未启动。

@@ -270,7 +270,7 @@ VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次�
 
 ## 10. 论文组织与下一步
 
-用户当前优先提升 VAT，正式效率等待空闲卡。E2-T 已完成并恢复定位，当前优先 E2-H：从其 best 仅适配 `inout_head`，冻结共享 decoder 和 `inout_token`，改善 AP。该任务尚未实现或运行；迁移/分类适配属于训练配置，不扩展方法贡献。原迁移命令见 `../RUN_GF_ROUTER_TO_VAT.md`，不重复启动。
+用户接受当前 VAT-B，分类头适配后移。先等 GF-L 完成：可用则同硬件效率与完整 GF-L Router→VAT-L，不理想则先训练来源明确的 GF-L DINOv3 多层底座。等待期优先预算响应、人物条件化对照与真实多人 union 证据；GF-L 当前第 2 轮中间成绩已有积极信号，但不提前当作最终结果。正式效率等待空闲卡，原迁移命令见 `../RUN_GF_ROUTER_TO_VAT.md`，不重复启动。
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 

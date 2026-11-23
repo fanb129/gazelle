@@ -12,7 +12,11 @@ L 来源更新先读 `results/L_INITIALIZER_DECISION.md` 与 `results/l_initiali
 
 最新先读 `results/E2T_GF_TO_VAT_REVIEW.md` 与 `results/e2t_gfb_to_vatb_server_checks.json`。E2-T 完整 GF-B Router/decoder→VAT-B 已完成并经 `170ace8` push/pull：最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。实际 8 epochs K50，首轮固定 Router、后 7 轮 coverage/BCE 联合适配；按 test L2 选第 1 轮，选中 Router 与 GF 逐值一致，不能宣称联合 VAT Router 适配提升。52 个共享 tensors、20 个工件 SHA、8 轮真实更新和全部 31,978 条逐查询记录核验通过，重聚合指标差均 0。原命令 `RUN_GF_ROUTER_TO_VAT.md` 保留供复现，不重复运行。
 
-下一任务优先 E2-H：从该 best 仅训练 post-transformer 的 `inout_head` MLP，冻结 backbone、Router、heatmap decoder 和 `inout_token`，保护定位、改善 AP。尚未实现或运行。现有 inout 参数组包含 `inout_token`，不能直接用 router/decoder LR=0 实现此控制；需独立参数范围和逐查询热图一致性检查，再给用户完整命令手动跑。正式效率等待空闲卡，原 GF-L 不擅停，旧 trainer 源码不改。
+用户最新决定：接受当前 B 结果，E2-H 分类头适配后移。先等 GF-L 完成，可用则测同硬件效率、完整 GF-L Router→VAT-L；不理想则先训练来源明确的 DINOv3-L 多层 GF 底座，不提前启动 dense。只读快照 `results/gfl_interim_20261123.json`：已提交 2 个 decoder epochs，第 2 轮 train K75、test K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，无最终 summary。不是最终成绩，不重复启动。历史 L 层号未闭合的标签保留，较好成绩不替代来源说明。
+
+等待期实验优先级见 `EXPERIMENT_PLAN.md` 第 5 节：B 预算扫描 K25/K50/K75/K100、GF-B scene-only 同起点同预算重训对照、真实 VAT 同帧多人 union 精度/选区。GPU 精度与训练只需可用显存，正式效率需空闲卡；GF official test 全部单头，不可冒充多人证据。DINOv3 独立预算/benchmark/scene-only 入口还需实现，不复用 DINOv2 checkpoint 入口硬跑。
+
+若以后恢复 E2-H，只训练 post-transformer 的 `inout_head` MLP，冻结 backbone、Router、heatmap decoder 和 `inout_token`。现有 inout 参数组包含 `inout_token`，不能直接用 router/decoder LR=0 实现；需独立参数范围和热图一致性检查，再给用户完整命令手动跑。旧 trainer 源码不改。
 
 0. `cscwd_router/EXPERIMENT_PLAN.md` 与 `RUN_DINOV3_TRAIN_TEST.md`：E0 四组配置、GPU 0/1 命令、输出与恢复。最新 GF-B/VAT 续训结果先读 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`，优先于 W1/W2 的历史预算。
 1. `cscwd_router/latex/PAPER_STORY.md`：当前 idea、行文与贡献边界。

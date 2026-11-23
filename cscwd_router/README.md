@@ -13,7 +13,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 ## 写作与执行入口
 
 - [L_INITIALIZER_DECISION.md](results/L_INITIALIZER_DECISION.md)：L 权重的四路投影与历史源码矛盾；keys/shape 兼容不作为历史同配置认证。B 优先，L 作 warm-start 补充线，暂不重训两个 dense 或切 GazeSpot。
-- [E2T_GF_TO_VAT_REVIEW.md](results/E2T_GF_TO_VAT_REVIEW.md)：完整 GF-B→VAT-B 已回传，逐帧 `0.940033/0.100131/0.883183`；best 为 Router 冻结首轮，定位恢复、AP 待提升，下一项优先仅适配分类头。
+- [E2T_GF_TO_VAT_REVIEW.md](results/E2T_GF_TO_VAT_REVIEW.md)：完整 GF-B→VAT-B 已回传，逐帧 `0.940033/0.100131/0.883183`；best 为 Router 冻结首轮，定位恢复、AP 待提升。用户接受当前结果，分类头适配后移。
 - [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)：E2-T 已完成，完整 GF-B Router/decoder→VAT，8 epochs K50；保留原命令供复现，不重复启动；效率等空闲卡。
 - [E1_GFB_E2C_REVIEW.md](results/E1_GFB_E2C_REVIEW.md)：GF-B 精度、VAT 续训失败原因分析与后续实验；结果已回传并核验。
 - [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)：E2-C，VAT 初始化 GF→VAT 来源与固定 K50 低 LR 续训；续训已完成，各追加 8 epochs 未改善 L2，保留旧 best；命令保留供复现。
@@ -36,7 +36,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 四组均复用兼容旧 raw-concat decoder，再以 seed0 重学 Router，不直接继承 seed3106 support。VAT B/L 初始化已存在，不需要等本轮 GF。官方 GazeLLE 后续仅推理比较；旧 matched dense 保留原协议。
 
-后续完整 GF-B Router/decoder→VAT-B 迁移已完成，最终 AUC/L2/AP `0.940033/0.100131/0.883183`，较旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。第 1 轮固定 Router 的模型被选中，后 7 轮联合适配未改善 L2；下一项优先仅更新 `inout_head`，冻结共享 decoder 与 `inout_token`，该任务尚未实现或运行。
+后续完整 GF-B Router/decoder→VAT-B 迁移已完成，最终 AUC/L2/AP `0.940033/0.100131/0.883183`，较旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。用户接受当前 B，先等 GF-L 完成；可用则测效率并迁移 VAT-L，不理想则先训练来源明确的 GF-L DINOv3 多层底座。GF-L 第 2 轮 K50 test `0.960007/0.094061/0.037721` 是中间结果，见 [只读快照](results/gfl_interim_20261123.json)。等待期优先预算扫描、条件化对照和真实多人 union；具体顺序见实验清单。
 
 ## 工作约定
 

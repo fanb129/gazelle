@@ -6,7 +6,9 @@ E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DIN
 
 ## 1. 四组主实验与并行顺序
 
-E2-T 已完成并通过 `170ace8` 回传：完整 GF-B Router/heatmap decoder→VAT-B，8 epochs 固定 K50、冻结 backbone，首轮固定 Router、后 7 轮联合适配。最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，按 L2 选首轮；定位明显改善，AP 较旧 VAT-B 下降，联合阶段未改善 L2。详见 [E2-T 审查](results/E2T_GF_TO_VAT_REVIEW.md)，[原运行命令](RUN_GF_ROUTER_TO_VAT.md)保留供复现。当前优先 E2-H：仅适配 `inout_head`，冻结 Router、heatmap decoder 和 `inout_token`，尚未实现或运行；正式效率等空闲卡。
+E2-T 已完成并通过 `170ace8` 回传：完整 GF-B Router/heatmap decoder→VAT-B，最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，按 L2 选首轮。用户接受当前 B 结果，E2-H 分类头适配后移；先等 GF-L 完成，可用则同硬件效率与完整 GF-L Router→VAT-L，不理想则先训练来源明确的 DINOv3-L 多层 GF 底座。详见 [E2-T 审查](results/E2T_GF_TO_VAT_REVIEW.md)，[原运行命令](RUN_GF_ROUTER_TO_VAT.md)保留供复现；目前不提前启动 dense。
+
+等待期只读快照见 [gfl_interim_20261123.json](results/gfl_interim_20261123.json)：GF-L 已提交 2 个 decoder epochs，第 2 轮训练 K75、test 固定 K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，无最终 summary。该中间成绩已有积极信号，不提前替代最后的选模和审查。
 
 2026-11-23 E2-C 实际结果：原始 VAT dense 与 routed K100 的精度差为 0；两组低 LR 固定 K50 各加 8 epochs 后，均未超过旧 best L2，不继续原样加轮数。GF-B 已完成，GF-L 继续等待。完整 GF-B Router→VAT 迁移此后已完成，当前接续分类头适配；预算响应与 E3 测速在其后安排。详见 [历史审查](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
@@ -61,6 +63,21 @@ VAT 的 B/L 都已有可用 decoder，因此不依赖本轮 GF 产物。先并�
 只测自己的 FPS，或引用不同 GPU 的论文毫秒数，无法得到相对 GazeLLE 的实测加速比。E3 入口在本轮四组训练后接续；E0 没有伪造效率结果。
 
 ## 5. E4 与余量实验
+
+### 当前等待期的实验优先级（2026-11-23）
+
+| 顺序 | 工作 | 新训练 | GPU 条件 | 回答的问题 |
+|---|---|---|---|---|
+| 1 | 已完成 GF-B / VAT-B 的 K25/K50/K75/K100 扫描 | 无 | 有可用显存即可做精度；计时另跑 | 压缩预算改变后，精度与 coverage 如何变化 |
+| 2 | GF-B scene-only Router 对照 | support 3 + decoder 5 | 可在允许共用的卡训练，不要求独占 | 人物外观/相对几何条件是否有价值 |
+| 3 | VAT 真实同帧多人 union 与逐人 repeat 的精度、选区和案例 | 无 | 推理需显存；速度需空闲卡 | 固定共同预算如何服务多人的不同需求 |
+| 4 | 既有逐查询结果按场景、画内/画外、定位误差分组 | 无 | CPU | 改善与失败集中在哪些样本 |
+
+预算扫描只改变同一 checkpoint 的 keep ratio，不将 K100 冒充重新训练的 dense，不用每个预算再选不同 epoch。scene-only 对照从原 E0 的 GF-B dense 初始化开始，保持冻结 backbone、输入、seed 0、数据增强、学习率、3+5 更新预算及 test-selected 规则一致，去掉 head appearance 与 bbox-relative geometry；与现有 full-conditioned GF-B 比较整行结果。输入临时置零或换错头框只能作敏感性诊断，不能代替重训对照。
+
+GF official test 的 4,782 张图均为单头查询，多人实验应使用 VAT test 中同一真实帧的多头标注，不从 train 挑样本充当 test 或伪造头框。union 与 repeat 都报告质量，固定 K 下不保证等价。现有官方 GF 精度报告没有逐查询预测，做配对统计前需补齐同查询 baseline 输出。
+
+DINOv3 独立预算评测、scene-only 与正式 benchmark 入口尚未实现；原 `benchmark_router_dinov2.py` 不能直接用于本轮 DINOv3 checkpoint。等待期间可先在本机完成入口和数据分组，服务器运行仍由用户手动执行，提供完整 nohup 命令后再跑。
 
 使用已训练模型，在真实多人帧上按同时查询 1/2/3 人分层，比较 GazeLLE 的共享 dense 与 Router 的共享 sparse union；per-person repeat 仅作额外控制。导出真实 support、选中 patch、GT 与热图，保留定位退化样例。它们均不新增训练。
 

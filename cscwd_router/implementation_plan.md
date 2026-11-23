@@ -5,7 +5,7 @@
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
 > 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。最新 GF 与续训状态见下一条，效率尚待测量。
 > E1-B / E2-C 最新：GF-B 与 VAT 续训结果已通过 `8f2ae9c` 回传并核验。GF-B 为 `0.956236/0.101550/0.043420`；VAT 各新增 8 epochs 未超过旧 best L2，最终指标不变。GF-L 仍训练；详见 `results/E1_GFB_E2C_REVIEW.md`。
-> E2-T 已完成并经 `170ace8` 回传：完整 GF-B Router→VAT-B 的逐帧 AUC/L2/AP 为 `0.940033/0.100131/0.883183`。按 L2 选第 1 轮（Router 仍冻结）；后 7 轮联合适配未改善定位。审查见 `results/E2T_GF_TO_VAT_REVIEW.md`。下一项优先 E2-H：保护当前定位、仅适配 inout_head，尚未实现或运行；效率等空闲卡。
+> E2-T 已完成并经 `170ace8` 回传：完整 GF-B Router→VAT-B 的逐帧 AUC/L2/AP 为 `0.940033/0.100131/0.883183`。用户接受当前 B 结果，E2-H 分类头适配后移。GF-L 第 2 轮 K50 test `0.960007/0.094061/0.037721`（尚未完成），先等收尾；可用则效率测试与 VAT-L 迁移，否则先训练来源明确的 GF-L DINOv3 多层底座。详见 `EXPERIMENT_PLAN.md`。
 > L 来源补充：现存 GF-L/VAT-L 投影从 epoch 0 起均为 4096 通道，W&B 指向 DINOv3，但历史精确选层未闭合；不能当作已证实单层，也不能继续称同配置初始化已完全认证。详见 `results/L_INITIALIZER_DECISION.md`。B 迁移已恢复定位，继续优先；本轮未停止 L 或新增 L dense 任务。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
@@ -13,13 +13,13 @@
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
-L 初始化的 keys/shape 兼容不等于历史特征配置一致。当前 GF-L 保留为独立 warm-start 实验，等待本轮 K75 test；不因目录名或记忆直接判无效，也不新开两套 L dense。B 的两数据集与完整 GF-B Router→VAT 是首要工作，GazeSpot 分支暂不替换当前主线。
+L 初始化的 keys/shape 兼容不等于历史特征配置一致。当前 GF-L 保留为独立 warm-start 实验，已取得第 2 轮 test，等待 5 轮完整结果；用户接受 B 结果后，优先收齐 GF-L，可用则接效率和完整 GF-L Router→VAT-L。不理想时再训练来源明确的 GF-L DINOv3 多层底座，不提前新开两套 L dense；GazeSpot 暂不替换主线。
 
 按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。GF-B 已完成并核验，GF-L 继续训练。VAT 两组及各新增 8 轮低 LR 续训已核验；新 L2 未改善，保留原 best，不再原样加轮数。
 
 VAT 的 B/L 初始化都已核对存在，因此不用等本轮 GF。GPU 0 顺序 GF-B→GF-L，GPU 1 顺序 VAT-B→VAT-L；详细配置与完整 nohup 命令见 `EXPERIMENT_PLAN.md`、`RUN_DINOV3_TRAIN_TEST.md`。官方 GazeLLE 后续仅做推理比较；旧 DINOv2 T4 按原阈值单独收口。
 
-用户当前优先提升 VAT，暂不做拥挤 GPU 上的正式效率测试。E2-T 已实际完成：完整继承 GF-B K50 的 52 个 Router/heatmap decoder tensors，仅新增 5 个 in/out tensors，backbone 冻结；8 epochs 中首轮固定 Router，后 7 轮 coverage/BCE 联合适配，初始 LR `1e-4/1e-5/1e-3`，seed 0。按 rate-6 test L2 选第 1 轮，最终 rate-1 AUC/L2/AP `0.940033/0.100131/0.883183`；定位显著改善、AP 低于旧 VAT-B，联合阶段未改善 L2。下一项优先仅适配 `inout_head`，冻结共享 decoder 和 `inout_token` 以保护定位；E2-H 尚未实现或运行，不原样追加联合训练。
+E2-T 已实际完成：完整继承 GF-B K50 的 52 个 Router/heatmap decoder tensors，仅新增 5 个 in/out tensors，backbone 冻结；8 epochs 中首轮固定 Router，后 7 轮 coverage/BCE 联合适配，初始 LR `1e-4/1e-5/1e-3`，seed 0。按 rate-6 test L2 选第 1 轮，最终 rate-1 AUC/L2/AP `0.940033/0.100131/0.883183`；定位显著改善、AP 低于旧 VAT-B，联合阶段未改善 L2。用户接受当前结果，先收齐 GF-L；E2-H 仅分类头适配后移。等待期优先预算扫描、条件化对照与多人 union 证据，正式效率等空闲卡。
 
 GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffix。MM 图 2 是 last-layer PCA，保留素材但当前不直接作为 Router 主动机图。已有 GF K50 相对自身 matched dense AUC 差 `-0.000802`，旧 B8 `1.148545x` 使用不同 split-clean checkpoint，不能据此预写相对官方 GazeLLE 的速度优势。VAT 旧负结果保留。
 
@@ -208,6 +208,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：服务器仅提交当前 5 份 JSON 与对应 provenance block，push `170ace8`，本地 pull/rebase 保留 L 来源文档和原有目录迁移。核对完整 GF 权重继承、8 轮参数变化、实际 optimizer steps、单模型选模与全部逐帧导出；未新增 GPU forward 或测速。
 - **产出文件与数字**：`results/vat_from_gfb_router_k050_joint_seed0/`、`results/E2T_GF_TO_VAT_REVIEW.md`、`results/e2t_gfb_to_vatb_server_checks.json`。最终 31,978 人次、20,655 画内，AUC/L2/AP `0.940033/0.100131/0.883183`，相对旧 VAT-B 差 `+0.026485/-0.010840/-0.018555`，L2 相对降低 9.77%。第 1 轮 Router 未改变，后 7 轮实际更新 4,956 次；decoder/inout 更新 5,664 次，但 best 仍为第 1 轮。20 个登记工件（14 个大型 PT/PTH/gzip）SHA、5 份回传报告与 20 个本地源码 SHA 一致；31,978 条预测身份/标注匹配，三项指标重聚合差值均 0。
 - **下一步**：E2-H 优先从当前 best 仅适配 `inout_head`，冻结 Router、heatmap decoder 与 `inout_token`，先改善 AP；需独立实现参数控制与热图一致性检查，再由用户手动运行。暂不原样加联合 epochs；效率等空闲卡，L 来源独立保留。
+
+### 2026-11-23 · E2-W：接受 B 结果，确定等待期与 L 后续分支
+
+- **完成内容**：按用户决定将 E2-H 后移；只读服务器 GF-L history、日志与 GPU 状态，记录等待期实验优先级，不启动/停止任务。GF-L 完成后可用则正式效率与完整 Router→VAT-L；不理想则先训练来源明确的 DINOv3-L 多层 GF 底座。
+- **产出文件与数字**：`results/gfl_interim_20261123.json`、`EXPERIMENT_PLAN.md`。GF-L 已提交 2 个 decoder epochs；第 2 轮 train K75、test K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`，第 3 轮 K50 训练中，无最终 summary。快照保存三个原始报告内容/SHA、服务器 Git 与日志尾部；不是最终成绩或效率结果。
+- **下一步**：先准备 B 的预算响应（无需重训）与 scene-only 条件化对照（同起点、同 seed/预算重训），再做真实多人 union 精度/可视化。正式效率入口需适配 DINOv3，空闲卡测量；GF official test 全部单头，不作为多人证据。
 
 ## 7. T1 服务器运行与结果回传
 

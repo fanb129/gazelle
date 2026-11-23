@@ -1,0 +1,281 @@
+{
+  "observed_at_utc": "2026-11-23T06:39:26.130300+00:00",
+  "scope": "Read-only snapshot of incomplete GF-L training; no model forward or timing.",
+  "server_git_commit": "170ace87b6e0f80062d85fddf80b55439085e688",
+  "completed_summary_exists": false,
+  "reports": {
+    "manifest.json": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/manifest.json",
+      "sha256": "572744a7c125f36b04ce3671dafdd95f943f52f64a092a4cddf721c6ceab6041",
+      "content": {
+        "recipe": {
+          "dataset": "gazefollow",
+          "size": "l",
+          "data_path": "/newhome/fb/dataset/gazefollow_extended",
+          "init_checkpoint": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+          "init_sha256": "7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af",
+          "init_kind": "decoder",
+          "backbone_sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035",
+          "support_epochs": 3,
+          "decoder_epochs": 5,
+          "keep_ratio": 0.5,
+          "batch_size": 4,
+          "eval_batch_size": 4,
+          "grad_accumulation": 8,
+          "workers": 8,
+          "router_lr": 0.001,
+          "decoder_lr": 0.0001,
+          "inout_lr": 0.001,
+          "weight_decay": 0.0,
+          "clip_norm": 1.0,
+          "budget_weight": 0.05,
+          "router_hidden_dim": 256,
+          "router_temperature": 1.0,
+          "escape_tokens": 8,
+          "train_frame_rate": 6,
+          "test_frame_rate": 6,
+          "seed": 0,
+          "log_every": 50,
+          "device": "cuda"
+        },
+        "model_config": {
+          "model": "gazelle_dinov3_vitl16",
+          "router_stage": "backbone_sparse",
+          "route_after_block": 11,
+          "keep_ratio": 0.5,
+          "router_hidden_dim": 256,
+          "router_temperature": 1.0,
+          "escape_tokens": 8,
+          "spatial_prior": "none",
+          "fusion": "raw_concat"
+        },
+        "data": {
+          "strategy": "official_train_test",
+          "selection_policy": "test_selected",
+          "validation_fraction": 0.0,
+          "train_split": "train",
+          "evaluation_split": "test",
+          "query_unit": "person",
+          "train_persons": 113458,
+          "test_persons": 4782,
+          "train_frame_sample_every": 1,
+          "test_frame_sample_every": 1,
+          "train_annotation": {
+            "path": "/newhome/fb/dataset/gazefollow_extended/train_preprocessed.json",
+            "sha256": "44f1b1e76da9e7acc2b44bd5e1d97b957bea756bd9e1c1c116457b7daa99e0e9"
+          },
+          "test_annotation": {
+            "path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+            "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+          }
+        },
+        "initialization": {
+          "kind": "decoder",
+          "loaded_tensors": 40,
+          "router_reinitialized": true,
+          "path": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_vitl/2026-01-30_13-14-15/epoch_14.pt",
+          "sha256": "7dbe0f2e07d003f3d8c479751dd08c3bbc642d8ab6558c11847a6e5d38fe58af"
+        },
+        "backbone": {
+          "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+          "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+        },
+        "sources": {
+          "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+          "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+          "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+          "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+          "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+          "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+          "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+          "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+          "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+          "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+          "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+          "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+          "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+          "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+          "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+          "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+          "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+          "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+          "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039"
+        },
+        "torch_version": "2.6.0+cu124",
+        "fingerprint": "40bbf83ebc5ed9b37bb300f35c4046fdc5d7b3e2d26c4a6411f9130f81cca0b4",
+        "runtime": {
+          "python": "3.10.19",
+          "torch": "2.6.0+cu124",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 3090",
+          "cuda_version": "12.4",
+          "cuda_visible_devices": "0",
+          "git_commit": "d1bbc380af4accd87bf2a76ad7acfc61e5eaadaf"
+        }
+      }
+    },
+    "support_history.json": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/support_history.json",
+      "sha256": "99eb93625d99873007e029568a516fd5259677e7595a96733f86f478198610b6",
+      "content": [
+        {
+          "epoch": 0,
+          "train": {
+            "loss": 2.093189268140635,
+            "persons": 113458,
+            "optimizer_steps": 28365,
+            "seconds": 5154.336994307989,
+            "train_keep_ratio": 0.25,
+            "trainable_parameters": {
+              "backbone": 0,
+              "router": 594177,
+              "decoder_and_inout": 0
+            }
+          },
+          "test": {
+            "auc": 0.9497953418272345,
+            "avg_l2": 0.10643870146134465,
+            "min_l2": 0.05007337436144848,
+            "persons": 4782,
+            "inframe_persons": 4782,
+            "precision": "fp32",
+            "query_unit": "person",
+            "keep_ratio": 0.5,
+            "routing_gt_point_coverage": 0.9288090335136113,
+            "routing_hard_coverage": 0.8406206970432223,
+            "routing_soft_coverage": 0.38410159015645545
+          }
+        },
+        {
+          "epoch": 1,
+          "train": {
+            "loss": 1.9072139422453578,
+            "persons": 113458,
+            "optimizer_steps": 28365,
+            "seconds": 5219.903829388961,
+            "train_keep_ratio": 0.25,
+            "trainable_parameters": {
+              "backbone": 0,
+              "router": 594177,
+              "decoder_and_inout": 0
+            }
+          },
+          "test": {
+            "auc": 0.9493957438242873,
+            "avg_l2": 0.10686999107160285,
+            "min_l2": 0.0500385846278215,
+            "persons": 4782,
+            "inframe_persons": 4782,
+            "precision": "fp32",
+            "query_unit": "person",
+            "keep_ratio": 0.5,
+            "routing_gt_point_coverage": 0.9315471476092417,
+            "routing_hard_coverage": 0.8426638088282159,
+            "routing_soft_coverage": 0.4003560275512478
+          }
+        },
+        {
+          "epoch": 2,
+          "train": {
+            "loss": 1.789695733328211,
+            "persons": 113458,
+            "optimizer_steps": 28365,
+            "seconds": 5220.858962327999,
+            "train_keep_ratio": 0.25,
+            "trainable_parameters": {
+              "backbone": 0,
+              "router": 594177,
+              "decoder_and_inout": 0
+            }
+          },
+          "test": {
+            "auc": 0.9499103221884779,
+            "avg_l2": 0.10696192854281346,
+            "min_l2": 0.050746470020491555,
+            "persons": 4782,
+            "inframe_persons": 4782,
+            "precision": "fp32",
+            "query_unit": "person",
+            "keep_ratio": 0.5,
+            "routing_gt_point_coverage": 0.9353261976420538,
+            "routing_hard_coverage": 0.8528800056799343,
+            "routing_soft_coverage": 0.4841950970469335
+          }
+        }
+      ]
+    },
+    "sparse_decoder_history.json": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/sparse_decoder_history.json",
+      "sha256": "3c63cfa715938e5d3e882c3d0fc72150658cc1301cdfdffa45a050c061550355",
+      "content": [
+        {
+          "epoch": 0,
+          "train": {
+            "loss": 0.039284675136954786,
+            "persons": 113458,
+            "optimizer_steps": 3546,
+            "seconds": 10615.974213241017,
+            "train_keep_ratio": 1.0,
+            "trainable_parameters": {
+              "backbone": 0,
+              "router": 0,
+              "decoder_and_inout": 3678720
+            }
+          },
+          "test": {
+            "auc": 0.9480907566755583,
+            "avg_l2": 0.10977033063559977,
+            "min_l2": 0.053189514449772005,
+            "persons": 4782,
+            "inframe_persons": 4782,
+            "precision": "fp32",
+            "query_unit": "person",
+            "keep_ratio": 0.5,
+            "routing_gt_point_coverage": 0.9353261976420538,
+            "routing_hard_coverage": 0.8528800056799343,
+            "routing_soft_coverage": 0.4841950970469335
+          }
+        },
+        {
+          "epoch": 1,
+          "train": {
+            "loss": 0.03954092869180316,
+            "persons": 113458,
+            "optimizer_steps": 3546,
+            "seconds": 11377.574082661013,
+            "train_keep_ratio": 0.75,
+            "trainable_parameters": {
+              "backbone": 0,
+              "router": 0,
+              "decoder_and_inout": 3678720
+            }
+          },
+          "test": {
+            "auc": 0.9600070985647116,
+            "avg_l2": 0.0940614169133612,
+            "min_l2": 0.03772149181701388,
+            "persons": 4782,
+            "inframe_persons": 4782,
+            "precision": "fp32",
+            "query_unit": "person",
+            "keep_ratio": 0.5,
+            "routing_gt_point_coverage": 0.9353261976420538,
+            "routing_hard_coverage": 0.8528800056799343,
+            "routing_soft_coverage": 0.4841950970469335
+          }
+        }
+      ]
+    }
+  },
+  "log_path": "/home/fb/src/paper/gazelleV1/logs/cscwd_router/gazefollow_bl_seed0_gpu0.log",
+  "log_tail": [
+    "TRAIN stage=sparse_decoder batch=25600/28365 loss=0.044870 keep=0.500 elapsed_s=7155.7",
+    "TRAIN stage=sparse_decoder batch=25650/28365 loss=0.039683 keep=0.500 elapsed_s=7168.0",
+    "TRAIN stage=sparse_decoder batch=25700/28365 loss=0.034439 keep=0.500 elapsed_s=7180.4",
+    "TRAIN stage=sparse_decoder batch=25750/28365 loss=0.033310 keep=0.500 elapsed_s=7192.8",
+    "TRAIN stage=sparse_decoder batch=25800/28365 loss=0.030247 keep=0.500 elapsed_s=7205.6",
+    "TRAIN stage=sparse_decoder batch=25850/28365 loss=0.037166 keep=0.500 elapsed_s=7218.4",
+    "TRAIN stage=sparse_decoder batch=25900/28365 loss=0.045856 keep=0.500 elapsed_s=7231.3",
+    "TRAIN stage=sparse_decoder batch=25950/28365 loss=0.033809 keep=0.500 elapsed_s=7244.3"
+  ]
+}
