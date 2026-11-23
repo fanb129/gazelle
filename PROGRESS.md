@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | 三卡入口就绪：GPU0 GF-B/GF-L 效率、GPU1 当前 VAT-B 效率、GPU2 完整 GF-L→VAT-L。68 项 CPU 通过，用户手动启动；尚无正式速度或新 VAT-L 数字 |
+| CSCWD 新主线 | `cscwd_router/` | GPU0 GF 效率、GPU2 VAT-L 已启动；VAT-B 嵌套标注修复已部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按新命令重启，原目录继续保持运行版本 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -80,9 +80,11 @@
 
 **E2-TL 迁移接入（2026-11-24）**：共享 source reader 显式接入 GF-L 用户收口状态，核对原 last/history 与导出 best 逐值一致，保留 completed=false 和实际 3+4。VAT-L 使用原 B 配方 8 epochs K50，batch4×累积8、seed0，首轮固定 Router、后7轮联合适配，逐轮 test L2 选模、最后逐帧 test。新增合成闭环通过，含旧训练/续训/迁移回归合计 **68/68**；旧 gazelle/ 未改。完整 GPU0/1/2 命令 `cscwd_router/RUN_EFFICIENCY_VATL.md`，工程报告 `results/e3_efficiency_vatl_local_checks.json`。本轮仅本机实现/CPU 检查和服务器只读权重/GPU 核对，未启动真实训练或测速。
 
+**E3-F1 VAT 效率入口修复（2026-11-24）**：用户报告 `KeyError: 'heads'`，原因是 VAT 顶层序列需展开 frames，旧效率采样只覆盖 GF 扁平结构。已按 dataset 复用官方 loader，补嵌套采样与队列/恢复测试，70/70 CPU 通过。修复 `29c6607` 已 push，服务器独立 worktree `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 就绪，原目录 HEAD4162da7/核心源码未变，GPU0/2 继续原任务。真实 VAT 475 序列/58,507 帧、8 个 RGB/GT 框及 B1/B8 正反序四个请求预检通过；未启动 GPU1 计时。完整重启命令 `RUN_VAT_EFFICIENCY_FIX.md`，证据 `results/e3_vat_schema_fix_checks.json`；新结果写原仓库 `_vatfix` 目录。
+
 ## 下一步
 
-1. 按 `RUN_EFFICIENCY_VATL.md` 更新代码并由用户手动启动三卡：GPU0 GF-B/GF-L、GPU1 当前 GF→VAT-B 的正式效率，GPU2 完整 GF-L→VAT-L；回传各自小报告，速度与迁移精度依实测。GF-L 统一用第 2 轮 best，不补旧轮次。
+1. 用户按 `RUN_VAT_EFFICIENCY_FIX.md` 从独立目录重启 GPU1 VAT-B；GPU0/2 原任务继续，GF 效率完成后再更新原目录。回传 GF/新 VAT 效率及 VAT-L 小报告审查，速度与迁移精度依实测。
 2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 

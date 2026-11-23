@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [RUN_VAT_EFFICIENCY_FIX.md](RUN_VAT_EFFICIENCY_FIX.md)：VAT 嵌套 frames 采样修复已部署到独立目录；70 项 CPU 与真实数据预检通过，GPU1 重启命令。GPU0/2 保持原运行版本。
 - [RUN_EFFICIENCY_VATL.md](RUN_EFFICIENCY_VATL.md)：当前三卡完整命令。GPU0 GF-B/GF-L 效率、GPU1 当前 VAT-B 效率、GPU2 完整 GF-L→VAT-L；入口已实现，68 项 CPU 通过，尚未执行真实 GPU 任务。
 - [E1L_GF_INTERRUPTED_REVIEW.md](results/E1L_GF_INTERRUPTED_REVIEW.md)：GF-L 关机后以实际 3+4 轮收口，选第 2 轮 K50，`0.960007/0.094061/0.037721`；best 已导出并回传核验，接效率与完整 VAT-L 迁移，不先新训 GF-L dense。
 - [L_INITIALIZER_DECISION.md](results/L_INITIALIZER_DECISION.md)：L 权重的四路投影与历史源码矛盾；keys/shape 兼容不作为历史同配置认证。B 优先，L 作 warm-start 补充线，暂不重训两个 dense 或切 GazeSpot。

@@ -267,3 +267,10 @@
 - runbook: `cscwd_router/RUN_EFFICIENCY_VATL.md`; SHA256: `2dd2c8c534db48ade31a3fc0977a245cef7c77331d986e45f78b2995db67cd1f`。GPU0 顺序 GF-B/GF-L，GPU1 当前 GF→VAT-B，GPU2 完整 GF-L→VAT-L；B1/B8 正反序，official/K100/K50、FP16、50/200/500/5，实际训练为新 L 目录 8 epochs K50、batch4×累积8、seed0。
 - GF-L 收口原 JSON 和原权重不改，显式 --allow-closed-gf 核对完整 history/last/best 后接受；源 completed=false 与实际3+4写入新 VAT manifest/summary。官方 B/L/B-inout decoder 与两份 DINOv2 backbone 已服务器只读核对；旧 gazelle/ 未改。
 - 本轮没有启动真实 GPU forward/训练/测速，无新速度或 VAT-L 精度数字。效率小报告将写 results/efficiency_dinov3_seed0_20261124/；新大型 VAT-L PT/gzip 将留服务器 experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/，运行时自动登记路径/SHA。
+
+## E3-F1 · VAT frames 采样修复（2026-11-24）
+
+- code commit: `29c660731e4deb8ad5746c7504b48a065e479691`，已 push；服务器独立 worktree `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 固定该提交，读取原权重/数据。原目录 HEAD `4162da7` 与三个核心源码 SHA 保持不变，GPU0/2 继续原任务。
+- checks: `cscwd_router/results/e3_vat_schema_fix_checks.json`; SHA256: `044447d94efe7002433b76a5da833a5bf2f8e731feb1c2b3866f4c25b680fc6d`。70/70 本机 CPU 通过；真实 VAT 475 序列、58,507 帧，8 个 RGB/GT 框匹配官方 loader，B1 为 B8 前缀，GF B8 metadata 与旧版一致，B1/B8 正反序四个请求 --check-only 通过。没有 GPU forward/计时或新的模型指标。
+- runbook: `cscwd_router/RUN_VAT_EFFICIENCY_FIX.md`; SHA256: `ddd3ad5343fca648505b39a7d7601740cb611dec21002ed0ab6313aaea6e0e83`。完整 GPU1 命令已过 CLI/ shell 语法检查；用户手动启动，结果写回原仓库 results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/，不混入旧 GF 版本单元。
+- 原错误发生在计时之前；旧失败日志和已有 GF 单元保留。修复仅按 dataset 复用官方 loader 展开 VAT frames，不修改 gazelle/、迁移训练或现有权重，不复制大型工件。

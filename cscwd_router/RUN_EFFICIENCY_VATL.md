@@ -1,5 +1,7 @@
 # 三卡：GF-B/GF-L/VAT-B 效率与 GF-L→VAT-L
 
+2026-11-24 VAT 入口修复已部署：已启动的 GPU0/2 保持原任务，GPU1 按 [RUN_VAT_EFFICIENCY_FIX.md](RUN_VAT_EFFICIENCY_FIX.md) 从独立目录重启。原目录的更新安排在 GF 效率完成后，保持同一矩阵的源码 SHA 一致。下面保留初始三卡命令。
+
 入口已实现，68 项 CPU 工程检查通过；没有在本机或服务器执行真实测速/训练。三张卡由用户手动启动下列命令。当前方案只测完整 forward，不重训 dense。
 
 ## 1. 更新代码

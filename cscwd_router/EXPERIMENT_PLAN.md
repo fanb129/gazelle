@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+当前 E3-F1：GPU0/2 已启动；VAT-B 的序列/frames 采样修复已经 Git 部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按 [修复运行说明](RUN_VAT_EFFICIENCY_FIX.md) 重启。GF 矩阵结束前保持原目录源码版本。
+
 更新：2026-11-24，E3 / E2-TL。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
 
 2026-11-24 E3/E2-TL 入口已实现，68/68 CPU 通过，完整命令见 [RUN_EFFICIENCY_VATL.md](RUN_EFFICIENCY_VATL.md)。GPU0 顺序测 GF-B/GF-L，GPU1 测已接受的 GF→VAT-B，GPU2 完整 GF-L→VAT-L；用户手动运行，尚无正式速度或新 VAT-L 指标。显式支持 GF-L 的用户收口来源，保持真实 3+4，不改 completed 标记。

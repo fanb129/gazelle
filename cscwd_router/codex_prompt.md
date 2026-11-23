@@ -8,6 +8,8 @@
 
 先读：
 
+2026-11-24 最新 E3-F1：用户启动三卡后 VAT-B 采样报 KeyError: heads，原因是 VAT 顶层为序列、heads 在 frames 中；已按 dataset 复用官方 loader，70/70 CPU 通过。修复 `29c6607` 已 push，并在服务器 `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 创建 detached worktree，链接原 checkpoints/dinov2/dinov3。真实 475 序列/58,507 帧、8 个 RGB/GT 框、四个 B1/B8 正反序请求预检通过，见 `results/e3_vat_schema_fix_checks.json`。没有启动 GPU1。GPU0 GF 效率与 GPU2 VAT-L 正在原目录运行，原 HEAD4162da7/核心源码 SHA 保持不变；GF 矩阵结束后再更新原目录，避免 request 源码混版。新 GPU1 完整命令 `RUN_VAT_EFFICIENCY_FIX.md`，输出原仓库 results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/。后面的“未启动三卡”是初始实现记录，以此条当前状态为准。
+
 2026-11-24 最新先读 `RUN_EFFICIENCY_VATL.md` 与 `results/e3_efficiency_vatl_local_checks.json`。E3 效率及 GF-L→VAT-L 来源接入已完成，68/68 CPU 通过；尚未运行真实 GPU 任务。GPU0 顺序测 GF-B/GF-L，GPU1 测当前 `vat_from_gfb_router_k050_joint_seed0/summary.json`（不是旧较低精度 VAT-B），GPU2 完整 GF-L→VAT-L，batch4×累积8、8 epochs、seed0。效率 official/K100/K50、B1/B8 正反序、FP16、50/200/500/5；每单元新进程并检查目标 GPU 其他 PID，完成单元 request 一致才复用。完整命令由用户手动执行。
 
 新 `dinov3_sources.load_source` 用显式 `--allow-closed-gf` 接受 GF-L，核对 history/last/exported-best，不修改 completed=false。源真实预算写进新 VAT-L manifest。旧 E0/Gazelle 源码未改；`dinov3_transfer.py` 为本次接入已更新，旧 VAT-B 报告保留原源码 SHA，不用新代码 resume 旧已完成 B 迁移。

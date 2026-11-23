@@ -1,0 +1,223 @@
+{
+  "date": "2026-11-24",
+  "task": "E3-F1_VAT_annotation_schema_fix",
+  "server_CPU_preflight_passed": true,
+  "scope": "Read-only real annotation/RGB/GT/checkpoint/request checks; no model forward, GPU timing or training launched.",
+  "code_worktree": "/home/fb/src/paper/gazelleV1_efficiency_vat_fix",
+  "fix_commit": "29c660731e4deb8ad5746c7504b48a065e479691",
+  "original_worktree_head_unchanged": "4162da79223fc1db8df0d606b06669fdbd3a55c4",
+  "original_source_sha256_unchanged": {
+    "cscwd_router/code/stag/dinov3_efficiency.py": "81653e82301ddfc8fb0517f5f86a8dc7e39903ddaa26743d0ee7dcee7a3f7850",
+    "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+    "cscwd_router/code/stag/dinov3_transfer.py": "7409b7d1b4e2b823465c8e11faa511739560cf32e7c12a71da6fcbdeac5f5a85"
+  },
+  "vat_annotation": {
+    "path": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+    "sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+    "sequences": 475,
+    "frames": 58507
+  },
+  "samples": [
+    {
+      "path": "images/How I Met Your Mother/4435_4556/00004468.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.43508522727272736,
+        0.07525252525252527,
+        0.6952414772727272,
+        0.5516414141414143
+      ],
+      "image_sha256": "d60fa8b752e3384b99085b68ee3ac42830c7cda8e9089d4f32046eb306ca1c66",
+      "image_size": [
+        1280,
+        720
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/Modern Family/4645_4826/00004658.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.3113636363636364,
+        0.17575757575757575,
+        0.5410511363636364,
+        0.5257575757575758
+      ],
+      "image_sha256": "f4940807beaa7ea66015e80af8ede7f302d220059c1d8ac6d27de82c0854192d",
+      "image_size": [
+        640,
+        480
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/Seinfeld/12797_12858/00012808.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.22840909090909092,
+        0.20841750841750836,
+        0.2966856060606061,
+        0.3264309764309764
+      ],
+      "image_sha256": "d0a4a7268a2c70de64b3f13e84f2d2abc18607331b7b5fb7dd6b8b90f4c0eb62",
+      "image_size": [
+        1920,
+        1080
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/A Play With Words/14595_14746/00014603.jpg",
+      "head_index": 1,
+      "head_bbox": [
+        0.6212121212121213,
+        0.16077441077441076,
+        0.8024621212121211,
+        0.5070707070707071
+      ],
+      "image_sha256": "47c418bc3363ae0ad799405448bb46e456c13ce1ff22b246901593a6175980dd",
+      "image_size": [
+        1920,
+        1080
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/Grey's Anatomy/44211_44332/00044303.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.09583333333333334,
+        0.13861386138613863,
+        0.2986111111111112,
+        0.4851485148514851
+      ],
+      "image_sha256": "787d29409af2b8db3a9f461538bbd4eecd45caed20eb4ccc9380f0fc73925536",
+      "image_size": [
+        720,
+        404
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/Breaking Bad/20307_20812/00020755.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.14055397727272728,
+        0.09873737373737373,
+        0.28110795454545456,
+        0.3260101010101011
+      ],
+      "image_sha256": "3783f385f650c667ade049ebda200e9c2051a066761844261b292b93fabee7f4",
+      "image_size": [
+        1280,
+        720
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/Tartuffe/148891_149131/00148978.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.21036931818181823,
+        0.26624579124579123,
+        0.26259469696969695,
+        0.35454545454545444
+      ],
+      "image_sha256": "956a4027d856dcac8a4ec818e57f5495b93fddcbd2b3c2499fca4f48917f5071",
+      "image_size": [
+        1920,
+        1080
+      ],
+      "GT_head_matches_official_loader": true
+    },
+    {
+      "path": "images/The View/10129_10430/00010392.jpg",
+      "head_index": 0,
+      "head_bbox": [
+        0.27130681818181823,
+        0.2815656565656565,
+        0.32883522727272724,
+        0.388510101010101
+      ],
+      "image_sha256": "9524b12a1f591a57f99090540824ec06816c24480185af78333a32655d1dab4f",
+      "image_size": [
+        1280,
+        720
+      ],
+      "GT_head_matches_official_loader": true
+    }
+  ],
+  "B1_is_B8_prefix": true,
+  "GF_B8_metadata_identical_to_running_version": true,
+  "request_preflight_cells": [
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "batch": 1,
+      "order": "forward",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "batch": 1,
+      "order": "reverse",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "batch": 8,
+      "order": "forward",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "batch": 8,
+      "order": "reverse",
+      "source_closed_by_user": false
+    }
+  ],
+  "preflight_argv": [
+    "/home/fb/anaconda3/envs/py310/bin/python",
+    "-u",
+    "/home/fb/src/paper/gazelleV1_efficiency_vat_fix/cscwd_router/code/scripts/run_router_efficiency.py",
+    "--summaries",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+    "--data-path",
+    "/newhome/fb/dataset/videoattentiontarget",
+    "--official-checkpoint-dir",
+    "/home/fb/src/paper/gazelleV1/checkpoints",
+    "--report-root",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix",
+    "--provenance",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+    "--batches",
+    "1",
+    "8",
+    "--precision",
+    "fp16",
+    "--warmup",
+    "50",
+    "--latency-iters",
+    "200",
+    "--throughput-iters",
+    "500",
+    "--repeats",
+    "5",
+    "--seed",
+    "0",
+    "--resume",
+    "--check-only"
+  ],
+  "benchmark_outputs_created": false,
+  "fixed_sources_sha256": {
+    "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+    "cscwd_router/code/stag/test_dinov3_efficiency.py": "e29c830ff4938d057c8f4b8fd42b57f46db984314f3d78c3afc0297cf108cd20"
+  },
+  "local_tests": {
+    "passed": 70,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 7.095,
+    "added_VAT_nested_schema_cases": 2
+  },
+  "root_cause": "VAT annotations are sequences containing frames; the original efficiency sampler assumed top-level GF image records. The previous synthetic efficiency cases did not cover the VAT layout."
+}

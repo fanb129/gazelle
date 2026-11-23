@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 E3-F1：VAT 效率的嵌套标注修复 `29c6607` 已部署到独立服务器 worktree，70 项 CPU 与真实 475 序列/58,507 帧预检通过。GPU0/2 保持原运行代码；GPU1 新完整命令见 `RUN_VAT_EFFICIENCY_FIX.md`，尚未由助手启动测速。
 > 2026-11-24 E3 / E2-TL 已实现：68/68 CPU 通过。三卡完整命令见 `RUN_EFFICIENCY_VATL.md`：GPU0 GF-B/GF-L 效率，GPU1 当前 GF→VAT-B 效率，GPU2 完整 GF-L→VAT-L。保留 GF-L 收口状态；用户手动启动，尚无真实效率或新 VAT-L 指标。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
@@ -234,6 +235,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：迁移入口新增显式 `--allow-closed-gf`，读取 committed history/last/best 核对选模与逐值权重，保留 GF-L completed=false、实际3+4。源状态写进新 VAT manifest/summary，不改变旧 GF 工件。L 沿用 B 的 8 轮 K50，首轮固定 Router、后7轮联合适配，batch4×累积8、seed0。
 - **产出文件与数字**：更新 `code/stag/dinov3_transfer.py`、`code/scripts/transfer_gf_router_to_vat.py`、`code/stag/test_dinov3_transfer.py`；新增闭环 1 项，与 E3/旧回归合计 **68/68** CPU 通过。旧 `gazelle/` 未改，无真实 VAT-L 训练结果。GPU2 全参数命令、日志与输出在 `RUN_EFFICIENCY_VATL.md`，大型工件将留服务器自动登记 SHA。
 - **下一步**：用户手动启动 GPU2 完整 GF-L Router/heatmap decoder→VAT-L；只 train/test、每轮 test L2 单模型选模，最后逐帧 test，回传小报告审查。当前不新增 dense。
+
+### 2026-11-24 · E3-F1：VAT 嵌套标注采样修复与隔离部署
+
+- **完成内容**：修复效率采样把 VAT 序列当作 GF 图像记录的错误，按 source dataset 调用官方 loader，VAT 展开 frames 后选择单帧真实头框。补齐嵌套采样与队列/恢复回归。`29c6607` 已经 Git push，服务器独立 worktree 就绪，原目录 HEAD/三个核心源码 SHA 未变，GPU0 GF 效率和 GPU2 VAT-L 继续运行。
+- **产出文件与数字**：更新 `code/stag/dinov3_efficiency.py`、`test_dinov3_efficiency.py`，新增 `RUN_VAT_EFFICIENCY_FIX.md`、`results/e3_vat_schema_fix_checks.json`。70/70 CPU 通过；真实 VAT 475 个序列、58,507 帧，8 个 RGB/GT 框匹配官方 loader，B1 是 B8 前缀，四个正式参数请求 --check-only 通过；GF B8 metadata 与旧版一致。没有新 GPU forward/计时或模型指标。
+- **下一步**：用户从 `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 手动重启 GPU1，输出原仓库 `results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/`。原目录保持运行版本直到 GF 矩阵结束，保留失败日志与 GF 已有单元。
 
 ## 7. T1 服务器运行与结果回传
 
