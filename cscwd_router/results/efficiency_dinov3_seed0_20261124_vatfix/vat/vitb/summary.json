@@ -1,0 +1,106 @@
+{
+  "protocol": "dinov3_vs_official_gazelle_efficiency_v1",
+  "dataset": "vat",
+  "size": "b",
+  "gpu_uuid": "GPU-2a918114-c4d4-6fc2-23fb-e065099e45cb",
+  "source_metrics": {
+    "auc": 0.9400325583571667,
+    "l2": 0.10013119593217963,
+    "inout_ap": 0.8831826381014405,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9632534495279593,
+    "routing_hard_coverage": 0.8694837984447039,
+    "routing_soft_coverage": 0.3591852730892633
+  },
+  "source_selection": {
+    "epoch": 0,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9398997273428248,
+      "l2": 0.10047474718421423,
+      "inout_ap": 0.8844164890656381,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9626062322946176,
+      "routing_hard_coverage": 0.8691891679345042,
+      "routing_soft_coverage": 0.359505552549981
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "source_closed_by_user": false,
+  "efficiency": {
+    "1": {
+      "variants": {
+        "official": {
+          "latency_ms_geomean": 17.940777255434654,
+          "throughput_fps_geomean": 55.7386676024928,
+          "peak_allocated_mib_max": 376.47314453125
+        },
+        "k100": {
+          "latency_ms_geomean": 21.859976954624248,
+          "throughput_fps_geomean": 45.37123635798713,
+          "peak_allocated_mib_max": 419.12255859375
+        },
+        "k50": {
+          "latency_ms_geomean": 21.73228811345656,
+          "throughput_fps_geomean": 45.51999860651428,
+          "peak_allocated_mib_max": 419.11865234375
+        }
+      },
+      "k50_speedup_vs_official": 0.8255355884190484,
+      "k50_speedup_vs_k100": 1.0058755359997562,
+      "k50_throughput_ratio_vs_official": 0.8166682226985723
+    },
+    "8": {
+      "variants": {
+        "official": {
+          "latency_ms_geomean": 51.60116208218987,
+          "throughput_fps_geomean": 154.89341343659567,
+          "peak_allocated_mib_max": 537.63037109375
+        },
+        "k100": {
+          "latency_ms_geomean": 63.21722899122793,
+          "throughput_fps_geomean": 126.24517417964819,
+          "peak_allocated_mib_max": 857.376953125
+        },
+        "k50": {
+          "latency_ms_geomean": 50.33692525145739,
+          "throughput_fps_geomean": 158.7651061033685,
+          "peak_allocated_mib_max": 857.345703125
+        }
+      },
+      "k50_speedup_vs_official": 1.0251154957204283,
+      "k50_speedup_vs_k100": 1.2558818139055403,
+      "k50_throughput_ratio_vs_official": 1.0249958508943167
+    }
+  },
+  "cells": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b1_forward.json",
+      "sha256": "0f0d4c23252c7f781b5eefca6cb2392de0e552770ee3ecf648e61895ada3e654"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b1_reverse.json",
+      "sha256": "f8569cf04be5bc9928719507a1c0ec41926f88813605b68768abbd1bc367800b"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_forward.json",
+      "sha256": "04a0c03b68ee7e1a104bcd13de6669075d3d09ce1daa3d4df95a3f0468e5b3e3"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_reverse.json",
+      "sha256": "05221fb0aafc131d47c5436e3656be7b0e7e5d2fc762e0345a087a5f8ddea958"
+    }
+  ]
+}

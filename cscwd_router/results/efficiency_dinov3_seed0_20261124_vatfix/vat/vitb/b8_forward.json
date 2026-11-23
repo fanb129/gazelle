@@ -1,0 +1,534 @@
+{
+  "request": {
+    "protocol": "dinov3_vs_official_gazelle_efficiency_v1",
+    "dataset": "vat",
+    "size": "b",
+    "source_summary": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+    },
+    "router_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+      "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+    },
+    "router_backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "official_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14_inout.pt",
+      "sha256": "451f76e5a1fa14429283d8612785d9aa94362f4754cb8a27d650482e3a2ac00e"
+    },
+    "official_backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth",
+      "sha256": "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
+    },
+    "batch_size": 8,
+    "order": "forward",
+    "precision": "fp16",
+    "seed": 0,
+    "allow_closed_gf": false,
+    "settings": {
+      "warmup": 50,
+      "latency_iters": 200,
+      "throughput_iters": 500,
+      "repeats": 5
+    },
+    "raw_input": {
+      "annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+      "samples": [
+        {
+          "path": "images/How I Met Your Mother/4435_4556/00004468.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.43508522727272736,
+            0.07525252525252527,
+            0.6952414772727272,
+            0.5516414141414143
+          ],
+          "image_sha256": "d60fa8b752e3384b99085b68ee3ac42830c7cda8e9089d4f32046eb306ca1c66"
+        },
+        {
+          "path": "images/Modern Family/4645_4826/00004658.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.3113636363636364,
+            0.17575757575757575,
+            0.5410511363636364,
+            0.5257575757575758
+          ],
+          "image_sha256": "f4940807beaa7ea66015e80af8ede7f302d220059c1d8ac6d27de82c0854192d"
+        },
+        {
+          "path": "images/Seinfeld/12797_12858/00012808.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.22840909090909092,
+            0.20841750841750836,
+            0.2966856060606061,
+            0.3264309764309764
+          ],
+          "image_sha256": "d0a4a7268a2c70de64b3f13e84f2d2abc18607331b7b5fb7dd6b8b90f4c0eb62"
+        },
+        {
+          "path": "images/A Play With Words/14595_14746/00014603.jpg",
+          "head_index": 1,
+          "head_bbox": [
+            0.6212121212121213,
+            0.16077441077441076,
+            0.8024621212121211,
+            0.5070707070707071
+          ],
+          "image_sha256": "47c418bc3363ae0ad799405448bb46e456c13ce1ff22b246901593a6175980dd"
+        },
+        {
+          "path": "images/Grey's Anatomy/44211_44332/00044303.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.09583333333333334,
+            0.13861386138613863,
+            0.2986111111111112,
+            0.4851485148514851
+          ],
+          "image_sha256": "787d29409af2b8db3a9f461538bbd4eecd45caed20eb4ccc9380f0fc73925536"
+        },
+        {
+          "path": "images/Breaking Bad/20307_20812/00020755.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.14055397727272728,
+            0.09873737373737373,
+            0.28110795454545456,
+            0.3260101010101011
+          ],
+          "image_sha256": "3783f385f650c667ade049ebda200e9c2051a066761844261b292b93fabee7f4"
+        },
+        {
+          "path": "images/Tartuffe/148891_149131/00148978.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.21036931818181823,
+            0.26624579124579123,
+            0.26259469696969695,
+            0.35454545454545444
+          ],
+          "image_sha256": "956a4027d856dcac8a4ec818e57f5495b93fddcbd2b3c2499fca4f48917f5071"
+        },
+        {
+          "path": "images/The View/10129_10430/00010392.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.27130681818181823,
+            0.2815656565656565,
+            0.32883522727272724,
+            0.388510101010101
+          ],
+          "image_sha256": "9524b12a1f591a57f99090540824ec06816c24480185af78333a32655d1dab4f"
+        }
+      ],
+      "query_selection": "one_in_frame_GT_head_per_train_image",
+      "people_per_image": 1
+    },
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/scripts/benchmark_router_dinov3.py": "744669ec1c775b7b25e98d270756fb01ad827046c542d8a29a7bc55710d4d4ea",
+      "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+      "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e",
+      "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+      "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+      "native_dinov2_source_tree": "96c486796f1cae2d8d3989b2ae20cfc49f8aef0a66ff522ec3a2050816210cb9"
+    }
+  },
+  "variant_order": [
+    "official",
+    "k100",
+    "k50"
+  ],
+  "results": {
+    "official": {
+      "tokens": {
+        "kept_patches": 1024,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 1025
+          }
+        ],
+        "out_indices": [
+          11
+        ],
+        "image_size": [
+          448,
+          448
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 51.34767999879841,
+        "latency_ms_mean": 51.22293948298466,
+        "latency_ms_p95": 51.8535082526796,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          50.474806001147954,
+          51.130806999935885,
+          51.47639949791483,
+          51.46215150125499,
+          51.448639498630655
+        ],
+        "throughput_images_per_second_median": 155.45249122921956,
+        "throughput_repeat_fps": [
+          157.10436248315762,
+          156.0977392651045,
+          155.23863487170345,
+          155.45249122921956,
+          155.19034039924566
+        ],
+        "steady_allocated_mib": 369.46630859375,
+        "peak_allocated_mib": 537.63037109375
+      }
+    },
+    "k100": {
+      "tokens": {
+        "kept_patches": 1024,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 1029
+          }
+        ],
+        "out_indices": [
+          2,
+          5,
+          8,
+          11
+        ],
+        "image_size": [
+          512,
+          512
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 62.983949997942545,
+        "latency_ms_mean": 63.05614943702312,
+        "latency_ms_p95": 63.91583419845119,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          62.62800150034309,
+          62.71871500030102,
+          63.20006249916332,
+          63.16640799923334,
+          63.29781899876252
+        ],
+        "throughput_images_per_second_median": 126.5317181242356,
+        "throughput_repeat_fps": [
+          127.40389168021638,
+          127.15280262433068,
+          126.53035770171849,
+          126.5317181242356,
+          126.41377561883606
+        ],
+        "steady_allocated_mib": 375.46240234375,
+        "peak_allocated_mib": 857.376953125
+      }
+    },
+    "k50": {
+      "tokens": {
+        "kept_patches": 512,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 517
+          }
+        ],
+        "out_indices": [
+          2,
+          5,
+          8,
+          11
+        ],
+        "image_size": [
+          512,
+          512
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 50.153819500337704,
+        "latency_ms_mean": 50.27353834907626,
+        "latency_ms_p95": 51.084485050159856,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          50.10209799911536,
+          50.10515299909457,
+          49.94774950137071,
+          50.287938000110444,
+          50.35363700153539
+        ],
+        "throughput_images_per_second_median": 159.56852234976918,
+        "throughput_repeat_fps": [
+          159.68599222571663,
+          159.57024914533042,
+          159.56852234976918,
+          159.3738642022225,
+          158.96527825525183
+        ],
+        "steady_allocated_mib": 375.46240234375,
+        "peak_allocated_mib": 857.345703125
+      }
+    }
+  },
+  "source_metrics": {
+    "auc": 0.9400325583571667,
+    "l2": 0.10013119593217963,
+    "inout_ap": 0.8831826381014405,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9632534495279593,
+    "routing_hard_coverage": 0.8694837984447039,
+    "routing_soft_coverage": 0.3591852730892633
+  },
+  "source_selection": {
+    "epoch": 0,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9398997273428248,
+      "l2": 0.10047474718421423,
+      "inout_ap": 0.8844164890656381,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9626062322946176,
+      "routing_hard_coverage": 0.8691891679345042,
+      "routing_soft_coverage": 0.359505552549981
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "source_closed_by_user": false,
+  "environment": {
+    "gpu_uuid": "GPU-2a918114-c4d4-6fc2-23fb-e065099e45cb",
+    "before": {
+      "uuid": "GPU-2a918114-c4d4-6fc2-23fb-e065099e45cb",
+      "name": "NVIDIA GeForce RTX 3090",
+      "driver_version": "555.42.06",
+      "pstate": "P8",
+      "temperature.gpu": "56",
+      "memory.used": "15",
+      "utilization.gpu": "0"
+    },
+    "after": {
+      "uuid": "GPU-2a918114-c4d4-6fc2-23fb-e065099e45cb",
+      "name": "NVIDIA GeForce RTX 3090",
+      "driver_version": "555.42.06",
+      "pstate": "P0",
+      "temperature.gpu": "72",
+      "memory.used": "353",
+      "utilization.gpu": "59"
+    },
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4"
+  },
+  "timing_scope": {
+    "full_forward": true,
+    "preprocessing_and_H2D": false,
+    "inference_mode": true,
+    "autocast_cache_enabled": false,
+    "tf32": false
+  },
+  "git_commit": "29c660731e4deb8ad5746c7504b48a065e479691"
+}

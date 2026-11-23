@@ -274,3 +274,19 @@
 - checks: `cscwd_router/results/e3_vat_schema_fix_checks.json`; SHA256: `044447d94efe7002433b76a5da833a5bf2f8e731feb1c2b3866f4c25b680fc6d`。70/70 本机 CPU 通过；真实 VAT 475 序列、58,507 帧，8 个 RGB/GT 框匹配官方 loader，B1 为 B8 前缀，GF B8 metadata 与旧版一致，B1/B8 正反序四个请求 --check-only 通过。没有 GPU forward/计时或新的模型指标。
 - runbook: `cscwd_router/RUN_VAT_EFFICIENCY_FIX.md`; SHA256: `ddd3ad5343fca648505b39a7d7601740cb611dec21002ed0ab6313aaea6e0e83`。完整 GPU1 命令已过 CLI/ shell 语法检查；用户手动启动，结果写回原仓库 results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/，不混入旧 GF 版本单元。
 - 原错误发生在计时之前；旧失败日志和已有 GF 单元保留。修复仅按 dataset 复用官方 loader 展开 VAT frames，不修改 gazelle/、迁移训练或现有权重，不复制大型工件。
+
+## DINOv3 efficiency · gazefollow / vitb
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/summary.json`; SHA256: `e1291a857968c3e4336feecbad1c0ba41f428b23d1b1d83f1b81844687b7479e`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/b1_forward.json`; SHA256: `770e8eb06292601c266d9a6cebf823df7c6bd9eaef4cca13cc045b58822ab9bb`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/b1_reverse.json`; SHA256: `58fa07e0565702c025d812859f0e27d55fcee6ac9665456f7f7672714bc4863c`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/b8_forward.json`; SHA256: `e14a41a4d540596aef9f48d9214abc26a8eae9a89acf08cbff54763dfc1a537d`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/b8_reverse.json`; SHA256: `1413bf7ec854eb8498d6a36fa52d89299c26e920c783d3a5099caf717d43e450`
+
+## DINOv3 efficiency · vat / vitb
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/summary.json`; SHA256: `b16a417d4c5a8a5882161e8d1f7a3efc819bebc85f54714e4629fbd1f60916cb`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b1_forward.json`; SHA256: `0f0d4c23252c7f781b5eefca6cb2392de0e552770ee3ecf648e61895ada3e654`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b1_reverse.json`; SHA256: `f8569cf04be5bc9928719507a1c0ec41926f88813605b68768abbd1bc367800b`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_forward.json`; SHA256: `04a0c03b68ee7e1a104bcd13de6669075d3d09ce1daa3d4df95a3f0468e5b3e3`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_reverse.json`; SHA256: `05221fb0aafc131d47c5436e3656be7b0e7e5d2fc762e0345a087a5f8ddea958`
