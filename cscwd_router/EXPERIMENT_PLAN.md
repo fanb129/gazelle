@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+E3-B 正式结果已通过 `85210b5` 回传：GF-B B1/B8 相对官方 latency speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`；相对同路径 K100 的 B8 为 `1.2519/1.2559×`，B8峰值显存约高59.5%。[审查与表格](results/E3_B_EFFICIENCY_REVIEW.md)记录完整口径，当前不写 B 完整系统明显更快；优先阶段profile/等价快路径验证，不新增 dense 训练。
+
 当前 E3-F1：GPU0/2 已启动；VAT-B 的序列/frames 采样修复已经 Git 部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按 [修复运行说明](RUN_VAT_EFFICIENCY_FIX.md) 重启。GF 矩阵结束前保持原目录源码版本。
 
 更新：2026-11-24，E3 / E2-TL。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
@@ -64,7 +66,7 @@ VAT 的 B/L 都已有可用 decoder，因此不依赖本轮 GF 产物。先并�
 
 每单元 warmup 50，latency 200、throughput 500，各重复 5 轮；记录每轮 median/p95 latency、images/s、peak memory。计时包含完整 forward（backbone、Router、gather/scatter、融合、decoder），读取/预处理/H2D 在计时外。最终主表准确率用哪个 checkpoint，效率就测哪个。
 
-只测自己的 FPS，或引用不同 GPU 的论文毫秒数，无法得到相对 GazeLLE 的实测加速比。E3 入口在本轮四组训练后接续；E0 没有伪造效率结果。
+只测自己的 FPS，或引用不同 GPU 的论文毫秒数，无法得到相对 GazeLLE 的实测加速比。E3 已实现并完成两组 B 的正式矩阵，结果见上方 E3-B 审查；L 的效率接续回传。
 
 ## 5. E4 与余量实验
 

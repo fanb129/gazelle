@@ -274,9 +274,15 @@ VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次�
 
 报告保留原计划 3+5 与实际 3+4，标记 user-closed，指标来自完整 epoch test，没有独立复评或逐查询导出。相对已登记 GazeLLE-L 文献参照，当前 AUC/定位有竞争力；仍需同硬件效率，不能提前写精度与速度双优。历史 initializer 的 warm-start 标签保留，当前运行的四层配置由 manifest 明确登记。当前先接效率与完整 GF-L→VAT-L，不新增 GF-L dense。
 
+### 9.7 GF-B / VAT-B 正式效率（2026-11-24）
+
+两组各 B1/B8 正反序矩阵已回传，详见 [E3-B 审查](../results/E3_B_EFFICIENCY_REVIEW.md)。相对同规模官方 GazeLLE 的 latency speedup，GF-B 为 B1 `0.7822×`、B8 `0.9918×`，VAT-B 为 `0.8255×/1.0251×`。B1 更慢，B8 GF 基本持平、VAT 仅小幅更快，B8峰值 allocated memory 高约59.5%。当前不能写成完整系统明显更快或更省显存。
+
+同一 checkpoint 下，K50 相对同路由路径 K100 在 B8 为 `1.2519×/1.2559×`，suffix token 实际从1029降至517；这一结果说明当前实现能减少自身全token路径成本，不替代原生DINOv3 dense对照。完整系统仍额外承担四层表示、回填、人物条件和融合成本。当前可保留定位收益与批量成本接近的权衡，待阶段profile与推理等价优化补齐后再更新效率主张。GF-L和VAT-L后续结果独立报告。
+
 ## 10. 论文组织与下一步
 
-用户接受当前 VAT-B，分类头适配后移。GF-L 已按实际 3+4 收口，精度可用，接同硬件效率与完整 GF-L Router→VAT-L；先实现 DINOv3 评测/效率及用户收口来源接入，再给手动运行命令。预算响应、人物条件化对照与真实多人 union 接续，正式效率需空闲卡；原 B 迁移命令不重复启动。
+用户接受当前 VAT-B，分类头适配后移。GF-L 按实际3+4收口，效率与完整GF-L→VAT-L已按原版本接续；B效率完成后，GPU1优先阶段profile、同权重native full-token控制与等价推理快路径验证。已有代码存在none全一乘法、投影前四层repeat/cat等具体测量对象；先核对原版/快路径输出与精度，再测完整效率，不预写收益、不新增dense训练。预算响应、人物条件化对照与真实多人union接续。
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 

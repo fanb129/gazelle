@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | GPU0 GF 效率、GPU2 VAT-L 已启动；VAT-B 嵌套标注修复已部署到独立 worktree，70 项 CPU 与真实数据预检通过，GPU1 按新命令重启，原目录继续保持运行版本 |
+| CSCWD 新主线 | `cscwd_router/` | 两组 B 效率已回传：GF B1/B8 speedup 0.7822/0.9918×，VAT 0.8255/1.0251×；相对自身 K100 的 B8 约1.25×，峰值显存高约59.5%。接阶段profile/等价推理优化；L 任务按原版本接续 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -82,9 +82,11 @@
 
 **E3-F1 VAT 效率入口修复（2026-11-24）**：用户报告 `KeyError: 'heads'`，原因是 VAT 顶层序列需展开 frames，旧效率采样只覆盖 GF 扁平结构。已按 dataset 复用官方 loader，补嵌套采样与队列/恢复测试，70/70 CPU 通过。修复 `29c6607` 已 push，服务器独立 worktree `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 就绪，原目录 HEAD4162da7/核心源码未变，GPU0/2 继续原任务。真实 VAT 475 序列/58,507 帧、8 个 RGB/GT 框及 B1/B8 正反序四个请求预检通过；未启动 GPU1 计时。完整重启命令 `RUN_VAT_EFFICIENCY_FIX.md`，证据 `results/e3_vat_schema_fix_checks.json`；新结果写原仓库 `_vatfix` 目录。
 
+**E3-B 两组 B 正式效率审查（2026-11-24）**：已完成 GF-B/VAT-B 各 B1/B8 正反序，12 份 JSON/MD 经隔离 worktree 提交 `85210b5` push/pull，本机原始报告 SHA 与 50 个版本化源码检查通过。8 个单元/24 组 token trace、权重/输入/源码/GPU 和汇总核验一致，原目录 HEAD/代码保持不变。相对官方 GazeLLE 的 latency speedup 为 GF B1/B8 `0.7822/0.9918×`，VAT `0.8255/1.0251×`；B1 延迟增加27.84%/21.13%，B8 GF基本持平、VAT小幅快2.5%。相对同一路由 K100，B8为1.2519/1.2559×；B8峰值 allocated memory约857MiB，官方约538MiB，高59.5%。报告 `results/E3_B_EFFICIENCY_REVIEW.md`、检查 `results/e3_b_efficiency_server_checks.json`；本轮未新增 GPU forward 或训练。当前不支持 B 完整系统明显更快/更省显存的表述。
+
 ## 下一步
 
-1. 用户按 `RUN_VAT_EFFICIENCY_FIX.md` 从独立目录重启 GPU1 VAT-B；GPU0/2 原任务继续，GF 效率完成后再更新原目录。回传 GF/新 VAT 效率及 VAT-L 小报告审查，速度与迁移精度依实测。
+1. 在独立目录为 GPU1 准备同 checkpoint 的阶段 profile、native DINOv3 full-token 推理控制与等价快路径验证，定位 prefix/Router/suffix/回填/融合/decoder 成本。静态候选包括 none 门控乘全一、四层 repeat/cat；先验证输出和精度，再测收益，不新增 dense 训练。GF-L/VAT-L 按原任务接续并回传审查。
 2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 

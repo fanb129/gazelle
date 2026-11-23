@@ -290,3 +290,16 @@
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b1_reverse.json`; SHA256: `f8569cf04be5bc9928719507a1c0ec41926f88813605b68768abbd1bc367800b`
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_forward.json`; SHA256: `04a0c03b68ee7e1a104bcd13de6669075d3d09ce1daa3d4df95a3f0468e5b3e3`
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/b8_reverse.json`; SHA256: `05221fb0aafc131d47c5436e3656be7b0e7e5d2fc762e0345a087a5f8ddea958`
+
+## E3-B · GF-B / VAT-B 正式效率审查（2026-11-24）
+
+- 原始结果提交 `85210b55b4832e31f7980a18e45397be29e80cfc` 已 push/pull，含两组各4个cell + summary JSON/MD，共12份小报告。通过空闲VAT修复worktree选择性提交后恢复29c6607，原目录HEAD4162da7及核心源码未改；GF-L/VAT-L按原任务接续。
+- checks: `cscwd_router/results/e3_b_efficiency_server_checks.json`; SHA256: `891eb2102797b6bc1272959cf686465d975d3fe03b5969477eed56e78ad70099`。8单元、24组token trace，8个source/weight路径（6个PT/PTH）、2份标注、16个RGB路径SHA与50个按记录Git版本检查的源码文件均一致；summary JSON/MD重算完全相同。逐次latency数组未保存，不声称独立重算单variant median/p95；已核对采样数/repeats/throughput median及矩阵公式。
+- review: `cscwd_router/results/E3_B_EFFICIENCY_REVIEW.md`; SHA256: `d0c3fedf2437139d275facf0c9bbb10d26ef4fd550865695557e7d82e6a15fb3`。相对官方latency speedup：GF B1/B8 `0.7822/0.9918×`，VAT `0.8255/1.0251×`；相对同路径K100的B8为 `1.2519/1.2559×`。B8峰值allocated memory约857 vs538MiB，高59.5%，不写成明显跨模型加速或省显存。
+- 本轮只读CPU核对既有数据，没有新GPU forward/训练/计时。下一项优先阶段profile与同权重native full-token推理控制，再验证none全一乘法、四层repeat/cat等候选的等价快路径；不预写收益、不新增dense训练。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14`。留服务器，未入Git。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`。留服务器，未入Git。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt`; SHA256: `525a69495c0db475fa8522b164aba3cfabeaa0dd60adb7be5e13dd73e56d70e1`。留服务器，未入Git。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth`; SHA256: `0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73`。留服务器，未入Git。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt`; SHA256: `c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b`。留服务器，未入Git。
+- benchmark weight: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14_inout.pt`; SHA256: `451f76e5a1fa14429283d8612785d9aa94362f4754cb8a27d650482e3a2ac00e`。留服务器，未入Git。

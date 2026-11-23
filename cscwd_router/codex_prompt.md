@@ -8,6 +8,8 @@
 
 先读：
 
+2026-11-24 最新 E3-B：先读 `results/E3_B_EFFICIENCY_REVIEW.md`、`results/e3_b_efficiency_server_checks.json`。GF-B/VAT-B 各4个效率单元已完成并通过 `85210b5` push/pull。GF B1/B8 相对官方 latency speedup `0.7822/0.9918×`，VAT `0.8255/1.0251×`，相对同路径K100的B8为1.2519/1.2559×，B8峰值显存约高59.5%。有效实测，但不支持“B又快又省显存”；不将K100称为原生dense。12报告SHA、50源码版本检查及权重/输入/图/汇总通过。计时器只保存repeat medians，没有逐次latency数组，不编显著性。下步GPU1优先profile与同权重native full-token推理控制，再做保留权重的等价快路径（none门控乘ones、四层repeat/cat等已有具体候选）；未实现或运行新优化。GF-L/VAT-L继续原任务，保留源代码版本。本次通过空闲VAT工作树提交后恢复29c6607，原目录HEAD4162da7未改，不在运行中的原目录pull代码。更早“GPU1待重启”现已过期，VAT-B新矩阵已完成。
+
 2026-11-24 最新 E3-F1：用户启动三卡后 VAT-B 采样报 KeyError: heads，原因是 VAT 顶层为序列、heads 在 frames 中；已按 dataset 复用官方 loader，70/70 CPU 通过。修复 `29c6607` 已 push，并在服务器 `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 创建 detached worktree，链接原 checkpoints/dinov2/dinov3。真实 475 序列/58,507 帧、8 个 RGB/GT 框、四个 B1/B8 正反序请求预检通过，见 `results/e3_vat_schema_fix_checks.json`。没有启动 GPU1。GPU0 GF 效率与 GPU2 VAT-L 正在原目录运行，原 HEAD4162da7/核心源码 SHA 保持不变；GF 矩阵结束后再更新原目录，避免 request 源码混版。新 GPU1 完整命令 `RUN_VAT_EFFICIENCY_FIX.md`，输出原仓库 results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/。后面的“未启动三卡”是初始实现记录，以此条当前状态为准。
 
 2026-11-24 最新先读 `RUN_EFFICIENCY_VATL.md` 与 `results/e3_efficiency_vatl_local_checks.json`。E3 效率及 GF-L→VAT-L 来源接入已完成，68/68 CPU 通过；尚未运行真实 GPU 任务。GPU0 顺序测 GF-B/GF-L，GPU1 测当前 `vat_from_gfb_router_k050_joint_seed0/summary.json`（不是旧较低精度 VAT-B），GPU2 完整 GF-L→VAT-L，batch4×累积8、8 epochs、seed0。效率 official/K100/K50、B1/B8 正反序、FP16、50/200/500/5；每单元新进程并检查目标 GPU 其他 PID，完成单元 request 一致才复用。完整命令由用户手动执行。

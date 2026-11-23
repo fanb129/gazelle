@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 E3-B 已回传审查：GF-B B1/B8 相对官方 speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`，B8相对K100约1.25×，峰值显存高约59.5%。详见 `results/E3_B_EFFICIENCY_REVIEW.md`；当前优先阶段profile与等价推理优化，L 任务保持原版本。
 > 2026-11-24 E3-F1：VAT 效率的嵌套标注修复 `29c6607` 已部署到独立服务器 worktree，70 项 CPU 与真实 475 序列/58,507 帧预检通过。GPU0/2 保持原运行代码；GPU1 新完整命令见 `RUN_VAT_EFFICIENCY_FIX.md`，尚未由助手启动测速。
 > 2026-11-24 E3 / E2-TL 已实现：68/68 CPU 通过。三卡完整命令见 `RUN_EFFICIENCY_VATL.md`：GPU0 GF-B/GF-L 效率，GPU1 当前 GF→VAT-B 效率，GPU2 完整 GF-L→VAT-L。保留 GF-L 收口状态；用户手动启动，尚无真实效率或新 VAT-L 指标。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
@@ -241,6 +242,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：修复效率采样把 VAT 序列当作 GF 图像记录的错误，按 source dataset 调用官方 loader，VAT 展开 frames 后选择单帧真实头框。补齐嵌套采样与队列/恢复回归。`29c6607` 已经 Git push，服务器独立 worktree 就绪，原目录 HEAD/三个核心源码 SHA 未变，GPU0 GF 效率和 GPU2 VAT-L 继续运行。
 - **产出文件与数字**：更新 `code/stag/dinov3_efficiency.py`、`test_dinov3_efficiency.py`，新增 `RUN_VAT_EFFICIENCY_FIX.md`、`results/e3_vat_schema_fix_checks.json`。70/70 CPU 通过；真实 VAT 475 个序列、58,507 帧，8 个 RGB/GT 框匹配官方 loader，B1 是 B8 前缀，四个正式参数请求 --check-only 通过；GF B8 metadata 与旧版一致。没有新 GPU forward/计时或模型指标。
 - **下一步**：用户从 `/home/fb/src/paper/gazelleV1_efficiency_vat_fix` 手动重启 GPU1，输出原仓库 `results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/`。原目录保持运行版本直到 GF 矩阵结束，保留失败日志与 GF 已有单元。
+
+### 2026-11-24 · E3-B：GF-B / VAT-B 效率完成与审查
+
+- **完成内容**：通过已空闲的 VAT 修复 worktree 选择性提交两组完整矩阵及两个 provenance blocks，`85210b5` 已 push/pull；随后恢复该 worktree 29c6607，原目录 HEAD4162da7/源码未变。CPU 核对权重/源码版本/输入/GPU/逐 block token 数，重算全部 summary JSON/MD，不重跑计时或训练。
+- **产出文件与数字**：两组 `results/efficiency_dinov3_seed0_20261124/gazefollow/vitb/`、`results/efficiency_dinov3_seed0_20261124_vatfix/vat/vitb/`，审查 `results/E3_B_EFFICIENCY_REVIEW.md`，检查 `results/e3_b_efficiency_server_checks.json`。GF官方/K50批次延迟 B1 `17.9309/22.9234ms`、B8 `53.3757/53.8184ms`；VAT B1 `17.9408/21.7323ms`、B8 `51.6012/50.3369ms`。对应speedup `0.7822/0.9918×` 和 `0.8255/1.0251×`；相对K100 B8为 `1.2519/1.2559×`。B8峰值显存约857 vs538MiB，高59.5%。12报告SHA、50个版本化源码、8个source/weight路径（6个PT/PTH）、2份标注、16个RGB与24组token trace核对通过。
+- **下一步**：B 当前不写成相对 GazeLLE 明显更快或更省显存。优先GPU1分阶段profile及同权重native full-token控制；检查 none 全一乘法、四层 repeat/cat 等具体开销，在新代码目录验证原版/快路径的输出、精度和实测效率，不新增 dense 训练。GF-L/VAT-L按原任务接续，旧DINOv2 gate不套用本轮。
 
 ## 7. T1 服务器运行与结果回传
 

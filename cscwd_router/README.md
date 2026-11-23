@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [E3_B_EFFICIENCY_REVIEW.md](results/E3_B_EFFICIENCY_REVIEW.md)：GF-B/VAT-B 正式效率已回传；B1 比官方慢，B8 基本持平/小幅更快，峰值显存更高。K50 相对同路径 K100 在 B8 约1.25×，下一步阶段profile和等价推理优化。
 - [RUN_VAT_EFFICIENCY_FIX.md](RUN_VAT_EFFICIENCY_FIX.md)：VAT 嵌套 frames 采样修复已部署到独立目录；70 项 CPU 与真实数据预检通过，GPU1 重启命令。GPU0/2 保持原运行版本。
 - [RUN_EFFICIENCY_VATL.md](RUN_EFFICIENCY_VATL.md)：当前三卡完整命令。GPU0 GF-B/GF-L 效率、GPU1 当前 VAT-B 效率、GPU2 完整 GF-L→VAT-L；入口已实现，68 项 CPU 通过，尚未执行真实 GPU 任务。
 - [E1L_GF_INTERRUPTED_REVIEW.md](results/E1L_GF_INTERRUPTED_REVIEW.md)：GF-L 关机后以实际 3+4 轮收口，选第 2 轮 K50，`0.960007/0.094061/0.037721`；best 已导出并回传核验，接效率与完整 VAT-L 迁移，不先新训 GF-L dense。
@@ -35,7 +36,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 论文目标是有竞争力的准确率与更低实际成本，不预写尚未测得的“双优”、显存节省、整网计算减半或多人保证无损。
 
-新入口采用全量 train、逐 epoch test、单指标选 checkpoint，标记 `test_selected`。GF 按 Min L2，VAT 按 L2，VAT 最后自动逐帧 test。CPU 32/32 通过；旧 gazelle/ 与历史脚本未改。VAT B/L 已完成回传，逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；VAT 各再训 8 轮后仍保留旧 best。GF-B 已验收，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，GF-L 已按 3+4 收口；统一效率尚未测量。
+新入口采用全量 train、逐 epoch test、单指标选 checkpoint，标记 `test_selected`。GF 按 Min L2，VAT 按 L2，VAT 最后自动逐帧 test。CPU 32/32 通过；旧 gazelle/ 与历史脚本未改。VAT B/L 已完成回传，逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；VAT 各再训 8 轮后仍保留旧 best。GF-B 已验收，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，GF-L 已按 3+4 收口；B 正式效率已回传，L 效率待审查。
 
 四组均复用兼容旧 raw-concat decoder，再以 seed0 重学 Router，不直接继承 seed3106 support。VAT B/L 初始化已存在，不需要等本轮 GF。官方 GazeLLE 后续仅推理比较；旧 matched dense 保留原协议。
 
