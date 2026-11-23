@@ -2,26 +2,26 @@
 
 更新：2026-11-23，E2。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
 
-E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 已完成并经 Git 回传（`0fc2844`），两组各 3+5 epochs，seed 0；逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。工件/指标核验通过，见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)。GF-B 已回传核验，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`；VAT B/L 各续训 8 轮未改善 L2，仍选旧 best。GF-L 继续训练；尚无新的 GPU 效率成绩。
+E0 已实现，32 项 CPU 工程检查通过。完整历史命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 初轮及续训、GF-B 均已回传核验。GF-L 已按用户决定在实际 support 3 + decoder 4 轮收口（最后一轮关机中断，不补跑），以 `459651a` 回传；按 Min L2 选第 2 轮，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。详见 [E1-L 审查](results/E1L_GF_INTERRUPTED_REVIEW.md)。尚无新的 GPU 效率成绩。
 
 ## 1. 四组主实验与并行顺序
 
-E2-T 已完成并通过 `170ace8` 回传：完整 GF-B Router/heatmap decoder→VAT-B，最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，按 L2 选首轮。用户接受当前 B 结果，E2-H 分类头适配后移；先等 GF-L 完成，可用则同硬件效率与完整 GF-L Router→VAT-L，不理想则先训练来源明确的 DINOv3-L 多层 GF 底座。详见 [E2-T 审查](results/E2T_GF_TO_VAT_REVIEW.md)，[原运行命令](RUN_GF_ROUTER_TO_VAT.md)保留供复现；目前不提前启动 dense。
+E2-T 已完成并通过 `170ace8` 回传：完整 GF-B Router/heatmap decoder→VAT-B，最终逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`，用户接受，E2-H 分类头适配后移。GF-L 收口精度可用，当前接续同硬件效率与完整 GF-L Router→VAT-L，不先新增 GF-L dense。详见 [E2-T 审查](results/E2T_GF_TO_VAT_REVIEW.md)，[原运行命令](RUN_GF_ROUTER_TO_VAT.md)保留供复现。
 
-等待期只读快照见 [gfl_interim_20261123.json](results/gfl_interim_20261123.json)：GF-L 已提交 2 个 decoder epochs，第 2 轮训练 K75、test 固定 K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，无最终 summary。该中间成绩已有积极信号，不提前替代最后的选模和审查。
+等待期 [旧快照](results/gfl_interim_20261123.json) 保留；当前以 [interrupted_summary.json](results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json) 为准。原 3+5 manifest 不变，报告明确 completed=false、user-closed、实际 3+4；指标来自选中完整 epoch 的 test，无独立复评或逐查询导出。已从 last 内嵌 best 导出标准 `best_test.pt`；下一实现需显式支持该收口来源，不能把本 JSON 直接传给要求 completed=true 的现有 transfer 命令。
 
-2026-11-23 E2-C 实际结果：原始 VAT dense 与 routed K100 的精度差为 0；两组低 LR 固定 K50 各加 8 epochs 后，均未超过旧 best L2，不继续原样加轮数。GF-B 已完成，GF-L 继续等待。完整 GF-B Router→VAT 迁移此后已完成，当前接续分类头适配；预算响应与 E3 测速在其后安排。详见 [历史审查](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
+2026-11-23 E2-C 历史结果：原始 VAT dense 与 routed K100 精度差为 0；两组低 LR 固定 K50 各加 8 epochs 未超过旧 best，不继续原样加轮数。完整 GF-B Router→VAT 此后已恢复定位，GF-L 收口后接效率与完整 VAT-L 迁移。详见 [历史审查](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
 | GPU | 顺序 | 数据集 / 模型 | 新增阶段 | 物理 batch / decoder 累积 | 路由点（0-based） |
 |---|---|---|---|---|---|
 | 0 | 1 | GazeFollow / ViT-B | support 3 + sparse decoder 5 | 16 / 2 | block 5 |
-| 0 | 2 | GazeFollow / ViT-L | support 3 + sparse decoder 5 | 4 / 8 | block 11 |
+| 0 | 2 | GazeFollow / ViT-L | 计划 3+5，实际 support 3 + sparse decoder 4 后收口 | 4 / 8 | block 11 |
 | 1 | 1 | VAT / ViT-B | support 3 + sparse decoder/inout 5 | 16 / 2 | block 5 |
 | 1 | 2 | VAT / ViT-L | support 3 + sparse decoder/inout 5 | 4 / 8 | block 11 |
 
 VAT 的 B/L 都已有可用 decoder，因此不依赖本轮 GF 产物。先并行 GF-B 与 VAT-B，再由两个独立队列各自接 L；某个数据集 B 失败就暂停它自己的队列，另一队列不受影响。
 
-四组共 32 个新增阶段 epoch；support 与 decoder 成本不同，不将这个计数换算成未经测量的 GPU 时长。support 梯度累积为 1，decoder 有效 batch 均为 32。训练和精度评测用 FP32。
+四组原计划共 32 个新增阶段 epoch，实际已完整提交 31 个（GF-L 少最后一轮）；不把未保存的第 5 轮局部状态计为完整 epoch。support 与 decoder 成本不同，不将这个计数换算成未经测量的 GPU 时长。support 梯度累积为 1，decoder 有效 batch 均为 32。训练和精度评测用 FP32。
 
 不新增 dense base、matched dense continuation、多 seed；两种规模只用既有同规模 decoder 初始化。K50 固定主点，K100→K75→K50 是一次训练中的 curriculum。
 

@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | 用户接受当前 VAT-B，等待 GF-L 完成；第 2 轮 K50 test `0.960007/0.094061/0.037721`（非最终）。完成后若可用，接同硬件效率与 VAT-L 迁移；否则先训来源明确的 GF-L 多层底座 |
+| CSCWD 新主线 | `cscwd_router/` | GF-L 关机中断，用户决定以实际 3+4 轮收口；第 2 轮 K50 best `0.960007/0.094061/0.037721` 已导出并回传核验。下一步效率与完整 GF-L→VAT-L，不新增 GF-L dense |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -74,10 +74,12 @@
 
 **E2-W 等待期安排（2026-11-23）**：用户接受当前 VAT-B，分类头适配后移。只读 GF-L 当前 history：已提交 2 个 decoder epochs，第 2 轮训练 K75、test K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，无最终 summary。快照 `results/gfl_interim_20261123.json` 保存服务器路径、原始小报告内容/SHA 与日志尾部。等待期优先准备 B 的 K25/K50/K75/K100 预算扫描、scene-only 条件化对照及真实多人 union 分析；训练/精度不要求独占卡，正式测速等空闲卡。本轮未启动新实验。
 
+**E1-L 中断收口与审查（2026-11-23）**：用户决定不补 GF-L 最后一轮。服务器结果 `459651a` 已 push 并 pull，实际 support 3 + decoder 4 epochs，第 5 轮途中关机，按 test Min L2 仍选第 2 轮；AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。从 last 内嵌 best 导出 52 个 tensors 逐值一致的 `best_test.pt`，原 last SHA 不变；原 manifest 3+5 不改，收口报告明确 `completed=false`、实际 3+4，无独立复评或逐查询导出。6 个 PT/PTH、2 份标注、18 个源码及原生树 SHA 和实际 optimizer steps（85,095/14,184）核对通过。报告 `results/E1L_GF_INTERRUPTED_REVIEW.md`、检查 `results/e1l_interrupted_server_checks.json`。当前精度可继续效率与 VAT-L 迁移，不先新训 GF-L dense；未启动新 GPU 任务。
+
 ## 下一步
 
-1. 等 GF-L 完成并审查同一选中 checkpoint；若指标可用，接正式效率及完整 GF-L Router→VAT-L。若不理想，按用户新决定先训练来源明确的 DINOv3-L 多层 GF 底座，再接 Router；目前不提前启动 dense。
-2. 等待期优先 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，不能拿全为单头查询的 GF official test 冒充多人评测。分类头适配 E2-H 后移；正式效率需空闲卡，GazeSpot 暂不切换。
+1. 实现 DINOv3 正式评测/效率入口和完整 GF-L→VAT-L 的用户收口来源接入；统一使用已导出的第 2 轮 best，不补最后一轮、不修改 completed 布尔值冒充全程完成。给完整命令后用户手动跑，正式效率需空闲卡。
+2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

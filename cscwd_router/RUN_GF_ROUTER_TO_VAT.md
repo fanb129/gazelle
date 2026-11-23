@@ -1,6 +1,6 @@
 # 完整 GF-B Router → VAT（E2-T）
 
-更新：2026-11-23。E2-T 已完成，原始结果提交 `170ace8` 已 push/pull。逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`；按 test L2 选第 1 轮，Router 仍为 GF 权重，后 7 轮联合适配未超过它。详见 [结果审查](results/E2T_GF_TO_VAT_REVIEW.md)。用户接受当前 B，分类头适配后移；先等 GF-L，再决定效率/VAT-L 迁移或新 GF-L 底座。以下命令保留供复现，不重复启动。正式效率等空闲卡。
+更新：2026-11-23。E2-T 已完成，原始结果提交 `170ace8` 已 push/pull。逐帧 AUC/L2/AP `0.940033/0.100131/0.883183`；按 test L2 选第 1 轮，Router 仍为 GF 权重，后 7 轮联合适配未超过它。详见 [结果审查](results/E2T_GF_TO_VAT_REVIEW.md)。用户接受当前 B，分类头适配后移。GF-L 现以实际 3+4 轮收口，后续接效率与 VAT-L；其 interrupted_summary 需新入口显式接入，不能只替换下面 B 命令的路径。以下 B 命令保留供复现，不重复启动。正式效率等空闲卡。
 
 ## 1. 这轮迁移什么
 
@@ -47,7 +47,7 @@ git pull --rebase --autostash origin codex/coverage-aware-router
 mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
 ```
 
-本次只新增 transfer 入口和检查，不修改旧 `gazelle/` 或原 GF trainer 源码。GF-L 继续其原任务。
+本次只新增 transfer 入口和检查，不修改旧 `gazelle/` 或原 GF trainer 源码。GF-L 已按实际 3+4 收口，后续迁移另接新入口。
 
 ## 4. GPU 1 完整命令
 

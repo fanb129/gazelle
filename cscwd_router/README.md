@@ -12,6 +12,7 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 ## 写作与执行入口
 
+- [E1L_GF_INTERRUPTED_REVIEW.md](results/E1L_GF_INTERRUPTED_REVIEW.md)：GF-L 关机后以实际 3+4 轮收口，选第 2 轮 K50，`0.960007/0.094061/0.037721`；best 已导出并回传核验，接效率与完整 VAT-L 迁移，不先新训 GF-L dense。
 - [L_INITIALIZER_DECISION.md](results/L_INITIALIZER_DECISION.md)：L 权重的四路投影与历史源码矛盾；keys/shape 兼容不作为历史同配置认证。B 优先，L 作 warm-start 补充线，暂不重训两个 dense 或切 GazeSpot。
 - [E2T_GF_TO_VAT_REVIEW.md](results/E2T_GF_TO_VAT_REVIEW.md)：完整 GF-B→VAT-B 已回传，逐帧 `0.940033/0.100131/0.883183`；best 为 Router 冻结首轮，定位恢复、AP 待提升。用户接受当前结果，分类头适配后移。
 - [RUN_GF_ROUTER_TO_VAT.md](RUN_GF_ROUTER_TO_VAT.md)：E2-T 已完成，完整 GF-B Router/decoder→VAT，8 epochs K50；保留原命令供复现，不重复启动；效率等空闲卡。
@@ -32,11 +33,11 @@ GazeLLE 本身已支持多人共享场景编码。比较对象应包括其原生
 
 论文目标是有竞争力的准确率与更低实际成本，不预写尚未测得的“双优”、显存节省、整网计算减半或多人保证无损。
 
-新入口采用全量 train、逐 epoch test、单指标选 checkpoint，标记 `test_selected`。GF 按 Min L2，VAT 按 L2，VAT 最后自动逐帧 test。CPU 32/32 通过；旧 gazelle/ 与历史脚本未改。VAT B/L 已完成回传，逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；VAT 各再训 8 轮后仍保留旧 best。GF-B 已验收，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，GF-L 仍训练；统一效率尚未测量。
+新入口采用全量 train、逐 epoch test、单指标选 checkpoint，标记 `test_selected`。GF 按 Min L2，VAT 按 L2，VAT 最后自动逐帧 test。CPU 32/32 通过；旧 gazelle/ 与历史脚本未改。VAT B/L 已完成回传，逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；VAT 各再训 8 轮后仍保留旧 best。GF-B 已验收，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，GF-L 已按 3+4 收口；统一效率尚未测量。
 
 四组均复用兼容旧 raw-concat decoder，再以 seed0 重学 Router，不直接继承 seed3106 support。VAT B/L 初始化已存在，不需要等本轮 GF。官方 GazeLLE 后续仅推理比较；旧 matched dense 保留原协议。
 
-后续完整 GF-B Router/decoder→VAT-B 迁移已完成，最终 AUC/L2/AP `0.940033/0.100131/0.883183`，较旧 VAT-B L2 降低 9.77%，AP 下降 0.018555。用户接受当前 B，先等 GF-L 完成；可用则测效率并迁移 VAT-L，不理想则先训练来源明确的 GF-L DINOv3 多层底座。GF-L 第 2 轮 K50 test `0.960007/0.094061/0.037721` 是中间结果，见 [只读快照](results/gfl_interim_20261123.json)。等待期优先预算扫描、条件化对照和真实多人 union；具体顺序见实验清单。
+后续完整 GF-B Router/decoder→VAT-B 迁移已完成，最终 AUC/L2/AP `0.940033/0.100131/0.883183`，较旧 VAT-B L2 降低 9.77%，AP 下降 0.018555，用户接受。GF-L 已按实际 3+4 轮收口，按 Min L2 选第 2 轮 K50 `0.960007/0.094061/0.037721`；指标来自完整 epoch test，无独立复评。当前接正式效率与完整 GF-L→VAT-L，预算扫描、条件化对照和真实多人 union 接续；不补最后一轮、不先新训 GF-L dense。
 
 ## 工作约定
 

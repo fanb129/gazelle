@@ -253,3 +253,10 @@
 - snapshot: `cscwd_router/results/gfl_interim_20261123.json`; SHA256: `b2b70e8366c2281c0c78dcbfe2bbc4bed77f5f0c50c1109bf97481ba8515bf81`。观察时间 `2026-11-23T06:39:26.130300+00:00`，只读服务器三个小报告和日志；原始报告路径、SHA 与内容均在快照中，无新增训练/推理/测速。
 - GF-L 已提交 2 个 decoder epochs，第 2 轮 train K75、test K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`；第 3 轮 K50 训练中，尚无最终 summary，不当作最终成绩。
 - 用户接受当前 VAT-B，将分类头适配后移。等 GF-L 完成，可用则正式效率与完整 Router→VAT-L；不理想则先训练来源明确的 DINOv3-L 多层 GF 底座。等待期预算扫描、scene-only 与真实多人 union 的顺序记录在 `EXPERIMENT_PLAN.md`，尚未启动。
+
+## E1-L · GF-L 中断收口审查（2026-11-23）
+
+- 服务器结果提交 `459651a8a6485a2a2ab2b5ccb418ae742817e7a8` 已 push/pull，4 份回传 JSON 与 18 个本地源码 SHA 一致；本地 3 条提交与用户目录迁移保留。只回传当前 GF-L 与其 provenance，未提交旧 T4 或其他工作。
+- checks: `cscwd_router/results/e1l_interrupted_server_checks.json`; SHA256: `c870c2d4af0051fa9ecd5466cfd6c19167e019fc0e1c7056c54f5e0588ed80ad`。6 个 PT/PTH、2 份标注、18 个源码及原生树 SHA 均核对；support/decoder 已提交更新 85,095/14,184，选模与冻结状态一致。52 个导出 best tensors 与 last 内嵌 best 逐值一致，原 last SHA 未变。没有新增 GPU forward、独立 test 或逐查询重聚合。
+- review: `cscwd_router/results/E1L_GF_INTERRUPTED_REVIEW.md`; SHA256: `78255235b08317bd13e57541779dda4caf66a11382b5ebe02d410314f7e178d6`。用户决定不补最后一轮，实际 support 3 + decoder 4 收口，按 Min L2 选第 2 轮 K50，AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。收口报告明确 completed=false / user-closed，原 3+5 manifest 保留；第 5 轮局部状态不计入完成预算。
+- best PT 路径/SHA 见上方 `DINOv3 GF-L interrupted closure`，留服务器未入 Git。当前精度可接效率与完整 GF-L→VAT-L，不先新增 GF-L dense；新入口需显式支持收口来源，再由用户手动运行。

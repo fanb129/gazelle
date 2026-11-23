@@ -268,10 +268,16 @@ VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次�
 
 后续联合阶段提高 soft coverage 和 GT point coverage，但 hard Gaussian mass coverage 下降，L2 没有改善。Router、decoder 和 in/out token 同时更新，尚不能单独归因；AP 仍较低，主表应保留同一选中模型的三项指标。下一项优先仅适配分类头、保护定位；尚无同硬件正式效率结果，也不能将完整系统改善全部归因于人物条件化机制。
 
+### 9.6 GF-L 中断后以实际 3+4 收口（2026-11-23）
+
+服务器关机中断最后一轮，用户决定不补跑。实际完成 support 3 + decoder 4，按预定 test Min L2 选第 2 轮，K50 AUC/Avg/Min L2 `0.960007/0.094061/0.037721`。第 4 轮为 `0.960678/0.093370/0.037724`，保留完整行，不因较高 AUC 改变选模规则。结果提交 `459651a` 已回传；从 last 内嵌 best 导出的 52 tensors 逐值一致，原恢复文件不变，详见 [E1-L 审查](../results/E1L_GF_INTERRUPTED_REVIEW.md)。
+
+报告保留原计划 3+5 与实际 3+4，标记 user-closed，指标来自完整 epoch test，没有独立复评或逐查询导出。相对已登记 GazeLLE-L 文献参照，当前 AUC/定位有竞争力；仍需同硬件效率，不能提前写精度与速度双优。历史 initializer 的 warm-start 标签保留，当前运行的四层配置由 manifest 明确登记。当前先接效率与完整 GF-L→VAT-L，不新增 GF-L dense。
+
 ## 10. 论文组织与下一步
 
-用户接受当前 VAT-B，分类头适配后移。先等 GF-L 完成：可用则同硬件效率与完整 GF-L Router→VAT-L，不理想则先训练来源明确的 GF-L DINOv3 多层底座。等待期优先预算响应、人物条件化对照与真实多人 union 证据；GF-L 当前第 2 轮中间成绩已有积极信号，但不提前当作最终结果。正式效率等待空闲卡，原迁移命令见 `../RUN_GF_ROUTER_TO_VAT.md`，不重复启动。
+用户接受当前 VAT-B，分类头适配后移。GF-L 已按实际 3+4 收口，精度可用，接同硬件效率与完整 GF-L Router→VAT-L；先实现 DINOv3 评测/效率及用户收口来源接入，再给手动运行命令。预算响应、人物条件化对照与真实多人 union 接续，正式效率需空闲卡；原 B 迁移命令不重复启动。
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
-E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。VAT B/L 及额外 8 轮续训已回传核验，GF-B 已审查、GF-L 继续训练；GPU 0/1 命令保留供复现/恢复，不重复训练已完成 VAT。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
+E0 执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：四组均 seed0，GF-L 实际 3+4，其余 3+5，不新增 dense 训练。VAT B/L 及额外 8 轮续训、GF-B、GF-L 收口均已回传核验；旧 GPU 0/1 命令保留供复现，不重启已收口任务。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
