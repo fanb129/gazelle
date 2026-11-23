@@ -11,6 +11,7 @@ import subprocess
 from PIL import Image
 import torch
 
+from gazelle.dataloader import load_data_gazefollow, load_data_vat
 from cscwd_router.code.scripts.benchmark_router_dinov2 import gpu_snapshot, measure
 from cscwd_router.code.stag import dinov3_run as original
 from cscwd_router.code.stag.checkpoint import sha256
@@ -35,10 +36,12 @@ def source_hashes():
     return values
 
 
-def select_samples(data_path, batch_size, seed):
+def select_samples(data_path, batch_size, seed, *, dataset="gazefollow"):
     annotation = Path(data_path) / "train_preprocessed.json"
+    records = (load_data_gazefollow(annotation) if dataset == "gazefollow"
+               else load_data_vat(annotation, sample_rate=1))
     candidates = []
-    for record in json.loads(annotation.read_text()):
+    for record in records:
         for index, head in enumerate(record["heads"]):
             if head["inout"] == 1:
                 candidates.append({"path": record["path"], "head_index": index, "head_bbox": head["bbox_norm"]})
@@ -65,7 +68,8 @@ def make_request(args):
             "batch_size": args.batch_size, "order": args.order, "precision": args.precision,
             "seed": args.seed, "allow_closed_gf": args.allow_closed_gf,
             "settings": {key: getattr(args, key) for key in ("warmup", "latency_iters", "throughput_iters", "repeats")},
-            "raw_input": select_samples(args.data_path, args.batch_size, args.seed), "sources": source_hashes()}
+            "raw_input": select_samples(args.data_path, args.batch_size, args.seed, dataset=summary["dataset"]),
+            "sources": source_hashes()}
 
 
 def build_variant(summary, payload, official_checkpoint, variant):

@@ -107,16 +107,19 @@ def test_token_trace_runs_native_routing_prefix_suffix_and_multilayer_decoder(mo
     assert all(not block._forward_pre_hooks for block in model.backbone.model.blocks)
 
 
-def test_samples_are_real_single_queries_stable_across_batch_sizes(tmp_path):
+@pytest.mark.parametrize("dataset", ["gazefollow", "vat"])
+def test_samples_are_real_single_queries_stable_across_batch_sizes(tmp_path, dataset):
     records = []
     for index in range(4):
         name = f"frame{index}.png"
         Image.new("RGB", (20, 20), (index, 0, 0)).save(tmp_path / name)
         records.append({"path": name, "heads": [{"inout": 0, "bbox_norm": [.5, .5, .8, .8]},
                                                 {"inout": 1, "bbox_norm": [.1, .1, .3, .3]}]})
-    (tmp_path / "train_preprocessed.json").write_text(json.dumps(records))
-    one = efficiency.select_samples(tmp_path, 1, 0)
-    many = efficiency.select_samples(tmp_path, 4, 0)
+    annotation = records if dataset == "gazefollow" else [
+        {"path": "clip0", "frames": records[:2]}, {"path": "clip1", "frames": records[2:]}]
+    (tmp_path / "train_preprocessed.json").write_text(json.dumps(annotation))
+    one = efficiency.select_samples(tmp_path, 1, 0, dataset=dataset)
+    many = efficiency.select_samples(tmp_path, 4, 0, dataset=dataset)
     assert one["samples"] == many["samples"][:1]
     assert all(row["head_index"] == 1 and row["head_bbox"] == [.1, .1, .3, .3] for row in many["samples"])
     transform = lambda image: torch.ones(3, 448, 448)
@@ -166,21 +169,24 @@ def test_queue_passes_every_timing_option_and_uses_official_inout_for_vat():
     assert (child.warmup, child.latency_iters, child.throughput_iters, child.repeats, child.seed) == (50, 200, 500, 5, 0)
 
 
-def test_queue_fresh_cells_verified_resume_and_changed_settings(tmp_path, monkeypatch):
+@pytest.mark.parametrize("dataset", ["gazefollow", "vat"])
+def test_queue_fresh_cells_verified_resume_and_changed_settings(tmp_path, monkeypatch, dataset):
     from cscwd_router.code.scripts import run_router_efficiency as queue
-    args, _ = setup_run(tmp_path, monkeypatch, "gazefollow", "b")
+    args, _ = setup_run(tmp_path, monkeypatch, dataset, "b")
     original.run(args, model_factory=model_factory)
     monkeypatch.setattr(efficiency, "ROOT", tmp_path)
     monkeypatch.setattr(efficiency, "source_hashes", lambda: {"fixture": "fixed"})
     monkeypatch.setattr(queue, "ROOT", tmp_path)
     (tmp_path / "checkpoints/dinov2_vitb14_pretrain.pth").write_bytes(b"synthetic backbone")
-    (tmp_path / "checkpoints/gazelle_dinov2_vitb14.pt").write_bytes(b"synthetic decoder")
+    suffix = "_inout" if dataset == "vat" else ""
+    (tmp_path / f"checkpoints/gazelle_dinov2_vitb14{suffix}.pt").write_bytes(b"synthetic decoder")
     rows = []
     for index in range(8):
         name = f"sample{index}.png"
         Image.new("RGB", (8, 8)).save(tmp_path / name)
         rows.append({"path": name, "heads": [{"inout": 1, "bbox_norm": [.1, .1, .3, .3]}]})
-    (tmp_path / "train_preprocessed.json").write_text(json.dumps(rows))
+    annotation = rows if dataset == "gazefollow" else [{"path": "clip", "frames": rows}]
+    (tmp_path / "train_preprocessed.json").write_text(json.dumps(annotation))
     calls = []
     def fake_cell(command, **kwargs):
         child = cell_args(command[3:])
@@ -194,7 +200,7 @@ def test_queue_fresh_cells_verified_resume_and_changed_settings(tmp_path, monkey
         "--official-checkpoint-dir", str(tmp_path / "checkpoints"), "--report-root", str(tmp_path / "timing"),
         "--provenance", str(tmp_path / "timing_provenance.md")])
     queue.run(settings)
-    assert len(calls) == 4 and (tmp_path / "timing/gazefollow/vitb/summary.json").exists()
+    assert len(calls) == 4 and (tmp_path / f"timing/{dataset}/vitb/summary.json").exists()
     settings.resume = True
     queue.run(settings)
     assert len(calls) == 4
