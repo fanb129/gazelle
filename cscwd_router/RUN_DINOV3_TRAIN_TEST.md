@@ -2,7 +2,7 @@
 
 更新：2026-11-22。E0 入口已实现，32 项 CPU 工程检查通过。以下命令由用户在服务器手动执行；助手没有启动服务器训练。
 
-2026-11-23 状态：VAT B/L 已正常完成并回传，核验见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)；不用重复启动 VAT 训练。以下保留原运行/恢复命令，GF 尚待审查。
+2026-11-23 状态：VAT B/L 已正常完成并回传，核验见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)；不用重复启动 VAT 训练。GF-B 现已回传核验（`0.956236/0.101550/0.043420`），GF-L 仍训练；VAT 续训也已完成并保留旧 best，详见 [最新审查](results/E1_GFB_E2C_REVIEW.md)。以下保留原运行/恢复命令。
 
 用户现要求提升 VAT；新增的 E2-C 低 LR 固定 K50 续训见 [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)，使用新目录，不修改这里的初始 3+5 epochs。
 

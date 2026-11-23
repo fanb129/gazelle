@@ -2,11 +2,11 @@
 
 更新：2026-11-23，E2。按用户最新要求：两个数据集、两个模型规模，**全部新训练 base seed=0**；只新增 Router 模型训练，不重训 dense。官方 GazeLLE checkpoint 仅用于推理对照。
 
-E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 已完成并经 Git 回传（`0fc2844`），两组各 3+5 epochs，seed 0；逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。工件/指标核验通过，见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)。GF 尚待审查，尚无新的 GPU 效率成绩。
+E0 已实现，32 项 CPU 工程检查通过。完整服务器命令见 [RUN_DINOV3_TRAIN_TEST.md](RUN_DINOV3_TRAIN_TEST.md)。VAT-B/L 已完成并经 Git 回传（`0fc2844`），两组各 3+5 epochs，seed 0；逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`。工件/指标核验通过，见 [E2 审查](results/E2_VAT_SEED0_REVIEW.md)。GF-B 已回传核验，AUC/Avg/Min L2 `0.956236/0.101550/0.043420`；VAT B/L 各续训 8 轮未改善 L2，仍选旧 best。GF-L 继续训练；尚无新的 GPU 效率成绩。
 
 ## 1. 四组主实验与并行顺序
 
-2026-11-23 新决定 E2-C：GF 继续等待完成；VAT 原始结果保留，先用现有模型做低 LR 固定 K50 续训，各加 8 epochs。旧初始化已确认有 GF→VAT decoder 迁移，Router 未在 GF 预训练；本轮 decoder LR 比旧 VAT 高 10 倍。先测原始初始化 native dense/K100，再续训，不新增 dense 训练。入口及完整 GPU 1 命令见 [RUN_VAT_CONTINUE.md](RUN_VAT_CONTINUE.md)，当前只有 39 项 CPU 工程检查结果。
+2026-11-23 E2-C 实际结果：原始 VAT dense 与 routed K100 的精度差为 0；两组低 LR 固定 K50 各加 8 epochs 后，均未超过旧 best L2，不继续原样加轮数。GF-B 已完成，GF-L 继续等待。下一项优先现有 VAT checkpoint 的预算响应、完整 GF-B Router→VAT 迁移及 GF-B 的 E3 测速。详见 [审查分析](results/E1_GFB_E2C_REVIEW.md)；[续训命令](RUN_VAT_CONTINUE.md)仅保留供复现。
 
 | GPU | 顺序 | 数据集 / 模型 | 新增阶段 | 物理 batch / decoder 累积 | 路由点（0-based） |
 |---|---|---|---|---|---|

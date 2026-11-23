@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | E2 VAT-B/L 已完成并经 Git 回传、核验通过；K50 AUC/L2/AP：B 0.913548/0.110971/0.901738，L 0.923034/0.097970/0.916599；GF 待审查，统一效率待测 |
+| CSCWD 新主线 | `cscwd_router/` | GF-B 已验收：0.956236/0.101550/0.043420，定位优于已有官方 B 报告；VAT B/L 各续训 8 轮未改善 L2，保留旧 best；GF-L 仍训练，效率待测 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -64,10 +64,12 @@
 
 **E2-C 初始化追溯与低 LR 续训入口（2026-11-23）**：服务器精确 W&B config/output 确认 B/L 初始化均为 GF dense→VAT dense 8 epochs，再接本轮新 Router；没有遗漏 decoder 的 GF 迁移，但 Router 未在 GF 预训练。旧 VAT decoder LR 为 `1e-5`，本轮 `1e-4`；旧末轮 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，仅登记历史日志值。新增独立续训入口：原第 5 轮末状态、固定 K50、新低 LR 优化器、旧 best 继续参与选模、原始 dense/K100 推理核对，计划 B/L 各追加 8 epochs。39/39 CPU 通过，旧 E0 源码 SHA 全部不变；`RUN_VAT_CONTINUE.md` 含 GPU 1 B→L 完整命令。新续训尚未运行，无新精度数字。
 
+**E1-B / E2-C 结果回传与审查（2026-11-23）**：结果提交 `8f2ae9c` 已从服务器 push 并 pull 本地，回传 GF-B 4 份、VAT 续训 B/L 8 份及官方 GF baseline 1 份 JSON。GF-B 完成 3+5 epochs，以 Min L2 选第 5 轮；AUC/Avg/Min L2 为 `0.956236/0.101550/0.043420`，相对已有官方 GazeLLE-B 报告差 `+0.000095/-0.002586/-0.001912`，定位误差相对降低 2.48%/4.22%，AUC 基本持平。VAT 各实际新增 8 epochs、5,664 次更新、44 个 decoder tensors 改变，但最低新 rate-6 L2 `0.111874/0.102485` 未超过旧 best `0.110842/0.099612`；最终逐帧指标保持原值。原始 VAT dense 与 routed K100 的 AUC/L2/AP 差均 0。29 个工件/标注路径（21 个大型 PT/PTH/gzip）SHA 核验通过，三组逐查询重聚合差值均 0；未新增 GPU forward。详见 `results/E1_GFB_E2C_REVIEW.md` 与 `results/e1_gfb_e2c_server_checks.json`。GF-L 继续训练，不再原样延长 VAT decoder。
+
 ## 下一步
 
-1. 用户按 `cscwd_router/RUN_VAT_CONTINUE.md` 手动执行 E2-C 的低 LR 固定 K50 续训；保留原 E2 结果，不重跑初始 support/decoder。GF 继续等待完成并审查。
-2. 根据原始 dense/K100 probe 与续训真实结果判断适配效果；GF 完成后比较完整 GF Router→VAT 迁移。对实际选中 checkpoint 推进 E3 官方 GazeLLE 推理/统一效率，再做 E4 多人分析；不新增 dense 训练。
+1. GF-L 继续等待；已完成的 GF-B 不重训，准备 E3 官方 GazeLLE 同硬件 B1/B8 测速。
+2. VAT 不再原样续训固定 Router 的 decoder。先做现有 checkpoint 的 K50/K75/K100 预算响应，并实现 GF-B Router + decoder→VAT 的迁移路线，新增 in/out head 在 VAT 学习。随后按真实结果推进效率与 E4；不新增 dense 训练。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。

@@ -181,3 +181,12 @@
 - decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitl/last.pt`; SHA256: `ebc9fac2fa0864e366f789ee22aea9540512ef82ee31f0840d5aa3e6cbd88c61`
 - per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_continue_k050_lr1e5_seed0/vitl/predictions.jsonl.gz`; SHA256: `3d846164c55ff72568a77b9f6509c7fb6fae0c7e19960ccc824fdb6b04f9a152`
 - probes: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_continue_k050_lr1e5_seed0/vitl/probes.json`; SHA256: `c8ff5ea247e283aec0a9e694dca951dc61922fc0748d76f93d3222938ac7cdf1`
+
+## E1-B / E2-C · GF-B 与 VAT 续训审查（2026-11-23）
+
+- 服务器结果提交 `8f2ae9cddd27799a3b2923754e47d21d5d07e962` 已 push，本机已 pull，13 份回传 JSON SHA 核对通过。GF-L 继续运行，不将其未完成产物纳入本次结果。
+- checks: `cscwd_router/results/e1_gfb_e2c_server_checks.json`; SHA256: `ecdb2b43ca41800e3c4ef1ffdd2da4917a0ecb4c4047284865ed42b561cf13b2`。29 个工件/标注路径（21 个 PT/PTH/gzip）SHA 匹配，三组逐查询身份/标注与重聚合指标核验通过，差值均 0；VAT 各确有 5,664 次更新、44 个 decoder tensors 改变，保留旧 best 符合原选择规则。
+- review: `cscwd_router/results/E1_GFB_E2C_REVIEW.md`; SHA256: `ce284ca93f06d6c92ba7a70a30e393b71d4c88583e2af272c9077204ca3285a8`。GF-B AUC/Avg/Min L2 `0.956236/0.101550/0.043420`；VAT B/L 各新增 8 轮未改善 L2，最终逐帧指标不变；原始 dense/K100 三项精度差为 0。本轮未新增模型 forward、训练或测速。
+- 既有官方 GF-B 精度报告已归档：`cscwd_router/results/t4_gf_fulltrain_seed3106/accuracy/dense_official.json`; SHA256: `0a4a9b3c8ead1907aae746c57e5496d02af1d0c434c0292496e148b059d9e4d4`。只回传这一份 T4 baseline accuracy，不作为 T4 总验收。
+- baseline compact checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/t4_gf_fulltrain_seed3106/dense_official/final.pt`; SHA256: `26d1c421689ad827c5bd633392cc31896a6593834d67ea122fbd134b776ec851`。decoder tensors 与官方原始权重逐值一致。
+- official decoder: `/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14.pt`; SHA256: `525a69495c0db475fa8522b164aba3cfabeaa0dd60adb7be5e13dd73e56d70e1`，与 T1 登记一致。大文件留服务器，未下载到本机。

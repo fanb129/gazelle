@@ -3,15 +3,15 @@
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
 > 2026-11-22 当前论文主方法：DINOv3 多层表示 + gaze-conditioned spatial routing。行文与贡献边界见 `latex/PAPER_STORY.md`；三稿复核见 `latex/PAPER_REVIEW.md`。
 > 当前 E0 已实现：GF/VAT × ViT-B/ViT-L，新训练 seed 0，32 项 CPU 检查通过。GPU 0/1 完整命令见 `RUN_DINOV3_TRAIN_TEST.md`。
-> 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。GF 尚待审查，效率尚待测量。
-> E2-C 已实现低学习率固定 K50 续训，39 项 CPU 检查通过；计划 B/L 各加 8 epochs，命令见 `RUN_VAT_CONTINUE.md`，尚未运行。
+> 2026-11-23 E2：VAT-B/L 队列完成，结果提交 `0fc2844` 已回传核验。逐帧 AUC/L2/AP 为 B `0.913548/0.110971/0.901738`、L `0.923034/0.097970/0.916599`；详见 `results/E2_VAT_SEED0_REVIEW.md`。最新 GF 与续训状态见下一条，效率尚待测量。
+> E1-B / E2-C 最新：GF-B 与 VAT 续训结果已通过 `8f2ae9c` 回传并核验。GF-B 为 `0.956236/0.101550/0.043420`；VAT 各新增 8 epochs 未超过旧 best L2，最终指标不变。GF-L 仍训练；详见 `results/E1_GFB_E2C_REVIEW.md`。
 > 原 T1–T6 是 DINOv2 单层适配的工程任务，保留原实现、验收和运行记录。以下历史规格不自动变为新的 DINOv3 训练命令。
 
 ## 0. 当前决定（2026-11-23，E2）
 
 当前方法覆盖冻结 DINOv3 ViT-B/16 和 ViT-L/16 多层表示上的人物条件化深层计算分配。DINOv3 与多层访问沿用，不再次作为相对在审 ICASSP 的新贡献；不新增 dense/matched dense 训练。旧 matched dense、GF fixed-final 与 VAT holdout 结果保留各自协议，不与新结果混拼。
 
-按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。VAT 两组已完成并回传核验，GF 尚待审查。
+按用户最新要求，全部新训练 base seed=0，epoch 子 seed 为 `0 + epoch`。四组从各自兼容的旧 raw-concat decoder 初始化，重新学习 support 3 epochs，再训练 sparse decoder/inout 5 epochs；不继承 seed3106 的已训练 Router。GF 按 test Min L2、VAT 按 test L2 选单一 checkpoint，每轮 test 用 K50，VAT 最后自动逐帧评测。GF-B 已完成并核验，GF-L 继续训练。VAT 两组及各新增 8 轮低 LR 续训已核验；新 L2 未改善，保留原 best，不再原样加轮数。
 
 VAT 的 B/L 初始化都已核对存在，因此不用等本轮 GF。GPU 0 顺序 GF-B→GF-L，GPU 1 顺序 VAT-B→VAT-L；详细配置与完整 nohup 命令见 `EXPERIMENT_PLAN.md`、`RUN_DINOV3_TRAIN_TEST.md`。官方 GazeLLE 后续仅做推理比较；旧 DINOv2 T4 按原阈值单独收口。
 
@@ -178,6 +178,12 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：从精确 W&B config/output 核实 B/L 都是 GF dense→VAT dense 8 epochs；本轮在此基础重学 VAT Router，没有继承 GF Router。核对 MM Table 4 的 B raw-concat `0.937/0.103`；旧 VAT decoder LR `1e-5`，当前首轮 Router 适配 `1e-4`。新增独立固定 K50 续训入口，不改旧 E0 源码、运行目录或 GF 任务；从原第 5 轮末状态使用新低 LR 优化器，保留旧 best，先做原始初始化 native dense/routed K100 推理核对。
 - **产出文件与数字**：`code/stag/dinov3_continue.py`、`code/scripts/continue_router_dinov3.py`、`code/stag/test_dinov3_continue.py`，`RUN_VAT_CONTINUE.md`、`results/e2_vat_initialization_trace.json`、`results/e2_vat_continue_local_checks.json`。39/39 CPU 通过（7 项新增、32 项回归），含 B/L 合成闭环、原工件不变、固定预算、旧 best 保留、恢复逐值一致与 probe 不符时停止；两组完整 CLI 和 shell 语法通过。旧末轮日志 rate-6 AUC/L2 为 B `0.939097/0.103012`、L `0.945401/0.093716`，不是当前逐帧复测。计划各加 8 epochs 是预算，尚无续训结果。
 - **下一步**：用户 push/pull 后在 GPU 1 手动执行 B→L 续训，回传 probe/history/summary。GF 继续等待；完成后再比较完整 GF Router→VAT 迁移。以真实结果决定后续预算与 E3，不重训 dense。
+
+### 2026-11-23 · E1-B / E2-C：GF-B 完成与 VAT 续训结果审查
+
+- **完成内容**：服务器提交并 push `8f2ae9c`，本地 pull GF-B、VAT 续训 B/L 及既有官方 GF-B 精度报告，共 13 份原始 JSON。按既定规则核对单 checkpoint 选模、真实参数变化、native dense/K100 probe 与逐查询记录；保留 GF-L 运行任务和旧 T4 其他产物。
+- **产出文件与数字**：`results/E1_GFB_E2C_REVIEW.md`、`results/e1_gfb_e2c_server_checks.json`。GF-B 第 5 轮 AUC/Avg/Min L2 `0.956236/0.101550/0.043420`，已有官方 B 报告为 `0.956141/0.104136/0.045332`；相对 Avg/Min L2 降低 2.48%/4.22%，AUC 基本持平。VAT B/L 各新增 8 轮、5,664 次更新，44 个 decoder tensors 改变；最低新 rate-6 L2 `0.111874/0.102485` 未超过旧 best，最终逐帧指标保持不变。原始 dense/routed K100 三项精度差均 0。29 个工件/标注路径（其中 21 个 PT/PTH/gzip）SHA 全匹配，三组逐查询重聚合差值均 0；本轮未新增 GPU forward 或测速。
+- **下一步**：GF-L 继续等待；GF-B 可先做 E3 同硬件测速。VAT 先测预算响应、再做完整 GF-B Router→VAT 迁移，不原样延长固定 Router 的 decoder，不新增 dense 训练。
 
 ## 7. T1 服务器运行与结果回传
 

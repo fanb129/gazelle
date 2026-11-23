@@ -228,7 +228,7 @@ GazeFollow 官方测试的旧记录为 4,782 个 single-head 图像查询，因�
 
 旧效率相对自身 DINOv3 多层 dense 的正反序比值几何均值：B1 `1.001525×`、B4 `1.060676×`、B8 `1.148545×`。没有显存收益，B1 基本持平。它们不是相对官方 DINOv2 GazeLLE 的加速。
 
-会话此前只读核对的服务器官方 GazeLLE-B/14 GF 结果为 AUC `0.956141`、Avg L2 `0.104136`、Min L2 `0.045332`。据此 DINOv3 K50 的 AUC 略高、Avg L2 略差；不能写成各指标均胜出。对应 T4 原始 JSON 尚未经 Git 同步到本地，本轮本地证据包没有将这三个会话数值冒充已归档的原始报告。完整跨模型表在报告回传与统一测速后形成。
+会话此前只读核对的服务器官方 GazeLLE-B/14 GF 结果为 AUC `0.956141`、Avg L2 `0.104136`、Min L2 `0.045332`。据此 DINOv3 K50 的 AUC 略高、Avg L2 略差；不能写成各指标均胜出。对应 `t4_gf_fulltrain_seed3106/accuracy/dense_official.json` 已随 `8f2ae9c` 回传，并核对 decoder 与官方权重一致；本次只归档这一份官方精度报告，不视为 T4 总验收。新的 GF-B 比较见第 9.4 节，统一测速尚未完成。
 
 ### 9.2 VAT：旧 source-video holdout
 
@@ -256,8 +256,14 @@ GPU 1 的 B/L 队列均完成，各 support 3 + sparse decoder/inout 5 epochs。
 
 相对计划中同规模 GazeLLE 文献参照，B 的 AP 较高但 AUC/L2 较差；L 的 L2/AP 较好但 AUC 较差。不能写成 VAT 全面优于 GazeLLE。L 的选择来自 K75 训练轮，实际评测仍为 K50；不将后续轮更高 AUC 与较早轮较低 L2 混拼。尚未做同口径官方 checkpoint 推理和效率比较，差距也未被分解为 backbone、表示和 Router 的各自作用。
 
+### 9.4 GF-B 与 VAT 续训（2026-11-23）
+
+结果提交 `8f2ae9c` 已回传，详见 [联合审查](../results/E1_GFB_E2C_REVIEW.md)。GF-B 按 test Min L2 选第 5 轮，AUC/Avg/Min L2 为 `0.956236/0.101550/0.043420`；已有官方 GazeLLE-B 报告为 `0.956141/0.104136/0.045332`。两者 test 标注和 4,782 个单头查询相同、均 FP32，Avg/Min L2 相对降低 2.48%/4.22%，AUC 基本持平；这属于完整系统比较，不把差异全部归因于 Router，也没有速度结论。
+
+VAT B/L 各新增 8 个低 LR K50 epochs，decoder 确有更新，但新轮次没有改善 L2，仍保留旧 best，最终逐帧指标不变。原始 VAT dense 初始化/routed K100 的 rate-6 AUC 为 B `0.939097`、L `0.944592`，三项精度路径差均为 0；同口径选中 K50 的 AUC 为 `0.913401/0.922349`，下降仍在。当前不再用原样追加 decoder epochs 作为提升依据，接续预算响应与完整 GF Router→VAT 迁移；GF-L 继续训练，GF-B 可先测 E3。
+
 ## 10. 论文组织与下一步
 
 正文按问题顺序组织：Introduction（训练轻量与推理计算的区别）→ Related Work（冻结编码器、通用 token 稀疏化、相关 GazeSpot 的边界）→ Method（support、union、sparse suffix、fill、decoder）→ Experiments（完整系统、matched dense、效率、条件化与人数）→ Conclusion（仅总结已验证的权衡）。
 
-E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。VAT B/L 已完成并回传核验，GF 尚待审查；GPU 0/1 命令保留供复现/恢复，不重复训练已完成 VAT。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
+E0 当前执行见 `../EXPERIMENT_PLAN.md` 与 `../RUN_DINOV3_TRAIN_TEST.md`：双尺寸入口已完成，GF/VAT × B/L 四组均 seed0、3+5 epochs，不新增 dense 训练。VAT B/L 及额外 8 轮续训已回传核验，GF-B 已审查、GF-L 继续训练；GPU 0/1 命令保留供复现/恢复，不重复训练已完成 VAT。对实际选中的同一 checkpoint 补统一推理测速与多人分析。旧正式报告保留原协议。
