@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+W4更新（2026-11-24）：GF-L原有完整效率结果已通过 `5e64c45` 补回审查，B1/B8相对官方为 `0.9177/1.0722×`，B8相对routed K100为 `1.3046×`。至此GF/VAT×B/L四组精度与效率均已回传，六张论文具体表见 [CORE_DRAFT_ZH.md](latex/CORE_DRAFT_ZH.md)，GF-L证据见 [审查](results/E3_GFL_EFFICIENCY_REVIEW.md)。后续按该表补预算精度、条件化消融和真实多人共享，不重跑已完成矩阵。
+
 E3-L 最新（2026-11-24）：VAT-L效率已由用户实际在 **GPU0** 完成，四单元/六报告及CPU检查经 `afcc39e` 回传审查通过。B1/B8相对官方speedup `0.8630/1.0652×`，相对同权重K100 `1.0168/1.3123×`；B8延迟降低6.12%、峰值显存高28.11%。详见 [VAT-L效率审查](results/E3_VATL_EFFICIENCY_REVIEW.md)。完整GF-L→VAT-L 8轮精度保持 `0.948264/0.089676/0.891592`，按test L2选第1轮，见 [E2-TL审查](results/E2TL_GFL_TO_VATL_REVIEW.md)。接续近期强方法推理比较；下面三卡安排保留为历史。
 
 SOTA-1 最新决定（2026-11-24）：重点转为与近期强方法比较精度—成本，GazeLLE 保留参照。已核8行公开指标，Mi ECCV2026为接近底座的精度参照但未找到公开权重；TextGaze GF/VAT×B/L四个任务权重与OmniGF的GF/VAT权重已通过官方发布API核实。下一项先准备TextGaze官方权重的推理评测/测速，不新增dense训练，随后检查OmniGF。详细表、输入差异和出处见 [近期方法核对](results/SOTA_LANDSCAPE_20261124.md)。原seed0、train/test选模不变。

@@ -334,7 +334,62 @@
         ]
       },
       "completed": false,
-      "closed_by_user": true
+      "closed_by_user": true,
+      "efficiency": {
+        "path": "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/summary.json",
+        "sha256": "32e7562e77ed036709705eec5c5208f5f4861b681c3f78ecb9751ceb15dca8cf",
+        "gpu_index": 0,
+        "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "precision": "fp16",
+        "protocol": "dinov3_vs_official_gazelle_efficiency_v1",
+        "results": {
+          "1": {
+            "variants": {
+              "official": {
+                "latency_ms_geomean": 33.099547118661704,
+                "throughput_fps_geomean": 30.003821685884915,
+                "peak_allocated_mib_max": 1215.625
+              },
+              "k100": {
+                "latency_ms_geomean": 36.53038913711947,
+                "throughput_fps_geomean": 26.999291750077163,
+                "peak_allocated_mib_max": 1271.06640625
+              },
+              "k50": {
+                "latency_ms_geomean": 36.066548579667604,
+                "throughput_fps_geomean": 27.474822383484167,
+                "peak_allocated_mib_max": 1271.0625
+              }
+            },
+            "k50_speedup_vs_official": 0.9177353648228339,
+            "k50_speedup_vs_k100": 1.012860686029529,
+            "k50_throughput_ratio_vs_official": 0.9157107608198292
+          },
+          "8": {
+            "variants": {
+              "official": {
+                "latency_ms_geomean": 147.78288116586432,
+                "throughput_fps_geomean": 53.71602180303741,
+                "peak_allocated_mib_max": 1423.826171875
+              },
+              "k100": {
+                "latency_ms_geomean": 179.80380712728285,
+                "throughput_fps_geomean": 44.43878091029307,
+                "peak_allocated_mib_max": 1823.92236328125
+              },
+              "k50": {
+                "latency_ms_geomean": 137.8264434442274,
+                "throughput_fps_geomean": 57.85021090892659,
+                "peak_allocated_mib_max": 1824.01611328125
+              }
+            },
+            "k50_speedup_vs_official": 1.0722389511970971,
+            "k50_speedup_vs_k100": 1.3045668351737008,
+            "k50_throughput_ratio_vs_official": 1.07696379901416
+          }
+        },
+        "review_path": "cscwd_router/results/E3_GFL_EFFICIENCY_REVIEW.md"
+      }
     },
     "vat_b": {
       "path": "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
