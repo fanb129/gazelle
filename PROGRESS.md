@@ -27,6 +27,8 @@
 
 ## 进展
 
+**W7-A多人精度完成（2026-11-24）**：GPU0 accuracy/resume任务正常结束，5,182共同帧N=1/2/3×三策略共9个FP32单元齐全；`7c37446` 已回传，源码/工件/查询身份和逐查询指标重聚合核对通过。N3 union AUC/L2/AP为0.929907/0.112543/0.849850，coverage0.959405；独立路径为0.929747/0.112434/0.848231，官方为0.919423/0.122274/0.866136。表5精度已补齐，详见 `results/final_multi_seed0/summary.md`。GPU0仍有其他用户进程，效率计时未运行；下一项独占后补计时，GPU1保留原训练。
+
 **W6-D部署完成（2026-11-24）**：两卡命令的5个服务器CPU预检入口全部exit0，`1fed049` 报告经Git回本地，23项记录内源码SHA一致。多人5,182帧、可视化GF/VAT各32候选及多人16候选可读取，绘图库已就绪。训练目录固定 `c19ba93`，评测目录 `gazelleV1_final_evaluation` 固定 `1fed049`。没有执行新GPU任务；用户按两份 `RUN_FINAL_*` 文档手动启动，先0卡两分支串行/1卡geometry，再0卡多人、1卡K100→可视化。
 
 **W6-C两卡与可视化入口（2026-11-24）**：全部91项本机CPU/回归通过（含新增12项C检查），真实导出/CPU绘图、表4自动核对汇总及两卡串行队列已实现。MM式六行图展示RGB→GT→support→实际token→官方/本文热图，另有同帧换人及max-union图；小案例相对引用可离线重画。用户仅授权GPU0/1：0卡scene-only→scene-head，1卡scene-geometry；后接多人、四组同权重K100和可视化。入口和完整命令 `cscwd_router/RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`，证据 `results/w6c_final_local_checks.json`。没有新增真实GPU结果，下一项服务器CPU预检与用户手动运行。

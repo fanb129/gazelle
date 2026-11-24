@@ -347,6 +347,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`results/w6_final_server_preflight.json`。实际服务器Python3.10.19、torch2.6.0+cu124、matplotlib3.10.8；多人共同集合5,182帧，GF/VAT各32个图片候选与多人16个候选可读取。未执行模型forward、GPU训练、精度或计时。评测worktree `/home/fb/src/paper/gazelleV1_final_evaluation` 固定 `1fed049`；完整命令 `RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`，仅用GPU0/1。
 - **下一步**：用户手动跑两卡条件化训练，随后0卡独占多人质量/效率，1卡依次K100和真实图导出；三分支结束后CPU汇总表4。回传小结果和RGB/图，保留大工件路径/SHA。
 
+### 2026-11-24 · W7-A：真实VAT多人精度完成并回传
+
+- **任务号**：W7-A。
+- **完成内容**：用户授权助手在GPU0以accuracy/resume启动后，N1既有结果复用，N2/N3三策略精度全部完成，日志COMPLETE、进程退出。服务器CPU核对9组预测工件SHA、32项源码fingerprint、同N同人物和嵌套查询，逐查询AUC/L2/AP重聚合差值小于1e-12；小报告经 `7c37446` push/pull回本地，12个报告SHA与30个可读源码文件SHA一致。
+- **产出文件与数字**：`results/final_multi_seed0/`、`results/w7a_multi_accuracy_server_checks.json`、provenance。5,182共同帧；N1/2/3分别5,182/10,364/15,546查询，9个FP32质量单元完成。N3 official AUC/L2/AP为0.919423/0.122274/0.866136，union为0.929907/0.112543/0.849850，independent为0.929747/0.112434/0.848231；union GT点覆盖0.959405。N1两Router结果一致，表5精度已填入；大预测gzip仅记录服务器路径/SHA。计时单元为0，GPU0仍有其他用户计算任务。
+- **下一步**：可独占GPU0后补6个多人计时单元；GPU1继续原geometry训练。K100和真实图导出按既定顺序运行，不重训主模型。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。
