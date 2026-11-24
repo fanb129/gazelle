@@ -27,6 +27,8 @@
 
 ## 进展
 
+**W3中文核心稿（2026-11-24）**：新增 `cscwd_router/latex/CORE_DRAFT_ZH.md`，按用户构思压缩为动机、方法、贡献、实验矩阵与结论。核对Mi的头部外观＋眼位置→方向→FOV→多层融合流程，本文把人物条件用于编码器中途的计算选择，当前代码没有直接搬用其方向/FOV模块。DINOv3/多层仍为基础配置。稿件填入四组已审精度与三组正式效率；列明预算精度、同预算条件化消融、真实多人共享和近期方法比较应补的数据。现有结论保留VAT-L B8小幅快、B1慢及更高显存，未把“保证所有指标”写成已验证；没有新训练或GPU评测。
+
 **E3-L VAT-L效率验收（2026-11-24）**：用户实际在GPU0运行完成，日志COMPLETE、四单元/六报告齐全，结果和CPU检查由隔离worktree提交 `afcc39e` push/pull。本机六报告SHA与25份按执行commit读取的源码、服务器27项源码hash/五来源权重/八张RGB、12组token trace、原始选模与汇总计算均核对通过。B1官方/K100/K50延迟 `33.4730/39.4368/38.7860ms`，B8 `147.5857/181.8345/138.5573ms`，相对官方speedup `0.8630/1.0652×`、相对K100 `1.0168/1.3123×`。B8延迟比官方低6.12%、吞吐57.3449 vs53.7989 FPS，峰值显存1824.21 vs1423.95MiB（高28.11%）；B1延迟高15.87%。精度仍为FP32 `0.948264/0.089676/0.891592`，效率为FP16完整forward。审查 `cscwd_router/results/E3_VATL_EFFICIENCY_REVIEW.md`，证据 `results/e3_vatl_efficiency_server_checks.json`；没有重跑GPU任务。下一项接近期强方法同机推理对照，保留B1和显存代价，不写成全面占优。
 
 **E2-TL验收 / E3-L效率准备（2026-11-24）**：完整GF-L Router→VAT-L 8轮已由隔离worktree提交 `2eb4275` push/pull，CPU检查 `33e459a` 回传通过。seed0、仅train/test、首轮固定Router后7轮联合适配，按rate-6 test L2选第1轮，最终逐帧AUC/L2/AP **0.948264/0.089676/0.891592**，31,978查询（20,655画内）。52个GF共享张量、20个工件SHA、22项源码hash、选模/optimizer/冻结状态一致；导出AUC/L2/AP重聚合差值0。相对旧VAT-L定位改善（L2低8.47%），AP较旧L低2.50个百分点；当前L三项均优于完整GF→VAT-B。审查 `cscwd_router/results/E2TL_GFL_TO_VATL_REVIEW.md`，证据 `results/e2tl_gfl_to_vatl_server_checks.json`，文献表已同步。现有runner直接支持L，B1/B8正反序四请求CPU预检通过，GPU1完整命令 `cscwd_router/RUN_VATL_EFFICIENCY.md`。末次1卡另有作业占23,821MiB/89%，待空闲后用户手动启动；未产生新GPU效率数字。

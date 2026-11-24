@@ -1,5 +1,7 @@
 # CSCWD Router：问题定义、方法边界与行文逻辑
 
+W3核心稿（2026-11-24）：最新精简中文叙事与实验矩阵见 [CORE_DRAFT_ZH.md](CORE_DRAFT_ZH.md)。以GazeLLE的训练效率与稠密推理计算缺口起笔，用Mi的头部方向/FOV作为相关思路，将人物条件的作用落到编码器中途的计算选择；下文保留详细论证。当前实测结论按具体batch和对照陈述，预算精度与条件化消融仍待补齐。
+
 SOTA-1 更新（2026-11-24）：按用户决定，主目标转为近期强方法的精度—成本比较，保留GazeLLE参照。公开指标/权重与比较范围见 [近期方法核对](../results/SOTA_LANDSCAPE_20261124.md)；不以全面超过GazeLLE作为推进前提，不改变train/test、seed0或ICASSP贡献边界。
 
 更新：2026-11-23，E2；写作始于 W1。主方法采用 **DINOv3 ViT-B/16、ViT-L/16 + 多层表示 + gaze-conditioned Router**。DINOv2 单层适配保留为已有工程与对照路线。本文件确定论文怎么论证；VAT full-test 结果见第 9.3 节，不把尚未完成的跨模型测速或消融写成结果。
