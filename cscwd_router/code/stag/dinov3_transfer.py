@@ -127,7 +127,7 @@ def source_hashes():
         "cscwd_router/code/stag/dinov3_sources.py")}}
 
 
-def run(args, *, model_factory=get_coverage_router_model):
+def run(args, *, model_factory=get_coverage_router_model, extra_sources=None):
     if Path.cwd().resolve() != ROOT:
         raise RuntimeError(f"run from the repository root: {ROOT}")
     gf_path = Path(args.gf_summary)
@@ -170,7 +170,7 @@ def run(args, *, model_factory=get_coverage_router_model):
         "gf_checkpoint": checkpoint, "backbone": backbone, "initialization": initialization,
         "gf_source_status": {"completed": gf["completed"], "closed_by_user": gf.get("closed_by_user", False),
                              "training_epochs": gf["training_epochs"]},
-        "data": data, "sources": source_hashes(), "torch_version": torch.__version__,
+        "data": data, "sources": {**source_hashes(), **(extra_sources or {})}, "torch_version": torch.__version__,
         "recipe": {key: value for key, value in vars(args).items() if key not in ("resume", "run_dir", "report_dir", "provenance")}}
     context["fingerprint"] = hashlib.sha256(json.dumps(context, sort_keys=True).encode()).hexdigest()
     manifest_path, summary_path = report_dir / "manifest.json", report_dir / "summary.json"

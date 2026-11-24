@@ -190,7 +190,7 @@ def register_provenance(path, summary_path, summary):
         handle.flush()
 
 
-def run(args, *, model_factory=get_coverage_router_model):
+def run(args, *, model_factory=get_coverage_router_model, extra_sources=None):
     if Path.cwd().resolve() != ROOT:
         raise RuntimeError(f"run from the repository root: {ROOT}")
     run_dir, report_dir = Path(args.run_dir), Path(args.report_dir)
@@ -218,7 +218,7 @@ def run(args, *, model_factory=get_coverage_router_model):
     context = {"recipe": recipe, "model_config": model.get_model_config(), "data": data,
                "initialization": {**initialization, "path": str(init_path.resolve()), "sha256": init_sha},
                "backbone": {"path": str(backbone_path.resolve()), "sha256": backbone_sha},
-               "sources": source_hashes(), "torch_version": torch.__version__}
+               "sources": {**source_hashes(), **(extra_sources or {})}, "torch_version": torch.__version__}
     context["fingerprint"] = hashlib.sha256(json.dumps(context, sort_keys=True).encode()).hexdigest()
     summary_path = report_dir / "summary.json"
     manifest_path = report_dir / "manifest.json"

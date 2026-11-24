@@ -319,6 +319,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`PRE_SHUTDOWN_PLAN.md`、`latex/CORE_DRAFT_ZH.md`、`results/w5_pre_shutdown_planning_evidence.json`。CPU确认VAT test为13,127唯一帧、31,978查询，5,182帧至少三个真实头框；采用共同帧集合和seed0嵌套N=1/2/3查询。三卡本次均15MiB/0%；旧B日志每条GF→VAT纯训练合计8.25小时，不含评测/导出。方案分配三卡各一个消融，维护前预留回传时间；没有新模型指标或GPU运行。
 - **下一步**：先实现可配置打分输入的B消融和多人/可视化导出入口，做CPU检查，再提供用户手动启动的三卡完整命令。余量独立复测两组L的B8速度；绘图和排版使用导出数据在本机继续。
 
+### 2026-11-24 · W6-A：三个条件化消融训练入口
+
+- **任务号**：W6-A。
+- **完成内容**：新增可配置scoring输入，复用原生Router优先规则、max-union、Top-K和suffix。关闭geometry同时移除绝对头框输入与相对几何；关闭appearance移除头部池化特征。full模式与原版state/输出逐值一致。新增三分支GF3+5→各自VAT8队列，仅冻结骨干上的任务模块训练；source扩展纳入原有恢复fingerprint，旧gazelle包未改。
+- **产出文件与数字**：`code/stag/conditional.py`、`code/scripts/train_conditioned_router.py`、`code/scripts/run_final_ablation.py`、`code/stag/test_final_ablation.py`、`results/w6a_conditional_local_checks.json`、`RUN_FINAL_ABLATIONS.md`。新增及原GF/VAT回归合计47项CPU通过（8.39秒），含三个合成迁移闭环、错误分支拒绝、冻结与恢复；没有真实训练指标。
+- **下一步**：Git部署独立训练worktree并CPU预检，用户手动启动三卡命令。接续多人、K100精度和真实可视化导出，训练目录保持固定版本。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

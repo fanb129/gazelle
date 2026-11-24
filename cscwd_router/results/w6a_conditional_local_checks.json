@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-24",
+  "task": "W6-A_conditional_ablation_implementation",
+  "scope": "Local CPU synthetic engineering checks only; no real dataset training or GPU evaluation.",
+  "passed": true,
+  "pytest": {
+    "passed": 47,
+    "duration_seconds": 8.39,
+    "files": [
+      "cscwd_router/code/stag/test_final_ablation.py",
+      "cscwd_router/code/stag/test_dinov3_train_test.py",
+      "cscwd_router/code/stag/test_dinov3_transfer.py"
+    ]
+  },
+  "checks": [
+    "Full mode native state and outputs bitwise identical, with and without inout",
+    "Disabled head appearance and absolute/relative geometry cannot leak into scoring",
+    "Scene-only support logits ignore queried head; native priority and exact K are preserved",
+    "All three branches complete synthetic GF training and VAT transfer",
+    "Source hashes participate in resume fingerprint",
+    "VAT shared tensors exactly inherit its own GF branch",
+    "Backbone remains frozen",
+    "Queue uses seed0 and original GF3+5/VAT8 recipes"
+  ],
+  "sources": {
+    "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+    "cscwd_router/code/scripts/train_conditioned_router.py": "75a3f2122d65a5ab2168dc6e9b344c7cc6fe5bf55bba75f4e104e8064d4ed3e3",
+    "cscwd_router/code/scripts/run_final_ablation.py": "b6e7826fcde96112a3fb13ff86ec03ffef9b2a95c15242f1f03b855600d0d444",
+    "cscwd_router/code/stag/test_final_ablation.py": "ee7d05e330a32fc8673aa782b094f8704813fc621d4cada8cc7c8728febf6d0f",
+    "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+    "cscwd_router/code/stag/dinov3_transfer.py": "56f2934921e4e1d7396be037d5b9ff04e6f1f16cef0b72557f765c85b32ab55b"
+  }
+}
