@@ -1,0 +1,258 @@
+{
+  "task": "E2-TL_server_review_and_E3L_CPU_preflight",
+  "passed": true,
+  "scope": "CPU hashes, tensors, selection, exported query aggregation and benchmark input preflight; no model forward or GPU timing.",
+  "review_script_sha256": "84ed4e0196f0df11695abb5f9b96ee5855c82d600dbbf7b81d8eebe0152ee96a",
+  "context_fingerprint": "5583a1f9bc72edd9c820dc61f14177b5120ed8697e87cdd17a538c98bef68d38",
+  "report_sha256": {
+    "history.json": "1ca76434348fbddeee21b58d739982c81328bc0feaa1734e99ef83b5dfcc0d00",
+    "initial_test.json": "4b3843192dd1a740f6e47d87403f3eca03bf294aefe4865d64e35f5aa2ed2306",
+    "initialization.json": "ad6db25445e301f0d6e1f14ca67f7f571e70ff0b1448db953c39b79429052dd7",
+    "manifest.json": "a35a0ea4cbc75223867b3d9b231494344f9e790c7f8fad37ec164f5c6d4f9acd",
+    "summary.json": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f"
+  },
+  "source_sha256": {
+    "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+    "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+    "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+    "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+    "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+    "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+    "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+    "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+    "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/dinov3_transfer.py": "7409b7d1b4e2b823465c8e11faa511739560cf32e7c12a71da6fcbdeac5f5a85",
+    "cscwd_router/code/scripts/transfer_gf_router_to_vat.py": "3e1e572ea76602dd93de930efe1d7d56e586c43c10000e8a6831be7808ef47f2",
+    "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+  },
+  "artifacts": {
+    "gf_summary": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+      "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1"
+    },
+    "gf_manifest": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/manifest.json",
+      "sha256": "572744a7c125f36b04ce3671dafdd95f943f52f64a092a4cddf721c6ceab6041"
+    },
+    "gf_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt",
+      "sha256": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+      "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+    },
+    "initial_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/initial.pt",
+      "sha256": "df6358c12a05316929ba9fd97c7a6b89681d330476247078a8d6367dd616be09"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/best_test.pt",
+      "sha256": "6d12190c7cdf24fe0389eede68b27f0f05d35cb4c753072f62a3d0d1d8445bb5"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/last.pt",
+      "sha256": "fc4df18e262b42a21d90671bbd9a8a9f89627daa08c4a8c9536cb4691e983641"
+    },
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/predictions.jsonl.gz",
+      "sha256": "3b4c5b12d313dfc076b74b84bb8e88dc38a0c80930a48dd1d8b2876dcb2ea56a"
+    },
+    "manifest": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/manifest.json",
+      "sha256": "a35a0ea4cbc75223867b3d9b231494344f9e790c7f8fad37ec164f5c6d4f9acd"
+    },
+    "history": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/history.json",
+      "sha256": "1ca76434348fbddeee21b58d739982c81328bc0feaa1734e99ef83b5dfcc0d00"
+    },
+    "initialization_report": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/initialization.json",
+      "sha256": "ad6db25445e301f0d6e1f14ca67f7f571e70ff0b1448db953c39b79429052dd7"
+    },
+    "initial_test_report": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/initial_test.json",
+      "sha256": "4b3843192dd1a740f6e47d87403f3eca03bf294aefe4865d64e35f5aa2ed2306"
+    },
+    "epoch_0": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_0.pt",
+      "sha256": "a60ae17136665979340a96de1f5789db62b53e3e493abccb698e55f4bff1aba1"
+    },
+    "epoch_1": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_1.pt",
+      "sha256": "cbf726b112e2e98d5812ab81260a4523c43e8057e2a98ca8550718cc9dcbcaa2"
+    },
+    "epoch_2": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_2.pt",
+      "sha256": "42f04039c775d98bf27d6cd653abd579f87765f46ef9617c659a9a8e49f428bc"
+    },
+    "epoch_3": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_3.pt",
+      "sha256": "f2903b35d9d2968ec32a5ce2bac336653d45359acd116448b48e725c31116d0d"
+    },
+    "epoch_4": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_4.pt",
+      "sha256": "878df462af6935aae0e9dde2ad957e1bd7799c0242242b63290fd7389ab4bc3a"
+    },
+    "epoch_5": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_5.pt",
+      "sha256": "9cee78c55a319cc0a4507ee1d4ce0552d553bff71bf3254a7011816c1fb2c21c"
+    },
+    "epoch_6": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_6.pt",
+      "sha256": "a14b45a4a4240dd4b4ef44e6420a8746a27f15f5fe3ab13863976bbf56d9776f"
+    },
+    "epoch_7": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_7.pt",
+      "sha256": "1a9526bbc846c1a06d50d97b2fde02ce737c765fa230d49aa982071a1b26cd12"
+    }
+  },
+  "artifact_paths_sha256_verified": 20,
+  "shared_GF_tensors_identical": 52,
+  "new_inout_tensors": 5,
+  "gf_source_status": {
+    "completed": false,
+    "closed_by_user": true,
+    "training_epochs": {
+      "support": 3,
+      "sparse_decoder": 4
+    }
+  },
+  "epoch_tensor_checks": [
+    {
+      "epoch_one_based": 1,
+      "changed_tensors_vs_initial": {
+        "router": 0,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 2,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 3,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 4,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 5,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 6,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 7,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    },
+    {
+      "epoch_one_based": 8,
+      "changed_tensors_vs_initial": {
+        "router": 12,
+        "decoder": 39,
+        "inout": 5
+      }
+    }
+  ],
+  "optimizer_internal_steps": {
+    "router": [
+      4956
+    ],
+    "decoder": [
+      5664
+    ],
+    "inout": [
+      5664
+    ]
+  },
+  "selected_epoch_one_based": 1,
+  "selected_router_unchanged_from_GF": true,
+  "metrics": {
+    "auc": 0.9482644118938351,
+    "l2": 0.089676214779225,
+    "inout_ap": 0.8915918880146028,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9532316630355846,
+    "routing_hard_coverage": 0.8377712002705356,
+    "routing_soft_coverage": 0.351366242273175
+  },
+  "query_identity_and_annotation_matches": 31978,
+  "aggregate_differences": {
+    "auc": 0.0,
+    "l2": 0.0,
+    "inout_ap": 0.0,
+    "persons": 0,
+    "inframe_persons": 0
+  },
+  "efficiency_preflight": [
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "batch": 1,
+      "order": "forward",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "batch": 1,
+      "order": "reverse",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "batch": 8,
+      "order": "forward",
+      "source_closed_by_user": false
+    },
+    {
+      "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "batch": 8,
+      "order": "reverse",
+      "source_closed_by_user": false
+    }
+  ],
+  "efficiency_report_root": "/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124"
+}
