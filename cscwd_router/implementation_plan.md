@@ -354,6 +354,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`results/final_multi_seed0/`、`results/w7a_multi_accuracy_server_checks.json`、provenance。5,182共同帧；N1/2/3分别5,182/10,364/15,546查询，9个FP32质量单元完成。N3 official AUC/L2/AP为0.919423/0.122274/0.866136，union为0.929907/0.112543/0.849850，independent为0.929747/0.112434/0.848231；union GT点覆盖0.959405。N1两Router结果一致，表5精度已填入；大预测gzip仅记录服务器路径/SHA。计时单元为0，GPU0仍有其他用户计算任务。
 - **下一步**：可独占GPU0后补6个多人计时单元；GPU1继续原geometry训练。K100和真实图导出按既定顺序运行，不重训主模型。
 
+### 2026-11-25 · W7-B：四组K100与geometry分支完成，核对早先队列恢复点
+
+- **任务号**：W7-B。
+- **完成内容**：GPU0四组K100已于11月24日23:59完成；GPU1 geometry分支GF于11月25日01:39、VAT于03:17完成，相关进程均退出。服务器CPU核对40个工件、固定权重/原选模、源码、GF→VAT继承、冻结状态及逐查询指标重聚合；`7ad1de7` 经Git回传，6个主报告SHA在本机一致。补查早先GPU0队列：scene-only已完成support3轮和decoder1轮，last可从decoder第2轮恢复，scene-head尚未开始。
+- **产出文件与数字**：`results/final_k100_seed0/`、`results/final_ablation_seed0/scene_geometry/`、`results/w7b_k100_geometry_server_checks.json`，大PT/gzip仅登记服务器路径/SHA。四组K100均实际1024patch、每block1029tokens；GF B/L AUC/Avg L2为0.957218/0.100484、0.961650/0.093095；VAT B/L AUC/L2/AP为0.940170/0.100636/0.878522、0.947314/0.090269/0.898700。geometry GF AUC/Avg L2/Min L2为0.956018/0.101514/0.043611，VAT为0.940438/0.100879/0.886571，已填入表4。CPU核对不执行模型forward；本轮没有启动新GPU任务。
+- **下一步**：等待用户确认后在GPU0以原resume队列继续scene-only→scene-head，补齐表4另外两行；后续真实图导出。GPU0仍有其他用户进程，效率待独占后补。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

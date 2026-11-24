@@ -1,5 +1,7 @@
 # 维护前：两卡条件化消融
 
+2026-11-25实际状态：GPU1的scene-geometry GF/VAT已经完成。早先GPU0队列中断于scene-only GF decoder第2轮；support3轮和decoder第1轮已保存，scene-head尚未开始。恢复使用下方原GPU0命令（含 `--resume`），保持固定训练目录；等待用户确认后由助手启动。
+
 服务器CPU预检已通过并回传：训练目录固定 `c19ba93`，评测目录固定 `1fed049`（代码 `d29d1ae`），见 [预检报告](results/w6_final_server_preflight.json)。两目录已就绪，使用本文对应目录的命令，无需在训练期间pull源码。
 
 W6-A。代码只新增在 `cscwd_router/code/`，旧 `gazelle/` 未改。47项本机CPU/回归通过，包含full模式原版输出逐值一致和三个条件分支的GF→VAT闭环。这里新增真实训练由用户手动启动，尚无新准确率结果。多人/K100/真实可视化入口见 `RUN_FINAL_EVALUATION.md`。当前仅使用GPU0/1，三个条件均保留；GPU0串行两分支，GPU1一分支。
