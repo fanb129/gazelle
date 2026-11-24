@@ -352,3 +352,10 @@
 - epoch_5: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_5.pt`; SHA256: `9cee78c55a319cc0a4507ee1d4ce0552d553bff71bf3254a7011816c1fb2c21c`
 - epoch_6: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_6.pt`; SHA256: `a14b45a4a4240dd4b4ef44e6420a8746a27f15f5fe3ab13863976bbf56d9776f`
 - epoch_7: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/epoch_7.pt`; SHA256: `1a9526bbc846c1a06d50d97b2fde02ce737c765fa230d49aa982071a1b26cd12`
+
+## E2-TL CPU review and E3-L efficiency preflight · 2026-11-24
+
+- report: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e2tl_gfl_to_vatl_server_checks.json`; SHA256: `ab43dd992b58f45acd29783945dd52f5af4353e2b766fc79d686e1e30f4cc9d8`
+- review script: `cscwd_router/code/scripts/review_vat_transfer.py`; SHA256: `84ed4e0196f0df11695abb5f9b96ee5855c82d600dbbf7b81d8eebe0152ee96a`
+- Scope: CPU artifact/tensor/selection/export checks and four benchmark input preflights; no GPU forward or timing. Raw VAT-L reports committed in `2eb4275`, CPU proof in `33e459a`.
+- Prepared GPU1 efficiency output: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/`; manual launch after GPU1 is idle. No timing report or efficiency value exists yet for this new matrix.

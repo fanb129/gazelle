@@ -217,7 +217,7 @@
       "weights_status": "Official README provides GF/VAT/ChildPlay checkpoint links; not downloaded."
     }
   ],
-  "vat_l_status": "Read-only server check found no final summary.json under cscwd_router/results/vat_from_gfl_router_k050_joint_seed0. No final VAT-L metrics inferred.",
+  "vat_l_status": "Completed 8 epochs; full GF-L Router transfer, seed0, test-L2-selected epoch1. CPU artifact/export review passed; four efficiency request preflights passed. GPU1 timing awaits an idle card and manual launch; no new model forward or GPU timing in this review.",
   "additional_candidates": [
     {
       "title": "Gaze Target Estimation Anywhere with Concepts",
@@ -376,6 +376,56 @@
       },
       "completed": true,
       "closed_by_user": false
+    },
+    "vat_l": {
+      "path": "cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "sha256": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f",
+      "metrics": {
+        "auc": 0.9482644118938351,
+        "l2": 0.089676214779225,
+        "inout_ap": 0.8915918880146028,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9532316630355846,
+        "routing_hard_coverage": 0.8377712002705356,
+        "routing_soft_coverage": 0.351366242273175
+      },
+      "selection": {
+        "epoch": 0,
+        "metric": "l2",
+        "metrics": {
+          "auc": 0.9480269914680018,
+          "l2": 0.0918637250269061,
+          "inout_ap": 0.8921953525523632,
+          "persons": 5461,
+          "inframe_persons": 3530,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9526912181303117,
+          "routing_hard_coverage": 0.837614236303497,
+          "routing_soft_coverage": 0.35064115353670994
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "completed": true,
+      "closed_by_user": false,
+      "review_path": "cscwd_router/results/E2TL_GFL_TO_VATL_REVIEW.md",
+      "source_status": {
+        "completed": false,
+        "closed_by_user": true,
+        "training_epochs": {
+          "support": 3,
+          "sparse_decoder": 4
+        }
+      }
     }
   },
   "textgaze_release": {
@@ -555,6 +605,90 @@
             "published_rounded_value": 0.879,
             "our_minus_published": 0.004182638101440483,
             "better_by_reported_values": true
+          }
+        ]
+      },
+      {
+        "ours": "vat_l",
+        "external": "mi2026objectaware",
+        "dataset": "vat",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9482644118938351,
+            "published_rounded_value": 0.948,
+            "our_minus_published": 0.0002644118938351925,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "l2",
+            "our_value": 0.089676214779225,
+            "published_rounded_value": 0.095,
+            "our_minus_published": -0.005323785220775007,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "inout_ap",
+            "our_value": 0.8915918880146028,
+            "published_rounded_value": 0.923,
+            "our_minus_published": -0.03140811198539728,
+            "better_by_reported_values": false
+          }
+        ]
+      },
+      {
+        "ours": "vat_l",
+        "external": "textgaze_l",
+        "dataset": "vat",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9482644118938351,
+            "published_rounded_value": 0.941,
+            "our_minus_published": 0.007264411893835199,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "l2",
+            "our_value": 0.089676214779225,
+            "published_rounded_value": 0.102,
+            "our_minus_published": -0.012323785220775,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "inout_ap",
+            "our_value": 0.8915918880146028,
+            "published_rounded_value": 0.911,
+            "our_minus_published": -0.01940811198539727,
+            "better_by_reported_values": false
+          }
+        ]
+      },
+      {
+        "ours": "vat_l",
+        "external": "omnigf",
+        "dataset": "vat",
+        "metrics": [
+          {
+            "metric": "auc",
+            "our_value": 0.9482644118938351,
+            "published_rounded_value": 0.917,
+            "our_minus_published": 0.03126441189383511,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "l2",
+            "our_value": 0.089676214779225,
+            "published_rounded_value": 0.096,
+            "our_minus_published": -0.006323785220775008,
+            "better_by_reported_values": true
+          },
+          {
+            "metric": "inout_ap",
+            "our_value": 0.8915918880146028,
+            "published_rounded_value": 0.923,
+            "our_minus_published": -0.03140811198539728,
+            "better_by_reported_values": false
           }
         ]
       }

@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+E2-TL 最新（2026-11-24）：完整GF-L Router→VAT-L已完成8轮并通过Git回传/CPU审查，最终逐帧AUC/L2/AP `0.948264/0.089676/0.891592`，按test L2选第1轮。详见 [E2-TL审查](results/E2TL_GFL_TO_VATL_REVIEW.md)。当前先补 **GPU1 VAT-L效率**，完整命令 [RUN_VATL_EFFICIENCY.md](RUN_VATL_EFFICIENCY.md)，四个请求CPU预检通过。末次1卡有其他作业，待空闲后用户手动运行；尚无VAT-L实测速度。以下三卡安排保留为历史。
+
 SOTA-1 最新决定（2026-11-24）：重点转为与近期强方法比较精度—成本，GazeLLE 保留参照。已核8行公开指标，Mi ECCV2026为接近底座的精度参照但未找到公开权重；TextGaze GF/VAT×B/L四个任务权重与OmniGF的GF/VAT权重已通过官方发布API核实。下一项先准备TextGaze官方权重的推理评测/测速，不新增dense训练，随后检查OmniGF。详细表、输入差异和出处见 [近期方法核对](results/SOTA_LANDSCAPE_20261124.md)。原seed0、train/test选模不变。
 
 SOTA-2补充：架构核对见该文件第7–9节。新增PaGE为明确GazeLLE派生的公开DINOv3对照候选；其两套场景/头部编码器取最后一层，不能称多层特征融合；公开结果采用联合数据、全模型微调和额外蒸馏，比较时分列。Mi仍是已核实DINOv3多层的外部参照，尚未找到公开任务权重。本轮只补文档/来源，不启动或改动训练。

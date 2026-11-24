@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | 重点转为近期强方法精度—成本，TextGaze/OmniGF有公开任务权重；保留已测GazeLLE结果：GF B1/B8 speedup 0.7822/0.9918×、VAT 0.8255/1.0251×。L任务按原版本接续 |
+| CSCWD 新主线 | `cscwd_router/` | 完整GF-L→VAT-L已审查：AUC/L2/AP 0.948264/0.089676/0.891592；下一项GPU1补VAT-L效率。近期强方法精度—成本为主目标，保留已有GazeLLE对照 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -26,6 +26,8 @@
 - 本机授权工作完成后由助手自动创建本地 Git commit，只 stage 本任务文件；push 与服务器运行不自动执行。
 
 ## 进展
+
+**E2-TL验收 / E3-L效率准备（2026-11-24）**：完整GF-L Router→VAT-L 8轮已由隔离worktree提交 `2eb4275` push/pull，CPU检查 `33e459a` 回传通过。seed0、仅train/test、首轮固定Router后7轮联合适配，按rate-6 test L2选第1轮，最终逐帧AUC/L2/AP **0.948264/0.089676/0.891592**，31,978查询（20,655画内）。52个GF共享张量、20个工件SHA、22项源码hash、选模/optimizer/冻结状态一致；导出AUC/L2/AP重聚合差值0。相对旧VAT-L定位改善（L2低8.47%），AP较旧L低2.50个百分点；当前L三项均优于完整GF→VAT-B。审查 `cscwd_router/results/E2TL_GFL_TO_VATL_REVIEW.md`，证据 `results/e2tl_gfl_to_vatl_server_checks.json`，文献表已同步。现有runner直接支持L，B1/B8正反序四请求CPU预检通过，GPU1完整命令 `cscwd_router/RUN_VATL_EFFICIENCY.md`。末次1卡另有作业占23,821MiB/89%，待空闲后用户手动启动；未产生新GPU效率数字。
 
 **方向决策链（更新于 2026-11-22）**：时序路线归档 → 回到 Router 效率线 → 先完成官方 DINOv2 单层的 T1–T4 适配与实验入口 → 重新核对旧 DINOv3 正式结果和三份稿件，按用户当前意图将论文方法定为 **DINOv3 多层 + Router**。此前“DINOv3 多层又贵又弱”的概括不成立：旧 GF K50 精度接近官方 GazeLLE，批量推理相对自身 dense 有收益；跨模型速度与 VAT 适用性分别验证。
 
@@ -92,7 +94,7 @@
 
 ## 下一步
 
-1. 优先准备TextGaze官方B/L任务权重的推理比较，核对同数据精度并在同硬件测core/完整RGB流程；不新增dense训练。之后检查OmniGF官方评测的3090显存与数据条件。GF-L/VAT-L按原任务接续并回传审查；阶段profile、native full-token控制和等价快路径保留为后续优化。
+1. GPU1空闲后按 `cscwd_router/RUN_VATL_EFFICIENCY.md` 补VAT-L的official/K100/K50效率并回传；完整GF-L→VAT-L精度已审查。之后准备TextGaze官方B/L任务权重的推理比较，在同硬件测core/完整RGB流程，不新增dense训练；再检查OmniGF官方评测条件。阶段profile、native full-token控制和等价快路径保留为后续优化。
 2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
 3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
 

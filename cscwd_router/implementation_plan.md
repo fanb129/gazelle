@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 E2-TL 验收完成：完整 GF-L Router→VAT-L 8 轮，逐帧 AUC/L2/AP `0.948264/0.089676/0.891592`，按 test L2 选第1轮；20个工件SHA及31,978个查询重聚合核对通过。GPU1效率四请求CPU预检通过，新完整命令 `RUN_VATL_EFFICIENCY.md`；末次GPU1已有其他作业，待空闲后用户手动启动。
 > 2026-11-24 SOTA-2：已将16个方法/参照的架构与GazeLLE关系补入 `results/SOTA_LANDSCAPE_20261124.md` 第7–9节，核对9个仓库29份固定commit源码。Mi明确DINOv3多层，PaGE明确从GazeLLE出发但取单层；新增公开PaGE权重及训练范围说明，没有启动实验。
 > 2026-11-24 SOTA-1：按用户决定，重点转为与近期 object-aware / vision-language 强方法比较精度—成本，保留 GazeLLE 对照。8行公开指标和4个单独标注线索已核对，TextGaze与OmniGF的官方任务权重入口已验证；下一项优先TextGaze推理比较，不新增dense训练。详见 `results/SOTA_LANDSCAPE_20261124.md`。
 > 2026-11-24 E3-B 已回传审查：GF-B B1/B8 相对官方 speedup `0.7822/0.9918×`，VAT-B `0.8255/1.0251×`，B8相对K100约1.25×，峰值显存高约59.5%。详见 `results/E3_B_EFFICIENCY_REVIEW.md`；当前优先阶段profile与等价推理优化，L 任务保持原版本。
@@ -270,6 +271,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：区分明确派生、GazeLLE式结构扩展、相同冻结编码范式与独立架构；逐项列出输入、backbone取层、融合/decoder、额外分支、训练与推理组件。补查PaGE、GazeCoT中的GazeLLE-v3、PINTO工程实现，保留未知信息，不从模型名推断结构。
 - **产出文件与数字**：更新 `results/SOTA_LANDSCAPE_20261124.md` 第7–9节，新增 `results/architecture_lineage_20261124.json`。16项架构（含官方和本方法）、9仓库29份源码commit/SHA；PaGE B/H+官方HF权重元数据已核实。Mi为DINOv3浅/中/深融合，PaGE/TextGaze/GazeHRNet/GazeLoom所核forward为单层输出；ViTGaze是多层attention、Sharingan是多层DPT，两者不是DINOv3。PaGE公开B-distill GF `.966/.081/.029`、VAT `.969/.068/.945` 高于我们，注明联合数据/全模型微调/额外蒸馏，非本轮复测。
 - **下一步**：外部官方权重推理对照增加PaGE这一直接相关DINOv3候选；Mi继续作多层配置精度参照，TextGaze保留。先核输入与权重语义后逐项准备服务器脚本；当前配方、checkpoint及服务器任务不变，没有新训练/GPU forward。
+
+### 2026-11-24 · E2-TL 验收 / E3-L：VAT-L 回传审查与 GPU1 效率准备
+
+- **任务号**：E2-TL / E3-L。
+- **完成内容**：从隔离 worktree 将完整 GF-L→VAT-L 五份报告和 provenance 以 `2eb4275` push/pull，CPU 检查以 `33e459a` 回传。完整继承52个GF张量、8轮K50训练、冻结backbone、逐轮test L2单模型选模与best/last/epoch工件均核对通过。现有效率入口直接支持L，采用包含VAT loader修复的隔离目录准备GPU1命令；未改旧gazelle包或计时器。
+- **产出文件与数字**：`results/vat_from_gfl_router_k050_joint_seed0/`、`results/E2TL_GFL_TO_VATL_REVIEW.md`、`results/e2tl_gfl_to_vatl_server_checks.json`、`code/scripts/review_vat_transfer.py`、`RUN_VATL_EFFICIENCY.md`。最终AUC/L2/AP `0.948264/0.089676/0.891592`，31,978查询（20,655画内），选第1轮；20个工件SHA、22项源码hash及导出指标重聚合通过，三指标差值0；B1/B8正反序4个效率请求CPU预检通过。同期更新文献表，未产生新GPU效率数字。
+- **下一步**：GPU1空闲后用户手动运行official/K100/K50效率矩阵，输出 `efficiency_dinov3_vatl_seed0_20261124/vat/vitl/`，完成后Git回传审查。末次GPU1为23,821MiB/89%，当前不与其他作业共卡测速；后续再接近期强方法推理对照。
 
 ## 7. T1 服务器运行与结果回传
 

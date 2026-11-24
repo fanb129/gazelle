@@ -25,17 +25,17 @@ SOTA-2 补充：第7–9节逐项列出架构、GazeLLE关系和多层特征类�
 | ViTGaze | Visual Intelligence 2024 | .949 | .105 | .047 | .938 | .102 | .905 |
 | Sharingan | CVPR 2024 | .944 | .113 | .057 | — | .107 | .891 |
 | Ours-B K50 | 本轮已审查 | .9562 | .1016 | .0434 | .9400 | .1001 | .8832 |
-| Ours-L K50 | GF 已审查 | .9600 | .0941 | .0377 | — | — | — |
+| Ours-L K50 | GF/VAT 已审查 | .9600 | .0941 | .0377 | .9483 | .0897 | .8916 |
 
 来源分别为 [Mi Table 1](https://arxiv.org/pdf/2606.29334)、[TextGaze v2 Table 1](https://arxiv.org/html/2607.10130v2)、[OmniGF v2 Table 9](https://arxiv.org/html/2605.26399v2)、[GazeHRNet 原文](https://www.mdpi.com/1424-8220/26/15/4799)、[GazeVLM 会议版 Table 1](https://openaccess.thecvf.com/content/CVPR2026W/AI4RWC/papers/Mathew_GazeVLM_A_Vision-Language_Model_for_Multi-Task_Gaze_Understanding_CVPRW_2026_paper.pdf)、[ViTGaze 官方表](https://github.com/hustvl/ViTGaze)、[Sharingan 官方论文](https://openaccess.thecvf.com/content/CVPR2024/html/Tafasca_Sharingan_A_Transformer_Architecture_for_Multi-Person_Gaze_Following_CVPR_2024_paper.html)。Mi、TextGaze、OmniGF、GazeVLM 的相关整页已渲染目视核对。GazeVLM 不沿用 Mi 表中较旧版本的数值，也不与其他同名项目混淆。
 
-Ours-L 为原 Min L2 规则选中的第 2 轮，完整行 `.960007/.094061/.037721`，实际 support3+decoder4 后由用户收口。Ours-B 的 VAT 为完整 GF→VAT 后 `.940033/.100131/.883183`，不是旧低精度 VAT 初始化结果。本次只读服务器未发现完整 GF-L→VAT-L 的最终 summary，VAT-L 保留空值；不混用旧 VAT-L。
+Ours-L 的 GF 为原 Min L2 规则选中的第 2 轮，完整行 `.960007/.094061/.037721`，实际 support3+decoder4 后由用户收口。Ours-B 的 VAT 为完整 GF→VAT 后 `.940033/.100131/.883183`，不是旧低精度 VAT 初始化结果。VAT-L 现已完成完整GF-L迁移8轮，按test L2选第1轮，全量逐帧 `.948264/.089676/.891592`，工件/导出重聚合审查通过，见 [E2-TL审查](E2TL_GFL_TO_VATL_REVIEW.md)。效率四请求CPU预检通过，GPU1待空闲后手动运行，尚无该模型速度数字。
 
 ## 3. ECCV 2026 那篇是否适合作为重点比较
 
 已确认是 Jiajie Mi 等的 *Multi-scale Object-Aware Gaze Estimation via Geometric Reasoning*。原文使用冻结 DINOv3-L/16、多层表示、物体语义和方向/FOV 模块；YOLO11x/SAM2-hiera-large 离线生成 masks，实验用 RTX5090。称其“含多模块和额外物体处理”更准确，不据此假定多个 DINOv3 分支或必然更慢。原文未见可直接采用的 latency/FLOPs 表。[原文方法与设置](https://arxiv.org/html/2606.29334v1)
 
-GF-L 的 Avg L2 与其基本相同，AUC 稍低；Min L2 按公开数值略低，但对方只报三位小数，双方 Min 均可四舍五入为 .038，不称为已显著超过。当前 VAT-B 的 AUC/L2/AP 三项均落后，待 VAT-L 完成后再作同规模判断。因此可以作为“接近精度、比较成本”的重点参照，当前不能写成已全面胜出。
+GF-L 的 Avg L2 与其基本相同，AUC 稍低；Min L2 按公开数值略低，但对方只报三位小数，双方 Min 均可四舍五入为 .038，不称为已显著超过。VAT-L 的 AUC `.948264` 与其公开 `.948` 同量级，L2 `.089676` 比 `.095` 低5.60%，AP `.891592` 比 `.923` 低0.031408。因此可以作为“接近定位精度、比较成本”的重点参照，当前不能写成已全面胜出。
 
 截至检索日，论文、共同作者[主页](https://liuxy1005.github.io/)没有找到官方实现/权重链接，GitHub 标题检索无对应仓库。记录为“未找到”，不证明作者没有公开代码。现阶段可作公开精度参照；不能声称已复现其效率。
 
@@ -49,9 +49,9 @@ GF-L 的 Avg L2 与其基本相同，AUC 稍低；Min L2 按公开数值略低�
 | GazeHRNet | [官方代码](https://github.com/Zhikanyoumai/gazehrnet)存在；论文声称发布权重，但当前 README/源码树未找到任务权重下载 | 先获取 checkpoint，再排测速；注意其 head-aware routing 与本方法的实际 token 稀疏执行区别 |
 | GazeVLM | 会议论文可读，尚未核实对应官方代码/任务权重 | 先作公开精度参照；使用深度/HHA，输入标明 |
 
-TextGaze 使用 DINOv2+BERT 和预生成文本线索。当前 GF-L 三项均优于其 L 的报告值；当前 B 在 GF/VAT 两个数据集的六项均优于 TextGaze-B 的公开值。VAT-B 对 TextGaze-L 是 L2 更低、AUC/AP 较低。计时应区分给定文本后的 core forward 与从原始 RGB 生成文本的完整流程，不能将缓存输入与在线生成成本混为一个口径。[TextGaze 原文与发布说明](https://arxiv.org/html/2607.10130v2)
+TextGaze 使用 DINOv2+BERT 和预生成文本线索。当前 GF-L 三项均优于其 L 的报告值；当前 B 在 GF/VAT 两个数据集的六项均优于 TextGaze-B 的公开值。VAT-L 对 TextGaze-L 的AUC/L2更好，AP较低；VAT-B对其L是L2更低、AUC/AP较低。计时应区分给定文本后的 core forward 与从原始 RGB 生成文本的完整流程，不能将缓存输入与在线生成成本混为一个口径。[TextGaze 原文与发布说明](https://arxiv.org/html/2607.10130v2)
 
-OmniGF 的 GF Avg L2 .091 优于我们，但 AUC/Min L2 弱于 GF-L；VAT 的距离与 AP 仍优于当前 B。它基于 4B VLM，官方仓库说明评测约需20–30GB。Table15 的单人53.62ms是在 RTX PRO6000 Blackwell、BF16、batch64、合成头框及每人生成25tokens下的每图时间，不能除以我们3090的B1/B8时间得到正式加速比。需要复现其产生预测的官方路径。[原文附录H](https://arxiv.org/html/2605.26399v2)
+OmniGF 的 GF Avg L2 .091 优于我们，但 AUC/Min L2 弱于 GF-L；VAT-L的AUC/L2优于其公开 `.917/.096`，AP低于其 `.923`。它基于 4B VLM，官方仓库说明评测约需20–30GB。Table15 的单人53.62ms是在 RTX PRO6000 Blackwell、BF16、batch64、合成头框及每人生成25tokens下的每图时间，不能除以我们3090的B1/B8时间得到正式加速比。需要复现其产生预测的官方路径。[原文附录H](https://arxiv.org/html/2605.26399v2)
 
 ## 5. 另外发现的近期工作
 
