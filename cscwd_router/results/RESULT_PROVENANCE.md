@@ -393,3 +393,17 @@
 
 - report: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/r1_vatl_epoch_comparison_preflight.json`; SHA256: `5c728889d8fe9bac95c96ad5df9f476020b6160b42d6c8cc20937971c9f43b0c`
 - Verified epochs 1/2/3/5/8, original checkpoint tensors and SHA, test annotation and 31,978 full-test person queries. No GPU forward or new accuracy measurement.
+
+## W7-A real VAT multi-query accuracy (2026-11-24)
+
+- FP32, shared 5,182 frames, N=1/2/3, 9 quality cells complete; no timing results.
+- CPU checks: `w7a_multi_accuracy_server_checks.json`; SHA256: `15232fa90ee45ab1c516dafc88e448515be8aab492af706657cd55b881bb139d`.
+- n1_official.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n1_official_predictions.jsonl.gz`; SHA256: `3e33373acbef6b386553466801960094644525cc684d17509213ed8175f062cf` (server only).
+- n1_independent.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n1_independent_predictions.jsonl.gz`; SHA256: `f743ca0c8770b93f81dc4c19340418fa991477313a06e9619292155ffa04e41e` (server only).
+- n1_union.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n1_union_predictions.jsonl.gz`; SHA256: `d2b88a16889de0c271e182fdf03b790ff1344aa9c84b1e6801a711f0d90b499b` (server only).
+- n2_official.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n2_official_predictions.jsonl.gz`; SHA256: `6073e7defdc810caf65dead6534bc35279bb4e092242b10563f7325aba661979` (server only).
+- n2_independent.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n2_independent_predictions.jsonl.gz`; SHA256: `fa5937fcfbc38b6f2c8cac941f71cbc9ea7235c5de1627b9e9add1cec27ae55a` (server only).
+- n2_union.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n2_union_predictions.jsonl.gz`; SHA256: `845cd5d026c4269c91d2faeb72c52caac121f757b7a97b4f2f82aeca1700c07c` (server only).
+- n3_official.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n3_official_predictions.jsonl.gz`; SHA256: `67bfb1044f4e33fcd6a1e707305a430ee991c2b5637b346c44e5dd690dc18cf9` (server only).
+- n3_independent.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n3_independent_predictions.jsonl.gz`; SHA256: `d9b9fac22355a29e735455894a5e6c1e748ac3049c9ee652c4868a8bb59df4bd` (server only).
+- n3_union.json: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n3_union_predictions.jsonl.gz`; SHA256: `ef34d27b2f65245fa028be40d708b1a596be468526da3bca595b52dd023862c7` (server only).

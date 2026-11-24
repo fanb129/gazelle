@@ -1,0 +1,127 @@
+{
+  "request": {
+    "protocol": "VAT_real_nested_multi_query_v1",
+    "source": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+    },
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+      "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "official_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14_inout.pt",
+      "sha256": "451f76e5a1fa14429283d8612785d9aa94362f4754cb8a27d650482e3a2ac00e"
+    },
+    "official_backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitb14_pretrain.pth",
+      "sha256": "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
+    },
+    "cohort": {
+      "annotation": {
+        "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+        "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+      },
+      "split": "test",
+      "seed": 0,
+      "minimum_heads": 3,
+      "frames": 5182,
+      "selection": "nested_GT_queries_by_seed_path_head_index",
+      "selection_sha256": "54aba32c2ed45d5fbde281ba1986e817b574bb6191cf673a4440d40035ff1ab7"
+    },
+    "seed": 0,
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/scripts/benchmark_router_dinov3.py": "744669ec1c775b7b25e98d270756fb01ad827046c542d8a29a7bc55710d4d4ea",
+      "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+      "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e",
+      "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+      "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+      "native_dinov2_source_tree": "96c486796f1cae2d8d3989b2ae20cfc49f8aef0a66ff522ec3a2050816210cb9",
+      "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+      "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+      "cscwd_router/code/data_prep/final_queries.py": "5d50d4d92b07071e849c491a40180ed92d274d1c51206ffb0832b4a34d5f07ee",
+      "cscwd_router/code/stag/final_multipeople.py": "6b0fa28874187e0415e39e99c57b7f6b20a1d50dbe4d34d769ff97372c1e8712",
+      "cscwd_router/code/scripts/run_final_multi.py": "e4866596cb0c25d12f464ce9cad22aeb0deac377b13fb552bcc8e47ce8db254a"
+    },
+    "role": "accuracy",
+    "n": 1,
+    "variant": "independent",
+    "precision": "fp32",
+    "batch_size": 4
+  },
+  "metrics": {
+    "auc": 0.9295916601652446,
+    "l2": 0.10997715619481771,
+    "inout_ap": 0.8479967145582519,
+    "persons": 5182,
+    "inframe_persons": 3306,
+    "frames": 5182,
+    "queries_per_frame": 1,
+    "query_unit": "person",
+    "precision": "fp32",
+    "routing_gt_point_coverage": 0.9582577132486388
+  },
+  "source_selection": {
+    "epoch": 0,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9398997273428248,
+      "l2": 0.10047474718421423,
+      "inout_ap": 0.8844164890656381,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9626062322946176,
+      "routing_hard_coverage": 0.8691891679345042,
+      "routing_soft_coverage": 0.359505552549981
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda",
+    "cuda_visible_devices": "0",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "git_commit": "1fed0497acd414d768ecd633526f2f97f82000f6"
+  },
+  "artifacts": {
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0/n1_independent_predictions.jsonl.gz",
+      "sha256": "f743ca0c8770b93f81dc4c19340418fa991477313a06e9619292155ffa04e41e"
+    }
+  },
+  "completed": true
+}
