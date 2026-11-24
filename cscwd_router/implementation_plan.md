@@ -340,6 +340,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`code/stag/final_visuals.py`、`code/scripts/export_final_visualizations.py`、`render_final_visualizations.py`、`summarize_final_ablation.py`、`run_final_ablation_queue.py`、两份新增检查及 `results/w6c_final_local_checks.json`；全部91项CPU/回归通过，新增C检查12项，合成排版已目视检查。默认导出10个真实案例、生成6张PNG/SVG图；这是配置数量，真实导出尚待用户GPU执行。完整两卡命令在 `RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`。
 - **下一步**：提交并部署独立评测worktree、完成服务器CPU预检；用户手动启动两卡训练及后续推理，关键小报告和图经Git回传。固定训练worktree不更新。
 
+### 2026-11-24 · W6-D：两卡入口服务器CPU预检与回传
+
+- **任务号**：W6-D。
+- **完成内容**：代码 `d29d1ae` 经Git部署到独立评测worktree，固定训练worktree保持 `c19ba93`。从两份runbook提取真实命令，以空CUDA可见设备执行check-only，训练双分支队列、geometry单分支、多人、K100、可视化共5个入口均exit0；预检报告 `1fed049` push/pull回本地，核对23项报告内源码SHA一致。
+- **产出文件与数字**：`results/w6_final_server_preflight.json`。实际服务器Python3.10.19、torch2.6.0+cu124、matplotlib3.10.8；多人共同集合5,182帧，GF/VAT各32个图片候选与多人16个候选可读取。未执行模型forward、GPU训练、精度或计时。评测worktree `/home/fb/src/paper/gazelleV1_final_evaluation` 固定 `1fed049`；完整命令 `RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`，仅用GPU0/1。
+- **下一步**：用户手动跑两卡条件化训练，随后0卡独占多人质量/效率，1卡依次K100和真实图导出；三分支结束后CPU汇总表4。回传小结果和RGB/图，保留大工件路径/SHA。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

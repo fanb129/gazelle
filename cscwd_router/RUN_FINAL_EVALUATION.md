@@ -1,5 +1,7 @@
 # 维护前：两卡多人评测、K100精度与可视化
 
+服务器CPU预检已通过并回传：训练目录固定 `c19ba93`，评测目录固定 `1fed049`（代码 `d29d1ae`），见 [预检报告](results/w6_final_server_preflight.json)。两目录已就绪，使用本文对应目录的命令，无需在训练期间pull源码。
+
 评测代码使用独立目录 `/home/fb/src/paper/gazelleV1_final_evaluation`，与固定训练目录分开。助手统一Git部署和CPU预检。只用GPU0/1：先完成两卡条件化训练；GPU0队列结束后跑多人（计时独占GPU0），GPU1先跑K100，再跑可视化。后面两个GPU1命令依次手动启动，不能同时启动。尚无本轮新GPU指标。
 
 ## GPU0：VAT-B真实多人

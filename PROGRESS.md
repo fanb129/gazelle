@@ -15,7 +15,7 @@
 
 执行状态见 `cscwd_router/implementation_plan.md`；行文逻辑与三稿边界见 `cscwd_router/latex/PAPER_STORY.md`、`PAPER_REVIEW.md`；后续会话提示词为 `cscwd_router/codex_prompt.md`。旧 DINOv2 T1–T6 记录保留，不自动变成 DINOv3 的新命令。
 
-当前执行清单为 `cscwd_router/EXPERIMENT_PLAN.md`，完整 GPU 0/1 命令见 `cscwd_router/RUN_DINOV3_TRAIN_TEST.md`。VAT 不依赖本轮 GF；两队列分别先跑 B 再接 L。所有新训练 base seed 0，四组各 support 3 + sparse decoder/inout 5 epochs。
+当前执行清单为 `cscwd_router/PRE_SHUTDOWN_PLAN.md`，完整GPU0/1命令见 `cscwd_router/RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`。只增加三个B条件化分支，各自GF3+5→VAT8；0卡scene-only→scene-head，1卡scene-geometry；seed0。已有GF/VAT×B/L主模型保留，后续只补多人、同权重K100精度与可视化。旧 `RUN_DINOV3_TRAIN_TEST.md` 保留历史命令。
 
 ## 工作约定
 
@@ -26,6 +26,8 @@
 - 本机授权工作完成后由助手自动创建本地 Git commit，只 stage 本任务文件；push 与服务器运行不自动执行。
 
 ## 进展
+
+**W6-D部署完成（2026-11-24）**：两卡命令的5个服务器CPU预检入口全部exit0，`1fed049` 报告经Git回本地，23项记录内源码SHA一致。多人5,182帧、可视化GF/VAT各32候选及多人16候选可读取，绘图库已就绪。训练目录固定 `c19ba93`，评测目录 `gazelleV1_final_evaluation` 固定 `1fed049`。没有执行新GPU任务；用户按两份 `RUN_FINAL_*` 文档手动启动，先0卡两分支串行/1卡geometry，再0卡多人、1卡K100→可视化。
 
 **W6-C两卡与可视化入口（2026-11-24）**：全部91项本机CPU/回归通过（含新增12项C检查），真实导出/CPU绘图、表4自动核对汇总及两卡串行队列已实现。MM式六行图展示RGB→GT→support→实际token→官方/本文热图，另有同帧换人及max-union图；小案例相对引用可离线重画。用户仅授权GPU0/1：0卡scene-only→scene-head，1卡scene-geometry；后接多人、四组同权重K100和可视化。入口和完整命令 `cscwd_router/RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`，证据 `results/w6c_final_local_checks.json`。没有新增真实GPU结果，下一项服务器CPU预检与用户手动运行。
 
