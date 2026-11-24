@@ -1,0 +1,474 @@
+{
+  "date": "2026-11-24",
+  "task": "W6_final_server_CPU_preflight",
+  "scope": "CPU-only validation of manual GPU commands; no model forward, training or GPU timing.",
+  "evaluation_commit": "d29d1ae1d21b9c507b6d0bf7c71e592e0465c3c0",
+  "training_commit": "c19ba9317980f30b57cc33f1ae1aceca188eebdd",
+  "cuda_visible_devices": "",
+  "versions": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "matplotlib": "3.10.8",
+    "Pillow": "12.0.0"
+  },
+  "checks": [
+    {
+      "entry": "run_final_ablation_queue.py",
+      "command": [
+        "/home/fb/anaconda3/envs/py310/bin/python",
+        "-u",
+        "/home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/run_final_ablation_queue.py",
+        "--training-code-root",
+        "/home/fb/src/paper/gazelleV1_final_training",
+        "--conditions",
+        "scene_only",
+        "scene_head",
+        "--gf-data-path",
+        "/newhome/fb/dataset/gazefollow_extended",
+        "--vat-data-path",
+        "/newhome/fb/dataset/videoattentiontarget",
+        "--initialization-root",
+        "/home/fb/src/paper/gazelleV1",
+        "--artifact-root",
+        "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0",
+        "--report-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0",
+        "--provenance",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+        "--workers",
+        "8",
+        "--batch-size",
+        "16",
+        "--eval-batch-size",
+        "16",
+        "--grad-accumulation",
+        "2",
+        "--support-epochs",
+        "3",
+        "--decoder-epochs",
+        "5",
+        "--vat-epochs",
+        "8",
+        "--seed",
+        "0",
+        "--resume",
+        "--check-only"
+      ],
+      "returncode": 0,
+      "seconds": 23.88107188399954,
+      "stdout_sha256": "b55a749b934273d8a411cc28a644532ae24e3c5abd94c1bedad45f51e4360f93",
+      "stderr_tail": ""
+    },
+    {
+      "entry": "run_final_ablation.py",
+      "command": [
+        "/home/fb/anaconda3/envs/py310/bin/python",
+        "-u",
+        "/home/fb/src/paper/gazelleV1_final_training/cscwd_router/code/scripts/run_final_ablation.py",
+        "--condition",
+        "scene_geometry",
+        "--gf-data-path",
+        "/newhome/fb/dataset/gazefollow_extended",
+        "--vat-data-path",
+        "/newhome/fb/dataset/videoattentiontarget",
+        "--initialization-root",
+        "/home/fb/src/paper/gazelleV1",
+        "--artifact-root",
+        "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0",
+        "--report-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0",
+        "--provenance",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+        "--workers",
+        "8",
+        "--batch-size",
+        "16",
+        "--eval-batch-size",
+        "16",
+        "--grad-accumulation",
+        "2",
+        "--support-epochs",
+        "3",
+        "--decoder-epochs",
+        "5",
+        "--vat-epochs",
+        "8",
+        "--seed",
+        "0",
+        "--resume",
+        "--check-only"
+      ],
+      "returncode": 0,
+      "seconds": 11.926038411999798,
+      "stdout_sha256": "42fe915eebf2ad610b0853494a9a4f8f263ca5d07e51d9c9dbaebe799e2dd75a",
+      "stderr_tail": ""
+    },
+    {
+      "entry": "run_final_multi.py",
+      "command": [
+        "/home/fb/anaconda3/envs/py310/bin/python",
+        "-u",
+        "/home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/run_final_multi.py",
+        "--source-summary",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+        "--data-path",
+        "/newhome/fb/dataset/videoattentiontarget",
+        "--official-checkpoint",
+        "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitb14_inout.pt",
+        "--artifact-root",
+        "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_multi_seed0",
+        "--report-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_multi_seed0",
+        "--provenance",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+        "--task",
+        "all",
+        "--batch-size",
+        "4",
+        "--workers",
+        "4",
+        "--seed",
+        "0",
+        "--device",
+        "cuda",
+        "--precision",
+        "fp16",
+        "--warmup",
+        "50",
+        "--latency-iters",
+        "200",
+        "--throughput-iters",
+        "500",
+        "--repeats",
+        "5",
+        "--resume",
+        "--check-only"
+      ],
+      "returncode": 0,
+      "seconds": 27.377838520000296,
+      "stdout_sha256": "ee0e1a8200e08d25e0d0bf279f6b159bf77ad69e810fda2863aa64da430e39b3",
+      "stderr_tail": "",
+      "outputs": [
+        {
+          "checked": true,
+          "frames": 5182,
+          "selection_sha256": "54aba32c2ed45d5fbde281ba1986e817b574bb6191cf673a4440d40035ff1ab7",
+          "quality_cells": 9,
+          "timing_cells": 6,
+          "model_forward_executed": false
+        }
+      ]
+    },
+    {
+      "entry": "run_final_k100.py",
+      "command": [
+        "/home/fb/anaconda3/envs/py310/bin/python",
+        "-u",
+        "/home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/run_final_k100.py",
+        "--summaries",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+        "--gf-data-path",
+        "/newhome/fb/dataset/gazefollow_extended",
+        "--vat-data-path",
+        "/newhome/fb/dataset/videoattentiontarget",
+        "--artifact-root",
+        "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0",
+        "--report-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_k100_seed0",
+        "--provenance",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+        "--batch-size",
+        "8",
+        "--workers",
+        "4",
+        "--seed",
+        "0",
+        "--device",
+        "cuda",
+        "--allow-closed-gf",
+        "--resume",
+        "--check-only"
+      ],
+      "returncode": 0,
+      "seconds": 24.609827887999927,
+      "stdout_sha256": "9c0193bd1fd41cfb0ad555dc9ae6a5a641ea10fae41b3ee46e10670f66cfc739",
+      "stderr_tail": "",
+      "outputs": [
+        {
+          "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+          "request": {
+            "protocol": "selected_weights_K100_accuracy_v1",
+            "source": {
+              "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+              "sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0"
+            },
+            "checkpoint": {
+              "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt",
+              "sha256": "8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14"
+            },
+            "backbone": {
+              "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+              "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+            },
+            "test_annotation": {
+              "path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+              "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+            },
+            "keep_ratio": 1.0,
+            "precision": "fp32",
+            "seed": 0,
+            "batch_size": 8,
+            "frame_sample_every": 1,
+            "sources": {
+              "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+              "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+              "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+              "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+              "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+              "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+              "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+              "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+              "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+              "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+              "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+              "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+              "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+              "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+              "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+              "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+              "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+              "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+              "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+              "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+              "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+              "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+              "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+              "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+            }
+          }
+        },
+        {
+          "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+          "request": {
+            "protocol": "selected_weights_K100_accuracy_v1",
+            "source": {
+              "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+              "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1"
+            },
+            "checkpoint": {
+              "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt",
+              "sha256": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf"
+            },
+            "backbone": {
+              "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+              "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+            },
+            "test_annotation": {
+              "path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+              "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+            },
+            "keep_ratio": 1.0,
+            "precision": "fp32",
+            "seed": 0,
+            "batch_size": 8,
+            "frame_sample_every": 1,
+            "sources": {
+              "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+              "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+              "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+              "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+              "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+              "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+              "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+              "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+              "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+              "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+              "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+              "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+              "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+              "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+              "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+              "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+              "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+              "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+              "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+              "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+              "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+              "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+              "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+              "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+            }
+          }
+        },
+        {
+          "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+          "request": {
+            "protocol": "selected_weights_K100_accuracy_v1",
+            "source": {
+              "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+              "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+            },
+            "checkpoint": {
+              "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+              "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+            },
+            "backbone": {
+              "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+              "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+            },
+            "test_annotation": {
+              "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+              "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+            },
+            "keep_ratio": 1.0,
+            "precision": "fp32",
+            "seed": 0,
+            "batch_size": 8,
+            "frame_sample_every": 1,
+            "sources": {
+              "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+              "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+              "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+              "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+              "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+              "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+              "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+              "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+              "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+              "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+              "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+              "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+              "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+              "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+              "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+              "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+              "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+              "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+              "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+              "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+              "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+              "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+              "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+              "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+            }
+          }
+        },
+        {
+          "checked": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+          "request": {
+            "protocol": "selected_weights_K100_accuracy_v1",
+            "source": {
+              "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+              "sha256": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f"
+            },
+            "checkpoint": {
+              "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/best_test.pt",
+              "sha256": "6d12190c7cdf24fe0389eede68b27f0f05d35cb4c753072f62a3d0d1d8445bb5"
+            },
+            "backbone": {
+              "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+              "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+            },
+            "test_annotation": {
+              "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+              "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+            },
+            "keep_ratio": 1.0,
+            "precision": "fp32",
+            "seed": 0,
+            "batch_size": 8,
+            "frame_sample_every": 1,
+            "sources": {
+              "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+              "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+              "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+              "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+              "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+              "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+              "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+              "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+              "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+              "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+              "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+              "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+              "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+              "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+              "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+              "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+              "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+              "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+              "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+              "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+              "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+              "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+              "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+              "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "entry": "export_final_visualizations.py",
+      "command": [
+        "/home/fb/anaconda3/envs/py310/bin/python",
+        "-u",
+        "/home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/export_final_visualizations.py",
+        "--gf-summary",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+        "--vat-summary",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+        "--multi-summary",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+        "--gf-data-path",
+        "/newhome/fb/dataset/gazefollow_extended",
+        "--vat-data-path",
+        "/newhome/fb/dataset/videoattentiontarget",
+        "--official-checkpoint-dir",
+        "/home/fb/src/paper/gazelleV1/checkpoints",
+        "--report-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0",
+        "--figure-root",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0",
+        "--provenance",
+        "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+        "--candidate-count",
+        "32",
+        "--examples-per-dataset",
+        "4",
+        "--multi-candidate-count",
+        "16",
+        "--multi-examples",
+        "2",
+        "--seed",
+        "0",
+        "--device",
+        "cuda",
+        "--allow-closed-gf",
+        "--resume",
+        "--render",
+        "--check-only"
+      ],
+      "returncode": 0,
+      "seconds": 32.38716903100067,
+      "stdout_sha256": "d0cf93626e1a488fafe0a0db1231ed149d5b09b11787db9f3b6bba930ff12f92",
+      "stderr_tail": "",
+      "outputs": [
+        {
+          "checked": true,
+          "single_candidates": {
+            "gf": 32,
+            "vat": 32
+          },
+          "multi_candidates": 16,
+          "model_forward_executed": false
+        }
+      ]
+    }
+  ],
+  "all_passed": true,
+  "model_forward_executed": false
+}
