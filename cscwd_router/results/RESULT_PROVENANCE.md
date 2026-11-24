@@ -374,3 +374,17 @@
 - CPU check: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e3_vatl_efficiency_server_checks.json`; SHA256: `553f79aec85853d2c0751317bf76433b1b07dcd1835e67d0f39d66624b758461`
 - Result transfer commit: `afcc39eacf34f450beb8eded4e5ea8e4c01e0bf0`; execution code: `0a375054feca2920133e72e26fcc8c1f7afd73f9`; GPU0 UUID: `GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46`. Original log retains the name `efficiency_vat_l_gpu1.log`.
 - Six original reports and 25 archived source file hashes verified locally; 27 source entries, five source/weight references, annotation and eight RGB hashes checked on server. Summary JSON/MD and independent speedup recomputation match. This review launched no GPU forward, timing or training.
+
+
+## DINOv3 efficiency · gazefollow / vitl
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/summary.json`; SHA256: `32e7562e77ed036709705eec5c5208f5f4861b681c3f78ecb9751ceb15dca8cf`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b1_forward.json`; SHA256: `e6d3828bafca1bfabfebc3c3d823378db2273b371577a458ef922e65651e688d`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b1_reverse.json`; SHA256: `ae7313342c5cd7d6923499f62ee050dbf811dcca582b33aaf10885d1d3e605af`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b8_forward.json`; SHA256: `9c0afcbd163ec41e33eeb4da5d5f7cfa62a36a8746dff90c7956c26417e8a097`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b8_reverse.json`; SHA256: `c64d1428ddad502e08c5cfcd1a1e7bfe54e85d5ee97c3113903d13d5e6cb0c4a`
+
+## E3-L GF-L completed efficiency CPU review · 2026-11-24
+
+- CPU check: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e3_gfl_efficiency_server_checks.json`; SHA256: `287039a7c84a728d80a89c7b3778f91d97715d84c9e829a6a2eb85709909b148`
+- Existing GPU0 matrix only; code4162da7, four cells and twelve variant traces verified. No new GPU forward or timing.

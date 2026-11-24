@@ -1,0 +1,235 @@
+{
+  "date": "2026-11-24",
+  "task": "E3-L_GF_completed_efficiency_review_for_W4_tables",
+  "passed": true,
+  "scope": "CPU-only review of existing GPU0 measurements; no model forward or timing launched.",
+  "code_commit": "4162da79223fc1db8df0d606b06669fdbd3a55c4",
+  "gpu_index_used": 0,
+  "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+  "cells_checked": 4,
+  "variant_traces_checked": 12,
+  "archived_source_files_checked": 25,
+  "native_source_trees_checked": 2,
+  "source_sha256": {
+    "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+    "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+    "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+    "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+    "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+    "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+    "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+    "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+    "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+    "cscwd_router/code/stag/dinov3_efficiency.py": "81653e82301ddfc8fb0517f5f86a8dc7e39903ddaa26743d0ee7dcee7a3f7850",
+    "cscwd_router/code/scripts/benchmark_router_dinov3.py": "744669ec1c775b7b25e98d270756fb01ad827046c542d8a29a7bc55710d4d4ea",
+    "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+    "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e",
+    "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+    "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+    "native_dinov2_source_tree": "96c486796f1cae2d8d3989b2ae20cfc49f8aef0a66ff522ec3a2050816210cb9"
+  },
+  "difference_to_current_sources": [
+    "cscwd_router/code/stag/dinov3_efficiency.py"
+  ],
+  "source_summary": {
+    "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+    "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1"
+  },
+  "source_metrics": {
+    "auc": 0.9600070985647116,
+    "avg_l2": 0.0940614169133612,
+    "min_l2": 0.03772149181701388,
+    "persons": 4782,
+    "inframe_persons": 4782,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9353261976420538,
+    "routing_hard_coverage": 0.8528800056799343,
+    "routing_soft_coverage": 0.4841950970469335
+  },
+  "source_selection": {
+    "epoch": 1,
+    "metric": "min_l2",
+    "metrics": {
+      "auc": 0.9600070985647116,
+      "avg_l2": 0.0940614169133612,
+      "min_l2": 0.03772149181701388,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9353261976420538,
+      "routing_hard_coverage": 0.8528800056799343,
+      "routing_soft_coverage": 0.4841950970469335
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "source_training_epochs": {
+    "support": 3,
+    "sparse_decoder": 4
+  },
+  "source_closed_by_user": true,
+  "source_export_reader_verified": true,
+  "report_sha256": {
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b1_forward.json": "e6d3828bafca1bfabfebc3c3d823378db2273b371577a458ef922e65651e688d",
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b1_reverse.json": "ae7313342c5cd7d6923499f62ee050dbf811dcca582b33aaf10885d1d3e605af",
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b8_forward.json": "9c0afcbd163ec41e33eeb4da5d5f7cfa62a36a8746dff90c7956c26417e8a097",
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/b8_reverse.json": "c64d1428ddad502e08c5cfcd1a1e7bfe54e85d5ee97c3113903d13d5e6cb0c4a",
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/summary.json": "32e7562e77ed036709705eec5c5208f5f4861b681c3f78ecb9751ceb15dca8cf",
+    "cscwd_router/results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/summary.md": "8127ba790fa3f25015d6dd19e6bf013b4382d4323eb32e369462703550cb9ffc"
+  },
+  "verified_artifact_paths_sha256": {
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1",
+    "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf",
+    "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035",
+    "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitl14.pt": "abb2950b3f953d145465eb81811ef61abeb61874e009c5a712dc89036f3c4bde",
+    "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitl14_pretrain.pth": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+  },
+  "verified_annotation_sha256": "44f1b1e76da9e7acc2b44bd5e1d97b957bea756bd9e1c1c116457b7daa99e0e9",
+  "verified_RGB_paths_sha256": {
+    "train/00000004/00004903.jpg": "fcaa8863d5a434b4f87f56cdd7e2897600c1f45e05af1323529d1eb8a438475f",
+    "train/00000014/00014322.jpg": "33c5e370fbe8801f37a1a73cf1381445ccdae764760bb23ac80d041fd259d5ed",
+    "train/00000059/00059337.jpg": "a3cb85f3739197d880d624eb74a2a99e6bddb868fb0b51ac791d18de6f6bf422",
+    "train/00000088/00088316.jpg": "a7403cd7d5e4f44242983262eaefa1c6eacd8723219e0781225cf1d5c81a0b04",
+    "train/00000104/00104597.jpg": "02265863bec5002284341c311de2a53c94b62693723c91998f0f6e9c60e319f3",
+    "train/00000032/00032668.jpg": "eb5cc0d072f882db07a45906d2eb1a000c58390348c813db75f22acb3138f820",
+    "train/00000046/00046592.jpg": "a3241131d8945994a6eef8a75e5f66d5e54d5bcdd2e4358f71bd36b79f84388a",
+    "train/00000031/00031361.jpg": "e1a02e2a3f06babd62758905dbff722cb0a306dd6548668b7cf2c65dcf16d9cb"
+  },
+  "summary_and_markdown_recomputed_exactly": true,
+  "efficiency": {
+    "1": {
+      "official_ms": 33.099547118661704,
+      "k100_ms": 36.53038913711947,
+      "k50_ms": 36.066548579667604,
+      "speedup_vs_official": 0.9177353648228339,
+      "speedup_vs_k100": 1.012860686029529,
+      "latency_change_percent_vs_official": 8.963873283127466,
+      "peak_change_percent_vs_official": 4.56041131105398,
+      "order_speedups_vs_official": {
+        "forward": 0.928252250769919,
+        "reverse": 0.9073376327910044
+      }
+    },
+    "8": {
+      "official_ms": 147.78288116586432,
+      "k100_ms": 179.80380712728285,
+      "k50_ms": 137.8264434442274,
+      "speedup_vs_official": 1.0722389511970971,
+      "speedup_vs_k100": 1.3045668351737008,
+      "latency_change_percent_vs_official": -6.737206395686856,
+      "peak_change_percent_vs_official": 28.106657210778074,
+      "order_speedups_vs_official": {
+        "forward": 1.0654572497841648,
+        "reverse": 1.0790638185597317
+      }
+    }
+  },
+  "gpu_snapshots": [
+    {
+      "cell": "b1_forward.json",
+      "before": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P8",
+        "temperature.gpu": "69",
+        "memory.used": "15",
+        "utilization.gpu": "0"
+      },
+      "after": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P0",
+        "temperature.gpu": "86",
+        "memory.used": "361",
+        "utilization.gpu": "8"
+      }
+    },
+    {
+      "cell": "b1_reverse.json",
+      "before": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P8",
+        "temperature.gpu": "72",
+        "memory.used": "15",
+        "utilization.gpu": "0"
+      },
+      "after": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P0",
+        "temperature.gpu": "86",
+        "memory.used": "353",
+        "utilization.gpu": "5"
+      }
+    },
+    {
+      "cell": "b8_forward.json",
+      "before": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P8",
+        "temperature.gpu": "72",
+        "memory.used": "15",
+        "utilization.gpu": "0"
+      },
+      "after": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P0",
+        "temperature.gpu": "87",
+        "memory.used": "361",
+        "utilization.gpu": "13"
+      }
+    },
+    {
+      "cell": "b8_reverse.json",
+      "before": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P8",
+        "temperature.gpu": "74",
+        "memory.used": "15",
+        "utilization.gpu": "0"
+      },
+      "after": {
+        "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "name": "NVIDIA GeForce RTX 3090",
+        "driver_version": "555.42.06",
+        "pstate": "P0",
+        "temperature.gpu": "87",
+        "memory.used": "353",
+        "utilization.gpu": "20"
+      }
+    }
+  ],
+  "limitations": [
+    "Per-iteration latency arrays were not exported; variant median/p95 cannot be independently recalculated. Matrix aggregates and throughput repeat medians were verified.",
+    "One forward/reverse matrix; no independent-run significance test. FP32 accuracy and FP16 efficiency remain separately labeled."
+  ]
+}
