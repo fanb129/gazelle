@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-24",
+  "task": "W5_pre_shutdown_scope",
+  "scope": "CPU read-only planning metadata; no training, model forward or timing launched.",
+  "vat_test": {
+    "kind": "planning_metadata_only_no_model_evaluation",
+    "annotation": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+      "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+    },
+    "sequences": 131,
+    "frames": 13127,
+    "unique_frame_paths": 13127,
+    "heads_per_frame": {
+      "1": 2482,
+      "2": 5463,
+      "3": 3015,
+      "4": 1628,
+      "5": 270,
+      "6": 220,
+      "7": 49
+    },
+    "frames_at_least_two_heads": 10645,
+    "frames_at_least_three_heads": 5182,
+    "persons": 31978
+  },
+  "gpu_snapshot": [
+    {
+      "index": 0,
+      "model": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 15,
+      "utilization_percent": 0
+    },
+    {
+      "index": 1,
+      "model": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 15,
+      "utilization_percent": 0
+    },
+    {
+      "index": 2,
+      "model": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 15,
+      "utilization_percent": 0
+    }
+  ],
+  "historical_B_training_only": {
+    "gf_support": {
+      "path": "cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/support_history.json",
+      "sha256": "a183f31b3b5ce481104c05b4dbb2d17227df0ff29bb6f75184274f71596ba6c3",
+      "epochs": 3,
+      "recorded_train_seconds": 6260.956324802013,
+      "recorded_train_hours": 1.739154534667226
+    },
+    "gf_decoder": {
+      "path": "cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/sparse_decoder_history.json",
+      "sha256": "cfb14dcc95740c03a1b9a62d74f1e07d3432448f244d37cb4571024ef77c57e4",
+      "epochs": 5,
+      "recorded_train_seconds": 18970.014088623982,
+      "recorded_train_hours": 5.269448357951106
+    },
+    "vat_transfer": {
+      "path": "cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/history.json",
+      "sha256": "81f4dfa37c1194eafccb2506196a119135181e8a78b1c3ceea18f7c61a0a9d57",
+      "epochs": 8,
+      "recorded_train_seconds": 4480.439856478944,
+      "recorded_train_hours": 1.2445666267997069
+    }
+  },
+  "historical_GF_to_VAT_training_only_hours": 8.253169519418039,
+  "timing_note": "Historical train-loop times only; excludes evaluation, loading and exports. Not a prediction or new run."
+}

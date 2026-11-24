@@ -6,7 +6,7 @@
 |---|---|---|
 | ACM MM 2026（GazeSpot） | `rebuttal/` | 已拒，返修材料与结果保留（供 ICASSP 复用） |
 | ICASSP 2027 | `icassp2027/` | 初稿保留，在审 |
-| CSCWD 新主线 | `cscwd_router/` | GF/VAT×B/L精度与效率四组齐全，GF-L效率已补回；L的GF/VAT B8相对官方speedup为1.0722/1.0652×。六张具体论文表已填入中文稿 |
+| CSCWD 新主线 | `cscwd_router/` | GF/VAT×B/L精度与效率四组齐全，GF-L效率已补回；L的GF/VAT B8相对官方speedup为1.0722/1.0652×。维护前固定K50，集中B消融、真实多人和可视化 |
 | CSCWD 旧工作 | `cscwd_v0/`、`cscwd_v1/` | 全量归档（v0=STAG 时序探索；v1=ConvLSTM 时序基线 + 失败分析，均已证伪"冻结底座 + 时序"） |
 
 ## 当前目标
@@ -26,6 +26,8 @@
 - 本机授权工作完成后由助手自动创建本地 Git commit，只 stage 本任务文件；push 与服务器运行不自动执行。
 
 ## 进展
+
+**W5维护前收口（2026-11-24）**：删除完整预算扫描，固定K50；原表5/6改为表4/5，新增训练仅三种B打分消融（scene-only、scene＋geometry、scene＋head appearance），三卡并行，各自GF3+5→VAT8，full与L沿用现有结果。同权重K100只补一次精度参考，其他GPU任务为真实多人、可视化导出与余量B8复测。CPU统计VAT test中5,182帧至少三个真实头框，可用同帧N=1/2/3嵌套查询；三卡本次均空闲。旧B日志每条纯训练约8.25小时（不含test/IO），详细资源预算与回传顺序见 `cscwd_router/PRE_SHUTDOWN_PLAN.md`，元数据证据 `results/w5_pre_shutdown_planning_evidence.json`。本轮只更新方案、未训练或推理；下一项实现入口并提供手动运行命令。
 
 **R1 VAT-L综合复选（2026-11-24）**：用户决定同时比较AUC/L2/AP。8轮rate-6 test记录已整理至 `cscwd_router/results/VATL_EPOCH_SELECTION_REVIEW.md`，第3轮比原第1轮AP高1.1004个百分点，L2仅增加0.7152%，AUC下降0.000166；第5轮AP最高0.904636。Pareto为1/2/3/5/8，4/6/7被第3轮全面支配。新增纯CPU比较辅助及独立全量复评入口，4个选择规则检查通过；原第1轮rate-1与效率不覆盖。GPU0全参数命令 `cscwd_router/RUN_VATL_EPOCH_COMPARISON.md`，尚无新GPU复评结果，下一步先部署CPU预检再由用户手动运行。
 
@@ -102,8 +104,8 @@
 
 ## 下一步
 
-1. VAT-L精度与实际GPU0的official/K100/K50效率已完成审查。接续TextGaze官方B/L任务权重的推理比较，在同硬件测core/完整RGB流程，不新增dense训练；再检查OmniGF官方评测条件。阶段profile、native full-token控制和等价快路径保留为后续优化。
-2. 接续 B 预算扫描和人物条件化对照；多人 union 使用真实多人 test 帧，GF official test 全为单头。分类头适配 E2-H 后移，GazeSpot 暂不切换，不新增 GF-L dense。
-3. 旧 DINOv2 T4 按原协议单独收口；旧 matched dense / VAT holdout 不混入新协议。余量再补 scene-only Router。
+1. 按 `cscwd_router/PRE_SHUTDOWN_PLAN.md` 实现并启动三个B条件化消融，各自GF→VAT；主模型GF/VAT×B/L结果保持已有来源。随后完成真实多人、K100单次精度和可视化导出，维护前回传小结果。
+2. 有余量优先独立复测GF-L/VAT-L的B8速度；绘图和排版在本机继续。近期强方法推理对照、阶段profile和等价优化后移，完整预算扫描取消。
+3. 旧DINOv2 T4、matched dense与VAT holdout保留各自协议；本轮不扩展dense训练、L消融或其他长训练。
 
 历史详细进度见 `cscwd_v0/PROGRESS_SNAPSHOT.md`、`cscwd_v1/implementation_plan.md`。Router 旧探索线（DINOv3 版）状态仍见 `COVERAGE_AWARE_ROUTING_IDEA_PROGRESS.md`。
