@@ -1,6 +1,6 @@
 # 三卡：GF-B/GF-L/VAT-B 效率与 GF-L→VAT-L
 
-2026-11-24 最新：完整 GF-L→VAT-L 已训练完成，当前补测 VAT-L 使用 **GPU 1**，新命令见 [RUN_VATL_EFFICIENCY.md](RUN_VATL_EFFICIENCY.md)。下面为此前的三卡安排。
+2026-11-24 最新：完整 GF-L→VAT-L 精度和效率均已完成，用户实际在 **GPU0** 完成VAT-L四单元效率，见 [审查](results/E3_VATL_EFFICIENCY_REVIEW.md)与[运行记录](RUN_VATL_EFFICIENCY.md)。下面为此前的三卡安排。
 
 2026-11-24 VAT 入口修复已部署：已启动的 GPU0/2 保持原任务，GPU1 按 [RUN_VAT_EFFICIENCY_FIX.md](RUN_VAT_EFFICIENCY_FIX.md) 从独立目录重启。原目录的更新安排在 GF 效率完成后，保持同一矩阵的源码 SHA 一致。下面保留初始三卡命令。
 

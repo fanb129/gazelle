@@ -1,4 +1,6 @@
-# VAT-L：GPU 1 效率测试
+# VAT-L：GPU 0 效率测试已完成
+
+2026-11-24：原计划GPU1，用户实际改用GPU0，已完成全部四单元并回传审查。GPU UUID为 `GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46`；原日志文件名仍保留 `gpu1`。B1/B8相对官方速度比为 `0.8630/1.0652×`，详见 [E3_VATL_EFFICIENCY_REVIEW.md](results/E3_VATL_EFFICIENCY_REVIEW.md)。
 
 本次使用完整 GF-L Router→VAT-L 的 `best_test.pt`，不使用旧 VAT-L 初始化实验。来源报告为 `results/vat_from_gfl_router_k050_joint_seed0/summary.json`，最终逐帧 AUC/L2/AP 为 `0.9482644119 / 0.0896762148 / 0.8915918880`。训练结果已回传，审查见 [E2TL_GFL_TO_VATL_REVIEW.md](results/E2TL_GFL_TO_VATL_REVIEW.md)。
 
@@ -6,12 +8,12 @@
 
 本次沿用 B 的正式协议：官方 DINOv2 ViT-L/14 GazeLLE、当前 DINOv3 多层 K100、同一选中权重 K50；batch 1/8，各做正反顺序。FP16，seed 0，每变体 50 warmup、200×5 latency、500×5 throughput。真实 VAT train RGB 和 GT 头框，每图一个查询；官方输入 448、Router 输入 512。K100 是同一 K50 权重的计算控制，不是另训 dense。完整 forward 含 backbone、Router 和 decoder，磁盘读图与预处理在计时外，记录显存、block tokens、GPU UUID 和输入/源码/权重 SHA。
 
-服务器手动运行下列命令；GPU 1 空闲时启动。输出使用单独的新目录，与 VAT-B 的修复结果分开。
+以下保留本次实际GPU0的完整命令，输出目录与VAT-B分开；四个已完成单元可由 `--resume` 核对复用。
 
 ```bash
 cd /home/fb/src/paper/gazelleV1_results_vatl_20261124
 mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
-CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
   /home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/code/scripts/run_router_efficiency.py \
   --summaries /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json \
   --data-path /newhome/fb/dataset/videoattentiontarget \
@@ -44,4 +46,4 @@ CUDA_VISIBLE_DEVICES="" /home/fb/anaconda3/envs/py310/bin/python -u \
   --output /home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e2tl_gfl_to_vatl_server_checks.json
 ```
 
-关键 JSON/MD 和 provenance 经 Git 回传。所有 `.pt/.pth` 与逐查询压缩导出仍留服务器；路径和 SHA 已登记在 `results/RESULT_PROVENANCE.md`。当前没有 VAT-L 的 GPU 效率数字，运行完成后再填写。
+六份关键 JSON/MD、CPU检查和 provenance 已经 `afcc39e` 经 Git 回传。本次 FP16 完整forward结果为 B1官方/K100/K50 `33.4730/39.4368/38.7860ms`、B8 `147.5857/181.8345/138.5573ms`；B8为整批时间。所有 `.pt/.pth` 与逐查询压缩导出仍留服务器，路径和 SHA 已登记在 `results/RESULT_PROVENANCE.md`。

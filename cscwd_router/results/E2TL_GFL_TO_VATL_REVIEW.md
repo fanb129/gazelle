@@ -1,5 +1,7 @@
 # E2-TL：完整 GF-L Router→VAT-L 结果审查
 
+后续完成记录（2026-11-24）：用户实际在GPU0完成VAT-L效率并回传审查，相对官方B1/B8速度比 `0.8630/1.0652×`，见 [E3_VATL_EFFICIENCY_REVIEW.md](E3_VATL_EFFICIENCY_REVIEW.md)。下文保留此前精度验收时的协议与GPU1计划。
+
 2026-11-24。结果提交 `2eb4275`、服务器 CPU 检查提交 `33e459a` 均已 push/pull 到本地。**审查通过，接续 GPU 1 效率测试。** 本轮没有新训练、模型 forward 或 GPU 测速。
 
 | VAT / K50 | AUC ↑ | L2 ↓ | AP ↑ |

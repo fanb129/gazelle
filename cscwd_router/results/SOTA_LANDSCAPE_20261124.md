@@ -29,7 +29,7 @@ SOTA-2 补充：第7–9节逐项列出架构、GazeLLE关系和多层特征类�
 
 来源分别为 [Mi Table 1](https://arxiv.org/pdf/2606.29334)、[TextGaze v2 Table 1](https://arxiv.org/html/2607.10130v2)、[OmniGF v2 Table 9](https://arxiv.org/html/2605.26399v2)、[GazeHRNet 原文](https://www.mdpi.com/1424-8220/26/15/4799)、[GazeVLM 会议版 Table 1](https://openaccess.thecvf.com/content/CVPR2026W/AI4RWC/papers/Mathew_GazeVLM_A_Vision-Language_Model_for_Multi-Task_Gaze_Understanding_CVPRW_2026_paper.pdf)、[ViTGaze 官方表](https://github.com/hustvl/ViTGaze)、[Sharingan 官方论文](https://openaccess.thecvf.com/content/CVPR2024/html/Tafasca_Sharingan_A_Transformer_Architecture_for_Multi-Person_Gaze_Following_CVPR_2024_paper.html)。Mi、TextGaze、OmniGF、GazeVLM 的相关整页已渲染目视核对。GazeVLM 不沿用 Mi 表中较旧版本的数值，也不与其他同名项目混淆。
 
-Ours-L 的 GF 为原 Min L2 规则选中的第 2 轮，完整行 `.960007/.094061/.037721`，实际 support3+decoder4 后由用户收口。Ours-B 的 VAT 为完整 GF→VAT 后 `.940033/.100131/.883183`，不是旧低精度 VAT 初始化结果。VAT-L 现已完成完整GF-L迁移8轮，按test L2选第1轮，全量逐帧 `.948264/.089676/.891592`，工件/导出重聚合审查通过，见 [E2-TL审查](E2TL_GFL_TO_VATL_REVIEW.md)。效率四请求CPU预检通过，GPU1待空闲后手动运行，尚无该模型速度数字。
+Ours-L 的 GF 为原 Min L2 规则选中的第 2 轮，完整行 `.960007/.094061/.037721`，实际 support3+decoder4 后由用户收口。Ours-B 的 VAT 为完整 GF→VAT 后 `.940033/.100131/.883183`，不是旧低精度 VAT 初始化结果。VAT-L 现已完成完整GF-L迁移8轮，按test L2选第1轮，全量逐帧 `.948264/.089676/.891592`，工件/导出重聚合审查通过，见 [E2-TL审查](E2TL_GFL_TO_VATL_REVIEW.md)。其效率已在GPU0完成，FP16 B1/B8相对官方GazeLLE-L速度比 `.8630/1.0652×`，相对同权重K100为 `1.0168/1.3123×`，见 [E3-L审查](E3_VATL_EFFICIENCY_REVIEW.md)。尚未与表中外部强方法同机测速。
 
 ## 3. ECCV 2026 那篇是否适合作为重点比较
 

@@ -368,3 +368,9 @@
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b1_reverse.json`; SHA256: `2d26777dba5567a02bb63a053ef6ac2fa558705bb79a367d562077a3aef2a378`
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b8_forward.json`; SHA256: `2a248f72083991780f3873d30ca5f31e4afd408c71883daf619d0475399a89f6`
 - cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b8_reverse.json`; SHA256: `eb93512200cfbd25b90ac9e3d3e5ba7ba2e0dffd374a435b5f1adda9d4260f4b`
+
+## E3-L VAT-L completed GPU0 efficiency review · 2026-11-24
+
+- CPU check: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e3_vatl_efficiency_server_checks.json`; SHA256: `553f79aec85853d2c0751317bf76433b1b07dcd1835e67d0f39d66624b758461`
+- Result transfer commit: `afcc39eacf34f450beb8eded4e5ea8e4c01e0bf0`; execution code: `0a375054feca2920133e72e26fcc8c1f7afd73f9`; GPU0 UUID: `GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46`. Original log retains the name `efficiency_vat_l_gpu1.log`.
+- Six original reports and 25 archived source file hashes verified locally; 27 source entries, five source/weight references, annotation and eight RGB hashes checked on server. Summary JSON/MD and independent speedup recomputation match. This review launched no GPU forward, timing or training.

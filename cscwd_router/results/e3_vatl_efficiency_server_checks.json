@@ -262,5 +262,9 @@
   "limitations": [
     "Raw per-iteration latency arrays are not exported; variant median/p95 cannot be independently recomputed from this report. Matrix aggregates and repeat throughput medians are verified.",
     "One completed forward/reverse matrix; no independent-run significance test. FP32 accuracy and FP16 efficiency are separately labeled."
-  ]
+  ],
+  "result_commit": "afcc39eacf34f450beb8eded4e5ea8e4c01e0bf0",
+  "local_git_report_hash_matches": 6,
+  "local_archived_source_file_checks": 25,
+  "local_independent_latency_throughput_aggregation": true
 }

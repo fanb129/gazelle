@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 E3-L VAT效率完成：用户实际使用GPU0，四单元/六份报告经 `afcc39e` 回传审查。VAT-L B1/B8相对官方speedup `0.8630/1.0652×`，相对同权重K100为 `1.0168/1.3123×`；B8延迟低6.12%、峰值显存高28.11%。详见 `results/E3_VATL_EFFICIENCY_REVIEW.md`。本轮未重跑GPU任务，后续接近期强方法推理比较。
 > 2026-11-24 E2-TL 验收完成：完整 GF-L Router→VAT-L 8 轮，逐帧 AUC/L2/AP `0.948264/0.089676/0.891592`，按 test L2 选第1轮；20个工件SHA及31,978个查询重聚合核对通过。GPU1效率四请求CPU预检通过，新完整命令 `RUN_VATL_EFFICIENCY.md`；末次GPU1已有其他作业，待空闲后用户手动启动。
 > 2026-11-24 SOTA-2：已将16个方法/参照的架构与GazeLLE关系补入 `results/SOTA_LANDSCAPE_20261124.md` 第7–9节，核对9个仓库29份固定commit源码。Mi明确DINOv3多层，PaGE明确从GazeLLE出发但取单层；新增公开PaGE权重及训练范围说明，没有启动实验。
 > 2026-11-24 SOTA-1：按用户决定，重点转为与近期 object-aware / vision-language 强方法比较精度—成本，保留 GazeLLE 对照。8行公开指标和4个单独标注线索已核对，TextGaze与OmniGF的官方任务权重入口已验证；下一项优先TextGaze推理比较，不新增dense训练。详见 `results/SOTA_LANDSCAPE_20261124.md`。
@@ -278,6 +279,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：从隔离 worktree 将完整 GF-L→VAT-L 五份报告和 provenance 以 `2eb4275` push/pull，CPU 检查以 `33e459a` 回传。完整继承52个GF张量、8轮K50训练、冻结backbone、逐轮test L2单模型选模与best/last/epoch工件均核对通过。现有效率入口直接支持L，采用包含VAT loader修复的隔离目录准备GPU1命令；未改旧gazelle包或计时器。
 - **产出文件与数字**：`results/vat_from_gfl_router_k050_joint_seed0/`、`results/E2TL_GFL_TO_VATL_REVIEW.md`、`results/e2tl_gfl_to_vatl_server_checks.json`、`code/scripts/review_vat_transfer.py`、`RUN_VATL_EFFICIENCY.md`。最终AUC/L2/AP `0.948264/0.089676/0.891592`，31,978查询（20,655画内），选第1轮；20个工件SHA、22项源码hash及导出指标重聚合通过，三指标差值0；B1/B8正反序4个效率请求CPU预检通过。同期更新文献表，未产生新GPU效率数字。
 - **下一步**：GPU1空闲后用户手动运行official/K100/K50效率矩阵，输出 `efficiency_dinov3_vatl_seed0_20261124/vat/vitl/`，完成后Git回传审查。末次GPU1为23,821MiB/89%，当前不与其他作业共卡测速；后续再接近期强方法推理对照。
+
+### 2026-11-24 · E3-L：VAT-L 效率完成、回传与审查
+
+- **任务号**：E3-L（VAT-L）。
+- **完成内容**：确认用户改用GPU0的任务有最终COMPLETE、四单元/六报告齐全且已退出。隔离worktree提交 `afcc39e` push/pull；核对执行commit `0a37505`、GPU0 UUID、同一VAT-L best、输入/源码/权重SHA、12组token trace和计时协议，CPU重算汇总通过。实际K50前12层1029、后12层517 tokens，旧gazelle包和计时器均未改。
+- **产出文件与数字**：`results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/`、`results/e3_vatl_efficiency_server_checks.json`、`results/E3_VATL_EFFICIENCY_REVIEW.md`。B1官方/K100/K50为 `33.4730/39.4368/38.7860ms`，B8为 `147.5857/181.8345/138.5573ms`；相对官方speedup `0.8630/1.0652×`，相对K100 `1.0168/1.3123×`。B8峰值allocated `1824.21` vs官方 `1423.95MiB`。六报告SHA、25版本化源码文件、两份native源码树、五个来源/权重引用及八张RGB已核对，汇总/独立速度比重算一致。FP32精度仍为 `0.948264/0.089676/0.891592`，没有新增模型forward或GPU测量。
+- **下一步**：保留VAT-L完整系统基线及B1/显存代价，接近期强方法的同机推理对照，优先TextGaze官方任务权重，不新增dense训练；外部速度比待真实测量后填写。
 
 ## 7. T1 服务器运行与结果回传
 

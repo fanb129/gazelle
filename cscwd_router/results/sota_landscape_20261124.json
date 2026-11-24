@@ -217,7 +217,7 @@
       "weights_status": "Official README provides GF/VAT/ChildPlay checkpoint links; not downloaded."
     }
   ],
-  "vat_l_status": "Completed 8 epochs; full GF-L Router transfer, seed0, test-L2-selected epoch1. CPU artifact/export review passed; four efficiency request preflights passed. GPU1 timing awaits an idle card and manual launch; no new model forward or GPU timing in this review.",
+  "vat_l_status": "Training and completed GPU0 efficiency matrix reviewed. Final FP32 AUC/L2/AP .948264/.089676/.891592; FP16 B1/B8 speedup vs official .8630/1.0652x, vs routed K100 1.0168/1.3123x. No same-hardware timing against external SOTA yet.",
   "additional_candidates": [
     {
       "title": "Gaze Target Estimation Anywhere with Concepts",
@@ -425,6 +425,61 @@
           "support": 3,
           "sparse_decoder": 4
         }
+      },
+      "efficiency": {
+        "path": "cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/summary.json",
+        "sha256": "8f50d149cf686df53909da41988bec86f88e026add25b6862c84f1b6195a641f",
+        "gpu_index": 0,
+        "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+        "precision": "fp16",
+        "protocol": "dinov3_vs_official_gazelle_efficiency_v1",
+        "results": {
+          "1": {
+            "variants": {
+              "official": {
+                "latency_ms_geomean": 33.47296682566685,
+                "throughput_fps_geomean": 29.71933767711317,
+                "peak_allocated_mib_max": 1215.75244140625
+              },
+              "k100": {
+                "latency_ms_geomean": 39.43676748949826,
+                "throughput_fps_geomean": 25.377142497500394,
+                "peak_allocated_mib_max": 1271.19384765625
+              },
+              "k50": {
+                "latency_ms_geomean": 38.785981710609065,
+                "throughput_fps_geomean": 25.881469547372337,
+                "peak_allocated_mib_max": 1271.18994140625
+              }
+            },
+            "k50_speedup_vs_official": 0.8630171352994538,
+            "k50_speedup_vs_k100": 1.016778891501183,
+            "k50_throughput_ratio_vs_official": 0.8708629320263632
+          },
+          "8": {
+            "variants": {
+              "official": {
+                "latency_ms_geomean": 147.58565041346088,
+                "throughput_fps_geomean": 53.79885302614621,
+                "peak_allocated_mib_max": 1423.95361328125
+              },
+              "k100": {
+                "latency_ms_geomean": 181.83452711719568,
+                "throughput_fps_geomean": 43.899693405654055,
+                "peak_allocated_mib_max": 1824.1123046875
+              },
+              "k50": {
+                "latency_ms_geomean": 138.55729182325018,
+                "throughput_fps_geomean": 57.34487770470702,
+                "peak_allocated_mib_max": 1824.2060546875
+              }
+            },
+            "k50_speedup_vs_official": 1.0651597506808066,
+            "k50_speedup_vs_k100": 1.3123418098352553,
+            "k50_throughput_ratio_vs_official": 1.0659126445844016
+          }
+        },
+        "review_path": "cscwd_router/results/E3_VATL_EFFICIENCY_REVIEW.md"
       }
     }
   },
