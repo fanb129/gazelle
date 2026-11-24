@@ -388,3 +388,8 @@
 
 - CPU check: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/e3_gfl_efficiency_server_checks.json`; SHA256: `287039a7c84a728d80a89c7b3778f91d97715d84c9e829a6a2eb85709909b148`
 - Existing GPU0 matrix only; code4162da7, four cells and twelve variant traces verified. No new GPU forward or timing.
+
+## R1 VAT-L candidate full-test CPU preflight · 2026-11-24
+
+- report: `/home/fb/src/paper/gazelleV1_results_vatl_20261124/cscwd_router/results/r1_vatl_epoch_comparison_preflight.json`; SHA256: `5c728889d8fe9bac95c96ad5df9f476020b6160b42d6c8cc20937971c9f43b0c`
+- Verified epochs 1/2/3/5/8, original checkpoint tensors and SHA, test annotation and 31,978 full-test person queries. No GPU forward or new accuracy measurement.

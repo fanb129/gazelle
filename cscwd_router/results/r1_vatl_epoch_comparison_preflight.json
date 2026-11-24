@@ -1,0 +1,16 @@
+{
+  "checked_epochs_one_based": [
+    1,
+    2,
+    3,
+    5,
+    8
+  ],
+  "persons": 31978,
+  "precision": "fp32",
+  "frame_rate": 1,
+  "context_fingerprint": "c08dc46547ddaf3c6bc92de8a29f99c61a1090152ef5e892abf8a61342f37206",
+  "passed": true,
+  "scope": "CPU-only saved-checkpoint SHA/tensor metadata, annotation and full-test query-count preflight; no model forward or GPU evaluation.",
+  "git_commit": "71e7ab3cc28d70dae414b983155c4696e64d92ec"
+}
