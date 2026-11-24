@@ -1,0 +1,245 @@
+{
+  "task": "R1_VATL_multi_metric_epoch_comparison",
+  "status": "rate6_history_review_full_frame_candidates_pending",
+  "sources": {
+    "cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/history.json": "1ca76434348fbddeee21b58d739982c81328bc0feaa1734e99ef83b5dfcc0d00",
+    "cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f",
+    "cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/manifest.json": "a35a0ea4cbc75223867b3d9b231494344f9e790c7f8fad37ec164f5c6d4f9acd"
+  },
+  "comparison_test_frame_rate": 6,
+  "comparison_persons": 5461,
+  "existing_final_test_frame_rate": 1,
+  "existing_final_persons": 31978,
+  "existing_full_test_metrics": {
+    "auc": 0.9482644118938351,
+    "l2": 0.089676214779225,
+    "inout_ap": 0.8915918880146028,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9532316630355846,
+    "routing_hard_coverage": 0.8377712002705356,
+    "routing_soft_coverage": 0.351366242273175
+  },
+  "existing_selected_epoch_one_based": 1,
+  "full_frame_candidate_epochs": [
+    1,
+    2,
+    3,
+    5,
+    8
+  ],
+  "policy": "pareto_equal_relative_regret_v1",
+  "metric_weights": {
+    "auc": 1,
+    "l2": 1,
+    "inout_ap": 1
+  },
+  "ideal": {
+    "auc": 0.9482781460144153,
+    "l2": 0.0918637250269061,
+    "inout_ap": 0.9046359780341537
+  },
+  "pareto_epochs": [
+    1,
+    2,
+    3,
+    5,
+    8
+  ],
+  "recommended_epoch_one_based": 3,
+  "rows": [
+    {
+      "epoch_one_based": 1,
+      "metrics": {
+        "auc": 0.9480269914680018,
+        "l2": 0.0918637250269061,
+        "inout_ap": 0.8921953525523632,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9526912181303117,
+        "routing_hard_coverage": 0.837614236303497,
+        "routing_soft_coverage": 0.35064115353670994
+      },
+      "dominated_by": [],
+      "relative_regret": {
+        "auc": 0.0002648532474032442,
+        "l2": 0.0,
+        "inout_ap": 0.013752079050432046
+      },
+      "mean_relative_regret": 0.004672310765945097
+    },
+    {
+      "epoch_one_based": 2,
+      "metrics": {
+        "auc": 0.9482781460144153,
+        "l2": 0.09251431280862608,
+        "inout_ap": 0.8977832961652047,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9526912181303117,
+        "routing_hard_coverage": 0.8432756339439927,
+        "routing_soft_coverage": 0.3889695678581352
+      },
+      "dominated_by": [],
+      "relative_regret": {
+        "auc": 0.0,
+        "l2": 0.007082096676674464,
+        "inout_ap": 0.0075750711173796954
+      },
+      "mean_relative_regret": 0.004885722598018053
+    },
+    {
+      "epoch_one_based": 3,
+      "metrics": {
+        "auc": 0.9478613570366083,
+        "l2": 0.09252070150600754,
+        "inout_ap": 0.9031990920396091,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9512747875354107,
+        "routing_hard_coverage": 0.8388712671466657,
+        "routing_soft_coverage": 0.392185024241653
+      },
+      "dominated_by": [],
+      "relative_regret": {
+        "auc": 0.00043952186345187793,
+        "l2": 0.007151642053585568,
+        "inout_ap": 0.0015883582230137255
+      },
+      "mean_relative_regret": 0.0030598407133503903
+    },
+    {
+      "epoch_one_based": 4,
+      "metrics": {
+        "auc": 0.9477123363824754,
+        "l2": 0.09327508474657314,
+        "inout_ap": 0.901936116574038,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9515580736543909,
+        "routing_hard_coverage": 0.8395073267538892,
+        "routing_soft_coverage": 0.39567088743410583
+      },
+      "dominated_by": [
+        3
+      ],
+      "relative_regret": {
+        "auc": 0.0005966705384047317,
+        "l2": 0.015363623881501365,
+        "inout_ap": 0.002984472788693092
+      },
+      "mean_relative_regret": 0.006314922402866396
+    },
+    {
+      "epoch_one_based": 5,
+      "metrics": {
+        "auc": 0.9474525921288081,
+        "l2": 0.09331735537401632,
+        "inout_ap": 0.9046359780341537,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9535410764872522,
+        "routing_hard_coverage": 0.8415252787870996,
+        "routing_soft_coverage": 0.39943982358314833
+      },
+      "dominated_by": [],
+      "relative_regret": {
+        "auc": 0.0008705820007315485,
+        "l2": 0.01582376881281998,
+        "inout_ap": 0.0
+      },
+      "mean_relative_regret": 0.005564783604517176
+    },
+    {
+      "epoch_one_based": 6,
+      "metrics": {
+        "auc": 0.9473058611152718,
+        "l2": 0.09321058182662748,
+        "inout_ap": 0.902606813065039,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9546742209631728,
+        "routing_hard_coverage": 0.8412871158663342,
+        "routing_soft_coverage": 0.4059917572437899
+      },
+      "dominated_by": [
+        3
+      ],
+      "relative_regret": {
+        "auc": 0.0010253161514160757,
+        "l2": 0.014661465113970689,
+        "inout_ap": 0.0022430734774934536
+      },
+      "mean_relative_regret": 0.005976618247626739
+    },
+    {
+      "epoch_one_based": 7,
+      "metrics": {
+        "auc": 0.9473036785055279,
+        "l2": 0.09312646934638441,
+        "inout_ap": 0.9031812159469332,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9552407932011332,
+        "routing_hard_coverage": 0.8409498340600611,
+        "routing_soft_coverage": 0.4013190159103213
+      },
+      "dominated_by": [
+        3
+      ],
+      "relative_regret": {
+        "auc": 0.001027617807057,
+        "l2": 0.013745842759026678,
+        "inout_ap": 0.0016081187599699728
+      },
+      "mean_relative_regret": 0.0054605264420178835
+    },
+    {
+      "epoch_one_based": 8,
+      "metrics": {
+        "auc": 0.947287178017212,
+        "l2": 0.09294594734780263,
+        "inout_ap": 0.9036679444374094,
+        "persons": 5461,
+        "inframe_persons": 3530,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9552407932011332,
+        "routing_hard_coverage": 0.8408419953527262,
+        "routing_soft_coverage": 0.40128004219351343
+      },
+      "dominated_by": [],
+      "relative_regret": {
+        "auc": 0.0010450182800988699,
+        "l2": 0.011780736308913726,
+        "inout_ap": 0.0010700808062575288
+      },
+      "mean_relative_regret": 0.004631945131756708
+    }
+  ]
+}

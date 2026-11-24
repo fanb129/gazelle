@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+R1最新（2026-11-24）：用户决定VAT-L按AUC/L2/AP综合比较，不再只按L2取best。既有rate-6逐轮数据中第3轮更均衡，第5轮AP最高；先保留Pareto第1/2/3/5/8轮，统一逐帧test后再定正式checkpoint。入口和GPU0完整命令见 [RUN_VATL_EPOCH_COMPARISON.md](RUN_VATL_EPOCH_COMPARISON.md)，第1轮复用原全量结果，新增四次评测，不训练。原L2结果与已测效率保留为历史来源。
+
 W4更新（2026-11-24）：GF-L原有完整效率结果已通过 `5e64c45` 补回审查，B1/B8相对官方为 `0.9177/1.0722×`，B8相对routed K100为 `1.3046×`。至此GF/VAT×B/L四组精度与效率均已回传，六张论文具体表见 [CORE_DRAFT_ZH.md](latex/CORE_DRAFT_ZH.md)，GF-L证据见 [审查](results/E3_GFL_EFFICIENCY_REVIEW.md)。后续按该表补预算精度、条件化消融和真实多人共享，不重跑已完成矩阵。
 
 E3-L 最新（2026-11-24）：VAT-L效率已由用户实际在 **GPU0** 完成，四单元/六报告及CPU检查经 `afcc39e` 回传审查通过。B1/B8相对官方speedup `0.8630/1.0652×`，相对同权重K100 `1.0168/1.3123×`；B8延迟降低6.12%、峰值显存高28.11%。详见 [VAT-L效率审查](results/E3_VATL_EFFICIENCY_REVIEW.md)。完整GF-L→VAT-L 8轮精度保持 `0.948264/0.089676/0.891592`，按test L2选第1轮，见 [E2-TL审查](results/E2TL_GFL_TO_VATL_REVIEW.md)。接续近期强方法推理比较；下面三卡安排保留为历史。

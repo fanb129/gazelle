@@ -30,6 +30,8 @@ Router复用共享中间特征，无需额外头部图像编码器。其输出�
 
 ## 实验具体表格
 
+R1复选进展（2026-11-24）：用户决定按AUC/L2/AP综合比较VAT-L。当前主表与效率仍对应原第1轮；8轮rate-6记录的综合候选分析见 [逐轮比较](../results/VATL_EPOCH_SELECTION_REVIEW.md)，正准备第1/2/3/5/8轮的统一全量复评，完成后再更新正式行。
+
 以下按[MM Table 2/4](../../rebuttal/2026ACMMM-fanb-final-3.pdf)的“类别—方法—发表—参数—GF/VAT指标”和勾选式消融布局展开，Markdown将GF/VAT分组表头展开为独立列。文献行来自原报告，本文行来自已审查结果；“—”为未报告或本轮未完成，不是0。主表统一保留3位小数，表4/5保留本文原始指标精度。
 
 ### 表1：GazeFollow与VideoAttentionTarget主性能比较

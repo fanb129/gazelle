@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-24 R1：按用户新决定对VAT-L做三指标综合复选。8轮rate-6记录首选第3轮（AP较第1轮高1.1004个百分点、L2增加0.7152%），第5轮AP最高。已准备Pareto第1/2/3/5/8轮的逐帧复评入口，4个本机CPU规则检查通过；完整GPU0命令 `RUN_VATL_EPOCH_COMPARISON.md`。尚未启动GPU复评，正式表暂保留原第1轮。
 > 2026-11-24 W4：`latex/CORE_DRAFT_ZH.md` 已加入MM式六张具体表：21行主性能、完整效率、速度/显存变化、预算、条件化勾选消融、多人共享。补回并审查GF-L原有效率后，填入四组精度和24个variant×batch效率汇总项；B/L任务模块参数为GF/VAT `3.88/3.91M`、`4.27/4.31M`，未完成的消融留“—”。
 > 2026-11-24 W3核心中文稿已整理：`latex/CORE_DRAFT_ZH.md`。主线为“训练参数效率→稠密推理缺口→人物条件化计算选择”；核对Mi的head/eye→direction→FOV作用，明确当前Router没有直接复用该模块。实验按主性能、效率、预算曲线、条件化消融、真实多人组织，已有数值与待补实验分列。
 > 2026-11-24 E3-L VAT效率完成：用户实际使用GPU0，四单元/六份报告经 `afcc39e` 回传审查。VAT-L B1/B8相对官方speedup `0.8630/1.0652×`，相对同权重K100为 `1.0168/1.3123×`；B8延迟低6.12%、峰值显存高28.11%。详见 `results/E3_VATL_EFFICIENCY_REVIEW.md`。本轮未重跑GPU任务，后续接近期强方法推理比较。
@@ -302,6 +303,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **完成内容**：读取并渲染MM第6/8页，核对主表字段和勾选消融布局；对照官方GazeLLE第6页Table3确认B/L及传统方法的文献数值。将核心稿改为六张具体实验表，按来源填入近期方法、本文四组精度/效率与条件化full行覆盖率。补表时发现GF-L原矩阵已完整完成，经 `5e64c45` 将六报告及CPU检查push/pull，核对25份版本化源码、两份native源码树、五来源/权重、八张RGB、12组token trace和汇总通过。未将旧MM的GazeSpot消融数字填作Router结果。
 - **产出文件与数字**：`latex/CORE_DRAFT_ZH.md`、`results/E3_GFL_EFFICIENCY_REVIEW.md`、`results/e3_gfl_efficiency_server_checks.json`、`results/efficiency_dinov3_seed0_20261124/gazefollow/vitl/`。主表21行，GF/VAT各三指标；效率含24个已测variant×batch汇总项；预算8行、条件化勾选4行、多人策略3行。补回GF-L B1/B8相对官方 `0.9177/1.0722×`，B8相对routed K100 `1.3046×`。本文任务参数GF/VAT：B `3,879,681/3,912,962`，L `4,272,897/4,306,178`，来自Router、decoder、in/out实际训练参数数。PaGE更强公开值及其额外训练范围保留。没有新增训练、模型forward或GPU计时。
 - **下一步**：按表4/5填充预算精度与同预算条件化消融；表6使用真实同帧多人子集评测。四组原效率矩阵均已审查；近期强方法同机测速完成后再补对应表项，当前不预填。
+
+### 2026-11-24 · R1：VAT-L三指标综合比较与全量复评入口
+
+- **任务号**：R1。
+- **完成内容**：提取8轮同次训练的rate-6 AUC/L2/AP，先做Pareto筛选，再用三指标相对最优值的损失等权比较作为辅助排序。新建独立逐帧复评入口，加载已保存epoch，复用原第1轮全量结果，其他候选分别评测；保存每轮完整三指标和导出SHA，不覆盖旧best，不将rate-6与rate-1指标混排。
+- **产出文件与数字**：`results/VATL_EPOCH_SELECTION_REVIEW.md`、`results/vatl_epoch_selection_history.json`、`code/stag/vat_epoch_selection.py`、`code/scripts/compare_vat_epochs.py`、`RUN_VATL_EPOCH_COMPARISON.md`。rate-6 Pareto为1/2/3/5/8；第3轮 `0.947861/0.092521/0.903199`，第5轮 `0.947453/0.093317/0.904636`。第4/6/7轮被第3轮三指标全面支配。4个本机CPU选择规则检查通过，脚本语法检查通过；没有新GPU精度。
+- **下一步**：部署并做服务器CPU预检；用户手动在GPU0运行候选的统一逐帧test（第1轮复用，新增第2/3/5/8轮），回传后依据完整三项确定正式模型，再导出与核对其效率。
 
 ## 7. T1 服务器运行与结果回传
 
