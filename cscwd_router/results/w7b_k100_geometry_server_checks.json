@@ -1,0 +1,332 @@
+{
+  "date": "2026-11-25",
+  "task": "W7-B_K100_and_geometry_completed",
+  "all_passed": true,
+  "validation_forward_executed": false,
+  "completed_K100_cells": 4,
+  "completed_geometry_datasets": 2,
+  "checks": [
+    {
+      "task": "K100",
+      "dataset": "gazefollow",
+      "size": "b",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_k100_seed0/gazefollow/vitb/summary.json",
+        "sha256": "b368bac17ccb425f551fa11d7a24c5c3ef2c04fedc13be8784c4c90d41467faf"
+      },
+      "metrics": {
+        "auc": 0.9572183895240528,
+        "avg_l2": 0.10048446340869603,
+        "min_l2": 0.04266016154855401,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 1.0,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 0.9999999995014249,
+        "routing_soft_coverage": 0.4673345874463699
+      },
+      "K100_minus_K50": {
+        "auc": 0.0009820753750595657,
+        "avg_l2": -0.001065651519709221,
+        "min_l2": -0.0007593882066477542
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "avg_l2": 0.0,
+        "min_l2": 0.0
+      },
+      "per_query_predictions": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0/gazefollow/vitb/k100_predictions.jsonl.gz",
+        "sha256": "dfc9fe4651ac93257dd2c2ee01af64a2b79f40d22bdf63467608b2de4109938b"
+      }
+    },
+    {
+      "task": "K100",
+      "dataset": "gazefollow",
+      "size": "l",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_k100_seed0/gazefollow/vitl/summary.json",
+        "sha256": "084378a1dabe5d76705984e26b56fada1c71e1088e441e01ade0678eb3a23c2f"
+      },
+      "metrics": {
+        "auc": 0.9616496313926461,
+        "avg_l2": 0.09309497681462005,
+        "min_l2": 0.03755520972608295,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 1.0,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 0.9999999995014249,
+        "routing_soft_coverage": 0.4841953497808481
+      },
+      "K100_minus_K50": {
+        "auc": 0.001642532827934584,
+        "avg_l2": -0.0009664400987411531,
+        "min_l2": -0.00016628209093093316
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "avg_l2": 0.0,
+        "min_l2": 0.0
+      },
+      "per_query_predictions": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0/gazefollow/vitl/k100_predictions.jsonl.gz",
+        "sha256": "0ecfdd7c0e94b6d0ee2fc16c7ce4bab0f6da4bf2b5ba95eaa46581a3da57b64c"
+      }
+    },
+    {
+      "task": "K100",
+      "dataset": "vat",
+      "size": "b",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_k100_seed0/vat/vitb/summary.json",
+        "sha256": "c9689de6d844199d43582ea9649cf19c17def3015024244f5c71a4276f5c7cbe"
+      },
+      "metrics": {
+        "auc": 0.940170086134721,
+        "l2": 0.10063551821765464,
+        "inout_ap": 0.8785223828101569,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 1.0,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 0.9999999995325126,
+        "routing_soft_coverage": 0.3591852749487127
+      },
+      "K100_minus_K50": {
+        "auc": 0.00013752777755426937,
+        "l2": 0.0005043222854750062,
+        "inout_ap": -0.004660255291283555
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "l2": 0.0,
+        "inout_ap": 0.0
+      },
+      "per_query_predictions": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0/vat/vitb/k100_predictions.jsonl.gz",
+        "sha256": "a6e80f0c09cba9f6fcbfd9563396278f68541acad08948201607ff7c8e4259b2"
+      }
+    },
+    {
+      "task": "K100",
+      "dataset": "vat",
+      "size": "l",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_k100_seed0/vat/vitl/summary.json",
+        "sha256": "75dda577cbf580fe83a7f2b0c92e1e292a2de2663b6fdc4f56820edec2570f25"
+      },
+      "metrics": {
+        "auc": 0.947314481115698,
+        "l2": 0.0902687577134691,
+        "inout_ap": 0.8986997145564742,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 1.0,
+        "routing_gt_point_coverage": 1.0,
+        "routing_hard_coverage": 0.9999999995325126,
+        "routing_soft_coverage": 0.3513663852428064
+      },
+      "K100_minus_K50": {
+        "auc": -0.000949930778137098,
+        "l2": 0.0005925429342441002,
+        "inout_ap": 0.007107826541871476
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "l2": 0.0,
+        "inout_ap": 0.0
+      },
+      "per_query_predictions": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0/vat/vitl/k100_predictions.jsonl.gz",
+        "sha256": "745ca5e35dc2679dde0e00d9f83a1a368fbb13e606f92830064d34e03b7a3749"
+      }
+    },
+    {
+      "task": "scene_geometry",
+      "dataset": "gazefollow",
+      "size": "b",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/summary.json",
+        "sha256": "8986f1ec584fae3e44d86cc99f5a82eaf09c7ab4064da2e18229a06a8ab4fc89"
+      },
+      "metrics": {
+        "auc": 0.9560184010250282,
+        "avg_l2": 0.10151446734597143,
+        "min_l2": 0.043610659966572124,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9138738657192641,
+        "routing_hard_coverage": 0.8110339524156626,
+        "routing_soft_coverage": 0.37351190143925833
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "avg_l2": 0.0,
+        "min_l2": 0.0
+      },
+      "artifacts": {
+        "initialization": {
+          "kind": "decoder",
+          "loaded_tensors": 40,
+          "router_reinitialized": true,
+          "path": "/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt",
+          "sha256": "26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef"
+        },
+        "backbone": {
+          "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+          "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+        },
+        "support_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/support/final.pt",
+          "sha256": "22110de7aa2035d9d7f0c94836f953e513a820eb674ed0635c9651f9a4d60495"
+        },
+        "support_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/support/last.pt",
+          "sha256": "bebe0e3632f90095877e0aedef8f9b8a82f39b1711e28dfa4a100f5df845c155"
+        },
+        "best_test_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/sparse_decoder/best_test.pt",
+          "sha256": "d60f3f61f02d2d460318411fa73bef0c01a7925d6655d4a306ff5aae0bb01587"
+        },
+        "decoder_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/sparse_decoder/last.pt",
+          "sha256": "a540b49e4aa81c8c86a7af81729291660152be646bb0be2cf74f2da93ebd8932"
+        },
+        "per_query_predictions": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/predictions.jsonl.gz",
+          "sha256": "b38d2f05003c4b81f418cacc58f177a22035711ae8d3152c59760a01a1cb811b"
+        }
+      }
+    },
+    {
+      "task": "scene_geometry",
+      "dataset": "vat",
+      "size": "b",
+      "summary": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/vat/vitb/summary.json",
+        "sha256": "53ed4b3abe6873011805a7150df20519d03e45ddd396d8205952babb6749ca2e"
+      },
+      "metrics": {
+        "auc": 0.9404376749452077,
+        "l2": 0.10087887730101129,
+        "inout_ap": 0.886571357105872,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9527475187605906,
+        "routing_hard_coverage": 0.8019684671616185,
+        "routing_soft_coverage": 0.2654381831551498
+      },
+      "metric_reaggregation_abs_difference": {
+        "auc": 0.0,
+        "l2": 0.0,
+        "inout_ap": 0.0
+      },
+      "artifacts": {
+        "gf_summary": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/summary.json",
+          "sha256": "8986f1ec584fae3e44d86cc99f5a82eaf09c7ab4064da2e18229a06a8ab4fc89"
+        },
+        "gf_manifest": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/manifest.json",
+          "sha256": "24f94141adeee9314e04c4cbc65d5ab7a9bd6ca123e62ba5b4ae10058564228d"
+        },
+        "gf_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/sparse_decoder/best_test.pt",
+          "sha256": "d60f3f61f02d2d460318411fa73bef0c01a7925d6655d4a306ff5aae0bb01587"
+        },
+        "backbone": {
+          "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+          "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+        },
+        "initial_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/initial.pt",
+          "sha256": "e376c6b703b50c7413535e7ce78bb73d3320f2f57dd1e1153f86421a4fa17e56"
+        },
+        "best_test_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/best_test.pt",
+          "sha256": "51cb9e9f30d607c1f3a88877463a630d6ad3af6eb81509ebc11791d4ff33925b"
+        },
+        "decoder_resume_checkpoint": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/last.pt",
+          "sha256": "5b9863f6b513cbfcc83df8d62a80542f15541a78307a21e64844275e8cbe13d1"
+        },
+        "per_query_predictions": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/predictions.jsonl.gz",
+          "sha256": "6ecb7bfaa06793803b0122be4b442aec8d49de4540b48b2567b89c071056984d"
+        },
+        "manifest": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/vat/vitb/manifest.json",
+          "sha256": "8b7595c14174ed1872fec04e853b9b7fc21ce0a7a39252d7e4c85b433646410b"
+        },
+        "history": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/vat/vitb/history.json",
+          "sha256": "700074fc60c53f2fc7c1695fcfa1b6dcd733d93faff036e1bcbb159b1e406dcd"
+        },
+        "initialization_report": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/vat/vitb/initialization.json",
+          "sha256": "fef50fc1af429cd37ba315b5640cb2cb6dfeee15672c1a436324762225dec462"
+        },
+        "initial_test_report": {
+          "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/vat/vitb/initial_test.json",
+          "sha256": "c98eab7d81c7f3e96d8c45803bca4bffb00e892bf32784825b34d40c6086b8b9"
+        },
+        "epoch_0": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_0.pt",
+          "sha256": "a5d2e1a82f24f18e407c5a5969125bc2b90284fb79c60fcc4fe379ce406f694c"
+        },
+        "epoch_1": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_1.pt",
+          "sha256": "5c60998c965cb6158378c4c4f288a80f6f4aae532c7e6b139bd0ebfe791a7330"
+        },
+        "epoch_2": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_2.pt",
+          "sha256": "ce2b4aaa643c0d10901f274990e734359e0faec5758f6e04f9622b2525b60a3c"
+        },
+        "epoch_3": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_3.pt",
+          "sha256": "6bdf48dac49b7ec266f3a15d36f772674da1e089a24e2372fc0d68cbcf058ef4"
+        },
+        "epoch_4": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_4.pt",
+          "sha256": "9c55b3b46ca32bba651babcefb226540d78f8a6acdb70f4e08f4674d53b7e1c7"
+        },
+        "epoch_5": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_5.pt",
+          "sha256": "a057b19975c530a3c3daaa6c1fcf9d72bb7c3ad4bfa0311157d90a35d91edda7"
+        },
+        "epoch_6": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_6.pt",
+          "sha256": "fa86b5147902d2965ab9f2a29f99de28d28042a34663d3d406d6c06681169a28"
+        },
+        "epoch_7": {
+          "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_7.pt",
+          "sha256": "59d17b275cc35c25c222cce3d8cdc77d964d198e7b0a8ed034f1edf785b4cc6b"
+        }
+      }
+    }
+  ],
+  "verified_artifacts": 40,
+  "earlier_ablation_queue": {
+    "scene_only_support_completed_epochs": 3,
+    "scene_only_sparse_decoder_completed_epochs": 1,
+    "scene_only_next_decoder_epoch_1_based": 2,
+    "scene_only_GF_and_VAT_summaries_exist": false,
+    "scene_head_started": false,
+    "resume_available": true
+  }
+}

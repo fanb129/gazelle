@@ -1,0 +1,122 @@
+{
+  "gf_summary": {
+    "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/summary.json",
+    "sha256": "8986f1ec584fae3e44d86cc99f5a82eaf09c7ab4064da2e18229a06a8ab4fc89"
+  },
+  "gf_manifest": {
+    "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/manifest.json",
+    "sha256": "24f94141adeee9314e04c4cbc65d5ab7a9bd6ca123e62ba5b4ae10058564228d"
+  },
+  "gf_checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/gazefollow/vitb/sparse_decoder/best_test.pt",
+    "sha256": "d60f3f61f02d2d460318411fa73bef0c01a7925d6655d4a306ff5aae0bb01587"
+  },
+  "backbone": {
+    "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+    "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+  },
+  "initialization": {
+    "loaded_gf_tensors": 52,
+    "new_inout_keys": [
+      "inout_head.0.bias",
+      "inout_head.0.weight",
+      "inout_head.3.bias",
+      "inout_head.3.weight",
+      "inout_token.weight"
+    ],
+    "shared_tensors_identical": true,
+    "gf_router_sha256": "bd8bf3823af7a9c789dded0a766588675c2df99b8eb17fbf68b4f2ff7c73acb7",
+    "gf_decoder_sha256": "770997c2715e5162be65e237ae24eaa54c86387bf2bc6989e0b66b64cc0141f0",
+    "new_inout_sha256": "77d77618b9fbe9953902975784020c155b6744936630d7740702a9abf1330300",
+    "initial_task_sha256": "08ade9e1a534055b8902c5f18655a8e1864b6d5a2be67ea2a319ebac6f613aeb"
+  },
+  "gf_source_status": {
+    "completed": true,
+    "closed_by_user": false,
+    "training_epochs": {
+      "support": 3,
+      "sparse_decoder": 5
+    }
+  },
+  "data": {
+    "strategy": "official_train_test",
+    "selection_policy": "test_selected",
+    "validation_fraction": 0.0,
+    "train_split": "train",
+    "evaluation_split": "test",
+    "query_unit": "person",
+    "train_persons": 22641,
+    "test_persons": 5461,
+    "train_frame_sample_every": 6,
+    "test_frame_sample_every": 6,
+    "train_annotation": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+      "sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43"
+    },
+    "test_annotation": {
+      "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+      "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+    }
+  },
+  "sources": {
+    "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+    "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+    "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+    "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+    "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+    "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+    "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+    "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+    "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/dinov3_transfer.py": "56f2934921e4e1d7396be037d5b9ff04e6f1f16cef0b72557f765c85b32ab55b",
+    "cscwd_router/code/scripts/transfer_gf_router_to_vat.py": "3e1e572ea76602dd93de930efe1d7d56e586c43c10000e8a6831be7808ef47f2",
+    "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+    "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+    "cscwd_router/code/scripts/train_conditioned_router.py": "75a3f2122d65a5ab2168dc6e9b344c7cc6fe5bf55bba75f4e104e8064d4ed3e3",
+    "cscwd_router/code/scripts/run_final_ablation.py": "b6e7826fcde96112a3fb13ff86ec03ffef9b2a95c15242f1f03b855600d0d444"
+  },
+  "torch_version": "2.6.0+cu124",
+  "recipe": {
+    "gf_summary": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_geometry/gazefollow/vitb/summary.json",
+    "data_path": "/newhome/fb/dataset/videoattentiontarget",
+    "epochs": 8,
+    "router_warmup_epochs": 1,
+    "router_lr": 0.0001,
+    "decoder_lr": 1e-05,
+    "inout_lr": 0.001,
+    "router_loss_weight": 1.0,
+    "budget_weight": 0.05,
+    "batch_size": 16,
+    "eval_batch_size": 16,
+    "grad_accumulation": 2,
+    "workers": 8,
+    "clip_norm": 1.0,
+    "train_frame_rate": 6,
+    "test_frame_rate": 6,
+    "seed": 0,
+    "log_every": 50,
+    "device": "cuda",
+    "allow_closed_gf": false,
+    "condition": "scene_geometry"
+  },
+  "fingerprint": "03b339fb38f4c8cd0a5b65c319235742ac790f99c5bd16d84650a460ea30a674",
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "cuda_visible_devices": "1",
+    "cuda_version": "12.4",
+    "git_commit": "c19ba9317980f30b57cc33f1ae1aceca188eebdd"
+  }
+}

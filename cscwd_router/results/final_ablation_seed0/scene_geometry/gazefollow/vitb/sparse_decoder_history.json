@@ -1,0 +1,142 @@
+[
+  {
+    "epoch": 0,
+    "train": {
+      "loss": 0.04045200941777161,
+      "persons": 113458,
+      "optimizer_steps": 3546,
+      "seconds": 3257.9938787989995,
+      "train_keep_ratio": 1.0,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 0,
+        "decoder_and_inout": 3416576
+      }
+    },
+    "test": {
+      "auc": 0.8847249428269489,
+      "avg_l2": 0.2296114888540738,
+      "min_l2": 0.16548092043788112,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9138738657192641,
+      "routing_hard_coverage": 0.8110339524156626,
+      "routing_soft_coverage": 0.37351190143925833
+    }
+  },
+  {
+    "epoch": 1,
+    "train": {
+      "loss": 0.040910034366203524,
+      "persons": 113458,
+      "optimizer_steps": 3546,
+      "seconds": 2792.4355808050004,
+      "train_keep_ratio": 0.75,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 0,
+        "decoder_and_inout": 3416576
+      }
+    },
+    "test": {
+      "auc": 0.9551299875297211,
+      "avg_l2": 0.10171934749211871,
+      "min_l2": 0.04365186853750894,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9138738657192641,
+      "routing_hard_coverage": 0.8110339524156626,
+      "routing_soft_coverage": 0.37351190143925833
+    }
+  },
+  {
+    "epoch": 2,
+    "train": {
+      "loss": 0.040949285020055085,
+      "persons": 113458,
+      "optimizer_steps": 3546,
+      "seconds": 2522.0746331710034,
+      "train_keep_ratio": 0.5,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 0,
+        "decoder_and_inout": 3416576
+      }
+    },
+    "test": {
+      "auc": 0.956064245204098,
+      "avg_l2": 0.10296097531940712,
+      "min_l2": 0.0444664762991969,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9138738657192641,
+      "routing_hard_coverage": 0.8110339524156626,
+      "routing_soft_coverage": 0.37351190143925833
+    }
+  },
+  {
+    "epoch": 3,
+    "train": {
+      "loss": 0.04071202796833103,
+      "persons": 113458,
+      "optimizer_steps": 3546,
+      "seconds": 2513.9248992719986,
+      "train_keep_ratio": 0.5,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 0,
+        "decoder_and_inout": 3416576
+      }
+    },
+    "test": {
+      "auc": 0.9561982132985524,
+      "avg_l2": 0.10249443234313774,
+      "min_l2": 0.04448273658652368,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9138738657192641,
+      "routing_hard_coverage": 0.8110339524156626,
+      "routing_soft_coverage": 0.37351190143925833
+    }
+  },
+  {
+    "epoch": 4,
+    "train": {
+      "loss": 0.04059091591851465,
+      "persons": 113458,
+      "optimizer_steps": 3546,
+      "seconds": 2528.830517743001,
+      "train_keep_ratio": 0.5,
+      "trainable_parameters": {
+        "backbone": 0,
+        "router": 0,
+        "decoder_and_inout": 3416576
+      }
+    },
+    "test": {
+      "auc": 0.9560184010250282,
+      "avg_l2": 0.10151446734597143,
+      "min_l2": 0.043610659966572124,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9138738657192641,
+      "routing_hard_coverage": 0.8110339524156626,
+      "routing_soft_coverage": 0.37351190143925833
+    }
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "context_fingerprint": "03b339fb38f4c8cd0a5b65c319235742ac790f99c5bd16d84650a460ea30a674",
+  "inout_initialization": "random_seeded",
+  "checkpoint_selection_candidate": false,
+  "metrics": {
+    "auc": 0.9382172575411852,
+    "l2": 0.09949120897966483,
+    "inout_ap": 0.6104329749518649,
+    "persons": 5461,
+    "inframe_persons": 3530,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9569405099150141,
+    "routing_hard_coverage": 0.803527386858004,
+    "routing_soft_coverage": 0.2659353010783832
+  }
+}

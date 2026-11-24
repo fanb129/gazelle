@@ -1,0 +1,197 @@
+{
+  "request": {
+    "protocol": "selected_weights_K100_accuracy_v1",
+    "source": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+      "sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0"
+    },
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt",
+      "sha256": "8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "test_annotation": {
+      "path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+      "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+    },
+    "keep_ratio": 1.0,
+    "precision": "fp32",
+    "seed": 0,
+    "batch_size": 8,
+    "frame_sample_every": 1,
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+      "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+      "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7"
+    }
+  },
+  "source_selection": {
+    "epoch": 4,
+    "metric": "min_l2",
+    "metrics": {
+      "auc": 0.9562363141489932,
+      "avg_l2": 0.10155011492840525,
+      "min_l2": 0.043419549755201764,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9457808150980969,
+      "routing_hard_coverage": 0.871910231201183,
+      "routing_soft_coverage": 0.46733457956888447
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "K50_saved": {
+    "auc": 0.9562363141489932,
+    "avg_l2": 0.10155011492840525,
+    "min_l2": 0.043419549755201764,
+    "persons": 4782,
+    "inframe_persons": 4782,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9457808150980969,
+    "routing_hard_coverage": 0.871910231201183,
+    "routing_soft_coverage": 0.46733457956888447
+  },
+  "K100": {
+    "auc": 0.9572183895240528,
+    "avg_l2": 0.10048446340869603,
+    "min_l2": 0.04266016154855401,
+    "persons": 4782,
+    "inframe_persons": 4782,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 1.0,
+    "routing_gt_point_coverage": 1.0,
+    "routing_hard_coverage": 0.9999999995014249,
+    "routing_soft_coverage": 0.4673345874463699
+  },
+  "K100_minus_K50": {
+    "auc": 0.0009820753750595657,
+    "avg_l2": -0.001065651519709221,
+    "min_l2": -0.0007593882066477542
+  },
+  "trace": {
+    "kept_patches": 1024,
+    "block_inputs": [
+      {
+        "block": 0,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 1,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 2,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 3,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 4,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 5,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 6,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 7,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 8,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 9,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 10,
+        "batch": 8,
+        "tokens": 1029
+      },
+      {
+        "block": 11,
+        "batch": 8,
+        "tokens": 1029
+      }
+    ],
+    "out_indices": [
+      2,
+      5,
+      8,
+      11
+    ],
+    "image_size": [
+      512,
+      512
+    ]
+  },
+  "source_closed_by_user": false,
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda",
+    "cuda_visible_devices": "0",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "git_commit": "7c374462797eef057f6b2c257aa8927a28e5bb84"
+  },
+  "artifacts": {
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_k100_seed0/gazefollow/vitb/k100_predictions.jsonl.gz",
+      "sha256": "dfc9fe4651ac93257dd2c2ee01af64a2b79f40d22bdf63467608b2de4109938b"
+    }
+  },
+  "completed": true
+}
