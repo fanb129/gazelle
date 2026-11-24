@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-24",
+  "task": "W6-B_multi_query_and_K100_implementation",
+  "scope": "Local CPU synthetic engineering tests; no real model evaluation or GPU timing.",
+  "passed": true,
+  "pytest": {
+    "passed": 32,
+    "duration_seconds": 5.89,
+    "files": [
+      "cscwd_router/code/stag/test_final_evaluation.py",
+      "cscwd_router/code/stag/test_dinov3_efficiency.py"
+    ]
+  },
+  "checks": [
+    "Nested real-GT frame views retain out-of-frame labels and identity",
+    "Multi metrics exactly match the legacy evaluator on synthetic inputs",
+    "Native sparse suffix encodes one image for union and N copies for independent queries",
+    "N1 outputs are bitwise identical between union and independent execution",
+    "FP32 K100 evaluation preserves source checkpoint, selection and saved K50 metrics",
+    "Immutable output resume rejects changed requests or damaged exports",
+    "15-cell multi dispatcher and geometric summary checked on synthetic fixtures",
+    "images/s and queries/s remain distinct"
+  ],
+  "sources": {
+    "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+    "cscwd_router/code/data_prep/final_queries.py": "5d50d4d92b07071e849c491a40180ed92d274d1c51206ffb0832b4a34d5f07ee",
+    "cscwd_router/code/stag/final_multipeople.py": "6b0fa28874187e0415e39e99c57b7f6b20a1d50dbe4d34d769ff97372c1e8712",
+    "cscwd_router/code/scripts/run_final_multi.py": "e4866596cb0c25d12f464ce9cad22aeb0deac377b13fb552bcc8e47ce8db254a",
+    "cscwd_router/code/scripts/run_final_k100.py": "4ce23b4f41f94684071b03bebd3dc45153bdc821537b09ff99b0f2c445c3319a",
+    "cscwd_router/code/stag/test_final_evaluation.py": "17cdb095124a2305c94be03d5805e89a028784200321035267daa6d7182aba5c"
+  }
+}

@@ -27,6 +27,8 @@
 
 ## 进展
 
+**W6-B评测入口（2026-11-24）**：真实VAT共同帧N=1/2/3的三策略质量/效率与四组同权重K100精度已实现。32项CPU/旧效率回归通过，含原指标一致、N1共享/独立逐值一致、真实native suffix的batch/token、15-cell派发恢复与原checkpoint不变。命令 `cscwd_router/RUN_FINAL_EVALUATION.md`，证据 `results/w6b_evaluation_local_checks.json`；没有新GPU评测。可视化完成后统一部署评测目录，不更新已部署训练目录。
+
 **W6-A条件化训练入口（2026-11-24）**：三种B输入消融与各自GF3+5→VAT8队列已实现，47项本机CPU/回归通过；full原版输出逐值一致，关闭几何也移除绝对bbox坐标。source扩展纳入恢复fingerprint，旧gazelle包未改。证据 `cscwd_router/results/w6a_conditional_local_checks.json`；完整三卡命令 `cscwd_router/RUN_FINAL_ABLATIONS.md`。没有新GPU训练结果，接续部署/CPU预检与其余评测入口。
 
 **W5维护前收口（2026-11-24）**：删除完整预算扫描，固定K50；原表5/6改为表4/5，新增训练仅三种B打分消融（scene-only、scene＋geometry、scene＋head appearance），三卡并行，各自GF3+5→VAT8，full与L沿用现有结果。同权重K100只补一次精度参考，其他GPU任务为真实多人、可视化导出与余量B8复测。CPU统计VAT test中5,182帧至少三个真实头框，可用同帧N=1/2/3嵌套查询；三卡本次均空闲。旧B日志每条纯训练约8.25小时（不含test/IO），详细资源预算与回传顺序见 `cscwd_router/PRE_SHUTDOWN_PLAN.md`，元数据证据 `results/w5_pre_shutdown_planning_evidence.json`。本轮只更新方案、未训练或推理；下一项实现入口并提供手动运行命令。

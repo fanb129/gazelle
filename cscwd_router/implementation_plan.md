@@ -326,6 +326,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`code/stag/conditional.py`、`code/scripts/train_conditioned_router.py`、`code/scripts/run_final_ablation.py`、`code/stag/test_final_ablation.py`、`results/w6a_conditional_local_checks.json`、`RUN_FINAL_ABLATIONS.md`。新增及原GF/VAT回归合计47项CPU通过（8.39秒），含三个合成迁移闭环、错误分支拒绝、冻结与恢复；没有真实训练指标。
 - **下一步**：Git部署独立训练worktree并CPU预检，用户手动启动三卡命令。接续多人、K100精度和真实可视化导出，训练目录保持固定版本。
 
+### 2026-11-24 · W6-B：真实多人和K100精度入口
+
+- **任务号**：W6-B。
+- **完成内容**：新增VAT固定共同帧/嵌套GT查询视图；共享官方dense、独立批量sparse、max-union三策略的FP32质量评测和FP16正反序fresh-process计时，保存真实token/batch与图像/查询吞吐。新增四组同权重K100单次精度，保留原选择和GF-L用户收口记录，输出K100−K50，不训练/不换原文件。请求、工件SHA和恢复统一核对。
+- **产出文件与数字**：`code/data_prep/final_queries.py`、`code/stag/final_io.py`、`code/stag/final_multipeople.py`、`code/scripts/run_final_multi.py`、`code/scripts/run_final_k100.py`、`code/stag/test_final_evaluation.py`、`RUN_FINAL_EVALUATION.md`、`results/w6b_evaluation_local_checks.json`。新增及旧效率回归合计32项CPU通过（5.89秒），含15-cell合成派发/恢复与原指标一致性；没有真实精度或新GPU时间。
+- **下一步**：完成真实可视化导出后统一部署评测worktree、CPU预检；用户在各训练队列结束后手动运行GPU0多人、GPU1 K100，固定训练目录不更新。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。
