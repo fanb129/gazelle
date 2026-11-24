@@ -1,0 +1,714 @@
+{
+  "request": {
+    "protocol": "dinov3_vs_official_gazelle_efficiency_v1",
+    "dataset": "vat",
+    "size": "l",
+    "source_summary": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+      "sha256": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f"
+    },
+    "router_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/best_test.pt",
+      "sha256": "6d12190c7cdf24fe0389eede68b27f0f05d35cb4c753072f62a3d0d1d8445bb5"
+    },
+    "router_backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+      "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+    },
+    "official_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitl14_inout.pt",
+      "sha256": "e48136e4efad6bb91182a51a2fb365c2202d974e5e449145a21348aca7b5d0b1"
+    },
+    "official_backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitl14_pretrain.pth",
+      "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+    },
+    "batch_size": 8,
+    "order": "forward",
+    "precision": "fp16",
+    "seed": 0,
+    "allow_closed_gf": false,
+    "settings": {
+      "warmup": 50,
+      "latency_iters": 200,
+      "throughput_iters": 500,
+      "repeats": 5
+    },
+    "raw_input": {
+      "annotation_sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43",
+      "samples": [
+        {
+          "path": "images/How I Met Your Mother/4435_4556/00004468.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.43508522727272736,
+            0.07525252525252527,
+            0.6952414772727272,
+            0.5516414141414143
+          ],
+          "image_sha256": "d60fa8b752e3384b99085b68ee3ac42830c7cda8e9089d4f32046eb306ca1c66"
+        },
+        {
+          "path": "images/Modern Family/4645_4826/00004658.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.3113636363636364,
+            0.17575757575757575,
+            0.5410511363636364,
+            0.5257575757575758
+          ],
+          "image_sha256": "f4940807beaa7ea66015e80af8ede7f302d220059c1d8ac6d27de82c0854192d"
+        },
+        {
+          "path": "images/Seinfeld/12797_12858/00012808.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.22840909090909092,
+            0.20841750841750836,
+            0.2966856060606061,
+            0.3264309764309764
+          ],
+          "image_sha256": "d0a4a7268a2c70de64b3f13e84f2d2abc18607331b7b5fb7dd6b8b90f4c0eb62"
+        },
+        {
+          "path": "images/A Play With Words/14595_14746/00014603.jpg",
+          "head_index": 1,
+          "head_bbox": [
+            0.6212121212121213,
+            0.16077441077441076,
+            0.8024621212121211,
+            0.5070707070707071
+          ],
+          "image_sha256": "47c418bc3363ae0ad799405448bb46e456c13ce1ff22b246901593a6175980dd"
+        },
+        {
+          "path": "images/Grey's Anatomy/44211_44332/00044303.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.09583333333333334,
+            0.13861386138613863,
+            0.2986111111111112,
+            0.4851485148514851
+          ],
+          "image_sha256": "787d29409af2b8db3a9f461538bbd4eecd45caed20eb4ccc9380f0fc73925536"
+        },
+        {
+          "path": "images/Breaking Bad/20307_20812/00020755.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.14055397727272728,
+            0.09873737373737373,
+            0.28110795454545456,
+            0.3260101010101011
+          ],
+          "image_sha256": "3783f385f650c667ade049ebda200e9c2051a066761844261b292b93fabee7f4"
+        },
+        {
+          "path": "images/Tartuffe/148891_149131/00148978.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.21036931818181823,
+            0.26624579124579123,
+            0.26259469696969695,
+            0.35454545454545444
+          ],
+          "image_sha256": "956a4027d856dcac8a4ec818e57f5495b93fddcbd2b3c2499fca4f48917f5071"
+        },
+        {
+          "path": "images/The View/10129_10430/00010392.jpg",
+          "head_index": 0,
+          "head_bbox": [
+            0.27130681818181823,
+            0.2815656565656565,
+            0.32883522727272724,
+            0.388510101010101
+          ],
+          "image_sha256": "9524b12a1f591a57f99090540824ec06816c24480185af78333a32655d1dab4f"
+        }
+      ],
+      "query_selection": "one_in_frame_GT_head_per_train_image",
+      "people_per_image": 1
+    },
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "f7957f39f858b37580a30fc67e1c0367a44bc6183f3e799b9097fa2ae5827eac",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/scripts/benchmark_router_dinov3.py": "744669ec1c775b7b25e98d270756fb01ad827046c542d8a29a7bc55710d4d4ea",
+      "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+      "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e",
+      "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+      "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+      "native_dinov2_source_tree": "96c486796f1cae2d8d3989b2ae20cfc49f8aef0a66ff522ec3a2050816210cb9"
+    }
+  },
+  "variant_order": [
+    "official",
+    "k100",
+    "k50"
+  ],
+  "results": {
+    "official": {
+      "tokens": {
+        "kept_patches": 1024,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 12,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 13,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 14,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 15,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 16,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 17,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 18,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 19,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 20,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 21,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 22,
+            "batch": 8,
+            "tokens": 1025
+          },
+          {
+            "block": 23,
+            "batch": 8,
+            "tokens": 1025
+          }
+        ],
+        "out_indices": [
+          23
+        ],
+        "image_size": [
+          448,
+          448
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 147.56083899919759,
+        "latency_ms_mean": 146.47181215984892,
+        "latency_ms_p95": 154.16313389832794,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          137.1804134978447,
+          147.59718199638883,
+          149.89582499765675,
+          149.07577600024524,
+          148.86779399967054
+        ],
+        "throughput_images_per_second_median": 53.66411422528747,
+        "throughput_repeat_fps": [
+          56.79227442008125,
+          53.679575470856406,
+          53.557525119916384,
+          53.56207335919479,
+          53.66411422528747
+        ],
+        "steady_allocated_mib": 1199.73486328125,
+        "peak_allocated_mib": 1423.95361328125
+      }
+    },
+    "k100": {
+      "tokens": {
+        "kept_patches": 1024,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 12,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 13,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 14,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 15,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 16,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 17,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 18,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 19,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 20,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 21,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 22,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 23,
+            "batch": 8,
+            "tokens": 1029
+          }
+        ],
+        "out_indices": [
+          5,
+          11,
+          17,
+          23
+        ],
+        "image_size": [
+          512,
+          512
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 180.64210000011371,
+        "latency_ms_mean": 180.88064193689934,
+        "latency_ms_p95": 190.2046236966271,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          178.412067998579,
+          180.83285299871932,
+          181.3143669969577,
+          183.88806700022542,
+          181.13223699765513
+        ],
+        "throughput_images_per_second_median": 44.095320561619964,
+        "throughput_repeat_fps": [
+          44.26212216621741,
+          44.095320561619964,
+          43.99211664279076,
+          43.93035028655794,
+          44.14787976515515
+        ],
+        "steady_allocated_mib": 1206.27587890625,
+        "peak_allocated_mib": 1823.2373046875
+      }
+    },
+    "k50": {
+      "tokens": {
+        "kept_patches": 512,
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 7,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 8,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 9,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 10,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 11,
+            "batch": 8,
+            "tokens": 1029
+          },
+          {
+            "block": 12,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 13,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 14,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 15,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 16,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 17,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 18,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 19,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 20,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 21,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 22,
+            "batch": 8,
+            "tokens": 517
+          },
+          {
+            "block": 23,
+            "batch": 8,
+            "tokens": 517
+          }
+        ],
+        "out_indices": [
+          5,
+          11,
+          17,
+          23
+        ],
+        "image_size": [
+          512,
+          512
+        ]
+      },
+      "timing": {
+        "latency_ms_median": 137.8631654988567,
+        "latency_ms_mean": 137.8178890709969,
+        "latency_ms_p95": 141.37415749937645,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          136.1108109995257,
+          138.38179900267278,
+          138.32254700173507,
+          137.9592404991854,
+          138.470698002493
+        ],
+        "throughput_images_per_second_median": 57.8919134505872,
+        "throughput_repeat_fps": [
+          57.93517816016489,
+          57.88160257755488,
+          57.8919134505872,
+          57.924376029113944,
+          57.720961469557814
+        ],
+        "steady_allocated_mib": 1206.27587890625,
+        "peak_allocated_mib": 1823.2060546875
+      }
+    }
+  },
+  "source_metrics": {
+    "auc": 0.9482644118938351,
+    "l2": 0.089676214779225,
+    "inout_ap": 0.8915918880146028,
+    "persons": 31978,
+    "inframe_persons": 20655,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9532316630355846,
+    "routing_hard_coverage": 0.8377712002705356,
+    "routing_soft_coverage": 0.351366242273175
+  },
+  "source_selection": {
+    "epoch": 0,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8921953525523632,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "source_closed_by_user": false,
+  "environment": {
+    "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+    "before": {
+      "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+      "name": "NVIDIA GeForce RTX 3090",
+      "driver_version": "555.42.06",
+      "pstate": "P8",
+      "temperature.gpu": "71",
+      "memory.used": "15",
+      "utilization.gpu": "0"
+    },
+    "after": {
+      "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+      "name": "NVIDIA GeForce RTX 3090",
+      "driver_version": "555.42.06",
+      "pstate": "P0",
+      "temperature.gpu": "87",
+      "memory.used": "361",
+      "utilization.gpu": "15"
+    },
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4"
+  },
+  "timing_scope": {
+    "full_forward": true,
+    "preprocessing_and_H2D": false,
+    "inference_mode": true,
+    "autocast_cache_enabled": false,
+    "tf32": false
+  },
+  "git_commit": "0a375054feca2920133e72e26fcc8c1f7afd73f9"
+}

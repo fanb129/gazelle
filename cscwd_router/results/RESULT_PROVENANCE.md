@@ -359,3 +359,12 @@
 - review script: `cscwd_router/code/scripts/review_vat_transfer.py`; SHA256: `84ed4e0196f0df11695abb5f9b96ee5855c82d600dbbf7b81d8eebe0152ee96a`
 - Scope: CPU artifact/tensor/selection/export checks and four benchmark input preflights; no GPU forward or timing. Raw VAT-L reports committed in `2eb4275`, CPU proof in `33e459a`.
 - Prepared GPU1 efficiency output: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/`; manual launch after GPU1 is idle. No timing report or efficiency value exists yet for this new matrix.
+
+
+## DINOv3 efficiency · vat / vitl
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/summary.json`; SHA256: `8f50d149cf686df53909da41988bec86f88e026add25b6862c84f1b6195a641f`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b1_forward.json`; SHA256: `6b62e143c09c02128f5c29ffcd6cf4d1945bb996974270d9e24c121dc0038db0`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b1_reverse.json`; SHA256: `2d26777dba5567a02bb63a053ef6ac2fa558705bb79a367d562077a3aef2a378`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b8_forward.json`; SHA256: `2a248f72083991780f3873d30ca5f31e4afd408c71883daf619d0475399a89f6`
+- cell: `/home/fb/src/paper/gazelleV1/cscwd_router/results/efficiency_dinov3_vatl_seed0_20261124/vat/vitl/b8_reverse.json`; SHA256: `eb93512200cfbd25b90ac9e3d3e5ba7ba2e0dffd374a435b5f1adda9d4260f4b`
