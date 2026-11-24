@@ -1,6 +1,6 @@
-# 维护前：多人评测与K100精度
+# 维护前：两卡多人评测、K100精度与可视化
 
-评测代码使用独立目录 `/home/fb/src/paper/gazelleV1_final_evaluation`，与固定训练目录分开。可视化入口完成后助手统一Git部署和CPU预检。以下命令由用户在对应卡的训练结束后手动启动。本轮只完成实现/CPU检查，尚无新GPU指标。
+评测代码使用独立目录 `/home/fb/src/paper/gazelleV1_final_evaluation`，与固定训练目录分开。助手统一Git部署和CPU预检。只用GPU0/1：先完成两卡条件化训练；GPU0队列结束后跑多人（计时独占GPU0），GPU1先跑K100，再跑可视化。后面两个GPU1命令依次手动启动，不能同时启动。尚无本轮新GPU指标。
 
 ## GPU0：VAT-B真实多人
 
@@ -50,3 +50,62 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 只载入原选中checkpoint，将keep ratio改为1，各运行一次FP32 full test；不训练、不换epoch、不改原summary或checkpoint，不扫描其他预算。保留GF-L的真实3+4/用户收口来源，通过原last/history/best核对后使用。报告包含原K50完整指标、K100完整指标、K100−K50、真实全token trace和相同查询人数检查。
 
 输出：`results/final_k100_seed0/{gazefollow,vat}/vit{b,l}/summary.json`；逐查询大导出在artifact-root。两个入口均支持原命令 `--resume`，只复用相同权重/输入/源码/设置且工件SHA一致的结果。CPU预检在相同命令加 `--check-only` 并去掉nohup/后台/重定向，不执行模型forward。
+
+## GPU1：K100结束后，真实机制图与MM式预测对比
+
+```bash
+cd /home/fb/src/paper/gazelleV1_final_evaluation
+mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
+CUDA_VISIBLE_DEVICES=1 MPLCONFIGDIR=/tmp/gazelle-mpl setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/export_final_visualizations.py \
+  --gf-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json \
+  --vat-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json \
+  --multi-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json \
+  --gf-data-path /newhome/fb/dataset/gazefollow_extended \
+  --vat-data-path /newhome/fb/dataset/videoattentiontarget \
+  --official-checkpoint-dir /home/fb/src/paper/gazelleV1/checkpoints \
+  --report-root /home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0 \
+  --figure-root /home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0 \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  --candidate-count 32 --examples-per-dataset 4 --multi-candidate-count 16 --multi-examples 2 \
+  --seed 0 --device cuda --allow-closed-gf --resume --render \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_visualizations_gpu1.log 2>&1 < /dev/null &
+```
+
+导出10个真实案例（GF4、VAT4、多人2），默认生成6张图，每张PNG/SVG两种格式：
+
+- `gazefollow_comparison`、`vat_comparison`：参照MM图4同列同样例布局，六行依次为RGB头框、GT连线、条件化support、实际保留token、官方热图、Router热图。未保留patch变暗，GT星号、预测叉号；连线只连接真实GT或真实预测点。
+- `vat_multi_00/01_mechanism`：同一RGB切换查询人物，各人support与独立K50 mask，最后一列为真实max-union和共享Top-K；下方显示共享路径各人预测及实际suffix patch数量。
+- `vat_multi_00/01`：每人support、共享union与逐人独立的预测对照，并列真实误差、p(in)与patch执行总数。patch数量只指suffix空间位置，不当作整网FLOPs。
+
+GF/VAT各从seed0固定的32候选中选2个较低误差和2个较高误差，保留错误案例；多人从seed0固定16个候选中按人物support的Jensen-Shannon差异选前2个，选样规则和分数写入JSON。多人图用于展示机制，不能代替整个5,182帧的量化表。热图比较使用每样例共同色标，不把support称为方向/FOV。原始预测和误差在数组压缩前计算，展示用小数组保留足够精度。
+
+`results/final_visualizations_seed0/manifest.json` 与 `cases/*.json`、`latex/figures/final_seed0/`（含assets小RGB）一并进Git。case与RGB带SHA、相对引用，可在维护后无服务器、无原数据、无GPU重新排图。模型导出请求不绑定绘图脚本，换配色无需重新前向。
+
+## CPU：三分支完成后汇总表4
+
+```bash
+cd /home/fb/src/paper/gazelleV1_final_evaluation
+CUDA_VISIBLE_DEVICES="" setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/summarize_final_ablation.py \
+  --report-root /home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0 \
+  --full-gf-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json \
+  --full-vat-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json \
+  --output /home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/table4_summary.json \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_table4_cpu.log 2>&1 < /dev/null &
+```
+
+核对各条件的权重/数据/源码、同一训练配方与各自GF→VAT继承后输出JSON和MD。缺失分支默认报错；显式 `--allow-incomplete` 才输出空格，绝不补造结果。
+
+## 本机CPU：Git回传后重新渲染
+
+```bash
+cd /Users/fanb/src/gazelle
+MPLCONFIGDIR=/tmp/gazelle-mpl /private/tmp/gazelle-cscwd-check/bin/python \
+  /Users/fanb/src/gazelle/cscwd_router/code/scripts/render_final_visualizations.py \
+  --manifest /Users/fanb/src/gazelle/cscwd_router/results/final_visualizations_seed0/manifest.json \
+  --output-dir /Users/fanb/src/gazelle/cscwd_router/latex/figures/final_seed0
+```
+
+保留 `render_manifest.json` 中的输入/绘图源码/图片SHA。这里不执行模型，不要求数据集或checkpoint。真实图尚需用户执行服务器导出命令后才会产生。

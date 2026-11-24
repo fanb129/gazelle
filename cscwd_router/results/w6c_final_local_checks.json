@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-24",
+  "task": "W6-C_final_visuals_two_GPU_queue_and_table_assembly",
+  "scope": "Local CPU synthetic engineering and layout checks only; no real training, model quality or GPU timing.",
+  "passed": true,
+  "pytest": {
+    "passed": 91,
+    "duration_seconds": 15.344,
+    "files": [
+      "cscwd_router/code/stag/test_final_ablation.py",
+      "cscwd_router/code/stag/test_final_evaluation.py",
+      "cscwd_router/code/stag/test_final_visualizations.py",
+      "cscwd_router/code/stag/test_final_tables_and_queue.py",
+      "cscwd_router/code/stag/test_dinov3_train_test.py",
+      "cscwd_router/code/stag/test_dinov3_transfer.py",
+      "cscwd_router/code/stag/test_dinov3_efficiency.py"
+    ],
+    "new_C_checks": 12
+  },
+  "checks": [
+    "Portable rendering after removing server root and original dataset",
+    "MM-like six-row comparison, discrete retained patches and shared/independent person mechanism figures visually inspected on synthetic fixtures",
+    "Prediction points and errors computed before array rounding",
+    "Actual max-union support arrays exported; no generated masks or directional branch",
+    "Multi-case person support variation uses measured Jensen-Shannon divergence and explicit selection policy",
+    "Selected-weight resume avoids repeated model forward",
+    "CPU table validates GF-to-own-VAT lineage and matched optimization; missing results remain blank",
+    "GPU0 sequential scene_only then scene_head; GPU1 scene_geometry; child failure stops queue",
+    "Full native compatibility, training/transfer, multi/K100 and old efficiency regression"
+  ],
+  "sources": {
+    "cscwd_router/code/stag/final_visuals.py": "df78696cb4d3f16531e81ff0970eba5a140beaad4210e4e7e14ff10c6b76527f",
+    "cscwd_router/code/scripts/export_final_visualizations.py": "4d483da6a1e2ddb43d64b1c530e2f9fcd3e821ab9f340002c6f82a6c70e59f78",
+    "cscwd_router/code/scripts/render_final_visualizations.py": "a05211fe6e4df6e7356f36f9d221ff73a90235bed6d95890473fa592d93aaa66",
+    "cscwd_router/code/scripts/summarize_final_ablation.py": "5418c939d45dcc95665d9c1696b4fd4b0639e0126c2d2b1aa73a7d9d6127cd87",
+    "cscwd_router/code/scripts/run_final_ablation_queue.py": "6b17b82be08374f23b65cfb5b393b72bf3e2ac037c2a260ef601a29029fb9b38",
+    "cscwd_router/code/stag/test_final_visualizations.py": "32eff29a9a53dd6bf9f09b0e883edb579d463a2578d0888fbb483e5ff242e3bc",
+    "cscwd_router/code/stag/test_final_tables_and_queue.py": "fafa4153ceb148c8d83ebc1a153d41657c3098d7b4caf9eae4ec3cee864549cc"
+  }
+}

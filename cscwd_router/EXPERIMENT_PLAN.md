@@ -1,5 +1,7 @@
 # CSCWD Router：当前实验清单（GF/VAT × ViT-B/ViT-L，seed 0）
 
+W6已实现（2026-11-24）：仅使用GPU0/1，三个B条件化分支按两卡排队；真实多人、四组同权重K100和MM式真实机制图均已有入口，91项本机CPU/回归通过。完整命令见 [训练](RUN_FINAL_ABLATIONS.md)、[推理与绘图](RUN_FINAL_EVALUATION.md)。用户手动运行GPU，以下W5及更早顺序保留为历史。
+
 W5当前优先级（2026-11-24）：距维护约48小时，固定K50，删除完整预算扫描；原表5/6改为表4/5。三卡分别跑三个B条件化消融，各自GF→VAT；之后做同帧N=1/2/3多人、同权重K100单次精度、可视化导出。L主模型沿用，先保障小结果/样例输出回传。资源预算与具体口径见 [PRE_SHUTDOWN_PLAN.md](PRE_SHUTDOWN_PLAN.md)，以下旧执行顺序作为历史保留。入口尚需实现，本轮未启动GPU任务。
 
 R1最新（2026-11-24）：用户决定VAT-L按AUC/L2/AP综合比较，不再只按L2取best。既有rate-6逐轮数据中第3轮更均衡，第5轮AP最高；先保留Pareto第1/2/3/5/8轮，统一逐帧test后再定正式checkpoint。入口和GPU0完整命令见 [RUN_VATL_EPOCH_COMPARISON.md](RUN_VATL_EPOCH_COMPARISON.md)，第1轮复用原全量结果，新增四次评测，不训练。原L2结果与已测效率保留为历史来源。

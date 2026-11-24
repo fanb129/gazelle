@@ -333,6 +333,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`code/data_prep/final_queries.py`、`code/stag/final_io.py`、`code/stag/final_multipeople.py`、`code/scripts/run_final_multi.py`、`code/scripts/run_final_k100.py`、`code/stag/test_final_evaluation.py`、`RUN_FINAL_EVALUATION.md`、`results/w6b_evaluation_local_checks.json`。新增及旧效率回归合计32项CPU通过（5.89秒），含15-cell合成派发/恢复与原指标一致性；没有真实精度或新GPU时间。
 - **下一步**：完成真实可视化导出后统一部署评测worktree、CPU预检；用户在各训练队列结束后手动运行GPU0多人、GPU1 K100，固定训练目录不更新。
 
+### 2026-11-24 · W6-C：两卡收口与真实机制图入口
+
+- **任务号**：W6-C。
+- **完成内容**：实现真实预测/support/max-union/Top-K/RGB小案例导出与可脱离服务器的CPU绘图。参照MM图4形成六行同样例对比，另画同帧换人条件图、真实union与独立路径对比；保留较高误差样例，记录选样策略与SHA。新增CPU表4汇总，核对配方与各自GF→VAT继承。按用户最新资源改为只用GPU0/1：0卡scene-only→scene-head，1卡scene-geometry；后接多人、四组K100与可视化。
+- **产出文件与数字**：`code/stag/final_visuals.py`、`code/scripts/export_final_visualizations.py`、`render_final_visualizations.py`、`summarize_final_ablation.py`、`run_final_ablation_queue.py`、两份新增检查及 `results/w6c_final_local_checks.json`；全部91项CPU/回归通过，新增C检查12项，合成排版已目视检查。默认导出10个真实案例、生成6张PNG/SVG图；这是配置数量，真实导出尚待用户GPU执行。完整两卡命令在 `RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`。
+- **下一步**：提交并部署独立评测worktree、完成服务器CPU预检；用户手动启动两卡训练及后续推理，关键小报告和图经Git回传。固定训练worktree不更新。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

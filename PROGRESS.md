@@ -27,6 +27,8 @@
 
 ## 进展
 
+**W6-C两卡与可视化入口（2026-11-24）**：全部91项本机CPU/回归通过（含新增12项C检查），真实导出/CPU绘图、表4自动核对汇总及两卡串行队列已实现。MM式六行图展示RGB→GT→support→实际token→官方/本文热图，另有同帧换人及max-union图；小案例相对引用可离线重画。用户仅授权GPU0/1：0卡scene-only→scene-head，1卡scene-geometry；后接多人、四组同权重K100和可视化。入口和完整命令 `cscwd_router/RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`，证据 `results/w6c_final_local_checks.json`。没有新增真实GPU结果，下一项服务器CPU预检与用户手动运行。
+
 **W6-B评测入口（2026-11-24）**：真实VAT共同帧N=1/2/3的三策略质量/效率与四组同权重K100精度已实现。32项CPU/旧效率回归通过，含原指标一致、N1共享/独立逐值一致、真实native suffix的batch/token、15-cell派发恢复与原checkpoint不变。命令 `cscwd_router/RUN_FINAL_EVALUATION.md`，证据 `results/w6b_evaluation_local_checks.json`；没有新GPU评测。可视化完成后统一部署评测目录，不更新已部署训练目录。
 
 **W6-A条件化训练入口（2026-11-24）**：三种B输入消融与各自GF3+5→VAT8队列已实现，47项本机CPU/回归通过；full原版输出逐值一致，关闭几何也移除绝对bbox坐标。source扩展纳入恢复fingerprint，旧gazelle包未改。证据 `cscwd_router/results/w6a_conditional_local_checks.json`；完整三卡命令 `cscwd_router/RUN_FINAL_ABLATIONS.md`。没有新GPU训练结果，接续部署/CPU预检与其余评测入口。

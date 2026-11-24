@@ -2,6 +2,11 @@
 !/results/**/*.json
 !/results/*.json
 
+# Portable, small paper cases and CPU render provenance.
+!/latex/figures/final_seed0/assets/
+!/latex/figures/final_seed0/assets/*.jpg
+!/latex/figures/final_seed0/*.json
+
 # Large artifacts remain on the server.
 *.npy
 *.npz
