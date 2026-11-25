@@ -1,16 +1,19 @@
 # 维护前：两卡条件化消融
 
-2026-11-25实际状态：GPU1的scene-geometry GF/VAT已经完成。早先GPU0队列中断于scene-only GF decoder第2轮；support3轮和decoder第1轮已保存，scene-head尚未开始。恢复使用下方原GPU0命令（含 `--resume`），保持固定训练目录；已获用户授权并由助手恢复：队列PID640838、训练子进程643229，日志确认从decoder第2轮开始；scene-head在前一分支GF→VAT完成后自动接续。
+2026-11-25 14:31收口：按用户同意停止scene-head及外层队列，进程组640838已无活动进程。执行停止前，scene-only GF已于11:23完成support3＋decoder5，VAT已于13:03完成8轮；这两组完成结果保留。scene-geometry GF/VAT也已完成。表4保留scene-only、scene＋geometry、full三行；不再启动scene-head或其他训练。
 
 服务器CPU预检已通过并回传：训练目录固定 `c19ba93`，评测目录固定 `1fed049`（代码 `d29d1ae`），见 [预检报告](results/w6_final_server_preflight.json)。两目录已就绪，使用本文对应目录的命令，无需在训练期间pull源码。
 
-W6-A。代码只新增在 `cscwd_router/code/`，旧 `gazelle/` 未改。47项本机CPU/回归通过，包含full模式原版输出逐值一致和三个条件分支的GF→VAT闭环。这里新增真实训练由用户手动启动，尚无新准确率结果。多人/K100/真实可视化入口见 `RUN_FINAL_EVALUATION.md`。当前仅使用GPU0/1，三个条件均保留；GPU0串行两分支，GPU1一分支。
+W6-A入口与47项CPU/回归已完成；full模式与原版输出逐值一致。scene-only的小结果已回传，并核对25个工件、24份源码及逐查询指标；汇总见 [W7-D审查](results/W7D_ABLATION_REVIEW.md)。多人精度、四组K100与两组真实图均已完成，入口见 `RUN_FINAL_EVALUATION.md`。
 
 固定训练worktree：`/home/fb/src/paper/gazelleV1_final_training`，由助手通过Git部署并CPU预检。训练期间保持此目录版本不变。GPU0的外层队列入口位于独立评测目录，但实际训练始终调用此固定目录的代码。三个分支使用原GF-B decoder初始化和冻结DINOv3-B：support3＋sparse decoder5，再从**各自**GF Router/decoder迁移VAT8轮（首轮固定Router）。seed0，batch16×累积2；仅train/test，GF按Min L2、VAT按L2选同一个checkpoint，VAT最终逐帧test。
 
 关闭geometry时，同时屏蔽head descriptor中的4维绝对头框坐标和6通道相对几何。关闭head appearance时，屏蔽池化头部外观；scene-only两类均关闭。头部/escape优先规则保持一致，主表full模型直接复用已有结果。
 
-## GPU0：scene only → scene + head appearance（自动串行）
+<details>
+<summary>历史启动命令（队列已停止，不再执行）</summary>
+
+## 历史GPU0：scene only → scene + head appearance（自动串行）
 
 ```bash
 cd /home/fb/src/paper/gazelleV1_final_evaluation
@@ -30,7 +33,7 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
   > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_ablation_queue_resume_gpu0.log 2>&1 < /dev/null &
 ```
 
-## GPU1：scene + geometry
+## 历史GPU1：scene + geometry
 
 ```bash
 cd /home/fb/src/paper/gazelleV1_final_training
@@ -49,6 +52,8 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
   > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_scene_geometry_gpu1.log 2>&1 < /dev/null &
 ```
 
+</details>
+
 ## 产物与恢复
 
 每分支的报告为 `final_ablation_seed0/<condition>/gazefollow/vitb/summary.json` 与 `.../vat/vitb/summary.json`；history、manifest、initialization等小报告同目录。PT和逐查询压缩导出保存在 `experiments/cscwd_router/final_ablation_seed0/<condition>/...`，自动登记路径/SHA。队列最后打印 `COMPLETE conditional branch <condition>`。
@@ -57,4 +62,4 @@ CUDA_VISIBLE_DEVICES=1 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
 
 训练完成后回传 `cscwd_router/results/final_ablation_seed0/` 的JSON与provenance；大PT/压缩预测不进Git。当前不使用原VAT-L epoch比较入口。
 
-GPU0日志最后应打印 `COMPLETE conditional queue scene_only,scene_head`；GPU1为 `COMPLETE conditional branch scene_geometry`。已有任何分支在跑时，不重复启动该分支。队列使用同一命令恢复，先核对已完成分支再继续下一条；第一条失败时不会开始第二条。GPU2不使用。
+本轮按用户决定主动停止，因此不等待GPU0整队列COMPLETE。scene-head只保留服务器上的部分checkpoint，不作正式消融；路径/SHA已登记provenance。停止记录 `results/w7d_ablation_scope_stop.json`，完成分支的CPU核对 `results/w7d_scene_only_server_checks.json`。本文历史resume命令会重启已取消分支，不作为后续执行项。

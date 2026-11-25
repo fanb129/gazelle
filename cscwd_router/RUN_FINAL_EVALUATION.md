@@ -1,10 +1,10 @@
 # 维护前：两卡多人评测、K100精度与可视化
 
-2026-11-25实际状态：多人9个精度单元和四组K100已完成，其中K100实际在GPU0运行；结果已回传，无需重跑。两组真实可视化均已完成，查看 `results/QUALITATIVE_FIGURES.md`；GPU0两分支队列已恢复并在训练。多人计时尚未执行；下文保留完整推理命令。
+2026-11-25收口状态：多人9个精度单元、四组K100、两组真实可视化，以及scene-only/scene-geometry的GF/VAT均已完成并回传。用户同意缩减训练后，14:31停止scene-head及队列；不再等待或重启训练。多人计时尚未执行，需独占目标GPU；下文保留历史完整命令。
 
 服务器CPU预检已通过并回传：训练目录固定 `c19ba93`，评测目录固定 `1fed049`（代码 `d29d1ae`），见 [预检报告](results/w6_final_server_preflight.json)。两目录已就绪，使用本文对应目录的命令，无需在训练期间pull源码。
 
-评测代码使用独立目录 `/home/fb/src/paper/gazelleV1_final_evaluation`，与固定训练目录分开。助手统一Git部署和CPU预检。只用GPU0/1：先完成两卡条件化训练；GPU0队列结束后跑多人（计时独占GPU0），GPU1先跑K100，再跑可视化。后面两个GPU1命令依次手动启动，不能同时启动。尚无本轮新GPU指标。
+评测目录为 `/home/fb/src/paper/gazelleV1_final_evaluation`，固定训练目录保留原版本。已完成的精度和图片入口无需重跑；当前没有助手新增的GPU任务。表4汇总已通过CPU配方与继承核对，论文使用三个完成条件，scene-head不纳入。
 
 ## GPU0：VAT-B真实多人
 
@@ -86,7 +86,7 @@ GF/VAT各从seed0固定的32候选中选2个较低误差和2个较高误差，�
 
 `results/final_visualizations_seed0/manifest.json` 与 `cases/*.json`、`latex/figures/final_seed0/`（含assets小RGB）一并进Git。case与RGB带SHA、相对引用，可在维护后无服务器、无原数据、无GPU重新排图。模型导出请求不绑定绘图脚本，换配色无需重新前向。
 
-## CPU：三分支完成后汇总表4
+## CPU：已完成条件的表4汇总（已执行，无需重跑）
 
 ```bash
 cd /home/fb/src/paper/gazelleV1_final_evaluation
@@ -95,12 +95,13 @@ CUDA_VISIBLE_DEVICES="" setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u
   --report-root /home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0 \
   --full-gf-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json \
   --full-vat-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json \
-  --output /home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/table4_summary.json \
-  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  --output /home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/results/final_ablation_seed0/summary.json \
+  --provenance /home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/results/RESULT_PROVENANCE.md \
+  --allow-incomplete \
   > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_table4_cpu.log 2>&1 < /dev/null &
 ```
 
-核对各条件的权重/数据/源码、同一训练配方与各自GF→VAT继承后输出JSON和MD。缺失分支默认报错；显式 `--allow-incomplete` 才输出空格，绝不补造结果。
+汇总已核对权重、数据、同一训练配方与各自GF→VAT继承。工具保留原四条件注册表，`--allow-incomplete` 使已取消的scene-head保持空格，`all_branches_complete=false`；论文表4只列scene-only、scene＋geometry、full三个已完成条件。详见 `results/W7D_ABLATION_REVIEW.md`。
 
 ## 本机CPU：Git回传后重新渲染
 
@@ -112,7 +113,7 @@ MPLCONFIGDIR=/tmp/gazelle-mpl /private/tmp/gazelle-cscwd-check/bin/python \
   --output-dir /Users/fanb/src/gazelle/cscwd_router/latex/figures/final_seed0
 ```
 
-保留 `render_manifest.json` 中的输入/绘图源码/图片SHA。这里不执行模型，不要求数据集或checkpoint。真实图尚需用户执行服务器导出命令后才会产生。
+保留 `render_manifest.json` 中的输入/绘图源码/图片SHA。这里不执行模型，不要求数据集或checkpoint。两组真实图已回传，此命令仅用于本机重新排图。
 
 ## 补充：三个GT注视点均在画内的多人机制图（GPU1）
 

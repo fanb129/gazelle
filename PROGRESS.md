@@ -15,7 +15,7 @@
 
 执行状态见 `cscwd_router/implementation_plan.md`；行文逻辑与三稿边界见 `cscwd_router/latex/PAPER_STORY.md`、`PAPER_REVIEW.md`；后续会话提示词为 `cscwd_router/codex_prompt.md`。旧 DINOv2 T1–T6 记录保留，不自动变成 DINOv3 的新命令。
 
-当前执行清单为 `cscwd_router/PRE_SHUTDOWN_PLAN.md`，完整GPU0/1命令见 `cscwd_router/RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`。只增加三个B条件化分支，各自GF3+5→VAT8；0卡scene-only→scene-head，1卡scene-geometry；seed0。已有GF/VAT×B/L主模型保留，后续只补多人、同权重K100精度与可视化。旧 `RUN_DINOV3_TRAIN_TEST.md` 保留历史命令。
+当前收口清单为 `cscwd_router/PRE_SHUTDOWN_PLAN.md`：scene-only/scene-geometry的GF3+5→VAT8均已完成，scene-head与队列已按用户决定停止，不再等待训练。表4使用两个完成消融与full三行；四组K100、多人精度和真实图已回传，多人计时待独占GPU。`RUN_FINAL_ABLATIONS.md`、`RUN_FINAL_EVALUATION.md`保留完整历史命令，已完成项不重跑。
 
 ## 工作约定
 
@@ -26,6 +26,8 @@
 - 本机授权工作完成后由助手自动创建本地 Git commit，只 stage 本任务文件；push 与服务器运行不自动执行。
 
 ## 进展
+
+**W7-D训练收口与scene-only回传（2026-11-25）**：按用户同意于14:31停止scene-head及队列，进程组640838已无活动进程；原checkpoint保留。停止时scene-only GF已在11:23完成support3＋decoder5，VAT已在13:03完成8轮。两组小结果经e68eb93回传，25个工件、24份源码和9份本机报告SHA核对通过，逐查询重聚合差值小于1e-12，CPU配方/各自GF→VAT继承通过。GF AUC/Avg L2/Min L2为0.956205/0.101614/0.043444，VAT AUC/L2/AP为0.940565/0.100693/0.886334。表4保留scene-only、scene＋geometry、full三行；停止分支不作正式消融。产出 `results/w7d_ablation_scope_stop.json`、`w7d_scene_only_server_checks.json`、`W7D_ABLATION_REVIEW.md`。不再等待训练；下一步本机整理表图与行文，多人计时等待独占GPU。
 
 **W7-C2真实图完成（2026-11-25）**：GPU1补充组也已完成并由c0e0cfb回传，两个三人案例的GT均在画内，包含实际support、独立/union mask与预测。两组各10案例、6张PNG/6张SVG，首批含画外案例，全部保留；本机SHA与目视检查通过。图片入口 `results/QUALITATIVE_FIGURES.md`，草稿已加图注。GPU0继续scene-only→scene-head恢复队列，末次检查decoder第2轮2450/7092 batch；多人效率仍待独占卡。
 

@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-25 W7-D：scene-only GF/VAT已完整完成并回传；14:31按用户决定停止scene-head及队列，不再等待训练。表4只列scene-only、scene＋geometry、full。四组K100、多人精度与两组真实图均完成；多人计时仍待独占GPU。
 > 2026-11-24 W5：维护前固定K50，删除完整预算扫描；原表5/6为新表4/5。新增训练集中三个B打分消融，各自GF→VAT；真实多人N=1/2/3、K100单次精度和可视化导出接续。见 `PRE_SHUTDOWN_PLAN.md`，本轮尚未启动GPU任务。
 > 2026-11-24 R1：按用户新决定对VAT-L做三指标综合复选。8轮rate-6记录首选第3轮（AP较第1轮高1.1004个百分点、L2增加0.7152%），第5轮AP最高。已准备Pareto第1/2/3/5/8轮的逐帧复评入口，4个本机CPU规则检查通过；完整GPU0命令 `RUN_VATL_EPOCH_COMPARISON.md`。尚未启动GPU复评，正式表暂保留原第1轮。
 > 2026-11-24 W4：`latex/CORE_DRAFT_ZH.md` 已加入MM式六张具体表：21行主性能、完整效率、速度/显存变化、预算、条件化勾选消融、多人共享。补回并审查GF-L原有效率后，填入四组精度和24个variant×batch效率汇总项；B/L任务模块参数为GF/VAT `3.88/3.91M`、`4.27/4.31M`，未完成的消融留“—”。
@@ -697,3 +698,10 @@ git add \
 git commit -m "Add T4 main experiment and DINOv2 efficiency matrix"
 git push origin codex/coverage-aware-router
 ```
+
+### 2026-11-25 · W7-D：停止剩余训练并回传完整scene-only结果
+
+- **任务号**：W7-D。
+- **完成内容**：用户同意仅保留scene-only GF、取消后续训练后，先查实际进程；此时scene-only GF/VAT均已完成，队列已进入scene-head。14:31对核实归属的进程组640838发送SIGTERM，11个相关进程全部退出；无活动训练、无删除工件、无启动新GPU任务。已完成GF/VAT保留，scene-head部分checkpoint只登记路径/SHA。
+- **产出文件与数字**：`results/final_ablation_seed0/scene_only/`、`w7d_ablation_scope_stop.json`、`w7d_scene_only_server_checks.json`、`W7D_ABLATION_REVIEW.md`与provenance，e68eb93经Git回传。GF实际support3＋decoder5，11:23完成，AUC/Avg L2/Min L2为0.956205/0.101614/0.043444；VAT实际8轮，13:03完成，逐帧AUC/L2/AP为0.940565/0.100693/0.886334。25个工件、24份源码、9份本机报告SHA通过，逐查询重聚合差值小于1e-12；CPU汇总核对同配方和各自GF→VAT继承。表4更新为scene-only、scene＋geometry、full三个完成条件，取消条件不作正式消融。
+- **下一步**：不再恢复训练队列；本机整理表格、真实图与论文行文。多人计时等独占目标GPU，现有空格保留。
