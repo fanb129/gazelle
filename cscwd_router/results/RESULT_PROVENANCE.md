@@ -448,3 +448,9 @@
 - 10 real cases; 6 PNG and 6 SVG files. RGB thumbnails, arrays, case/source/checkpoint references retained for offline CPU rendering.
 - report: `w7c_visualizations_server_checks.json`; SHA256: `a9030562cd18d5d218a728a5175d2d3ca18305d8fcef3dd6a86aece6039c7952`.
 - GPU0 scene-only -> scene-head queue resumed with --resume; queue PID 640838, training child PID 643229 at launch.
+
+## W7-C fully in-frame visualization supplement (2026-11-25)
+
+- Three in-frame GT queries required only for selecting qualitative multi-person examples; original quantitative cohort unchanged.
+- 10 cases, 6 PNG and 6 SVG files retained alongside the mixed in/out group.
+- report: `w7c_inframe_visualizations_server_checks.json`; SHA256: `11a4a23cd91029654a0446908301ccccd2226e3f03a750a2e22e7b7e37c1eb93`.

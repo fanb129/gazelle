@@ -1,0 +1,55 @@
+{
+  "source_manifest_sha256": "c746a65a2b177dbe4c95d086ac717ce520216ae9f1f25f6f1877321989627edf",
+  "renderer_sha256": "a05211fe6e4df6e7356f36f9d221ff73a90235bed6d95890473fa592d93aaa66",
+  "model_forward_executed": false,
+  "figures": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/gazefollow_comparison.png",
+      "sha256": "cbffc3354c13db9b2968f1723a194dd6eb3db0540d8c61558f22dfa6306ba84f"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/gazefollow_comparison.svg",
+      "sha256": "9d301727952e69c3a0f2092af71cdd24e484e58c0748c5f34d5eda35ebb2ae6a"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_comparison.png",
+      "sha256": "e162d44c8ea7d9cfd528865064d3dfeff46acd71b8571f287d874b1a9b0ed993"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_comparison.svg",
+      "sha256": "80b7b150911196c22cf242e536a85306e21f553c48c96539f0cd5609c480867d"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_00.png",
+      "sha256": "c6f831c5112da47089057cc965db822cb0e24b2882e42027f2611c7c9bc15eff"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_00.svg",
+      "sha256": "4b72a6d0284858919785391ea23daa19f97c11d241de148e95f6dd8dce35e023"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_00_mechanism.png",
+      "sha256": "cbd770176e53bcf78eb7f5a7eaf39fe93b92688840698e7d9be4764ecc15d1ee"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_00_mechanism.svg",
+      "sha256": "25f62140f604a859e456d6f504f86921dde85476a372893e89bc80ae1e68df7f"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_01.png",
+      "sha256": "0f1db9d5e4d111d9549a58a64de6452296a39ee1559ddfacbb4232418d34ee1b"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_01.svg",
+      "sha256": "49cc5ff998d3f32afc5aa8ba1a0527ff87becb79f0ae3dce8663d384aa9c3e22"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_01_mechanism.png",
+      "sha256": "023d65cb36cbd174f6a03a8510f336707278c7921364c83d7d47015cfb0aa5ba"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0/vat_multi_01_mechanism.svg",
+      "sha256": "337361f326b219b1db68014858d230a8a2e016701258d7efffeec8a328c034bb"
+    }
+  ]
+}
