@@ -1,0 +1,63 @@
+{
+  "completed": true,
+  "protocol": "GOO_Real_full_test_zero_shot_v1",
+  "reports": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitb/k50/summary.json",
+      "sha256": "29befae27f83eb8b078cb328cf7aaec8efde7c4598b77075fd23e71bb501c9a3"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitb/official/summary.json",
+      "sha256": "edfb3d59e2e73ea1cd18b0eeead543bf11ad12734a5a085e2710dda690812699"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitl/k50/summary.json",
+      "sha256": "1470389d9cf904078c9a250788015c5257294b26d99334c0bd4abf0be5123d96"
+    },
+    {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitl/official/summary.json",
+      "sha256": "eab7779dd6a8bf8d0544814fc54a5bd48079f2cbc42aaf3dd22586d525f63b41"
+    }
+  ],
+  "metrics": {
+    "vitb/k50": {
+      "images": 2146,
+      "persons": 2146,
+      "auc": 0.8964352283317769,
+      "l2": 0.17841467290446358,
+      "routing_gt_point_coverage": 0.9287045666356011
+    },
+    "vitb/official": {
+      "images": 2146,
+      "persons": 2146,
+      "auc": 0.9016775396085702,
+      "l2": 0.1721904511118096,
+      "routing_gt_point_coverage": null
+    },
+    "vitl/k50": {
+      "images": 2146,
+      "persons": 2146,
+      "auc": 0.8952702702702671,
+      "l2": 0.17392379079341352,
+      "routing_gt_point_coverage": 0.9263746505125815
+    },
+    "vitl/official": {
+      "images": 2146,
+      "persons": 2146,
+      "auc": 0.9004737496116767,
+      "l2": 0.1738674782993075,
+      "routing_gt_point_coverage": null
+    }
+  },
+  "router_minus_official": {
+    "vitb": {
+      "auc": -0.00524231127679331,
+      "l2": 0.006224221792653972
+    },
+    "vitl": {
+      "auc": -0.005203479341409634,
+      "l2": 5.631249410603667e-05
+    }
+  },
+  "verification": "4 artifact pairs hashed; identical 2146 query/GT records; raw means matched within 1e-12"
+}

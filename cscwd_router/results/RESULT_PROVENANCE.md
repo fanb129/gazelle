@@ -503,3 +503,30 @@
 - report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/server_checks.json`; SHA256: `76fb028f5042b25df70335963e91a6aa54348250f05b9b69c84588c2d2ad7155`
 - report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/summary.json`; SHA256: `2ffe133f31f7c143cf800dca8347b5dc0952d6fc7652ae6975fa9e562d2124f0`
 - log: `/home/fb/src/paper/gazelleV1/logs/cscwd_router/self_multi_timing_gpu0.log`; SHA256: `f23984392276493b9d255f29aae7c5f593ecdf315a0058b9a76a93e34993047b`
+
+## GOO-Real zero-shot · vitb/k50
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitb/k50/summary.json`; SHA256: `29befae27f83eb8b078cb328cf7aaec8efde7c4598b77075fd23e71bb501c9a3`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitb/k50/predictions.jsonl.gz`; SHA256: `b3620620e7858759aa1266d25140d476b1e947124ce94d6e88f57e3ff5eb27c7`
+- visual_cases: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitb/k50/visual_cases.npz`; SHA256: `734cfab48ba17780babf80bb70ae9f0bcb2ded5225e7911d4c80d8c380b0ed6e`
+
+
+## GOO-Real zero-shot · vitl/k50
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitl/k50/summary.json`; SHA256: `1470389d9cf904078c9a250788015c5257294b26d99334c0bd4abf0be5123d96`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitl/k50/predictions.jsonl.gz`; SHA256: `9d818cfd301d8f5d19f98973d591248aa35777a30e181c706629608ca4ce094f`
+- visual_cases: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitl/k50/visual_cases.npz`; SHA256: `1992969f80322c9963c4f4326398719d5466156a1aae77c054456ae29f599fe0`
+
+
+## GOO-Real zero-shot · vitb/official
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitb/official/summary.json`; SHA256: `edfb3d59e2e73ea1cd18b0eeead543bf11ad12734a5a085e2710dda690812699`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitb/official/predictions.jsonl.gz`; SHA256: `371ee5ba7b8b977999e34b40473a8e7358458724af115175064b80875d02e870`
+- visual_cases: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitb/official/visual_cases.npz`; SHA256: `88246cceccf52607c2dd0543ce67c64e4c77e1e1e7b32cbbe8afb71bcb43ae51`
+
+
+## GOO-Real zero-shot · vitl/official
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/gooreal_zero_shot_seed0/vitl/official/summary.json`; SHA256: `eab7779dd6a8bf8d0544814fc54a5bd48079f2cbc42aaf3dd22586d525f63b41`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitl/official/predictions.jsonl.gz`; SHA256: `8c7e8658f948127d22f3070e6066bf1ac49b735ccf02d44d8460a2b0a2a0f89c`
+- visual_cases: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/gooreal_zero_shot_seed0/vitl/official/visual_cases.npz`; SHA256: `23e4690172d80babc54f4c8ad42e8867ce496d572ba7775eba71ffdd01032da0`
