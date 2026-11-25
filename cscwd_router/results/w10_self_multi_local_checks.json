@@ -1,0 +1,24 @@
+{
+  "tests": 9,
+  "failures": 0,
+  "errors": 0,
+  "seconds": 4.591,
+  "device": "cpu",
+  "synthetic_tensors_only": true,
+  "production_model_forward": false,
+  "gpu_timing_executed": false,
+  "checked": [
+    "shared K100 has one image copy and 1024 patches",
+    "independent K50 has three copies and 512 patches each",
+    "union K50 has one image copy and 512 patches",
+    "all three real routing/decoder paths produce three person predictions",
+    "images/s versus queries/s accounting",
+    "GPU/sample/order/completeness rejection",
+    "nested GT-head requests and child command settings"
+  ],
+  "source_sha256": {
+    "cscwd_router/code/scripts/run_self_multi_timing.py": "76ae4f078c2455d62f81569fb2157aac3bfcc23af27c01229e4042eb64e1fe6b",
+    "cscwd_router/code/stag/self_multi_timing.py": "8ba1b9449fe2fa0fff4cdfdacf31d85c4bcffd39983fcfd8ff19825710abd85f",
+    "cscwd_router/code/stag/test_self_multi_timing.py": "20b587d844429d5670cf6ae730341b786d5ec693a5f4a2c0fb890861834bd417"
+  }
+}
