@@ -1,0 +1,16 @@
+{
+  "loaded_gf_tensors": 52,
+  "new_inout_keys": [
+    "inout_head.0.bias",
+    "inout_head.0.weight",
+    "inout_head.3.bias",
+    "inout_head.3.weight",
+    "inout_token.weight"
+  ],
+  "shared_tensors_identical": true,
+  "gf_router_sha256": "c018bdfde4d94425a9838013aa001866a8b6c5027857cf4cac259cf98802cab3",
+  "gf_decoder_sha256": "518f6e47f56239d8849b25d124013724f47a1e368a3c9f1b06224f06d788dff7",
+  "new_inout_sha256": "77d77618b9fbe9953902975784020c155b6744936630d7740702a9abf1330300",
+  "initial_task_sha256": "ad54f149131242425cf481ceca4c15e1d97c2286359ccfea00a95d03764977c7",
+  "context_fingerprint": "d749b322294a056d6d668614b41b1316abbe75b84039ff5bca70b7c8a433153e"
+}

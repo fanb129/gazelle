@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-11-25T14:31:42.086600+08:00",
+  "action": "stop_scene_head_and_queue_after_user_approval",
+  "signal": "SIGTERM",
+  "process_group": 640838,
+  "stopped_pids": [
+    640838,
+    824370,
+    824376,
+    824383,
+    824400,
+    824408,
+    824416,
+    824432,
+    824449,
+    4059990,
+    4062151
+  ],
+  "active_processes_after": [],
+  "scene_only_completed": {
+    "gazefollow": {
+      "completed": true,
+      "metrics": {
+        "auc": 0.9562052356774786,
+        "avg_l2": 0.10161380761896674,
+        "min_l2": 0.043443627482655456,
+        "persons": 4782,
+        "inframe_persons": 4782,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9027403769998416,
+        "routing_hard_coverage": 0.7923348324162249,
+        "routing_soft_coverage": 0.33663790235206303
+      },
+      "selection": {
+        "epoch": 4,
+        "metric": "min_l2",
+        "metrics": {
+          "auc": 0.9562052356774786,
+          "avg_l2": 0.10161380761896674,
+          "min_l2": 0.043443627482655456,
+          "persons": 4782,
+          "inframe_persons": 4782,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9027403769998416,
+          "routing_hard_coverage": 0.7923348324162249,
+          "routing_soft_coverage": 0.33663790235206303
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "training_epochs": {
+        "support": 3,
+        "sparse_decoder": 5
+      },
+      "epochs": null,
+      "summary_path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/gazefollow/vitb/summary.json",
+      "mtime": "2026-11-25T11:23:40.754513+08:00"
+    },
+    "vat": {
+      "completed": true,
+      "metrics": {
+        "auc": 0.940565397477728,
+        "l2": 0.100693294308986,
+        "inout_ap": 0.886333999725913,
+        "persons": 31978,
+        "inframe_persons": 20655,
+        "precision": "fp32",
+        "query_unit": "person",
+        "keep_ratio": 0.5,
+        "routing_gt_point_coverage": 0.9494553376906318,
+        "routing_hard_coverage": 0.7782392214214475,
+        "routing_soft_coverage": 0.16713529878830943
+      },
+      "selection": {
+        "epoch": 0,
+        "metric": "l2",
+        "metrics": {
+          "auc": 0.9406576603508972,
+          "l2": 0.0999323378619827,
+          "inout_ap": 0.8876262207479748,
+          "persons": 5461,
+          "inframe_persons": 3530,
+          "precision": "fp32",
+          "query_unit": "person",
+          "keep_ratio": 0.5,
+          "routing_gt_point_coverage": 0.9492917847025496,
+          "routing_hard_coverage": 0.77953452215063,
+          "routing_soft_coverage": 0.16747705753016742
+        },
+        "policy": "test_selected",
+        "tie_breakers": [
+          "auc_max",
+          "earliest_epoch"
+        ]
+      },
+      "training_epochs": null,
+      "epochs": 8,
+      "summary_path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/vat/vitb/summary.json",
+      "mtime": "2026-11-25T13:03:22.323867+08:00"
+    }
+  },
+  "artifacts_deleted": false,
+  "new_gpu_jobs_launched": false,
+  "scene_head_partial_artifacts": [
+    {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_head/gazefollow/vitb/support/last.pt",
+      "sha256": "3cfd66bea08e6b77ead93ccfa4dd6bad81a5812d2162474d88fa5d43615fd203",
+      "use_in_formal_ablation": false
+    }
+  ]
+}

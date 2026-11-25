@@ -454,3 +454,39 @@
 - Three in-frame GT queries required only for selecting qualitative multi-person examples; original quantitative cohort unchanged.
 - 10 cases, 6 PNG and 6 SVG files retained alongside the mixed in/out group.
 - report: `w7c_inframe_visualizations_server_checks.json`; SHA256: `11a4a23cd91029654a0446908301ccccd2226e3f03a750a2e22e7b7e37c1eb93`.
+
+## Final conditional-scoring table
+
+- report: `/home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/results/final_ablation_seed0/summary.json`; SHA256: `e89b8b6bbcf0d4e6b9cd59dc3b0dff09ccd41e6ebda10779afd0795ded49a4b2`
+
+## W7-D completed scene-only branch (2026-11-25)
+
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/train_gazefollow_baseline/2026-02-10_13-03-16/epoch_14.pt`; SHA256: `26010ecc293cd51d2ce69f95e8111ca46632e425e1463b22fb0980aacf67fbef`
+- artifact: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/support/final.pt`; SHA256: `0f6ed428b2b1fe4ef4cff349e9353c2ce3bb5e331a7a6537bd2870ecf4de6e0e`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/support/last.pt`; SHA256: `a63e5fc9ebb73192d03d2db1a76fa39ebd487ee59ee86305f4b6e7f29d8149d4`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `87547dd5f8a225c1b0ba09f1c8ea1a1a6ccb367ac7b22701fa4b4901e4f6a485`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/sparse_decoder/last.pt`; SHA256: `48cd7fa07889ca1607eb0355885bd2ce56fb3d4b46196e252383afdf73597075`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/predictions.jsonl.gz`; SHA256: `b0693bf4280045e23e9301c930f82d2290119ddadb48d2a658b3bc624f6fb71c`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/gazefollow/vitb/summary.json`; SHA256: `016a1909a7b72446942cce0b484ff7d182701509f009795800a313952d8f1fef`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/gazefollow/vitb/manifest.json`; SHA256: `21d3361336b130bfd09de6fe8cb3bfcbad7c116a06f31ca6519237c3d3c5e0ab`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/initial.pt`; SHA256: `be2c58f576c8262263b4771c2dbfc1351bc3c183f2b7ee7b907161fa746fc136`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/best_test.pt`; SHA256: `b659afbb18742d753fa4838a53368e686e53705eda5e74ed4fa75833a0773fb4`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/last.pt`; SHA256: `9bbcec9dec69b15fa0ad0a9969f4749bcb1a7376f2faa5f5243e90d7c93b2ebe`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/predictions.jsonl.gz`; SHA256: `068721baf9db23aa26be61283a972fc543a61e34fa03a5c7fc0246388443089d`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/vat/vitb/manifest.json`; SHA256: `53a5943d3bd26608d94fdc2d7ef4791a27da896ec98e267f600648f8e62dcc7a`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/vat/vitb/history.json`; SHA256: `e7f4cb60db131e39626422edd5396f47cff5d7bff04cb6ca97d5e8486671f7e2`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/vat/vitb/initialization.json`; SHA256: `a8810e78090bdcf5a9048ed380db16934aafb682774bc3ef6715ea9b5efb7399`
+- artifact: `/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/vat/vitb/initial_test.json`; SHA256: `7e8e719c98ee00664632d87e5193c3c0c1d5c33505f1ff0713ce93ec14e0baeb`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_0.pt`; SHA256: `cec19181648292c65e2c093d0d539f121e6ff2e38941ff89be127860ec27acad`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_1.pt`; SHA256: `b7ec079bc776f12db29d897c2db90930cb217fe1ef07e82eb57cb546b0e5b65d`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_2.pt`; SHA256: `9074e7fe39c05a262064427c2254754b7668ac680a6743f0f041fc4d22faf020`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_3.pt`; SHA256: `385e0ca31e72a9a3446182b3b7622cd1e944fbf46377e8c67cee5e3f8b8836d7`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_4.pt`; SHA256: `db79e81de863c85c21a31dbc2047bedeebc4f1b20e1f90b51543e42cafe0a82c`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_5.pt`; SHA256: `45b0f64220dbb4d909b67e5da75bcf076efc6011345c3d96e250ff3dc38dd162`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_6.pt`; SHA256: `c16d3896c71fcc8fccfd87e22688282c722f2d88855ac787d32d758e3935bbc6`
+- artifact: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/vat/vitb/epoch_7.pt`; SHA256: `ee7ae090224d0ae5208d4b6f0219d0f96b852394bf78d0de596bb8d409012196`
+
+## W7-D canceled scene-head branch (not used in the ablation table)
+
+- partial checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_head/gazefollow/vitb/support/last.pt`; SHA256: `3cfd66bea08e6b77ead93ccfa4dd6bad81a5812d2162474d88fa5d43615fd203`
