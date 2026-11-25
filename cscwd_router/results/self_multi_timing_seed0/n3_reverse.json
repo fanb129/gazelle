@@ -1,0 +1,436 @@
+{
+  "request": {
+    "protocol": "selected_weight_nested_multi_timing_v1",
+    "source": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+    },
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+      "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "seed": 0,
+    "precision": "fp16",
+    "batch_images": 1,
+    "sample": {
+      "path": "images/Grey's Anatomy/44211_44332/00044303.jpg",
+      "head_indices": [
+        1,
+        0,
+        3
+      ],
+      "head_bboxes": [
+        [
+          0.31805555555555554,
+          0.11386138613861382,
+          0.4361111111111113,
+          0.33415841584158423
+        ],
+        [
+          0.09583333333333334,
+          0.13861386138613863,
+          0.2986111111111112,
+          0.4851485148514851
+        ],
+        [
+          0.6839646464646466,
+          0.1257875787578758,
+          0.839520202020202,
+          0.4153915391539155
+        ]
+      ],
+      "image_sha256": "787d29409af2b8db3a9f461538bbd4eecd45caed20eb4ccc9380f0fc73925536",
+      "annotation": {
+        "path": "/newhome/fb/dataset/videoattentiontarget/train_preprocessed.json",
+        "sha256": "9831fe491277083dfc82cb843729a37e622c88c510e9c2c9e345158c03389e43"
+      }
+    },
+    "settings": {
+      "warmup": 50,
+      "latency_iters": 200,
+      "throughput_iters": 500,
+      "repeats": 5
+    },
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+      "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+      "cscwd_router/code/stag/self_multi_timing.py": "8ba1b9449fe2fa0fff4cdfdacf31d85c4bcffd39983fcfd8ff19825710abd85f",
+      "cscwd_router/code/scripts/run_self_multi_timing.py": "76ae4f078c2455d62f81569fb2157aac3bfcc23af27c01229e4042eb64e1fe6b",
+      "cscwd_router/code/stag/final_multipeople.py": "6b0fa28874187e0415e39e99c57b7f6b20a1d50dbe4d34d769ff97372c1e8712",
+      "cscwd_router/code/data_prep/final_queries.py": "5d50d4d92b07071e849c491a40180ed92d274d1c51206ffb0832b4a34d5f07ee",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+      "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e"
+    },
+    "n": 3,
+    "order": "reverse"
+  },
+  "results": {
+    "union": {
+      "trace": {
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 1,
+            "tokens": 517
+          },
+          {
+            "block": 7,
+            "batch": 1,
+            "tokens": 517
+          },
+          {
+            "block": 8,
+            "batch": 1,
+            "tokens": 517
+          },
+          {
+            "block": 9,
+            "batch": 1,
+            "tokens": 517
+          },
+          {
+            "block": 10,
+            "batch": 1,
+            "tokens": 517
+          },
+          {
+            "block": 11,
+            "batch": 1,
+            "tokens": 517
+          }
+        ],
+        "encoded_image_copies": 1,
+        "input_images": 1,
+        "queried_people": 3,
+        "kept_patches_per_copy": 512
+      },
+      "timing": {
+        "latency_ms_median": 30.205536000721622,
+        "latency_ms_mean": 29.40083485507057,
+        "latency_ms_p95": 31.98124815171468,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          29.911162004282232,
+          23.855526495026425,
+          31.118256993067916,
+          30.545251509465743,
+          30.307249500765465
+        ],
+        "throughput_images_per_second_median": 32.949906680937346,
+        "throughput_repeat_fps": [
+          33.110300573950745,
+          40.945244514765776,
+          32.453039515387594,
+          32.776882059596815,
+          32.949906680937346
+        ],
+        "steady_allocated_mib": 353.96240234375,
+        "peak_allocated_mib": 504.57421875
+      }
+    },
+    "independent": {
+      "trace": {
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 3,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 3,
+            "tokens": 517
+          },
+          {
+            "block": 7,
+            "batch": 3,
+            "tokens": 517
+          },
+          {
+            "block": 8,
+            "batch": 3,
+            "tokens": 517
+          },
+          {
+            "block": 9,
+            "batch": 3,
+            "tokens": 517
+          },
+          {
+            "block": 10,
+            "batch": 3,
+            "tokens": 517
+          },
+          {
+            "block": 11,
+            "batch": 3,
+            "tokens": 517
+          }
+        ],
+        "encoded_image_copies": 3,
+        "input_images": 1,
+        "queried_people": 3,
+        "kept_patches_per_copy": 512
+      },
+      "timing": {
+        "latency_ms_median": 31.231954497343395,
+        "latency_ms_mean": 30.357801610181923,
+        "latency_ms_p95": 33.42085145341116,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          31.320591500843875,
+          27.23679449991323,
+          27.785444995970465,
+          32.399565003288444,
+          32.071513996925205
+        ],
+        "throughput_images_per_second_median": 31.383143511998487,
+        "throughput_repeat_fps": [
+          31.383143511998487,
+          36.704333383029855,
+          36.280430512952066,
+          31.01511860470159,
+          30.938204251614692
+        ],
+        "steady_allocated_mib": 354.58740234375,
+        "peak_allocated_mib": 544.2783203125
+      }
+    },
+    "k100": {
+      "trace": {
+        "block_inputs": [
+          {
+            "block": 0,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 1,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 2,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 3,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 4,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 5,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 6,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 7,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 8,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 9,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 10,
+            "batch": 1,
+            "tokens": 1029
+          },
+          {
+            "block": 11,
+            "batch": 1,
+            "tokens": 1029
+          }
+        ],
+        "encoded_image_copies": 1,
+        "input_images": 1,
+        "queried_people": 3,
+        "kept_patches_per_copy": 1024
+      },
+      "timing": {
+        "latency_ms_median": 24.636154004838318,
+        "latency_ms_mean": 25.862137077681837,
+        "latency_ms_p95": 31.703725400438998,
+        "latency_sample_count": 1000,
+        "latency_repeat_medians_ms": [
+          30.77196150115924,
+          24.327357503352687,
+          24.269663997984026,
+          24.263102503027767,
+          24.421938993327785
+        ],
+        "throughput_images_per_second_median": 40.896226506558314,
+        "throughput_repeat_fps": [
+          32.443100362851006,
+          40.96373284792197,
+          40.14800377234026,
+          40.951150290241394,
+          40.896226506558314
+        ],
+        "steady_allocated_mib": 354.58740234375,
+        "peak_allocated_mib": 505.220703125
+      }
+    }
+  },
+  "variant_order": [
+    "union",
+    "independent",
+    "k100"
+  ],
+  "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+  "gpu_before": {
+    "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+    "name": "NVIDIA GeForce RTX 3090",
+    "driver_version": "555.42.06",
+    "pstate": "P8",
+    "temperature.gpu": "66",
+    "memory.used": "15",
+    "utilization.gpu": "0"
+  },
+  "gpu_after": {
+    "uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+    "name": "NVIDIA GeForce RTX 3090",
+    "driver_version": "555.42.06",
+    "pstate": "P0",
+    "temperature.gpu": "80",
+    "memory.used": "361",
+    "utilization.gpu": "17"
+  },
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda",
+    "cuda_visible_devices": "0",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "git_commit": "63b203a110bd9e0bc4e8c4488c401c50d7f519ed"
+  },
+  "source_selection": {
+    "epoch": 0,
+    "metric": "l2",
+    "metrics": {
+      "auc": 0.9398997273428248,
+      "l2": 0.10047474718421423,
+      "inout_ap": 0.8844164890656381,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9626062322946176,
+      "routing_hard_coverage": 0.8691891679345042,
+      "routing_soft_coverage": 0.359505552549981
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "timing_scope": {
+    "full_forward": true,
+    "preprocessing_and_H2D": false,
+    "inference_mode": true,
+    "autocast_cache_enabled": false,
+    "tf32": false
+  },
+  "artifacts": {},
+  "completed": true
+}

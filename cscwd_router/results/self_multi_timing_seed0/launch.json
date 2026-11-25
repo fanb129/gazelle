@@ -1,0 +1,50 @@
+{
+  "started_at": "2026-11-25T15:47:05.654726+08:00",
+  "pid": 1719451,
+  "gpu": "0",
+  "code_root": "/home/fb/src/paper/gazelleV1_self_multi_timing",
+  "code_commit": "63b203a110bd9e0bc4e8c4488c401c50d7f519ed",
+  "command": [
+    "nohup",
+    "/home/fb/anaconda3/envs/py310/bin/python",
+    "-u",
+    "/home/fb/src/paper/gazelleV1_self_multi_timing/cscwd_router/code/scripts/run_self_multi_timing.py",
+    "--source-summary",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+    "--data-path",
+    "/newhome/fb/dataset/videoattentiontarget",
+    "--report-root",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0",
+    "--provenance",
+    "/home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md",
+    "--device",
+    "cuda",
+    "--precision",
+    "fp16",
+    "--warmup",
+    "50",
+    "--latency-iters",
+    "200",
+    "--throughput-iters",
+    "500",
+    "--repeats",
+    "5",
+    "--seed",
+    "0",
+    "--resume"
+  ],
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "0"
+  },
+  "log": "/home/fb/src/paper/gazelleV1/logs/cscwd_router/self_multi_timing_gpu0.log",
+  "report_root": "/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0",
+  "status": "launched",
+  "variants": [
+    "k100",
+    "independent",
+    "union"
+  ],
+  "timing_cells": 6,
+  "new_training": false,
+  "rerun_accuracy": false
+}

@@ -490,3 +490,16 @@
 ## W7-D canceled scene-head branch (not used in the ablation table)
 
 - partial checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_head/gazefollow/vitb/support/last.pt`; SHA256: `3cfd66bea08e6b77ead93ccfa4dd6bad81a5812d2162474d88fa5d43615fd203`
+
+## W10 completed selected-weight multi-person timing (2026-11-25)
+
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/launch.json`; SHA256: `0b9c1411bb7b8bb5be216208c952c39cba111de0a2bb551e5155e3f1ae2571e5`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n1_forward.json`; SHA256: `8f4d5b3ed54c1061009be97aee7c7e22f11fc66422bc01827fb54627d1308a01`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n1_reverse.json`; SHA256: `a8d86055b4cbefa3b8baad083ab900d2cca21c4ef417a0bd84c2f680139732e8`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n2_forward.json`; SHA256: `254aac31fc8f3c4300eb1d7b51a96600181a3ddf5578dc9f46aa7e44a68919f8`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n2_reverse.json`; SHA256: `f22e5d785f4669cb87b9f42fc1e54cd0b72242a37c5a6b965057c17a39935480`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n3_forward.json`; SHA256: `943705c22b8bd5e782c0844635ebd523a6f066064e8c2d5d51d10df9ad81dff8`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/n3_reverse.json`; SHA256: `cc8af8a2abcee337b83e896d3396f5cc738066be57717d6b56ab52b238967aee`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/server_checks.json`; SHA256: `76fb028f5042b25df70335963e91a6aa54348250f05b9b69c84588c2d2ad7155`
+- report: `/home/fb/src/paper/gazelleV1/cscwd_router/results/self_multi_timing_seed0/summary.json`; SHA256: `2ffe133f31f7c143cf800dca8347b5dc0952d6fc7652ae6975fa9e562d2124f0`
+- log: `/home/fb/src/paper/gazelleV1/logs/cscwd_router/self_multi_timing_gpu0.log`; SHA256: `f23984392276493b9d255f29aae7c5f593ecdf315a0058b9a76a93e34993047b`

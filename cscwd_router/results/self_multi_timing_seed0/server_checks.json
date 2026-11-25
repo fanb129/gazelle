@@ -1,0 +1,329 @@
+{
+  "checked_at": "2026-11-25T16:29:30.317723+08:00",
+  "checked_without_model_forward": true,
+  "completed_at_from_summary_mtime": "2026-11-25T16:17:34.063724+08:00",
+  "elapsed_minutes": 30.4734833,
+  "cells": 6,
+  "variant_measurements": 18,
+  "gpu_uuid": "GPU-9abd86a3-e5fb-bca1-4843-b29aefbfbd46",
+  "execution_commit": "63b203a110bd9e0bc4e8c4488c401c50d7f519ed",
+  "references": {
+    "source": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+      "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+    },
+    "checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+      "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    }
+  },
+  "returned_files_sha256": {
+    "cscwd_router/results/self_multi_timing_seed0/n1_forward.json": "8f4d5b3ed54c1061009be97aee7c7e22f11fc66422bc01827fb54627d1308a01",
+    "cscwd_router/results/self_multi_timing_seed0/n1_reverse.json": "a8d86055b4cbefa3b8baad083ab900d2cca21c4ef417a0bd84c2f680139732e8",
+    "cscwd_router/results/self_multi_timing_seed0/n2_forward.json": "254aac31fc8f3c4300eb1d7b51a96600181a3ddf5578dc9f46aa7e44a68919f8",
+    "cscwd_router/results/self_multi_timing_seed0/n2_reverse.json": "f22e5d785f4669cb87b9f42fc1e54cd0b72242a37c5a6b965057c17a39935480",
+    "cscwd_router/results/self_multi_timing_seed0/n3_forward.json": "943705c22b8bd5e782c0844635ebd523a6f066064e8c2d5d51d10df9ad81dff8",
+    "cscwd_router/results/self_multi_timing_seed0/n3_reverse.json": "cc8af8a2abcee337b83e896d3396f5cc738066be57717d6b56ab52b238967aee",
+    "cscwd_router/results/self_multi_timing_seed0/summary.json": "2ffe133f31f7c143cf800dca8347b5dc0952d6fc7652ae6975fa9e562d2124f0",
+    "cscwd_router/results/self_multi_timing_seed0/summary.md": "6fbb4d645f9c36c2dcf99c15b1fec533037f5eeeb2e11e31a42ebbd2b83c7f5f",
+    "cscwd_router/results/self_multi_timing_seed0/launch.json": "0b9c1411bb7b8bb5be216208c952c39cba111de0a2bb551e5155e3f1ae2571e5"
+  },
+  "source_fingerprints": {
+    "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+    "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+    "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+    "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+    "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+    "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+    "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+    "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+    "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+    "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+    "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+    "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+    "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+    "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+    "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+    "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+    "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+    "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+    "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+    "cscwd_router/code/stag/self_multi_timing.py": "8ba1b9449fe2fa0fff4cdfdacf31d85c4bcffd39983fcfd8ff19825710abd85f",
+    "cscwd_router/code/scripts/run_self_multi_timing.py": "76ae4f078c2455d62f81569fb2157aac3bfcc23af27c01229e4042eb64e1fe6b",
+    "cscwd_router/code/stag/final_multipeople.py": "6b0fa28874187e0415e39e99c57b7f6b20a1d50dbe4d34d769ff97372c1e8712",
+    "cscwd_router/code/data_prep/final_queries.py": "5d50d4d92b07071e849c491a40180ed92d274d1c51206ffb0832b4a34d5f07ee",
+    "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+    "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+    "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e"
+  },
+  "token_graph_checks": 18,
+  "aggregation_recomputed_equal": true,
+  "timing_repeats": [
+    {
+      "n": 1,
+      "order": "forward",
+      "variant": "k100",
+      "latency_ms": 29.857996996724978,
+      "repeat_medians_ms": [
+        29.29962500638794,
+        30.204688999219798,
+        29.71315450122347,
+        29.920524997578468,
+        29.93140900071012
+      ],
+      "repeat_max_over_min": 1.0308899514118195
+    },
+    {
+      "n": 1,
+      "order": "forward",
+      "variant": "independent",
+      "latency_ms": 30.227569506678265,
+      "repeat_medians_ms": [
+        29.91918450425146,
+        31.566932499117684,
+        29.860328992072027,
+        29.829809500370175,
+        29.848896505427547
+      ],
+      "repeat_max_over_min": 1.0582344650483253
+    },
+    {
+      "n": 1,
+      "order": "forward",
+      "variant": "union",
+      "latency_ms": 24.653216503793374,
+      "repeat_medians_ms": [
+        30.4671134945238,
+        29.17910899122944,
+        23.643948501558043,
+        23.638116006623022,
+        23.380956503388006
+      ],
+      "repeat_max_over_min": 1.3030738708276959
+    },
+    {
+      "n": 1,
+      "order": "reverse",
+      "variant": "union",
+      "latency_ms": 23.637803009478375,
+      "repeat_medians_ms": [
+        23.644795997824986,
+        23.69333599926904,
+        23.681350496190134,
+        23.64942099666223,
+        23.558605498692486
+      ],
+      "repeat_max_over_min": 1.0057189505798223
+    },
+    {
+      "n": 1,
+      "order": "reverse",
+      "variant": "independent",
+      "latency_ms": 24.186670496419538,
+      "repeat_medians_ms": [
+        24.029340500419494,
+        23.628894501598552,
+        23.75478200701764,
+        23.668001500482205,
+        29.685277004318777
+      ],
+      "repeat_max_over_min": 1.256312562668156
+    },
+    {
+      "n": 1,
+      "order": "reverse",
+      "variant": "k100",
+      "latency_ms": 23.724922502879053,
+      "repeat_medians_ms": [
+        23.752426001010463,
+        23.92085100291297,
+        23.808588506653905,
+        23.696764998021536,
+        23.04032650135923
+      ],
+      "repeat_max_over_min": 1.0382166676979074
+    },
+    {
+      "n": 2,
+      "order": "forward",
+      "variant": "k100",
+      "latency_ms": 23.75422799377702,
+      "repeat_medians_ms": [
+        29.457917997206096,
+        23.407166998367757,
+        23.344809997070115,
+        23.258023495145608,
+        23.324014495301526
+      ],
+      "repeat_max_over_min": 1.2665701366822733
+    },
+    {
+      "n": 2,
+      "order": "forward",
+      "variant": "independent",
+      "latency_ms": 24.547408997023012,
+      "repeat_medians_ms": [
+        24.58666050370084,
+        24.11410949571291,
+        23.98679099860601,
+        24.58273149386514,
+        24.815256998408586
+      ],
+      "repeat_max_over_min": 1.0345384257465169
+    },
+    {
+      "n": 2,
+      "order": "forward",
+      "variant": "union",
+      "latency_ms": 23.917086502478924,
+      "repeat_medians_ms": [
+        24.18081100040581,
+        23.736465998808853,
+        23.91034100583056,
+        24.142587499227375,
+        23.847865501011256
+      ],
+      "repeat_max_over_min": 1.0187199308279191
+    },
+    {
+      "n": 2,
+      "order": "reverse",
+      "variant": "union",
+      "latency_ms": 24.30198949878104,
+      "repeat_medians_ms": [
+        24.422041002253536,
+        24.279274002765305,
+        24.272452494187746,
+        24.187439994420856,
+        24.238083999080118
+      ],
+      "repeat_max_over_min": 1.0096992905361954
+    },
+    {
+      "n": 2,
+      "order": "reverse",
+      "variant": "independent",
+      "latency_ms": 25.495800502540078,
+      "repeat_medians_ms": [
+        24.896276496292558,
+        24.801495499559678,
+        24.490906995197292,
+        30.777381492953282,
+        30.86502799851587
+      ],
+      "repeat_max_over_min": 1.2602647996894747
+    },
+    {
+      "n": 2,
+      "order": "reverse",
+      "variant": "k100",
+      "latency_ms": 24.13876599894138,
+      "repeat_medians_ms": [
+        30.05184949870454,
+        23.48631851054961,
+        23.058443002810236,
+        23.71335450152401,
+        24.09734349930659
+      ],
+      "repeat_max_over_min": 1.3032904908211707
+    },
+    {
+      "n": 3,
+      "order": "forward",
+      "variant": "k100",
+      "latency_ms": 25.351443502586335,
+      "repeat_medians_ms": [
+        24.89918450010009,
+        25.30170950194588,
+        24.728684504225384,
+        25.72744750068523,
+        25.477227500232402
+      ],
+      "repeat_max_over_min": 1.040388844634626
+    },
+    {
+      "n": 3,
+      "order": "forward",
+      "variant": "independent",
+      "latency_ms": 32.19875949434936,
+      "repeat_medians_ms": [
+        27.641575507004745,
+        28.395385001203977,
+        33.24013599922182,
+        32.73251650534803,
+        32.66454749973491
+      ],
+      "repeat_max_over_min": 1.2025412947535614
+    },
+    {
+      "n": 3,
+      "order": "forward",
+      "variant": "union",
+      "latency_ms": 25.443825994443614,
+      "repeat_medians_ms": [
+        25.454994996835012,
+        25.57945800072048,
+        25.50869100377895,
+        25.444771003094502,
+        25.2189249949879
+      ],
+      "repeat_max_over_min": 1.0142961290302512
+    },
+    {
+      "n": 3,
+      "order": "reverse",
+      "variant": "union",
+      "latency_ms": 30.205536000721622,
+      "repeat_medians_ms": [
+        29.911162004282232,
+        23.855526495026425,
+        31.118256993067916,
+        30.545251509465743,
+        30.307249500765465
+      ],
+      "repeat_max_over_min": 1.304446456025847
+    },
+    {
+      "n": 3,
+      "order": "reverse",
+      "variant": "independent",
+      "latency_ms": 31.231954497343395,
+      "repeat_medians_ms": [
+        31.320591500843875,
+        27.23679449991323,
+        27.785444995970465,
+        32.399565003288444,
+        32.071513996925205
+      ],
+      "repeat_max_over_min": 1.189551325630175
+    },
+    {
+      "n": 3,
+      "order": "reverse",
+      "variant": "k100",
+      "latency_ms": 24.636154004838318,
+      "repeat_medians_ms": [
+        30.77196150115924,
+        24.327357503352687,
+        24.269663997984026,
+        24.263102503027767,
+        24.421938993327785
+      ],
+      "repeat_max_over_min": 1.268261612352305
+    }
+  ],
+  "maximum_repeat_max_over_min": 1.304446456025847,
+  "latency_raw_samples_exported": false,
+  "log": {
+    "path": "/home/fb/src/paper/gazelleV1/logs/cscwd_router/self_multi_timing_gpu0.log",
+    "sha256": "f23984392276493b9d255f29aae7c5f593ecdf315a0058b9a76a93e34993047b"
+  },
+  "quality_recomputed": false,
+  "training_executed": false
+}
