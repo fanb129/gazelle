@@ -61,6 +61,13 @@ def person_variation(prediction):
     return float(np.sum(probabilities * np.log((probabilities + 1e-20) / (mixture + 1e-20)), axis=1).mean())
 
 
+def multi_candidates(records, selection, seed, count, minimum_inframe):
+    eligible = [index for index, record in enumerate(records)
+                if sum(record["heads"][h]["inout"] for h in selection["entries"][index]["head_indices"]) >= minimum_inframe]
+    return sorted(eligible, key=lambda index: hashlib.sha256(
+        f"{seed}\0{records[index]['path']}".encode()).hexdigest())[:count]
+
+
 @torch.inference_mode()
 def predict(model, transform, data_path, record, head_indices, dataset, device):
     heads = [record["heads"][index] for index in head_indices]
@@ -122,8 +129,9 @@ def prepare(args):
     candidates = {key: candidate_queries(records[key], args.seed, args.candidate_count) for key in ("gf", "vat")}
     if not 1 <= args.multi_examples <= args.multi_candidate_count:
         raise ValueError("multi examples must fit within the multi candidate pool")
-    selected_multi = sorted(range(len(multi_records)), key=lambda i: hashlib.sha256(
-        f"{args.seed}\0{multi_records[i]['path']}".encode()).hexdigest())[:args.multi_candidate_count]
+    selected_multi = multi_candidates(multi_records, selection, args.seed, args.multi_candidate_count, args.multi_min_inframe)
+    if len(selected_multi) < args.multi_examples:
+        raise ValueError("not enough multi-query frames satisfy the requested in-frame count")
     rgb_refs = {}
     for key in ("gf", "vat"):
         data_path = args.gf_data_path if key == "gf" else args.vat_data_path
@@ -147,6 +155,7 @@ def prepare(args):
         "candidate_count": args.candidate_count, "examples_per_dataset": args.examples_per_dataset,
         "multi_examples": args.multi_examples, "selection_policy": "lower_and_higher_error_within_seeded_candidate_pool",
         "multi_candidate_count": args.multi_candidate_count,
+        "multi_min_inframe": args.multi_min_inframe,
         "multi_selection_policy": "highest_person_support_Jensen_Shannon_divergence_within_seeded_candidate_pool",
         "RGB_sha256": rgb_refs, "multi_selection_sha256": selection["selection_sha256"],
         "sources": {**efficiency.source_hashes(), **io.sources("cscwd_router/code/stag/final_visuals.py",
@@ -212,7 +221,8 @@ def export(args):
         ref, refs = case_data(args.report_root, args.figure_root, args.vat_data_path, records["multi"][index],
             selection["entries"][index]["head_indices"], f"vat_multi_{order:02d}", "vat", "multi", predictions[index],
             source_selection=source["selection"], person_support_JS_nats=variation[index],
-            multi_selection_policy=request["multi_selection_policy"], multi_candidate_count=len(predictions))
+            multi_selection_policy=request["multi_selection_policy"], multi_candidate_count=len(predictions),
+            multi_min_inframe=request["multi_min_inframe"])
         cases.append(ref)
         artifacts.update(refs)
     result = {"request": request, "cases": cases, "precision": "fp32", "array_rounding": "heatmaps6/support8 decimals; prediction coordinates and errors retained before rounding",

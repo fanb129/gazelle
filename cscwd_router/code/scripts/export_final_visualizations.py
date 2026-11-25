@@ -18,6 +18,7 @@ def parse_args(argv=None):
         p.add_argument("--" + name, type=Path, required=True)
     for name, default in (("candidate-count", 32), ("examples-per-dataset", 4), ("multi-candidate-count", 16), ("multi-examples", 2), ("seed", 0)):
         p.add_argument("--" + name, type=int, default=default)
+    p.add_argument("--multi-min-inframe", type=int, choices=(0, 1, 2, 3), default=0)
     p.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     p.add_argument("--allow-closed-gf", action="store_true")
     p.add_argument("--resume", action="store_true")

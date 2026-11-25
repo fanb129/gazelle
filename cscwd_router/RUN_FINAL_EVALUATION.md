@@ -113,3 +113,28 @@ MPLCONFIGDIR=/tmp/gazelle-mpl /private/tmp/gazelle-cscwd-check/bin/python \
 ```
 
 保留 `render_manifest.json` 中的输入/绘图源码/图片SHA。这里不执行模型，不要求数据集或checkpoint。真实图尚需用户执行服务器导出命令后才会产生。
+
+## 补充：三个GT注视点均在画内的多人机制图（GPU1）
+
+首批10案例/6图已保留在原目录。为更清楚地展示GT与人物条件、共享选区的关系，补充版本仅在可视化选样时要求固定三个查询均在画内；在符合条件的seed0候选池中仍按support的JS差异选样，不按模型误差选多人案例。量化多人评测继续使用原5,182帧及全部画外查询。新输出目录与首批分开，保留两组真实输出。
+
+```bash
+cd /home/fb/src/paper/gazelleV1_final_evaluation
+mkdir -p /home/fb/src/paper/gazelleV1/logs/cscwd_router
+CUDA_VISIBLE_DEVICES=1 MPLCONFIGDIR=/tmp/gazelle-mpl setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u \
+  /home/fb/src/paper/gazelleV1_final_evaluation/cscwd_router/code/scripts/export_final_visualizations.py \
+  --gf-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json \
+  --vat-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json \
+  --multi-summary /home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json \
+  --gf-data-path /newhome/fb/dataset/gazefollow_extended \
+  --vat-data-path /newhome/fb/dataset/videoattentiontarget \
+  --official-checkpoint-dir /home/fb/src/paper/gazelleV1/checkpoints \
+  --report-root /home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_inframe3_seed0 \
+  --figure-root /home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_inframe3_seed0 \
+  --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
+  --candidate-count 32 --examples-per-dataset 4 --multi-candidate-count 16 --multi-examples 2 \
+  --multi-min-inframe 3 --seed 0 --device cuda --allow-closed-gf --resume --render \
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_visualizations_inframe3_gpu1.log 2>&1 < /dev/null &
+```
+
+首批图可用原manifest离线重画。补充版本也导出GF/VAT各4个单人案例与2个多人案例，每张PNG/SVG，相关模型权重与训练过程一致。

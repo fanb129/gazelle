@@ -33,6 +33,15 @@ def test_person_variation_measures_different_supports_without_gt_or_predictions(
     assert visuals.person_variation(different) > .9
 
 
+def test_multi_visual_eligibility_uses_the_fixed_selected_heads(tmp_path):
+    make_records(tmp_path)
+    records, selection = cohort(tmp_path)
+    assert len(visuals.multi_candidates(records, selection, 0, 16, 0)) == 2
+    chosen = visuals.multi_candidates(records, selection, 0, 16, 3)
+    assert len(chosen) == 1 and records[chosen[0]]["path"] == "frame_0.jpg"
+    assert visuals.multi_candidates(records, selection, 0, 16, 2) == visuals.multi_candidates(records, selection, 0, 16, 0)
+
+
 def test_prediction_point_is_saved_before_array_rounding(tmp_path):
     make_records(tmp_path)
     record = json.loads((tmp_path / "test_preprocessed.json").read_text())[0]["frames"][0]
@@ -70,7 +79,7 @@ def exported_fixture(tmp_path, monkeypatch):
     source_gf = {"size": "b", "dataset": "gazefollow", "selection": {"epoch": 0}}
     source_vat = {"size": "b", "dataset": "vat", "selection": {"epoch": 0}}
     sources = {"gf": (source_gf, {}, {}), "vat": (source_vat, {}, {}), "multi": (source_vat, {}, {})}
-    request = {"protocol": "synthetic_CPU_visualization_fixture", "seed": 0, "multi_selection_policy": "synthetic_pool"}
+    request = {"protocol": "synthetic_CPU_visualization_fixture", "seed": 0, "multi_selection_policy": "synthetic_pool", "multi_min_inframe": 2}
     args = SimpleNamespace(report_root=project / "results" / "visuals", figure_root=project / "latex" / "figures" / "visuals",
         gf_data_path=data_path, vat_data_path=data_path, device="cpu", examples_per_dataset=4, multi_examples=1,
         official_checkpoint_dir=tmp_path, provenance=project / "results" / "provenance.md", resume=True, check_only=False)

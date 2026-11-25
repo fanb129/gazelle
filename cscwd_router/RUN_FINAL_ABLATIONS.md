@@ -1,6 +1,6 @@
 # 维护前：两卡条件化消融
 
-2026-11-25实际状态：GPU1的scene-geometry GF/VAT已经完成。早先GPU0队列中断于scene-only GF decoder第2轮；support3轮和decoder第1轮已保存，scene-head尚未开始。恢复使用下方原GPU0命令（含 `--resume`），保持固定训练目录；等待用户确认后由助手启动。
+2026-11-25实际状态：GPU1的scene-geometry GF/VAT已经完成。早先GPU0队列中断于scene-only GF decoder第2轮；support3轮和decoder第1轮已保存，scene-head尚未开始。恢复使用下方原GPU0命令（含 `--resume`），保持固定训练目录；已获用户授权并由助手恢复：队列PID640838、训练子进程643229，日志确认从decoder第2轮开始；scene-head在前一分支GF→VAT完成后自动接续。
 
 服务器CPU预检已通过并回传：训练目录固定 `c19ba93`，评测目录固定 `1fed049`（代码 `d29d1ae`），见 [预检报告](results/w6_final_server_preflight.json)。两目录已就绪，使用本文对应目录的命令，无需在训练期间pull源码。
 
@@ -27,7 +27,7 @@ CUDA_VISIBLE_DEVICES=0 setsid nohup /home/fb/anaconda3/envs/py310/bin/python -u 
   --provenance /home/fb/src/paper/gazelleV1/cscwd_router/results/RESULT_PROVENANCE.md \
   --workers 8 --batch-size 16 --eval-batch-size 16 --grad-accumulation 2 \
   --support-epochs 3 --decoder-epochs 5 --vat-epochs 8 --seed 0 --resume \
-  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_ablation_queue_gpu0.log 2>&1 < /dev/null &
+  > /home/fb/src/paper/gazelleV1/logs/cscwd_router/final_ablation_queue_resume_gpu0.log 2>&1 < /dev/null &
 ```
 
 ## GPU1：scene + geometry

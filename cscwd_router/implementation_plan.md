@@ -361,6 +361,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`results/final_k100_seed0/`、`results/final_ablation_seed0/scene_geometry/`、`results/w7b_k100_geometry_server_checks.json`，大PT/gzip仅登记服务器路径/SHA。四组K100均实际1024patch、每block1029tokens；GF B/L AUC/Avg L2为0.957218/0.100484、0.961650/0.093095；VAT B/L AUC/L2/AP为0.940170/0.100636/0.878522、0.947314/0.090269/0.898700。geometry GF AUC/Avg L2/Min L2为0.956018/0.101514/0.043611，VAT为0.940438/0.100879/0.886571，已填入表4。CPU核对不执行模型forward；本轮没有启动新GPU任务。
 - **下一步**：等待用户确认后在GPU0以原resume队列继续scene-only→scene-head，补齐表4另外两行；后续真实图导出。GPU0仍有其他用户进程，效率待独占后补。
 
+### 2026-11-25 · W7-C：0卡恢复训练，1卡真实图导出
+
+- **任务号**：W7-C。
+- **完成内容**：按用户明确授权，GPU0启动resume队列（PID640838，训练子进程643229），日志确认从scene-only decoder第2/5轮继续，随后自动接各自VAT与scene-head分支；固定训练目录仍为c19ba93。GPU1首批可视化于约2分钟完成，cf6d2ff经Git回传，10案例/RGB与12个图文件SHA核对通过。目视检查发现首批多人案例画外查询较多，因此新增仅用于可视化的最少画内人数参数，补充三个GT都在画内的展示组；原多人量化集合不变，原图保留。
+- **产出文件与数字**：`results/final_visualizations_seed0/`、`latex/figures/final_seed0/`、`results/w7c_visualizations_server_checks.json`，包含GF4、VAT4、多人2案例及6张PNG/6张SVG；实际共享512/1024patch，三人独立各512，GT与真实预测均保留。新增选样/导出/离线渲染共7项本机CPU检查通过，证据 `results/w7c_visual_local_checks.json`。
+- **下一步**：GPU0队列持续训练；GPU1补充全画内多人组并归档、检查排版。表4待两条恢复分支结束后汇总；多人效率待独占卡。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

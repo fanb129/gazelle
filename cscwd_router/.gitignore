@@ -6,6 +6,9 @@
 !/latex/figures/final_seed0/assets/
 !/latex/figures/final_seed0/assets/*.jpg
 !/latex/figures/final_seed0/*.json
+!/latex/figures/final_inframe3_seed0/assets/
+!/latex/figures/final_inframe3_seed0/assets/*.jpg
+!/latex/figures/final_inframe3_seed0/*.json
 
 # Large artifacts remain on the server.
 *.npy

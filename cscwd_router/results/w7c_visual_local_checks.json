@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-25",
+  "task": "W7-C_inframe_visual_selection",
+  "passed": true,
+  "pytest": {
+    "passed": 7,
+    "duration_seconds": 6.803
+  },
+  "scope": "Local CPU synthetic visual export and portability checks; no real model-quality metric",
+  "checks": [
+    "Only fixed selected heads determine minimum in-frame eligibility",
+    "Default minimum0 preserves original candidate order",
+    "Model output coordinates precede array rounding",
+    "Portable CPU rendering and SHA checks preserve real exported arrays"
+  ],
+  "sources": {
+    "cscwd_router/code/stag/final_visuals.py": "ad4e82322c79a8c77dba28cc03e69f055b5fc17578a42963ca84e508c670efee",
+    "cscwd_router/code/scripts/export_final_visualizations.py": "84d2b715be72f4e31e15bc2a292feb3919e7ceea5d419aef05cac2edeea45ea9",
+    "cscwd_router/code/stag/test_final_visualizations.py": "15b4a41edc58c6f7e7ab549546a609488b61fa7ff35e6547cb606fd5ef3443fe"
+  }
+}
