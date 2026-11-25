@@ -1,0 +1,1160 @@
+{
+  "completed": true,
+  "protocol": "native_router_cpu_macs_v1",
+  "runtime": {
+    "device": "cpu",
+    "python": "3.10.20",
+    "torch": "2.12.0",
+    "threads": 4,
+    "git_commit": "fa47aa1e0b86dfa3035e4cf46fedbf9576723346"
+  },
+  "convention": {
+    "mac_flops": 2,
+    "scope": "complete model forward",
+    "counted": [
+      "Conv2d",
+      "ConvTranspose2d",
+      "Linear",
+      "attention QK^T",
+      "attention AV"
+    ],
+    "not_counted": [
+      "bias additions",
+      "normalization",
+      "activations",
+      "softmax",
+      "RoPE",
+      "pooling",
+      "Top-K/sort",
+      "gather/scatter",
+      "memory copies",
+      "elementwise geometry/masks"
+    ],
+    "weights": "untrained native architecture; operation shapes depend on fixed K, not weight values",
+    "inputs": "one synthetic RGB tensor and one synthetic head box; no accuracy or latency measurement",
+    "training": false,
+    "checkpoint_weights_loaded": false,
+    "seed": 0
+  },
+  "sources": {
+    "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+    "cscwd_router/code/stag/complexity.py": "c1101681676761394e77687f812fe64346b9f632add9d95688fb713ca4d685a2",
+    "cscwd_router/code/scripts/profile_router_macs.py": "26f86e911ca14a84917eaec92af7310d18f9da9e123bd1fbd7f5e0bf71a98b5d"
+  },
+  "cells": [
+    {
+      "dataset": "gazefollow",
+      "size": "b",
+      "source_summary": {
+        "path": "/Users/fanb/src/gazelle/cscwd_router/results/testselected_k050_seed0/gazefollow/vitb/summary.json",
+        "sha256": "9d6af43099b54e5d7ea58d6f74ad7269047e6de510ab3384487c6e4ea8a5e7d0"
+      },
+      "selected_checkpoint_reference": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitb/sparse_decoder/best_test.pt",
+        "sha256": "8297c6f621ceeeef6222e31a4e1782ee92d2fb50b697e9da31144cfe5b2a5b14"
+      },
+      "model_config": {
+        "model": "gazelle_dinov3_vitb16",
+        "router_stage": "backbone_sparse",
+        "route_after_block": 5,
+        "keep_ratio": 0.5,
+        "router_hidden_dim": 256,
+        "router_temperature": 1.0,
+        "escape_tokens": 8,
+        "spatial_prior": "none",
+        "fusion": "raw_concat"
+      },
+      "profiled_graph_sources": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/ablation_variants.py": "bed475342ae040115d8834474887209a2b3bbd95af8ca1035832805aa0cba528"
+      },
+      "source_completed": true,
+      "source_closed_by_user": false,
+      "architecture_only_seconds": 3.1329317910131067,
+      "results": {
+        "k100": {
+          "macs_per_image": 112890088448,
+          "flops_per_image": 225780176896,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 54061138944,
+            "sparse_suffix": 53457159168,
+            "router": 270468096,
+            "multilayer_decoder_and_outputs": 5101322240
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 3898081280,
+            "aten.addmm": 178419795968,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 42254340096,
+            "aten.mm": 1207959552
+          },
+          "attention_matmul_flops_per_batch": 42254340096,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            }
+          ],
+          "kept_patches": 1024,
+          "parameters": {
+            "total": 89549313,
+            "task_modules": 3879681
+          }
+        },
+        "k50": {
+          "macs_per_image": 83851873280,
+          "flops_per_image": 167703746560,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 54061138944,
+            "sparse_suffix": 24418944000,
+            "router": 270468096,
+            "multilayer_decoder_and_outputs": 5101322240
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 3898081280,
+            "aten.addmm": 134933252096,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 27664453632,
+            "aten.mm": 1207959552
+          },
+          "attention_matmul_flops_per_batch": 27664453632,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 517
+            }
+          ],
+          "kept_patches": 512,
+          "parameters": {
+            "total": 89549313,
+            "task_modules": 3879681
+          }
+        }
+      }
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "l",
+      "source_summary": {
+        "path": "/Users/fanb/src/gazelle/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+        "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1"
+      },
+      "selected_checkpoint_reference": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt",
+        "sha256": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf"
+      },
+      "model_config": {
+        "model": "gazelle_dinov3_vitl16",
+        "router_stage": "backbone_sparse",
+        "route_after_block": 11,
+        "keep_ratio": 0.5,
+        "router_hidden_dim": 256,
+        "router_temperature": 1.0,
+        "escape_tokens": 8,
+        "spatial_prior": "none",
+        "fusion": "raw_concat"
+      },
+      "profiled_graph_sources": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/ablation_variants.py": "bed475342ae040115d8834474887209a2b3bbd95af8ca1035832805aa0cba528"
+      },
+      "source_completed": false,
+      "source_closed_by_user": true,
+      "architecture_only_seconds": 10.789786666980945,
+      "results": {
+        "k100": {
+          "macs_per_image": 369304454144,
+          "flops_per_image": 738608908288,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 182201180160,
+            "sparse_suffix": 181395873792,
+            "router": 337642496,
+            "multilayer_decoder_and_outputs": 5369757696
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 4971823104,
+            "aten.addmm": 625119594496,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 107309531136,
+            "aten.mm": 1207959552
+          },
+          "attention_matmul_flops_per_batch": 107309531136,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 12,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 13,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 14,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 15,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 16,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 17,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 18,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 19,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 20,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 21,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 22,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 23,
+              "batch": 1,
+              "tokens": 1029
+            }
+          ],
+          "kept_patches": 1024,
+          "parameters": {
+            "total": 307427073,
+            "task_modules": 4272897
+          }
+        },
+        "k50": {
+          "macs_per_image": 272541860864,
+          "flops_per_image": 545083721728,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 182201180160,
+            "sparse_suffix": 84633280512,
+            "router": 337642496,
+            "multilayer_decoder_and_outputs": 5369757696
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 4971823104,
+            "aten.addmm": 470500771840,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 68403167232,
+            "aten.mm": 1207959552
+          },
+          "attention_matmul_flops_per_batch": 68403167232,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 12,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 13,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 14,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 15,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 16,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 17,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 18,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 19,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 20,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 21,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 22,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 23,
+              "batch": 1,
+              "tokens": 517
+            }
+          ],
+          "kept_patches": 512,
+          "parameters": {
+            "total": 307427073,
+            "task_modules": 4272897
+          }
+        }
+      }
+    },
+    {
+      "dataset": "vat",
+      "size": "b",
+      "source_summary": {
+        "path": "/Users/fanb/src/gazelle/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+        "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+      },
+      "selected_checkpoint_reference": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+        "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+      },
+      "model_config": {
+        "model": "gazelle_dinov3_vitb16_inout",
+        "router_stage": "backbone_sparse",
+        "route_after_block": 5,
+        "keep_ratio": 0.5,
+        "router_hidden_dim": 256,
+        "router_temperature": 1.0,
+        "escape_tokens": 8,
+        "spatial_prior": "none",
+        "fusion": "raw_concat"
+      },
+      "profiled_graph_sources": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/ablation_variants.py": "bed475342ae040115d8834474887209a2b3bbd95af8ca1035832805aa0cba528"
+      },
+      "source_completed": true,
+      "source_closed_by_user": false,
+      "architecture_only_seconds": 3.040734874899499,
+      "results": {
+        "k100": {
+          "macs_per_image": 112895627904,
+          "flops_per_image": 225791255808,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 54061138944,
+            "sparse_suffix": 53457159168,
+            "router": 270468096,
+            "multilayer_decoder_and_outputs": 5106861696
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 3898081280,
+            "aten.addmm": 178423400704,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 42260634624,
+            "aten.mm": 1209139200
+          },
+          "attention_matmul_flops_per_batch": 42260634624,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            }
+          ],
+          "kept_patches": 1024,
+          "parameters": {
+            "total": 89582594,
+            "task_modules": 3912962
+          }
+        },
+        "k50": {
+          "macs_per_image": 83857412736,
+          "flops_per_image": 167714825472,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 54061138944,
+            "sparse_suffix": 24418944000,
+            "router": 270468096,
+            "multilayer_decoder_and_outputs": 5106861696
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 3898081280,
+            "aten.addmm": 134936856832,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 27670748160,
+            "aten.mm": 1209139200
+          },
+          "attention_matmul_flops_per_batch": 27670748160,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 517
+            }
+          ],
+          "kept_patches": 512,
+          "parameters": {
+            "total": 89582594,
+            "task_modules": 3912962
+          }
+        }
+      }
+    },
+    {
+      "dataset": "vat",
+      "size": "l",
+      "source_summary": {
+        "path": "/Users/fanb/src/gazelle/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+        "sha256": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f"
+      },
+      "selected_checkpoint_reference": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/best_test.pt",
+        "sha256": "6d12190c7cdf24fe0389eede68b27f0f05d35cb4c753072f62a3d0d1d8445bb5"
+      },
+      "model_config": {
+        "model": "gazelle_dinov3_vitl16_inout",
+        "router_stage": "backbone_sparse",
+        "route_after_block": 11,
+        "keep_ratio": 0.5,
+        "router_hidden_dim": 256,
+        "router_temperature": 1.0,
+        "escape_tokens": 8,
+        "spatial_prior": "none",
+        "fusion": "raw_concat"
+      },
+      "profiled_graph_sources": {
+        "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+        "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+        "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+        "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+        "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+        "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+        "gazelle/ablation_variants.py": "bed475342ae040115d8834474887209a2b3bbd95af8ca1035832805aa0cba528"
+      },
+      "source_completed": true,
+      "source_closed_by_user": false,
+      "architecture_only_seconds": 10.358954999945126,
+      "results": {
+        "k100": {
+          "macs_per_image": 369309993600,
+          "flops_per_image": 738619987200,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 182201180160,
+            "sparse_suffix": 181395873792,
+            "router": 337642496,
+            "multilayer_decoder_and_outputs": 5375297152
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 4971823104,
+            "aten.addmm": 625123199232,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 107315825664,
+            "aten.mm": 1209139200
+          },
+          "attention_matmul_flops_per_batch": 107315825664,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 12,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 13,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 14,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 15,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 16,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 17,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 18,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 19,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 20,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 21,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 22,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 23,
+              "batch": 1,
+              "tokens": 1029
+            }
+          ],
+          "kept_patches": 1024,
+          "parameters": {
+            "total": 307460354,
+            "task_modules": 4306178
+          }
+        },
+        "k50": {
+          "macs_per_image": 272547400320,
+          "flops_per_image": 545094800640,
+          "stage_macs_per_image": {
+            "token_embedding_and_prefix": 182201180160,
+            "sparse_suffix": 84633280512,
+            "router": 337642496,
+            "multilayer_decoder_and_outputs": 5375297152
+          },
+          "counted_operator_flops_per_batch": {
+            "aten.convolution": 4971823104,
+            "aten.addmm": 470504376576,
+            "aten._scaled_dot_product_flash_attention_for_cpu": 68409461760,
+            "aten.mm": 1209139200
+          },
+          "attention_matmul_flops_per_batch": 68409461760,
+          "block_inputs": [
+            {
+              "block": 0,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 1,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 2,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 3,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 4,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 5,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 6,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 7,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 8,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 9,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 10,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 11,
+              "batch": 1,
+              "tokens": 1029
+            },
+            {
+              "block": 12,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 13,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 14,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 15,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 16,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 17,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 18,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 19,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 20,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 21,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 22,
+              "batch": 1,
+              "tokens": 517
+            },
+            {
+              "block": 23,
+              "batch": 1,
+              "tokens": 517
+            }
+          ],
+          "kept_patches": 512,
+          "parameters": {
+            "total": 307460354,
+            "task_modules": 4306178
+          }
+        }
+      }
+    }
+  ],
+  "summary": [
+    {
+      "dataset": "gazefollow",
+      "size": "b",
+      "k100_gmacs": 112.890088448,
+      "k50_gmacs": 83.85187328,
+      "mac_reduction_fraction": 0.2572255506857516,
+      "stage_macs_saved": {
+        "token_embedding_and_prefix": 0,
+        "sparse_suffix": 29038215168,
+        "router": 0,
+        "multilayer_decoder_and_outputs": 0
+      }
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "l",
+      "k100_gmacs": 369.304454144,
+      "k50_gmacs": 272.541860864,
+      "mac_reduction_fraction": 0.2620130686056392,
+      "stage_macs_saved": {
+        "token_embedding_and_prefix": 0,
+        "sparse_suffix": 96762593280,
+        "router": 0,
+        "multilayer_decoder_and_outputs": 0
+      }
+    },
+    {
+      "dataset": "vat",
+      "size": "b",
+      "k100_gmacs": 112.895627904,
+      "k50_gmacs": 83.857412736,
+      "mac_reduction_fraction": 0.25721292938547136,
+      "stage_macs_saved": {
+        "token_embedding_and_prefix": 0,
+        "sparse_suffix": 29038215168,
+        "router": 0,
+        "multilayer_decoder_and_outputs": 0
+      }
+    },
+    {
+      "dataset": "vat",
+      "size": "l",
+      "k100_gmacs": 369.3099936,
+      "k50_gmacs": 272.54740032,
+      "mac_reduction_fraction": 0.26200913854717844,
+      "stage_macs_saved": {
+        "token_embedding_and_prefix": 0,
+        "sparse_suffix": 96762593280,
+        "router": 0,
+        "multilayer_decoder_and_outputs": 0
+      }
+    }
+  ]
+}

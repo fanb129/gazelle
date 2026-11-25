@@ -1,0 +1,62 @@
+{
+  "device": "cpu",
+  "profile_cells": 8,
+  "primitive_tests": 3,
+  "test_failures": 0,
+  "test_errors": 0,
+  "test_seconds": 3.634,
+  "independent_stage_formula_checks": [
+    {
+      "dataset": "gazefollow",
+      "size": "b",
+      "variant": "k100",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "b",
+      "variant": "k50",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "l",
+      "variant": "k100",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "gazefollow",
+      "size": "l",
+      "variant": "k50",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "vat",
+      "size": "b",
+      "variant": "k100",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "vat",
+      "size": "b",
+      "variant": "k50",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "vat",
+      "size": "l",
+      "variant": "k100",
+      "stage_formula_difference": 0
+    },
+    {
+      "dataset": "vat",
+      "size": "l",
+      "variant": "k50",
+      "stage_formula_difference": 0
+    }
+  ],
+  "formula": "ViT block MACs = 12*N*D^2 + 2*N^2*D; patch, Router and decoder checked separately",
+  "summary_sha256": "e7c3c4e2f47e1900448244874d166f720872ec81db9886b64d86dd7ea4fc9599",
+  "backbone_weights_or_dataset_required": false,
+  "accuracy_or_latency_result": false
+}

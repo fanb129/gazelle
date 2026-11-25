@@ -1,6 +1,7 @@
 # CSCWD Router · 当前方案、实现规格与进展
 
 > 本文档是给 codex 的实现规格 + 进展记录。codex 开工前读，每完成一个任务写回"进展记录"。
+> 2026-11-25 W8：8组CPU MACs完成，B/L相对自身K100降低25.72%/26.20%；效率主对照改为本文K100/K50。CSCWD 2027 IEEE conference模板已下载并编译验收，英文总计6页。GPU尚未启动新任务。
 > 2026-11-25 W7-D：scene-only GF/VAT已完整完成并回传；14:31按用户决定停止scene-head及队列，不再等待训练。表4只列scene-only、scene＋geometry、full。四组K100、多人精度与两组真实图均完成；多人计时仍待独占GPU。
 > 2026-11-24 W5：维护前固定K50，删除完整预算扫描；原表5/6为新表4/5。新增训练集中三个B打分消融，各自GF→VAT；真实多人N=1/2/3、K100单次精度和可视化导出接续。见 `PRE_SHUTDOWN_PLAN.md`，本轮尚未启动GPU任务。
 > 2026-11-24 R1：按用户新决定对VAT-L做三指标综合复选。8轮rate-6记录首选第3轮（AP较第1轮高1.1004个百分点、L2增加0.7152%），第5轮AP最高。已准备Pareto第1/2/3/5/8轮的逐帧复评入口，4个本机CPU规则检查通过；完整GPU0命令 `RUN_VATL_EPOCH_COMPARISON.md`。尚未启动GPU复评，正式表暂保留原第1轮。
@@ -705,3 +706,17 @@ git push origin codex/coverage-aware-router
 - **完成内容**：用户同意仅保留scene-only GF、取消后续训练后，先查实际进程；此时scene-only GF/VAT均已完成，队列已进入scene-head。14:31对核实归属的进程组640838发送SIGTERM，11个相关进程全部退出；无活动训练、无删除工件、无启动新GPU任务。已完成GF/VAT保留，scene-head部分checkpoint只登记路径/SHA。
 - **产出文件与数字**：`results/final_ablation_seed0/scene_only/`、`w7d_ablation_scope_stop.json`、`w7d_scene_only_server_checks.json`、`W7D_ABLATION_REVIEW.md`与provenance，e68eb93经Git回传。GF实际support3＋decoder5，11:23完成，AUC/Avg L2/Min L2为0.956205/0.101614/0.043444；VAT实际8轮，13:03完成，逐帧AUC/L2/AP为0.940565/0.100693/0.886334。25个工件、24份源码、9份本机报告SHA通过，逐查询重聚合差值小于1e-12；CPU汇总核对同配方和各自GF→VAT继承。表4更新为scene-only、scene＋geometry、full三个完成条件，取消条件不作正式消融。
 - **下一步**：不再恢复训练队列；本机整理表格、真实图与论文行文。多人计时等独占目标GPU，现有空格保留。
+
+### 2026-11-25 · W8-A：原生完整前向CPU MACs完成
+
+- **任务号**：W8-A。
+- **完成内容**：新增独立CPU复杂度入口，复用旧Router/prefix/suffix/multilayer decoder，旧gazelle包未改。原生DINOv3源码树与各组训练manifest一致；7份计算图源码与训练记录/执行commit吻合。原生结构不加载checkpoint权重，使用固定K的单图单头形状；统计Conv、Linear和attention QK/AV，显式补齐CPU fused SDPA，未把未覆盖的归一化/排序/搬运计入MACs。
+- **产出文件与数字**：`code/stag/complexity.py`、`code/stag/test_complexity.py`、`code/scripts/profile_router_macs.py`、`results/cpu_macs_seed0/summary.json/md`、`checks.json`。3项独立算子检查通过；8个实际CPU单元与各阶段闭式公式差值0。GF-B K100/K50为112.890/83.852 GMACs，GF-L369.304/272.542；VAT-B112.896/83.857，VAT-L369.310/272.547。B/L降低25.72%/26.20%。不产生新精度或延迟，主效率表按用户要求只比较自身K100/K50，K100标为本文全token控制。
+- **下一步**：协调一张3090连续独占1小时补多人计时，预计30–45分钟，仅为估算；无新GPU任务已启动。论文采用实际质量与成本权衡，不以移除更强相关方法获得SOTA标签。
+
+### 2026-11-25 · W8-B：CSCWD 2027 LaTeX模板就绪
+
+- **任务号**：W8-B。
+- **完成内容**：查询CSCWD 2027官方投稿页和IEEE模板说明，下载维护者在CTAN分发的IEEEtran1.8b包，保留36个上游文件与版权，记录原包/逐文件SHA。IEEE直链HTTP202空响应、SPMB镜像429后采用CTAN正式发布包；2027未另发专用模板。用PDF技能编译、渲染并目视核对conference示例。
+- **产出文件与数字**：`latex/ieee_template/IEEEtran/`、`latex/ieee_template/download_provenance.json`、`latex/README.md`、`results/w8_template_checks.json`。官方要求英文、IEEE proceedings、图表和参考文献合计6页。示例两次pdflatex通过，1页、612×792pt Letter、10pt、双栏，Type1字体；未改上游示例、未提交论文。2027官网未单独指定A4/Letter，采用IEEEtran默认Letter。
+- **下一步**：从已核对的表格和真实图建立正式英文稿；不将示例作者或示例正文当作论文内容。
