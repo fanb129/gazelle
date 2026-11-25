@@ -368,6 +368,13 @@ GazeLLE 原生已共享多人场景编码；新多人主张是共享稀疏 suffi
 - **产出文件与数字**：`results/final_visualizations_seed0/`、`latex/figures/final_seed0/`、`results/w7c_visualizations_server_checks.json`，包含GF4、VAT4、多人2案例及6张PNG/6张SVG；实际共享512/1024patch，三人独立各512，GT与真实预测均保留。新增选样/导出/离线渲染共7项本机CPU检查通过，证据 `results/w7c_visual_local_checks.json`。
 - **下一步**：GPU0队列持续训练；GPU1补充全画内多人组并归档、检查排版。表4待两条恢复分支结束后汇总；多人效率待独占卡。
 
+### 2026-11-25 · W7-C2：真实图回传与目视验收完成
+
+- **任务号**：W7-C2。
+- **完成内容**：GPU1已完成全画内补充组；c0e0cfb经Git回传，两组三人图的GT均可见，实际union和独立mask、GT/预测及误差已展示。首批与补充组都保留，10案例/RGB及12个图文件的SHA在本机一致。目视检查GF/VAT六行图和两张补充机制图，标题/行列对应与标记正常；将图片入口、选样口径与草稿图注落盘。
+- **产出文件与数字**：`results/final_visualizations_inframe3_seed0/`、`latex/figures/final_inframe3_seed0/`、`results/w7c_inframe_visualizations_server_checks.json`、`results/QUALITATIVE_FIGURES.md`；该组10案例、6张PNG/6张SVG，两个多人案例各3个画内GT，实际共享512/1024patch、独立3×512。补充筛选只用于展示，原量化5,182帧未改。GPU0仍正常训练，末次检查decoder第2轮2450/7092 batch，训练目录始终c19ba93。
+- **下一步**：等待0卡两分支GF→VAT完成后汇总表4并回传；独占卡可用后补多人效率。可视化后续排版直接使用本地数据与CPU入口。
+
 ## 7. T1 服务器运行与结果回传
 
 本节 T1 已执行并通过，实际使用 GPU 1；以下保留复现命令。脚本只读取官方权重并生成合成 RGB 输入/头框，不读取 GazeFollow 数据，不训练，也不产生 AUC/L2 或效率结论。

@@ -27,6 +27,8 @@
 
 ## 进展
 
+**W7-C2真实图完成（2026-11-25）**：GPU1补充组也已完成并由c0e0cfb回传，两个三人案例的GT均在画内，包含实际support、独立/union mask与预测。两组各10案例、6张PNG/6张SVG，首批含画外案例，全部保留；本机SHA与目视检查通过。图片入口 `results/QUALITATIVE_FIGURES.md`，草稿已加图注。GPU0继续scene-only→scene-head恢复队列，末次检查decoder第2轮2450/7092 batch；多人效率仍待独占卡。
+
 **W7-C恢复与真实图（2026-11-25）**：按用户授权GPU0已从scene-only decoder第2轮恢复（队列PID640838，子进程643229），之后自动接VAT和scene-head，训练目录c19ba93保持不变。GPU1首批10个真实案例、6张PNG/6张SVG已完成并由cf6d2ff回传；SHA与实际512/1024mask核对通过。新增全画内多人案例筛选，7项CPU检查通过，补充版本准备在GPU1导出；原图和全部画外量化查询保留。入口及日志见两份RUN_FINAL文档。
 
 **W7-B两项任务结束（2026-11-25）**：GPU0四组同权重K100于11月24日23:59全部完成，GPU1 geometry GF→VAT于11月25日03:17结束。`7ad1de7` 回传，CPU核对40个工件及六组指标通过，本机主报告SHA一致；K100单点表 `results/final_k100_seed0/summary.md`，表4geometry行已填。补查更早GPU0训练队列发现scene-only只有support3轮＋decoder1轮完成、scene-head未开始，last可恢复；下一项等待用户确认后恢复0卡两分支队列。本轮没有启动新GPU任务；多人效率及真实图尚未完成。

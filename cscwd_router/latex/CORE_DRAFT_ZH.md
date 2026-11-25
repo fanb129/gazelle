@@ -127,6 +127,12 @@ R1复选进展（2026-11-24）：用户决定按AUC/L2/AP综合比较VAT-L。当
 
 VAT test共同5,182帧，seed0嵌套N=1/2/3分别为5,182/10,364/15,546个人物查询，画内3,306/6,643/9,952。FP32；union和independent使用相同选中权重及K50单路径预算。N1两种Router指标完全一致；N3 union相对independent的L2增加0.000108、AUC与AP略高，GT点覆盖为0.959405。三种N下Router定位优于官方、AP低于官方。此表为多人子集，主表保留全量VAT结果；效率尚未运行。来源：[汇总](../results/final_multi_seed0/summary.md)、[CPU核对](../results/w7a_multi_accuracy_server_checks.json)。
 
+## 真实可视化（已生成）
+
+[人物条件与共享路由图](figures/final_inframe3_seed0/vat_multi_00_mechanism.png)：同一RGB切换查询人物，逐行展示GT、人物support、实际保留patch与最终预测，最后一列展示max-union后共用512个patch的suffix。独立三条路径各保留512个patch，图中数量统计suffix空间槽位。三个GT注视点均在画内，选样从固定候选池按support差异确定。
+
+[GF六行对比](figures/final_inframe3_seed0/gazefollow_comparison.png)与[VAT六行对比](figures/final_inframe3_seed0/vat_comparison.png)：输入、GT、support、保留区域、官方GazeLLE及Router热图。分别包含固定候选池内两例较低误差和两例较高误差。完整图片、案例与选样说明见 [入口](../results/QUALITATIVE_FIGURES.md)；量化多人评测仍使用原共同帧集合及全部画外查询。
+
 ## 结论工作稿
 
 本文将人物相关线索用于视觉编码器的深层计算分配，在保留竞争力定位表现的同时获得批量推理收益。现有四组batch8相对同权重routed K100加速约1.25–1.31倍；VAT-L相对官方GazeLLE-L有1.065倍的小幅速度收益。同权重K100单次精度参考和条件化消融用于补足质量保持与人物条件增益的证据；结论按具体指标、batch和对照分别陈述。
