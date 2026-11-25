@@ -442,3 +442,9 @@
 - scene_geometry/vat/vitb epoch_5: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_5.pt`; SHA256: `a057b19975c530a3c3daaa6c1fcf9d72bb7c3ad4bfa0311157d90a35d91edda7` (large artifacts server only).
 - scene_geometry/vat/vitb epoch_6: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_6.pt`; SHA256: `fa86b5147902d2965ab9f2a29f99de28d28042a34663d3d406d6c06681169a28` (large artifacts server only).
 - scene_geometry/vat/vitb epoch_7: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_geometry/vat/vitb/epoch_7.pt`; SHA256: `59d17b275cc35c25c222cce3d8cdc77d964d198e7b0a8ed034f1edf785b4cc6b` (large artifacts server only).
+
+## W7-C real visualization exports (2026-11-25)
+
+- 10 real cases; 6 PNG and 6 SVG files. RGB thumbnails, arrays, case/source/checkpoint references retained for offline CPU rendering.
+- report: `w7c_visualizations_server_checks.json`; SHA256: `a9030562cd18d5d218a728a5175d2d3ca18305d8fcef3dd6a86aece6039c7952`.
+- GPU0 scene-only -> scene-head queue resumed with --resume; queue PID 640838, training child PID 643229 at launch.

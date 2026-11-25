@@ -1,0 +1,341 @@
+{
+  "request": {
+    "protocol": "genuine_routing_visualization_exports_v1",
+    "seed": 0,
+    "source_summaries": {
+      "gf": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/testselected_k050_seed0/gazefollow/vitl/interrupted_summary.json",
+        "sha256": "fd83f2f17424edb559cacf65fead5fc21a8f89e53385249abd7ec4abdc9289f1"
+      },
+      "vat": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json",
+        "sha256": "78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f"
+      },
+      "multi": {
+        "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfb_router_k050_joint_seed0/summary.json",
+        "sha256": "c092d90ca2b094e575a94a70c21a61042611a2cd217332d0f10c35f277bb0f99"
+      }
+    },
+    "checkpoints": {
+      "gf": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/testselected_k050_seed0/gazefollow/vitl/sparse_decoder/best_test.pt",
+        "sha256": "0e3c848ce62731c53762696488e4911e86272dd4824a2db6b69a2f0e9ee5bebf"
+      },
+      "vat": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfl_router_k050_joint_seed0/best_test.pt",
+        "sha256": "6d12190c7cdf24fe0389eede68b27f0f05d35cb4c753072f62a3d0d1d8445bb5"
+      },
+      "multi": {
+        "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/vat_from_gfb_router_k050_joint_seed0/best_test.pt",
+        "sha256": "c4268b27989f6a6049918e97ec73c066cba23d06e19f30379b6e7cc72e48309b"
+      }
+    },
+    "backbones": {
+      "gf": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+        "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+      },
+      "vat": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth",
+        "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
+      },
+      "multi": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+        "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+      }
+    },
+    "official_checkpoints": {
+      "gf": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitl14.pt",
+        "sha256": "abb2950b3f953d145465eb81811ef61abeb61874e009c5a712dc89036f3c4bde"
+      },
+      "vat": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/gazelle_dinov2_vitl14_inout.pt",
+        "sha256": "e48136e4efad6bb91182a51a2fb365c2202d974e5e449145a21348aca7b5d0b1"
+      }
+    },
+    "official_backbones": {
+      "gf": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitl14_pretrain.pth",
+        "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+      },
+      "vat": {
+        "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov2_vitl14_pretrain.pth",
+        "sha256": "d5383ea8f4877b2472eb973e0fd72d557c7da5d3611bd527ceeb1d7162cbf428"
+      }
+    },
+    "annotation_sha256": {
+      "gf": {
+        "path": "/newhome/fb/dataset/gazefollow_extended/test_preprocessed.json",
+        "sha256": "f83dcbceef9d4443e34b6544d161e02b5d437cece59231b6ba915567c1d562ab"
+      },
+      "vat": {
+        "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+        "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+      },
+      "multi": {
+        "path": "/newhome/fb/dataset/videoattentiontarget/test_preprocessed.json",
+        "sha256": "75c1097ac5ba417326b158f5f177720ae1c834b00d82f2588b3c28abc3b2c4aa"
+      }
+    },
+    "candidate_count": 32,
+    "examples_per_dataset": 4,
+    "multi_examples": 2,
+    "selection_policy": "lower_and_higher_error_within_seeded_candidate_pool",
+    "multi_candidate_count": 16,
+    "multi_selection_policy": "highest_person_support_Jensen_Shannon_divergence_within_seeded_candidate_pool",
+    "RGB_sha256": {
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003848.jpg": "9bd8994ee564fad8562ec2117c85cce315e31d6a5689496f39777fe2d24f2067",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000004/00004089.jpg": "e7f9d77ed75e82dd4d38d6d748d61de416c483d8d03ca378e5639db4d01528d2",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002112.jpg": "c53d8ec16cabdc2f6023d6db5bcc74afb22f8e99ea926c30e8bdd41ca84fac1c",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000000/00000944.jpg": "a2290f0793fbcbd10e7e02797bb997616eeddc1c2334b2f56c6332990e26b8a3",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002639.jpg": "b32d2de5b9ed12ec0bd1bc41726ea4621abe11669f3d017868cc9618f97aa6a3",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000001/00001388.jpg": "6af41f6fa254ebb730b66d6d6d3e3c2c6484fc458bddbb1cd2b9b569d23813c2",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000000/00000746.jpg": "c4e58bc41e24bf4fe080806a40551b868c73e085e61c0a07ccf980de7f40abfc",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000001/00001779.jpg": "4fe8ef63c6ce4a27606180db5fdafa846294e6076f763e6c8beab4fbb32cb1ef",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000004/00004025.jpg": "aec93973b81ef8fd5349417ac1f54db6e6d7ffd0fbdf19790e1066125fcb2eb1",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002119.jpg": "91697a49785dae0732217066de6648680e5295459d06882a8de640afa77df8fd",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002503.jpg": "ce0d64fea5f22185d07fa161f84c13a839c4e34eae1b307cce406c062689ba67",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000001/00001408.jpg": "9e2074faaf16f8ea2993d070d8cfea211da5d8276eb6cce43c64db0401543e5a",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003258.jpg": "847ef70f6c40da4a03a75a1c40499e1f754e8b92cb9ffcdac4f8ec28e34ce3a7",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002091.jpg": "75b4d00f7a9a29aef67c4f59f2a3ab75f03a96386d64a01397f779e1b1892910",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000004/00004354.jpg": "f52800c87cc7ae106ab370306643bdc2682a53d8bbbc60c98aff9515030f3065",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002263.jpg": "ee2b4119cfb5cdd335c1d8c20a77598523fe3ced61140a1cb5c49eb94173c29c",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002735.jpg": "f5deb4f980ff4855c24e12294e9555fcd730ee18776e77d182a726b1b50a1622",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000001/00001309.jpg": "b5cc750740012b8b9703f8b6ec9341a0ae78f00e57f7830ec89be471525ec241",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002870.jpg": "418c2dd0b7037abfb48258a53898b429f8015c718bf108483ea6078ae1d08f9c",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003614.jpg": "19fa9557faadd2d66e0108d5be4a658d3df661c940a0ce9adbd1c85ba70769b6",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000001/00001210.jpg": "6ed6f11c65ce36117222a7565657f53ce9c739376e303d59dc0d75784ee8537e",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000004/00004632.jpg": "a1f8323b5a164769ea910ff91b943006492e11a53832dd8a99443a53307b0999",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003659.jpg": "2945f840166b18b0f6027d680a976648b7de23306c4175e7ce7099ef9ec8fc54",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000004/00004389.jpg": "77f7d2e4c423411c0d7cc5e205566a85f887fd634a0712fd6db992d9625d1e3f",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003100.jpg": "177aaec447aab0b3f7945be3918a1ff788d092d09bea8eb9c37a213ed9c39ea8",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003333.jpg": "f7f8fc4546aa478c7ccb740ca47725401d5a13bb9d6f33b6d6c1026c98deecd9",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000002/00002125.jpg": "a7d0fa6fdc7d1f6fee0c94e29c25dd18a38c46a825cff0a1c47933eb0f2bb518",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000000/00000612.jpg": "70c0c1e13334223dd39a840e735247ca559028a468a3f665280f3c7d4f8b6c0d",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003206.jpg": "90eda18365de14c89cf940702ee7f1a0930f87178f649db5fade0f7d2ef3afbb",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003317.jpg": "9b6c8203f0351953328a815c4872c8f2446aad147adf149dbeb808a0312433b0",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003140.jpg": "f46b16738feb65e15cbfa7bed07f277e2127fc389ce030baa9ae023df91ca19c",
+      "/newhome/fb/dataset/gazefollow_extended/test2/00000003/00003377.jpg": "3d8f96c5e483e75671a6beea54b407e7e5ee518c43805c8469464db97f7a9801",
+      "/newhome/fb/dataset/videoattentiontarget/images/Downton Abby/2967_3177/00003046.jpg": "299a4748848dcd103c541bd7139ca076e85193b2432c152505f2b58043e98a1b",
+      "/newhome/fb/dataset/videoattentiontarget/images/I Wanna Marry Harry/17070_17119/00017101.jpg": "d5e04f1ee95cac6ce64e5279e6cbf6de58095e5d538d3a5721a12f75bfaedc65",
+      "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/12407_12648/00012601.jpg": "61d20c3a11651b66404f8de07bbbf7fb715854dd174bb28ad50fa5bf5f6c844e",
+      "/newhome/fb/dataset/videoattentiontarget/images/MLB Interview/1918_2098/00001942.jpg": "b1f683033ddbcd4542b7196b9be8775024a4b5133267c399a1d3c5c052ca0e1c",
+      "/newhome/fb/dataset/videoattentiontarget/images/Jamie Oliver/5200_5375/00005269.jpg": "aade211f1340bc7faf208bc3a6b93c116532d380350a6fa27fe24a2aaefec495",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/66300_66420/00066400.jpg": "b62253d75188be18f0ebaf9c738e7fa4d92a4faa931f8833e51814af3a0b7b68",
+      "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/5784_5995/00005975.jpg": "0c08209a47399a2ae63fc0cdb660f1531b3e34389261e3c6f395dc814005707e",
+      "/newhome/fb/dataset/videoattentiontarget/images/MLB Interview/1918_2098/00002091.jpg": "2c7c11d8bba3efbae642b4decf05642d676e3a13772e249d9c2acef67092a147",
+      "/newhome/fb/dataset/videoattentiontarget/images/Survivor/24575_24726/00024598.jpg": "fa2665e934658cb59e7a33d2d27d2a360ad3a8a6c617ce8d936b8f9908f2486f",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/10369_10490/00010431.jpg": "5792d7a241081e155341ecec871cb5adcbbedf5412015c5b1aaffa0059774454",
+      "/newhome/fb/dataset/videoattentiontarget/images/West World/43968_44040/00044027.jpg": "ca7d9fea6b06c6045608d64b9b44f2a8d65e7c3a5003a13b54d69243e77a0640",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/16423_16544/00016472.jpg": "97cafcac72400d5830a932f135b708439f270ec11d11bb7b417fd08a112d8e95",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/66300_66420/00066322.jpg": "801b617c6ebfcafbfee39424e8815d43754fd347c8b0754ef67b568622a10535",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/59310_59370/00059364.jpg": "c9c4047841fc02c07fa271ac497438937c7a1d897d9f5a5808461cee5d72ff9d",
+      "/newhome/fb/dataset/videoattentiontarget/images/Jamie Oliver/2575_2675/00002671.jpg": "96c48e6624c717a851329955a9a2db2348cb24f49843850824d41feeb76d15ba",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/6173_6294/00006213.jpg": "b3ba13f9a0e5bbb80e55d0308737d41ba550be3d0542f30ccb4cf8b35652cf91",
+      "/newhome/fb/dataset/videoattentiontarget/images/Downton Abby/13906_14116/00014035.jpg": "197739053092c09709bc202c9e749974768e28b8066cab0aae4de58e7633e9de",
+      "/newhome/fb/dataset/videoattentiontarget/images/Hell's Kitchen/1348_1379/00001361.jpg": "19e10adcd0c2db23d0c990d12c3d2af10077b4f1c8011821969e703917ad6fa1",
+      "/newhome/fb/dataset/videoattentiontarget/images/Downton Abby/17292_17533/00017479.jpg": "9ee35cbed5e7553c2e2d10bec7d412eaf217d99f12ac8dfcc9879b750a914f4a",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/4255_4376/00004260.jpg": "28b3aed8055a7a2405dbbf6c81423d88f7acd2bbf316d71946cb752be4e7a871",
+      "/newhome/fb/dataset/videoattentiontarget/images/MLB Interview/6593_7193/00007096.jpg": "40a843ebe4b9cf688254e2b8be361bd2883ee9408464b951480db870ef2143af",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/13426_13607/00013600.jpg": "6ef394b2ca2a434e9d156de49396c9a3eef8882755720130205fdeca183584d1",
+      "/newhome/fb/dataset/videoattentiontarget/images/Survivor/24575_24726/00024614.jpg": "023c744525b5864710a7a84f48e17f9075e032bfad8427e466a7dcd8ca9a3c53",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/66300_66420/00066363.jpg": "346bffdf48e2b4998babc7b612e0c20a5be9734581f14224b9ced4059632d2a0",
+      "/newhome/fb/dataset/videoattentiontarget/images/Titanic/4255_4376/00004369.jpg": "e03884d51819da3bfcf915ea4280f7236e685faad38e1f715d055fcc72b33b27",
+      "/newhome/fb/dataset/videoattentiontarget/images/Jamie Oliver/5200_5375/00005322.jpg": "999fc1569f3cafd94a626bbe996affa5d46d8b6f923f2e6d36e89427c0a347e9",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/25230_25410/00025291.jpg": "365802c9fc44ae992fbdb252758129e2bec98b01f9ab4ee4801579cc6787fab1",
+      "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/7162_7283/00007226.jpg": "4ddd97b884e7463433880418a210a2bb94c4bc57a17538b3790469c78d7560c6",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/46470_46710/00046665.jpg": "1dbfce106f0bcd73c3da689c3e6f37b7f67f8bd492b3c0c9c4e43d34db3e937d",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/66300_66420/00066313.jpg": "c1fcd860baa928c612547514f136ad81fb33df42e7072b415cdf6ea5bdba6e09",
+      "/newhome/fb/dataset/videoattentiontarget/images/I Wanna Marry Harry/16159_16232/00016187.jpg": "c45de1309611699dc1d4b31c5bee13b9f871e93b8f1d66a930202cfa5cda59b8",
+      "/newhome/fb/dataset/videoattentiontarget/images/MLB Interview/6593_7193/00006790.jpg": "87f6a8f47547d35eb199d8eb13b475a6605936634b6bb591b3cb293314a2fa3a",
+      "/newhome/fb/dataset/videoattentiontarget/images/MLB Interview/1078_1139/00001133.jpg": "9e42c3aa50b619469d98ad3d2b21341aa2aa588c78a077d8c76fbfb41fb20074",
+      "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/2487_2818/00002566.jpg": "a42b848ac6b01002884c956a0c83c7a65bef43b0695eee4c2f3f945176826b55",
+      "/newhome/fb/dataset/videoattentiontarget/images/CBS This Morning/5544_5635/00005607.jpg": "5591dbb72ed67a38b15637bfa3fb68132ffe517b98b879d933188784d251b972",
+      "/newhome/fb/dataset/videoattentiontarget/images/It's Always Sunny in Philadelphia/53310_53430/00053383.jpg": "4e36020d3cfb7052383fcb08fe2f6422d58fad04554389167d5f5ca767496c61"
+    },
+    "multi_selection_sha256": "54aba32c2ed45d5fbde281ba1986e817b574bb6191cf673a4440d40035ff1ab7",
+    "sources": {
+      "gazelle/backbone.py": "d9b90538e7754e6619c42af3fec986a4e6c9be8975e224ab45aa2ff7fa25bd8a",
+      "gazelle/model.py": "3e74fa14933ec408efaa0ee7937c395652f7f0eb8acd8599c44d206522484d56",
+      "gazelle/dataloader.py": "cdcf007e6fa462b476b86053ea597148634a21a6d841cd72d0ca0ea514560870",
+      "gazelle/utils.py": "0d609b25241913603a7b4ae8f87d3340075748fd608bb76274b6f6441d77717c",
+      "gazelle/routing/backbone.py": "6fb704ce1e0c0b94581e1f2b8ee36496164b9a948e1de89ea5b811c5d58d3b28",
+      "gazelle/routing/model.py": "b34af29355e8086cad1f3b30d46247dbb2686e6f2033c017e21224be721097aa",
+      "gazelle/routing/router.py": "29597a02b64d0142faa9da97b989f5c819ab627fb8cb17aaab870ee415b000e9",
+      "gazelle/routing/losses.py": "cae6ec31165dca64cda039b149aecb00d6bbafe43f96ad6195ea3714caf8d993",
+      "scripts/train_coverage_router.py": "75e8e4be137076fda05ffa7da39e76bd5a04dd077dd1480292ab855d6eeed8d1",
+      "cscwd_router/code/data_prep/gazefollow.py": "aceb179f987f8484bab8efe19ad8733b7b1400f4e056f7eb2d39ac9f40669403",
+      "cscwd_router/code/stag/checkpoint.py": "c39890245d9b24e22f3310567dd388561a6b7588c665864eaccb79c8bb5779dd",
+      "cscwd_router/code/stag/engine.py": "3275c287207f4e02969acdcc2ea8679a0bb90e2834fd7c5720c1e80821025cd7",
+      "cscwd_router/code/data_prep/train_test.py": "6551f1ce40a742ca66f67aee084b920d1b113a15726a75fb38d95231f2ae9725",
+      "cscwd_router/code/stag/dinov3_engine.py": "a40ab0383db33e7af820a0ebbeafe6a2316b9dfabb62f375a26889d0cbd89db5",
+      "cscwd_router/code/stag/dinov3_run.py": "b20a71e643696b326fa5cdf943c39cecddf18fb204e0a07d5ad1526e03278a77",
+      "cscwd_router/code/stag/dinov3_initializers.py": "c88ed0232669d585189749768efcd7e8461989075dbf31f926d567e9d2e6a676",
+      "cscwd_router/code/scripts/run_router_dinov3_queue.py": "ac21398f0b0c60f61f362ceb8ab16b044af4f2fd83d26cae4980a691c30d5ccd",
+      "cscwd_router/code/scripts/train_router_dinov3.py": "90e897913cb329be466de66ae0570a3fa4f1ef886dd159cfac9890a86a4d7262",
+      "native_dinov3_source_tree": "4c147dfa46d31cc9956d30766f7f9fd52ab12cb31b08324ee9a1cd34eeb47039",
+      "cscwd_router/code/stag/dinov3_sources.py": "8b44aa2a07d06026a29911b1fb073fcf8347d5f4c7b0780a8df86c321f0913e7",
+      "cscwd_router/code/stag/dinov3_efficiency.py": "6a6b3d5165d13d0e9089ca1884b42be21f18d3925e695878cc97f82e6fa78ed4",
+      "cscwd_router/code/scripts/benchmark_router_dinov3.py": "744669ec1c775b7b25e98d270756fb01ad827046c542d8a29a7bc55710d4d4ea",
+      "cscwd_router/code/scripts/run_router_efficiency.py": "33591043eea718ae7beae548771a3bdb84f69054a40211255c43f6d4357a79f6",
+      "cscwd_router/code/scripts/benchmark_router_dinov2.py": "dad0bd1a8601203feeb9dc464a049e61a43f59db34bcba331bf98742b58a776e",
+      "gazelle/backbone_v0_dinov2.py": "68c98efcb799c9cb8af248aa8719d0eaefd24619dca13cafd972b1b0707819bf",
+      "gazelle/model_v0_dinov2.py": "31fa02c1355b5804df59a653090941f4300bc1f5b3bfd2443e870c8057cc3143",
+      "native_dinov2_source_tree": "96c486796f1cae2d8d3989b2ae20cfc49f8aef0a66ff522ec3a2050816210cb9",
+      "cscwd_router/code/stag/final_io.py": "268bab9f376aeda15f7905c06c4839a89094ea5199550b11acd4f8310eb1326d",
+      "cscwd_router/code/stag/conditional.py": "598ce5aff863f8e2edb6b857e7d475d5435520a081edf4051e32f5ff7b4fa047",
+      "cscwd_router/code/stag/final_visuals.py": "df78696cb4d3f16531e81ff0970eba5a140beaad4210e4e7e14ff10c6b76527f",
+      "cscwd_router/code/scripts/export_final_visualizations.py": "4d483da6a1e2ddb43d64b1c530e2f9fcd3e821ab9f340002c6f82a6c70e59f78",
+      "cscwd_router/code/data_prep/final_queries.py": "5d50d4d92b07071e849c491a40180ed92d274d1c51206ffb0832b4a34d5f07ee",
+      "cscwd_router/code/stag/final_multipeople.py": "6b0fa28874187e0415e39e99c57b7f6b20a1d50dbe4d34d769ff97372c1e8712"
+    }
+  },
+  "cases": [
+    {
+      "id": "gf_single_00",
+      "path": "cases/gf_single_00.json",
+      "sha256": "53db3a243872ddb5cc41035490597d32f21cdb0e5120ae9dbca1c8359d15d822"
+    },
+    {
+      "id": "gf_single_01",
+      "path": "cases/gf_single_01.json",
+      "sha256": "126471d1078df65c544863daef33e6be1e6358311938f6c4fc8cacd29dfc1b26"
+    },
+    {
+      "id": "gf_single_02",
+      "path": "cases/gf_single_02.json",
+      "sha256": "0b87c7f8e6c426dd5fbbf4f64a44e4ab7b04208146ebd721470631c58a944686"
+    },
+    {
+      "id": "gf_single_03",
+      "path": "cases/gf_single_03.json",
+      "sha256": "d63cd7b395e157335c65fcba5364c8c93a6828050ce40c8e97ebbd46a570d433"
+    },
+    {
+      "id": "vat_single_00",
+      "path": "cases/vat_single_00.json",
+      "sha256": "a6fc74b82bd23b65cca2984ccab551708550658c284529e5ac12c26a31c72abe"
+    },
+    {
+      "id": "vat_single_01",
+      "path": "cases/vat_single_01.json",
+      "sha256": "6498fa877d57da49115291515c3f790631b7d15b0cb67787578b5b2b15643fab"
+    },
+    {
+      "id": "vat_single_02",
+      "path": "cases/vat_single_02.json",
+      "sha256": "d3cb5ba31711a9e51711cbdb44ad25d708e12c86371f1b878407834ef614d71b"
+    },
+    {
+      "id": "vat_single_03",
+      "path": "cases/vat_single_03.json",
+      "sha256": "1c949ef4ed900320d11ed20c81eaabce658f2c806a95d5dcb69a9daa6c158eaf"
+    },
+    {
+      "id": "vat_multi_00",
+      "path": "cases/vat_multi_00.json",
+      "sha256": "016b326235a9862fc52e9c82e45e2e24a16d66e90fdda872e13ac4bd43c8b196"
+    },
+    {
+      "id": "vat_multi_01",
+      "path": "cases/vat_multi_01.json",
+      "sha256": "e93972515ebd9bce01f83d83a03c9cd52521d62146ca57d9d84c26636e7a6f4b"
+    }
+  ],
+  "precision": "fp32",
+  "array_rounding": "heatmaps6/support8 decimals; prediction coordinates and errors retained before rounding",
+  "rendering": "CPU-only renderer; source/selection unchanged",
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "cuda": "12.4",
+    "device": "cuda",
+    "cuda_visible_devices": "1",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "git_commit": "7ad1de75f4910faddc5ca47db66d7ad3a46d8dd1"
+  },
+  "artifacts": {
+    "case_gf_single_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/gf_single_00.json",
+      "sha256": "53db3a243872ddb5cc41035490597d32f21cdb0e5120ae9dbca1c8359d15d822"
+    },
+    "image_gf_single_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/gf_single_00.jpg",
+      "sha256": "a9e43e5c8ab47d60a95a38c1da3ebd17939229f1a8bfae335eaa46f7572458a6"
+    },
+    "case_gf_single_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/gf_single_01.json",
+      "sha256": "126471d1078df65c544863daef33e6be1e6358311938f6c4fc8cacd29dfc1b26"
+    },
+    "image_gf_single_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/gf_single_01.jpg",
+      "sha256": "de2cebc3b9ab37545caf9dfab0e5199a8d9d0597ffac45e2cdf5f9830243e9b6"
+    },
+    "case_gf_single_02": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/gf_single_02.json",
+      "sha256": "0b87c7f8e6c426dd5fbbf4f64a44e4ab7b04208146ebd721470631c58a944686"
+    },
+    "image_gf_single_02": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/gf_single_02.jpg",
+      "sha256": "55b7f7bfa6cfbe8a87f049e89ade8867cdcb827be0b0136d0e86d1b9b48cd5ed"
+    },
+    "case_gf_single_03": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/gf_single_03.json",
+      "sha256": "d63cd7b395e157335c65fcba5364c8c93a6828050ce40c8e97ebbd46a570d433"
+    },
+    "image_gf_single_03": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/gf_single_03.jpg",
+      "sha256": "6b56924340b36d0b50efa6bc25d09c54ac44be13e7134d390bddf3c5eedcd147"
+    },
+    "case_vat_single_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_single_00.json",
+      "sha256": "a6fc74b82bd23b65cca2984ccab551708550658c284529e5ac12c26a31c72abe"
+    },
+    "image_vat_single_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_single_00.jpg",
+      "sha256": "9adde8cd34cd4b6f55199e3c3c41e80f1346ff3644db0fdae7486609759a6b77"
+    },
+    "case_vat_single_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_single_01.json",
+      "sha256": "6498fa877d57da49115291515c3f790631b7d15b0cb67787578b5b2b15643fab"
+    },
+    "image_vat_single_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_single_01.jpg",
+      "sha256": "e0dd64424bce55eea3f32e460b6df9c10f658df0b053029307fc3ed0d17cc6d5"
+    },
+    "case_vat_single_02": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_single_02.json",
+      "sha256": "d3cb5ba31711a9e51711cbdb44ad25d708e12c86371f1b878407834ef614d71b"
+    },
+    "image_vat_single_02": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_single_02.jpg",
+      "sha256": "3f6851a81e56ed2db28a1223ea42eb0af7ebddd8b385b5fbed4eb8e414729008"
+    },
+    "case_vat_single_03": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_single_03.json",
+      "sha256": "1c949ef4ed900320d11ed20c81eaabce658f2c806a95d5dcb69a9daa6c158eaf"
+    },
+    "image_vat_single_03": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_single_03.jpg",
+      "sha256": "6da9a6c6963033075305407e065665872e8ffc168e12be0be08fbf29e80680b5"
+    },
+    "case_vat_multi_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_multi_00.json",
+      "sha256": "016b326235a9862fc52e9c82e45e2e24a16d66e90fdda872e13ac4bd43c8b196"
+    },
+    "image_vat_multi_00": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_multi_00.jpg",
+      "sha256": "b6623ae1140a99cf4f77e92bc9e5b69fb03470b4383deba0c3b2aeb2fdfae59f"
+    },
+    "case_vat_multi_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_visualizations_seed0/cases/vat_multi_01.json",
+      "sha256": "e93972515ebd9bce01f83d83a03c9cd52521d62146ca57d9d84c26636e7a6f4b"
+    },
+    "image_vat_multi_01": {
+      "path": "/home/fb/src/paper/gazelleV1/cscwd_router/latex/figures/final_seed0/assets/vat_multi_01.jpg",
+      "sha256": "3f6851a81e56ed2db28a1223ea42eb0af7ebddd8b385b5fbed4eb8e414729008"
+    }
+  },
+  "completed": true
+}
