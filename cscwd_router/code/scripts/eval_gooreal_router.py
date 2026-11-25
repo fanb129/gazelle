@@ -10,12 +10,14 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
 import cv2
+import numpy as np
+import sklearn
 import torch
 
 from cscwd_router.code.data_prep.gooreal import audited_records
 from cscwd_router.code.stag import final_io as io
 from cscwd_router.code.stag import gooreal
-from cscwd_router.code.stag.dinov3_efficiency import build_variant
+from cscwd_router.code.stag.dinov3_efficiency import build_variant, source_hashes
 from cscwd_router.code.stag.engine import seed_everything
 
 
@@ -42,9 +44,9 @@ def run(args):
         raise ValueError("zero-shot GOO-Real uses GazeFollow-trained checkpoints only")
     records, audit = audited_records(args.data_path)
     native = ROOT / "checkpoints" / f"dinov2_vit{source['size']}14_pretrain.pth"
-    hashes = io.sources("cscwd_router/code/data_prep/gooreal.py", "cscwd_router/code/stag/gooreal.py",
+    hashes = {**source_hashes(), **io.sources("cscwd_router/code/data_prep/gooreal.py", "cscwd_router/code/stag/gooreal.py",
                        "cscwd_router/code/scripts/eval_gooreal_router.py", "scripts/eval_gooreal.py",
-                       "data_prep/preprocess_gooreal.py", "gazelle/model_v0_dinov2.py", "gazelle/backbone_v0_dinov2.py")
+                       "data_prep/preprocess_gooreal.py", "gazelle/model_v0_dinov2.py", "gazelle/backbone_v0_dinov2.py")}
     cv2.setNumThreads(0)
     torch.set_num_threads(4)
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -77,7 +79,8 @@ def run(args):
         report = {"request": request, "metrics": metrics, "annotation_audit": audit, "trace": trace,
             "source_selection": source["selection"] if variant != "official" else "official released GF weights",
             "visualization_selection": "first 8 paths sorted by SHA256(seed0 + path), independent of predictions",
-            "runtime": {**io.runtime(args.device), "opencv": cv2.__version__},
+            "runtime": {**io.runtime(args.device), "opencv": cv2.__version__,
+                        "numpy": np.__version__, "sklearn": sklearn.__version__},
             "artifacts": {"per_query_predictions": io.reference(rows), "visual_cases": io.reference(cases)}}
         io.finish(output, report, args.provenance, f"GOO-Real zero-shot · vit{source['size']}/{variant}")
         print(json.dumps({"completed": str(output), "metrics": metrics}), flush=True)
