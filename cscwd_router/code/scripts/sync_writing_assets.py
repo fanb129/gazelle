@@ -47,8 +47,9 @@ def make_plan(include_backbones):
             for key, ref in references(json.loads(path.read_text())):
                 remote = ref["path"]
                 suffix = Path(remote).suffix
-                wanted = (remote.endswith(".jsonl.gz") or key == "source_image"
+                wanted = (remote.endswith((".jsonl.gz", ".npz")) or key == "source_image"
                           or (suffix == ".pt" and "resume" not in key)
+                          or (key == "decoder_resume_checkpoint" and path.name == "interrupted_summary.json")
                           or (include_backbones and suffix == ".pth"))
                 if not wanted:
                     continue
@@ -61,6 +62,9 @@ def make_plan(include_backbones):
                 selected[remote] = item
     for path in (ROOT / "cscwd_router/latex/figures").rglob("*"):
         if path.is_file():
+            local[str(path.relative_to(ROOT))] = sha256(path)
+    for pattern in ("cscwd_router/*.md", "cscwd_router/latex/*.md", "cscwd_router/results/*.md"):
+        for path in ROOT.glob(pattern):
             local[str(path.relative_to(ROOT))] = sha256(path)
     extra = [f"/newhome/fb/dataset/{dataset}/{split}_preprocessed.json"
              for dataset in ("gazefollow_extended", "videoattentiontarget")
