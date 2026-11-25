@@ -13,6 +13,10 @@ def sha256(path):
 
 
 def run(args):
+    def artifact_path(item):
+        return (args.artifact_root_mirror / item["path"].lstrip("/")
+                if args.artifact_root_mirror else Path(item["path"]))
+
     reports = {}
     references = []
     identities = None
@@ -27,9 +31,9 @@ def run(args):
             if request["target_training"] or request["target_checkpoint_selection"]:
                 raise ValueError("GOO result is not fixed-checkpoint zero-shot inference")
             for artifact in report["artifacts"].values():
-                if sha256(artifact["path"]) != artifact["sha256"]:
+                if sha256(artifact_path(artifact)) != artifact["sha256"]:
                     raise ValueError("GOO prediction artifact SHA256 mismatch")
-            with gzip.open(report["artifacts"]["per_query_predictions"]["path"], "rt") as handle:
+            with gzip.open(artifact_path(report["artifacts"]["per_query_predictions"]), "rt") as handle:
                 rows = [json.loads(line) for line in handle]
             keys = [(r["index"], r["path"], r["bbox_norm"], r["gaze"]) for r in rows]
             if identities is None:
@@ -73,4 +77,6 @@ def run(args):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--report-root", type=Path, required=True)
+    p.add_argument("--artifact-root-mirror", type=Path,
+                   help="local mirror of server /; allows offline raw-prediction verification")
     run(p.parse_args())
