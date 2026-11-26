@@ -30,6 +30,7 @@ def parse_args(argv=None):
 def sources():
     return {name: sha256(ROOT / name) for name in (
         "cscwd_router/code/stag/conditional.py", "cscwd_router/code/scripts/train_conditioned_router.py",
+        "cscwd_router/code/stag/unconditional.py",
         "cscwd_router/code/scripts/run_final_ablation.py")}
 
 

@@ -7,7 +7,7 @@ from gazelle.routing.model import CoverageAwareGazeLLE
 from gazelle.routing.backbone import RoutedDinoV3Backbone
 
 CONDITIONS = {"scene_only": (False, False), "scene_geometry": (False, True),
-              "scene_head": (True, False), "full": (True, True)}
+              "scene_head": (True, False), "full": (True, True), "unconditional": (False, False)}
 
 
 class MaskedHeadProjection(nn.Sequential):
@@ -30,6 +30,9 @@ class ZeroProjection(nn.Sequential):
 
 
 def configure_inputs(router, condition):
+    if condition == "unconditional":
+        from cscwd_router.code.stag.unconditional import without_person_conditions
+        return without_person_conditions(router)
     appearance, geometry = CONDITIONS[condition]
     if condition != "full":
         router.head_projection = MaskedHeadProjection(router.head_projection, appearance, geometry)
@@ -42,7 +45,7 @@ class ConditionalGazeLLE(CoverageAwareGazeLLE):
     def __init__(self, backbone, *, condition, **kwargs):
         super().__init__(backbone, **kwargs)
         self.condition = condition
-        configure_inputs(self.router, condition)
+        self.router = configure_inputs(self.router, condition)
 
     def get_model_config(self):
         config = super().get_model_config()
