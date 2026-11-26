@@ -16,3 +16,12 @@
 - best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `0b6f73c5a6c63a89a38c06c369d59b2aa774ee6510b626e2764c9fad96b4198e`
 - decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/sparse_decoder/last.pt`; SHA256: `9e2027afdeb2c49c03140a638db9be555f73d16529648c68d4516aeddf654210`
 - per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/predictions.jsonl.gz`; SHA256: `3706eaa5e9207e8cad86fcfa9bf1e572bd6b238ce90905dbc301143a35ac7863`
+
+## VAT AP head-only / vitl
+
+- report: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/ap/vitl/summary.json`; SHA256: `a1ff17a050d0d1672ef0e69b27c94a7757da3be11cd848e53581b975fe34ce89`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/ap/vitl/best_test.pt`; SHA256: `1ce3cbe2bf1d0deea78e6d62ccef59426a308348810be9e2878f79a34bb47b87`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/ap/vitl/last.pt`; SHA256: `3be2f10a38c2873f241ce0404f8c0f9af980f118cf03b6462db3371f38313dd4`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/ap/vitl/predictions.jsonl.gz`; SHA256: `42926e0ab47b2b1a0fa03b2ca27b33a26482702acda66a7eab7d085079bf4a8e`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`
+- parent_summary: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json`; SHA256: `78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f`

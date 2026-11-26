@@ -1,0 +1,154 @@
+[
+  {
+    "epoch": 0,
+    "head_lr": 0.01,
+    "classification_bce": 2.1154982622767675,
+    "train_seconds": 3228.504060750998,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.875291843976169,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 1,
+    "head_lr": 0.01,
+    "classification_bce": 3.4408220877870126,
+    "train_seconds": 3086.210807476,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8714870981981822,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 2,
+    "head_lr": 0.01,
+    "classification_bce": 3.8395325281864587,
+    "train_seconds": 3139.7752356249985,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8427518255641188,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 3,
+    "head_lr": 0.01,
+    "classification_bce": 4.552280320746843,
+    "train_seconds": 3068.149335338003,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8603693805191572,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 4,
+    "head_lr": 0.01,
+    "classification_bce": 4.181322277635879,
+    "train_seconds": 3067.833124841003,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8569100831092212,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 5,
+    "head_lr": 0.01,
+    "classification_bce": 5.070703687220669,
+    "train_seconds": 3024.797341008998,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.862949607597709,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 6,
+    "head_lr": 0.01,
+    "classification_bce": 5.195829680704592,
+    "train_seconds": 3068.939181255002,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.8305241077858345,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  },
+  {
+    "epoch": 7,
+    "head_lr": 0.01,
+    "classification_bce": 5.183016916945648,
+    "train_seconds": 3126.538694855997,
+    "test": {
+      "auc": 0.9480269914680018,
+      "l2": 0.0918637250269061,
+      "inout_ap": 0.860458782627787,
+      "persons": 5461,
+      "inframe_persons": 3530,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9526912181303117,
+      "routing_hard_coverage": 0.837614236303497,
+      "routing_soft_coverage": 0.35064115353670994
+    }
+  }
+]
