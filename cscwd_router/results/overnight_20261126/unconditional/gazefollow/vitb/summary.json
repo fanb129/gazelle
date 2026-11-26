@@ -1,0 +1,95 @@
+{
+  "completed": true,
+  "format": "cscwd_router_dinov3_testselected_v1",
+  "dataset": "gazefollow",
+  "size": "b",
+  "model_config": {
+    "model": "gazelle_dinov3_vitb16",
+    "router_stage": "backbone_sparse",
+    "route_after_block": 5,
+    "keep_ratio": 0.5,
+    "router_hidden_dim": 256,
+    "router_temperature": 1.0,
+    "escape_tokens": 8,
+    "spatial_prior": "none",
+    "fusion": "raw_concat",
+    "routing_condition": "unconditional"
+  },
+  "selection_policy": "test_selected",
+  "selection": {
+    "epoch": 4,
+    "metric": "min_l2",
+    "metrics": {
+      "auc": 0.9556247990999287,
+      "avg_l2": 0.10247178103587563,
+      "min_l2": 0.04378481910685123,
+      "persons": 4782,
+      "inframe_persons": 4782,
+      "precision": "fp32",
+      "query_unit": "person",
+      "keep_ratio": 0.5,
+      "routing_gt_point_coverage": 0.9051616845058948,
+      "routing_hard_coverage": 0.7956454906439692,
+      "routing_soft_coverage": 0.33663790235206303
+    },
+    "policy": "test_selected",
+    "tie_breakers": [
+      "auc_max",
+      "earliest_epoch"
+    ]
+  },
+  "selection_test_frame_rate": 1,
+  "final_test_frame_rate": 1,
+  "metrics": {
+    "auc": 0.9556247990999287,
+    "avg_l2": 0.10247178103587563,
+    "min_l2": 0.04378481910685123,
+    "persons": 4782,
+    "inframe_persons": 4782,
+    "precision": "fp32",
+    "query_unit": "person",
+    "keep_ratio": 0.5,
+    "routing_gt_point_coverage": 0.9051616845058948,
+    "routing_hard_coverage": 0.7956454906439692,
+    "routing_soft_coverage": 0.33663790235206303
+  },
+  "artifacts": {
+    "initialization": {
+      "kind": "support",
+      "loaded_tensors": 52,
+      "router_reinitialized": false,
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/support/final.pt",
+      "sha256": "0f6ed428b2b1fe4ef4cff349e9353c2ce3bb5e331a7a6537bd2870ecf4de6e0e"
+    },
+    "backbone": {
+      "path": "/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth",
+      "sha256": "73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c"
+    },
+    "best_test_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/sparse_decoder/best_test.pt",
+      "sha256": "0b6f73c5a6c63a89a38c06c369d59b2aa774ee6510b626e2764c9fad96b4198e"
+    },
+    "decoder_resume_checkpoint": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/sparse_decoder/last.pt",
+      "sha256": "9e2027afdeb2c49c03140a638db9be555f73d16529648c68d4516aeddf654210"
+    },
+    "per_query_predictions": {
+      "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/predictions.jsonl.gz",
+      "sha256": "3706eaa5e9207e8cad86fcfa9bf1e572bd6b238ce90905dbc301143a35ac7863"
+    }
+  },
+  "context_fingerprint": "4aecd22236b7a2f603b45c98a947c7c7d1f5e62df8a81bf7a3ae02009fdae2b6",
+  "runtime": {
+    "python": "3.10.19",
+    "torch": "2.6.0+cu124",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "cuda_version": "12.4",
+    "cuda_visible_devices": "1",
+    "git_commit": "12b1a20243bd8a43ce77f0e25e3755626d844b38"
+  },
+  "training_epochs": {
+    "support": 0,
+    "sparse_decoder": 5
+  }
+}
