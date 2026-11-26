@@ -1,0 +1,22 @@
+{
+  "source_summary": "/home/fb/src/paper/gazelleV1/cscwd_router/results/final_ablation_seed0/scene_only/gazefollow/vitb/summary.json",
+  "support_checkpoint": {
+    "path": "/home/fb/src/paper/gazelleV1/experiments/cscwd_router/final_ablation_seed0/scene_only/gazefollow/vitb/support/final.pt",
+    "sha256": "0f6ed428b2b1fe4ef4cff349e9353c2ce3bb5e331a7a6537bd2870ecf4de6e0e"
+  },
+  "inherited_support_epochs": 3,
+  "new_decoder_epochs": 5,
+  "new_vat_epochs": 8,
+  "removed": [
+    "head_appearance",
+    "absolute_box",
+    "relative_geometry",
+    "head_priority"
+  ],
+  "retained": [
+    "scene_scoring",
+    "fixed_escape_priority",
+    "decoder_head_box_prompt"
+  ],
+  "reason": "Reuse scene-only soft-score training; newly adapt decoder after removing head priority."
+}
