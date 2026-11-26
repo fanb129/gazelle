@@ -25,3 +25,27 @@
 - per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/ap/vitl/predictions.jsonl.gz`; SHA256: `42926e0ab47b2b1a0fa03b2ca27b33a26482702acda66a7eab7d085079bf4a8e`
 - backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitl16_pretrain.pth`; SHA256: `8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035`
 - parent_summary: `/home/fb/src/paper/gazelleV1/cscwd_router/results/vat_from_gfl_router_k050_joint_seed0/summary.json`; SHA256: `78b45b94d7fe65cdff17f3bd86f2afd99f7ec6b2add5c3cb83c30d19550f4c9f`
+
+## GF Router to VAT · vitb
+
+- report: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/vat/vitb/summary.json`; SHA256: `0cf6b2c476453c92fb422ce5c502ad7257cf2233fc7be3a67fe76d7f8b1601a8`
+- gf_summary: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/gazefollow/vitb/summary.json`; SHA256: `6e027b79a3a8613de06f2a9384d35e800130b7680ff9b35a3d93d1bc5136f4a7`
+- gf_manifest: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/gazefollow/vitb/manifest.json`; SHA256: `141c6623013ecc2a4a9708c41fd44f91203afe0b1a747c98a151b6e15f1e4d07`
+- gf_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/gazefollow/vitb/sparse_decoder/best_test.pt`; SHA256: `0b6f73c5a6c63a89a38c06c369d59b2aa774ee6510b626e2764c9fad96b4198e`
+- backbone: `/home/fb/src/paper/gazelleV1/checkpoints/dinov3_vitb16_pretrain.pth`; SHA256: `73cec8be7427c8655ceced13ce62f6e20a1fa90d1b4d4a550df17a1144081a7c`
+- initial_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/initial.pt`; SHA256: `62df76138f347bc633a64c217d26bf7371a7e2d58f1bdd1cb264ebaf03a462bc`
+- best_test_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/best_test.pt`; SHA256: `9cb6bfb7f8f17b4c110199ce4dc53c58d878f15597c690d96e2c32cc63d91ccc`
+- decoder_resume_checkpoint: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/last.pt`; SHA256: `f783c41e20014ba758a4f3c39c0dcd734f0e4f29c9a524ebcbd402b6c7ab4dc3`
+- per_query_predictions: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/predictions.jsonl.gz`; SHA256: `4e90edb8b9a58c188b79c649289e48043a46db39530beb6d8a0bc2d66400619c`
+- manifest: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/vat/vitb/manifest.json`; SHA256: `1062bd8212825fd5cdcdf21f7d1e3b28f49d5c6bc929646505ff2df277a73b87`
+- history: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/vat/vitb/history.json`; SHA256: `63cf10db2f24b90c3c50e025316d69aa7218fc114d0eee526540b6e09124a743`
+- initialization_report: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/vat/vitb/initialization.json`; SHA256: `3d105f39640d7dd2eb8db0661f694c74be5878965603ec32fc0e11ff4fbbb2de`
+- initial_test_report: `/home/fb/src/paper/gazelleV1_overnight_20261126/cscwd_router/results/overnight_20261126/unconditional/vat/vitb/initial_test.json`; SHA256: `0be35250ea6a92a1c8c80515f6be6051676499f8dd06d655471e5d7cb1e400a2`
+- epoch_0: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_0.pt`; SHA256: `0703ddf31a1114de30d4f6df8d30418f1c103833b5ad2f34028ee846b5bd33d0`
+- epoch_1: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_1.pt`; SHA256: `4e7d4997d811cd21ad155a079a36d54a68bd9d086c2971f4d546a582ffb3c7fd`
+- epoch_2: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_2.pt`; SHA256: `4fbbba4d055e351b9960d3dd4687997e421498a08165735458d8faf32bbe7ce6`
+- epoch_3: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_3.pt`; SHA256: `090f7b013cb7fa6f108993c2e0d2c859d8e22d85230ec9bb530a4edde507bbec`
+- epoch_4: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_4.pt`; SHA256: `75933b6eb08096c078d1b15a0a51f0b66adad797b822b816dfacba797819997a`
+- epoch_5: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_5.pt`; SHA256: `3e24bb99d2f421597596e4ca77ebaba17283ab59c9385160ed57bc7ff7d2ab9c`
+- epoch_6: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_6.pt`; SHA256: `efeb3c96c37731a22579ca7c54b7ddceb64843ebe31b41a2e43833d58b2be64d`
+- epoch_7: `/home/fb/src/paper/gazelleV1/experiments/cscwd_router/overnight_20261126/unconditional/vat/vitb/epoch_7.pt`; SHA256: `ebc831af9ee5930acfa5b848e8aba5f9fa70ffa228bcecf74f7d932b98d8dc23`
